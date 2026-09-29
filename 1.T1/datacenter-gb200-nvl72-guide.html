@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GB200 NVL72: one rack, 132 kW — power and cooling for beginners</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2F4F3; --panel:#FFFFFF; --ink:#18222D; --muted:#566270; --line:#C9D1D6;
+    --power:#D08A00; --power-soft:#FBEFD2;
+    --cool:#1C74B8; --cool-soft:#DCEBF6;
+    --heat:#C23B22; --heat-soft:#F7DDD7;
+    --ok:#2E7D4F; --ok-soft:#DCEFE3;
+    --copper:#B8743F;
+    --nv:#5E7F2E; --nv-soft:#E6EFD9;
+    --body:"Barlow","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+    --label:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.6}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+  .prose{max-width:720px}
+  h1,h2,h3{line-height:1.15;margin:0}
+  h1{font-size:clamp(2.4rem,6vw,4.2rem);font-weight:700;letter-spacing:-.01em}
+  h2{font-size:clamp(1.6rem,3.2vw,2.2rem);font-weight:700;margin-bottom:.5em}
+  h3{font-size:1.2rem;font-weight:600;margin:1.4em 0 .4em}
+  p{margin:0 0 1em}
+  a{color:var(--cool)}
+  :focus-visible{outline:3px solid var(--cool);outline-offset:2px}
+
+  header{padding:64px 0 40px;border-bottom:1px solid var(--line)}
+  .back{font-size:.95rem;display:flex;gap:6px 20px;flex-wrap:wrap;margin-bottom:20px}
+  .lede{font-size:1.25rem;color:var(--muted);max-width:680px;margin-top:18px}
+  .compare{margin-top:30px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px 22px;max-width:760px}
+  .compare .row{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:14px;margin:8px 0}
+  .compare .lbl{font-size:.95rem}
+  .compare .bar{height:26px;border-radius:4px;display:flex;align-items:center;padding-left:10px;font-family:var(--label);font-weight:600;color:#fff;white-space:nowrap}
+  .compare small{display:block;color:var(--muted);margin-top:8px;font-size:.88rem}
+  nav.toc{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:28px;font-size:.95rem}
+  nav.toc a{color:var(--ink);text-decoration:none;border-bottom:2px solid var(--line)}
+  nav.toc a:hover{border-color:var(--ink)}
+
+  section{padding:60px 0;border-bottom:1px solid var(--line)}
+  figure{margin:24px 0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px}
+  figcaption{font-size:.92rem;color:var(--muted);margin-top:12px}
+  .diagram{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .diagram svg{display:block;width:100%;height:auto}
+  svg text{font-family:var(--label)}
+  .flow{stroke-dasharray:10 8;animation:flow 1.2s linear infinite}
+  @keyframes flow{to{stroke-dashoffset:-18}}
+
+  .rackwrap{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(240px,1fr);gap:24px;align-items:start}
+  @media (max-width:800px){.rackwrap{grid-template-columns:1fr}}
+  .legend{display:flex;flex-direction:column;gap:8px}
+  .legend button{all:unset;cursor:pointer;display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:6px;border:1px solid var(--line);background:#fff;font-size:.95rem}
+  .legend button:focus-visible{outline:3px solid var(--cool)}
+  .legend button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 4px 0 0 var(--ink)}
+  .sw{width:16px;height:16px;border-radius:3px;flex:none;margin-top:4px;border:1px solid rgba(0,0,0,.2)}
+  .legend b{display:block}
+  .legend span.d{color:var(--muted);font-size:.9rem}
+  .rrow{transition:opacity .2s}
+  .dim .rrow{opacity:.25}
+  .dim .rrow.on{opacity:1}
+
+  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:8px}
+  .facts div{background:var(--panel);border-radius:6px;padding:14px 16px;border-top:4px solid var(--line);font-size:.97rem}
+  .facts .c{border-color:var(--cool)} .facts .h{border-color:var(--heat)} .facts .p{border-color:var(--power)} .facts .g{border-color:var(--ok)}
+  .facts strong{display:block;margin-bottom:2px}
+
+  table{border-collapse:collapse;width:100%;font-size:.97rem}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-weight:600;background:#E7EBED}
+  .tablewrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;margin-top:16px}
+
+  button.toggle{font:inherit;font-size:.95rem;font-weight:600;background:var(--ink);color:#fff;border:0;border-radius:6px;padding:10px 18px;cursor:pointer;margin-top:14px}
+  button.toggle[aria-pressed="true"]{background:var(--heat)}
+  .status{font-size:.98rem;margin-top:10px}
+  .failed rect{fill:#E6E8EA!important;stroke:#9AA3AB!important}
+  .failed text{fill:#8A939B!important}
+  .failed path{stroke:#B7BEC4!important;animation:none!important}
+
+  .formula{background:var(--ink);color:#fff;border-radius:8px;padding:18px 22px;font-size:1.1rem;margin:20px 0;max-width:720px}
+  .formula b{color:#9FD0F5}
+
+  .checker{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px;display:grid;grid-template-columns:minmax(240px,320px) 1fr;gap:24px;margin-top:16px}
+  @media (max-width:760px){.checker{grid-template-columns:1fr}}
+  .presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .presets button{font:inherit;font-size:.88rem;padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:#fff;cursor:pointer}
+  .presets button:hover{border-color:var(--ink)}
+  .dtout{font-family:var(--label);font-size:2.6rem;font-weight:600;line-height:1}
+
+  .calc{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:28px;margin-top:24px}
+  @media (max-width:760px){.calc{grid-template-columns:1fr}}
+  .inputs{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px}
+  .field{margin-bottom:16px}
+  .field label{display:flex;justify-content:space-between;font-weight:600;font-size:.95rem;margin-bottom:6px}
+  .field label output{font-family:var(--label);font-size:1.05rem}
+  .field input[type=range]{width:100%;accent-color:var(--ink)}
+  .field select,.field input[type=number]{width:100%;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:#fff}
+  .field small{display:block;color:var(--muted);font-size:.85rem;margin-top:4px;line-height:1.4}
+  .results{display:flex;flex-direction:column;gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 20px}
+  .card h3{margin:0 0 6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:1.1rem}
+  .big{font-family:var(--label);font-size:1.8rem;font-weight:600;line-height:1.1}
+  .meter{position:relative;height:20px;background:#E8ECEE;border-radius:4px;margin:10px 0 26px}
+  .meter .fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;transition:width .3s}
+  .mark{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+  .mark span{position:absolute;top:26px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:var(--label);font-size:.82rem;color:var(--muted)}
+  .badge{display:inline-block;font-family:var(--label);font-weight:600;font-size:.95rem;padding:2px 10px;border-radius:4px}
+  .badge.good{background:var(--ok-soft);color:var(--ok)}
+  .badge.warn{background:var(--power-soft);color:#7A5200}
+  .badge.bad{background:var(--heat-soft);color:var(--heat)}
+  .card p{font-size:.96rem;margin:.3em 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:520px){.grid2{grid-template-columns:1fr}}
+  .verdict{background:var(--ink);color:#fff;border-radius:8px;padding:18px 20px;font-size:1.02rem}
+  .verdict strong{color:#FFD27A}
+  .verdict ul{margin:8px 0 0;padding-left:20px}
+
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:20px 0}
+  ol.steps li{counter-increment:s;position:relative;padding:0 0 18px 48px}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;background:var(--nv);color:#fff;font-family:var(--label);font-weight:600;display:grid;place-items:center}
+  ol.steps strong{display:block}
+  .callout{background:var(--power-soft);border-radius:8px;padding:18px 22px;margin:24px 0;max-width:760px}
+  footer{padding:40px 0 64px;color:var(--muted);font-size:.92rem}
+  footer ul{padding-left:20px}
+  @media (prefers-reduced-motion:reduce){.flow{animation:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="back">
+      <a href="datacenter-power-cooling-guide.html">Part 1: Power in, heat out</a>
+      <a href="datacenter-cooling-no-raised-floor.html">Part 2: No raised floor</a>
+      <a href="datacenter-direct-to-chip-cooling.html">Part 3: Liquid to the chip</a>
+    </div>
+    <h1>GB200 NVL72: one rack, 132 kW</h1>
+    <p class="lede">NVIDIA's GB200 NVL72 puts 72 GPUs and 36 CPUs in a single rack that behaves like one giant computer. It takes every idea from the earlier guides to the extreme. Here's how its power and cooling work, and how to check a site can host it.</p>
+    <div class="compare" aria-label="Rack power comparison">
+      <div class="row"><span class="lbl">Office-style rack</span><div class="bar" style="width:5%;background:#9AA3AB"></div></div>
+      <div class="row"><span class="lbl">Typical enterprise</span><div class="bar" style="width:11%;background:#9AA3AB">15 kW</div></div>
+      <div class="row"><span class="lbl">Air-cooled GPU rack</span><div class="bar" style="width:30%;background:var(--power)">~40 kW</div></div>
+      <div class="row"><span class="lbl"><b>GB200 NVL72</b></span><div class="bar" style="width:100%;background:var(--heat)">~120–132 kW</div></div>
+      <small>One GB200 rack uses as much power as a whole row of ordinary racks.</small>
+    </div>
+    <nav class="toc" aria-label="Sections">
+      <a href="#rack">Inside the rack</a>
+      <a href="#numbers">Key numbers</a>
+      <a href="#power">Power path</a>
+      <a href="#cooling">Cooling loop</a>
+      <a href="#check">Sanity-check numbers</a>
+      <a href="#superpod">SuperPOD calculator</a>
+      <a href="#verify">Site checklist</a>
+    </nav>
+  </div>
+</header>
+
+<!-- RACK -->
+<section id="rack">
+  <div class="wrap">
+    <div class="prose">
+      <h2>Inside the rack</h2>
+      <p>The rack is sold and installed as one unit. Per NVIDIA's DGX guide it holds 18 one-unit compute trays, each with 2 Grace CPUs and 4 Blackwell GPUs, plus NVLink switch trays that tie all 72 GPUs together, power shelves, a bus bar, and liquid cooling manifolds. Click a part to highlight it.</p>
+    </div>
+    <figure>
+      <div class="rackwrap">
+        <div class="diagram">
+          <svg id="rackSvg" viewBox="0 0 700 700" style="min-width:520px" role="img" aria-labelledby="tRack">
+            <title id="tRack">Simplified front and rear views of a GB200 NVL72 rack. Front: switches at top, power shelves, 10 compute trays, 9 NVLink switch trays, 8 compute trays, power shelves. Rear: blue supply and red return coolant manifolds on each side and a power bus bar down the middle.</title>
+            <text x="280" y="24" text-anchor="middle" font-size="17" font-weight="600" fill="#18222D">Front</text>
+            <text x="580" y="24" text-anchor="middle" font-size="17" font-weight="600" fill="#18222D">Rear</text>
+            <g id="frontRows"></g>
+            <g id="rearRows"></g>
+          </svg>
+        </div>
+        <div>
+          <div class="legend" id="legend"></div>
+          <p style="font-size:.88rem;color:var(--muted);margin-top:12px">Simplified. Exact layout and extra blank spaces vary by manufacturer.</p>
+        </div>
+      </div>
+      <figcaption>The rear is where the facility connects: coolant to the manifolds, and power whips to the power shelves.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- NUMBERS -->
+<section id="numbers">
+  <div class="wrap">
+    <div class="prose">
+      <h2>The key numbers</h2>
+      <p>Figures below come from NVIDIA and server maker spec sheets. Always design from the exact spec sheet of the vendor you buy from, because builds vary.</p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Item</th><th>GB200 NVL72</th><th>What it means</th></tr></thead>
+        <tbody>
+          <tr><td>Rack power</td><td>~120 kW nominal; ~132 kW often planned</td><td>NVIDIA lists about 120 kW. Real racks have been reported at 130–132 kW at full load, so many sites plan for 132 kW.</td></tr>
+          <tr><td>Heat into liquid</td><td>~115 kW</td><td>About 87% of the heat, removed by cold plates.</td></tr>
+          <tr><td>Heat into air</td><td>~17 kW</td><td>More than a whole ordinary rack, and still needs room cooling.</td></tr>
+          <tr><td>Coolant flow</td><td>~120–130 L/min per rack</td><td>One vendor datasheet lists 130 L/min; NVIDIA has cited about 2 L/s.</td></tr>
+          <tr><td>Coolant temperature</td><td>Inlet up to 45 °C; return up to 65 °C</td><td>Warm coolant is fine, so chillers can often run less.</td></tr>
+          <tr><td>Power shelves</td><td>8 × 33 kW input, N+N</td><td>Two independent halves, each able to run the whole rack.</td></tr>
+          <tr><td>Rack weight</td><td>~1,360 kg before coolant</td><td>Many older raised floors are rated for far less per rack position.</td></tr>
+          <tr><td>Rack size</td><td>48U, OCP-style, ~600 × 1,068 mm</td><td>Not a standard 19-inch rack. Check doorways, lifts and aisle widths too.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- POWER -->
+<section id="power">
+  <div class="wrap">
+    <div class="prose">
+      <h2>Power path: 2N built into the rack</h2>
+      <p>The GB200 has no normal server power supplies. Power whips from remote power panels feed the power shelves, which turn AC into about 50 V DC and send it up a copper <strong>bus bar</strong> to every tray. There are eight shelves in two halves, A and B. Each half alone can power the whole rack. That's the 2N idea from Part 1. Press the button to lose feed A.</p>
+    </div>
+    <figure>
+      <div class="diagram">
+        <svg viewBox="0 0 1000 400" style="min-width:760px" role="img" aria-labelledby="tPow">
+          <title id="tPow">Feed A and Feed B each power four power shelves; all eight shelves feed a 50 volt DC bus bar that powers the compute and switch trays</title>
+          <defs><marker id="pA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D08A00"/></marker></defs>
+          <g id="feedA">
+            <rect x="20" y="60" width="170" height="70" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <text x="105" y="92" text-anchor="middle" font-size="18" font-weight="600" fill="#18222D">Feed A</text>
+            <text x="105" y="114" text-anchor="middle" font-size="14" fill="#566270">UPS A → panel A</text>
+            <g stroke="#D08A00" stroke-width="3.5" fill="none">
+              <path class="flow" d="M190 95 H250 V48 H326" marker-end="url(#pA)"/>
+              <path class="flow" d="M250 95 V90 H326" marker-end="url(#pA)"/>
+              <path class="flow" d="M250 95 V132 H326" marker-end="url(#pA)"/>
+              <path class="flow" d="M250 95 V174 H326" marker-end="url(#pA)"/>
+            </g>
+            <g class="shelf">
+              <rect x="330" y="30" width="170" height="36" rx="4" fill="#FBEFD2" stroke="#18222D" stroke-width="1.5"/><text class="sl" x="415" y="54" text-anchor="middle" font-size="15" fill="#18222D">Shelf A1 · 16.5 kW</text>
+              <rect x="330" y="72" width="170" height="36" rx="4" fill="#FBEFD2" stroke="#18222D" stroke-width="1.5"/><text class="sl" x="415" y="96" text-anchor="middle" font-size="15" fill="#18222D">Shelf A2 · 16.5 kW</text>
+              <rect x="330" y="114" width="170" height="36" rx="4" fill="#FBEFD2" stroke="#18222D" stroke-width="1.5"/><text class="sl" x="415" y="138" text-anchor="middle" font-size="15" fill="#18222D">Shelf A3 · 16.5 kW</text>
+              <rect x="330" y="156" width="170" height="36" rx="4" fill="#FBEFD2" stroke="#18222D" stroke-width="1.5"/><text class="sl" x="415" y="180" text-anchor="middle" font-size="15" fill="#18222D">Shelf A4 · 16.5 kW</text>
+            </g>
+            <g stroke="#D08A00" stroke-width="3.5" fill="none">
+              <path class="flow" d="M500 48 H566"/><path class="flow" d="M500 90 H566"/><path class="flow" d="M500 132 H566"/><path class="flow" d="M500 174 H566"/>
+            </g>
+          </g>
+          <g id="feedB">
+            <rect x="20" y="270" width="170" height="70" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <text x="105" y="302" text-anchor="middle" font-size="18" font-weight="600" fill="#18222D">Feed B</text>
+            <text x="105" y="324" text-anchor="middle" font-size="14" fill="#566270">UPS B → panel B</text>
+            <g stroke="#D08A00" stroke-width="3.5" fill="none">
+              <path class="flow" d="M190 305 H250 V226 H326" marker-end="url(#pA)"/>
+              <path class="flow" d="M250 305 V268 H326" marker-end="url(#pA)"/>
+              <path class="flow" d="M250 305 V310 H326" marker-end="url(#pA)"/>
+              <path class="flow" d="M250 305 V352 H326" marker-end="url(#pA)"/>
+            </g>
+            <g class="shelf" id="bShelves">
+              <rect x="330" y="208" width="170" height="36" rx="4" fill="#FBEFD2" stroke="#18222D" stroke-width="1.5"/><text class="sl" x="415" y="232" text-anchor="middle" font-size="15" fill="#18222D">Shelf B1 · 16.5 kW</text>
+              <rect x="330" y="250" width="170" height="36" rx="4" fill="#FBEFD2" stroke="#18222D" stroke-width="1.5"/><text class="sl" x="415" y="274" text-anchor="middle" font-size="15" fill="#18222D">Shelf B2 · 16.5 kW</text>
+              <rect x="330" y="292" width="170" height="36" rx="4" fill="#FBEFD2" stroke="#18222D" stroke-width="1.5"/><text class="sl" x="415" y="316" text-anchor="middle" font-size="15" fill="#18222D">Shelf B3 · 16.5 kW</text>
+              <rect x="330" y="334" width="170" height="36" rx="4" fill="#FBEFD2" stroke="#18222D" stroke-width="1.5"/><text class="sl" x="415" y="358" text-anchor="middle" font-size="15" fill="#18222D">Shelf B4 · 16.5 kW</text>
+            </g>
+            <g stroke="#D08A00" stroke-width="3.5" fill="none">
+              <path class="flow" d="M500 226 H566"/><path class="flow" d="M500 268 H566"/><path class="flow" d="M500 310 H566"/><path class="flow" d="M500 352 H566"/>
+            </g>
+          </g>
+          <!-- bus bar -->
+          <rect x="566" y="26" width="22" height="348" rx="3" fill="#B8743F"/>
+          <text x="577" y="392" text-anchor="middle" font-size="14" fill="#7A4A22">Bus bar ~50 V DC</text>
+          <path class="flow" d="M588 200 H676" stroke="#D08A00" stroke-width="6" fill="none" marker-end="url(#pA)"/>
+          <rect x="680" y="110" width="290" height="180" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+          <text x="825" y="160" text-anchor="middle" font-size="18" font-weight="600" fill="#18222D">18 compute trays</text>
+          <text x="825" y="184" text-anchor="middle" font-size="18" font-weight="600" fill="#18222D">+ 9 NVLink switch trays</text>
+          <text x="825" y="220" text-anchor="middle" font-size="26" font-weight="600" fill="#C23B22">~132 kW</text>
+          <text x="825" y="250" text-anchor="middle" font-size="14" fill="#566270">planned peak</text>
+        </svg>
+      </div>
+      <button class="toggle" id="failA" aria-pressed="false">Lose feed A</button>
+      <p class="status" id="powStatus">Normal: 132 kW shared by 8 shelves, about 16.5 kW each (half of each shelf's 33 kW).</p>
+    </figure>
+    <div class="facts">
+      <div class="p"><strong>What this means for the site</strong>Each rack needs two feeds, and <em>each</em> must be able to carry about 132 kW alone. That's roughly 264 kW of connected capacity per rack.</div>
+      <div class="p"><strong>Check the whole chain</strong>UPS, PDUs, remote power panels and breakers on both sides, just like Part 1, but sized for this load.</div>
+      <div class="h"><strong>Don't forget cooling power</strong>CDU pumps and fans need backed-up power too. If pumps stop, 115 kW of heat has nowhere to go.</div>
+    </div>
+  </div>
+</section>
+
+<!-- COOLING -->
+<section id="cooling">
+  <div class="wrap">
+    <div class="prose">
+      <h2>Cooling loop: mostly liquid, some air</h2>
+      <p>The GB200 NVL72 has no air-cooled version. Cold plates sit on the GPUs and CPUs, and trays connect to the rack's manifold with <strong>blind-mate quick disconnects</strong>: slide the tray in and the coolant connection clicks into place, drip-free.</p>
+    </div>
+    <figure>
+      <div class="diagram">
+        <svg viewBox="0 0 1000 440" style="min-width:780px" role="img" aria-labelledby="tCool">
+          <title id="tCool">GB200 rack connected to a CDU through supply and return coolant; the CDU passes heat to facility water and outdoor heat rejection; about 17 kW of heat still goes to room air</title>
+          <defs>
+            <marker id="cB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1C74B8"/></marker>
+            <marker id="cR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C23B22"/></marker>
+          </defs>
+          <rect x="10" y="40" width="440" height="390" rx="8" fill="#DCEBF6" opacity=".45"/>
+          <rect x="450" y="40" width="540" height="390" rx="8" fill="#E7EBED" opacity=".7"/>
+          <text x="24" y="66" font-size="16" font-weight="600" fill="#11507F">Data hall</text>
+          <text x="660" y="66" font-size="16" font-weight="600" fill="#18222D">Plant room and outdoors</text>
+
+          <!-- air heat -->
+          <g stroke="#C23B22" stroke-width="2.5" fill="none">
+            <path d="M80 118 q5 -6 0 -12 q-5 -6 0 -12"/><path d="M120 118 q5 -6 0 -12 q-5 -6 0 -12"/><path d="M160 118 q5 -6 0 -12 q-5 -6 0 -12"/>
+          </g>
+          <text x="190" y="104" font-size="14" font-weight="600" fill="#8A2615">~17 kW to room air</text>
+
+          <!-- rack -->
+          <rect x="40" y="125" width="190" height="275" rx="4" fill="#fff" stroke="#18222D" stroke-width="2"/>
+          <g id="coolTrays"></g>
+          <line x1="206" y1="133" x2="206" y2="392" stroke="#1C74B8" stroke-width="5"/>
+          <line x1="219" y1="133" x2="219" y2="392" stroke="#C23B22" stroke-width="5"/>
+          <text x="135" y="420" text-anchor="middle" font-size="14" fill="#18222D">GB200 NVL72 rack</text>
+
+          <!-- CDU -->
+          <rect x="320" y="170" width="220" height="190" rx="6" fill="#fff" stroke="#18222D" stroke-width="2.5"/>
+          <text x="430" y="198" text-anchor="middle" font-size="19" font-weight="700" fill="#18222D">CDU</text>
+          <text x="430" y="218" text-anchor="middle" font-size="13" fill="#566270">in-rack, sidecar or in-row</text>
+          <rect x="405" y="230" width="50" height="100" fill="#FBEFD2" stroke="#18222D" stroke-width="1.5"/>
+          <path d="M415 238 L445 252 L415 266 L445 280 L415 294 L445 308 L415 322" stroke="#B8743F" stroke-width="2" fill="none"/>
+          <circle cx="358" cy="260" r="15" fill="#fff" stroke="#18222D" stroke-width="2"/><text x="358" y="265" text-anchor="middle" font-size="13" font-weight="600">P</text>
+          <circle cx="358" cy="305" r="15" fill="#fff" stroke="#18222D" stroke-width="2"/><text x="358" y="310" text-anchor="middle" font-size="13" font-weight="600">P</text>
+          <text x="358" y="340" text-anchor="middle" font-size="12" fill="#566270">spare pump</text>
+
+          <!-- rack loop -->
+          <path class="flow" d="M320 320 H270 V392 H206" stroke="#1C74B8" stroke-width="5" fill="none"/>
+          <path class="flow" d="M219 140 H270 V215 H316" stroke="#C23B22" stroke-width="5" fill="none" marker-end="url(#cR)"/>
+          <text x="236" y="136" font-size="13" font-weight="600" fill="#8A2615">return ≤ 65 °C</text>
+          <text x="236" y="412" font-size="13" font-weight="600" fill="#11507F">supply ≤ 45 °C</text>
+          <text x="282" y="382" font-size="13" fill="#11507F">~130 L/min</text>
+
+          <!-- facility -->
+          <rect x="760" y="180" width="200" height="130" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+          <text x="860" y="220" text-anchor="middle" font-size="16" font-weight="600" fill="#18222D">Dry cooler, cooling</text>
+          <text x="860" y="240" text-anchor="middle" font-size="16" font-weight="600" fill="#18222D">tower or chiller</text>
+          <text x="860" y="266" text-anchor="middle" font-size="13" fill="#566270">sized for all racks' liquid heat</text>
+          <g stroke="#C23B22" stroke-width="3" fill="none">
+            <path d="M820 172 q8 -10 0 -20 q-8 -10 0 -20"/><path d="M860 172 q8 -10 0 -20 q-8 -10 0 -20"/><path d="M900 172 q8 -10 0 -20 q-8 -10 0 -20"/>
+          </g>
+          <path class="flow" d="M540 225 H756" stroke="#C23B22" stroke-width="5" fill="none" marker-end="url(#cR)"/>
+          <path class="flow" d="M760 290 H544" stroke="#1C74B8" stroke-width="5" fill="none" marker-end="url(#cB)"/>
+          <text x="556" y="214" font-size="13" fill="#8A2615">warm facility water back</text>
+          <text x="556" y="314" font-size="13" fill="#11507F">cooler facility water</text>
+        </svg>
+      </div>
+      <figcaption>About 115 kW goes into the liquid and about 17 kW into the room air. Both need cooling capacity, and both need a spare.</figcaption>
+    </figure>
+    <div class="facts">
+      <div class="c"><strong>Warm water helps</strong>With coolant up to 45 °C allowed, dry coolers or cooling towers can often do the job without chillers. In hot, humid climates, check how many hours a year that's actually true.</div>
+      <div class="h"><strong>Air heat is not small</strong>17 kW of air heat per rack is more than a typical whole rack. Eight racks add about 136 kW, around 39 tons, to the room.</div>
+      <div class="g"><strong>Flow balance</strong>Every tray must get its share of flow. Racks furthest from the CDU get the least pressure, so check them first.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CHECK -->
+<section id="check">
+  <div class="wrap">
+    <div class="prose">
+      <h2>Sanity-check any number you read</h2>
+      <p>You'll find conflicting GB200 figures online. Some articles quote per-rack flows of 20 or 35 L/min, while vendor datasheets say about 130 L/min. The formula from Part 3 tells you which is realistic in seconds.</p>
+    </div>
+    <div class="formula">Temperature rise (°C) = <b>heat (kW)</b> ÷ ( <b>4.0</b> × <b>flow (L/s)</b> )</div>
+    <div class="checker">
+      <div>
+        <div class="presets" aria-label="Examples">
+          <button data-h="115" data-f="130">Vendor datasheet: 130 L/min</button>
+          <button data-h="115" data-f="35">Online claim: 35 L/min</button>
+          <button data-h="115" data-f="20">Online claim: 20 L/min</button>
+          <button data-h="3.2" data-f="3">Per tray: 3 L/min</button>
+        </div>
+        <div class="field">
+          <label for="sh">Heat into liquid <output id="shO"></output></label>
+          <input type="range" id="sh" min="1" max="160" step="0.1" value="115">
+        </div>
+        <div class="field">
+          <label for="sf">Coolant flow <output id="sfO"></output></label>
+          <input type="range" id="sf" min="1" max="250" step="1" value="130">
+        </div>
+      </div>
+      <div aria-live="polite">
+        <span style="color:var(--muted);font-size:.95rem">Coolant would warm up by</span>
+        <div class="dtout" id="dtOut"></div>
+        <p id="dtMsg" style="margin-top:10px"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SUPERPOD -->
+<section id="superpod">
+  <div class="wrap">
+    <div class="prose">
+      <h2>SuperPOD calculator</h2>
+      <p>A SuperPOD is usually 8 NVL72 racks. Set up a hall and see whether power, liquid cooling, air cooling and floor all have enough capacity, including when one feed or one CDU fails.</p>
+    </div>
+    <div class="calc">
+      <div class="inputs">
+        <div class="field">
+          <label for="racks">Racks <output id="racksO"></output></label>
+          <input type="range" id="racks" min="1" max="32" step="1" value="8">
+        </div>
+        <div class="field">
+          <label for="rkw">Plan per rack</label>
+          <select id="rkw">
+            <option value="120">120 kW (GB200 nominal)</option>
+            <option value="132" selected>132 kW (GB200 peak)</option>
+            <option value="142">142 kW (GB300)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="liq">Heat into liquid <output id="liqO"></output></label>
+          <input type="range" id="liq" min="75" max="95" step="1" value="87">
+        </div>
+        <div class="field">
+          <label for="dt">Coolant temperature rise <output id="dtO"></output></label>
+          <input type="range" id="dt" min="5" max="20" step="1" value="13">
+        </div>
+        <div class="field">
+          <label for="side">Power per side (A or B) <output id="sideO"></output></label>
+          <input type="range" id="side" min="200" max="6000" step="50" value="1500">
+          <small>Usable UPS and distribution capacity on each side.</small>
+        </div>
+        <div class="field">
+          <label for="cduSize">CDU capacity (each) <output id="cduSizeO"></output></label>
+          <input type="range" id="cduSize" min="150" max="2500" step="50" value="600">
+        </div>
+        <div class="field">
+          <label for="cduN">Number of CDUs <output id="cduNO"></output></label>
+          <input type="range" id="cduN" min="1" max="12" step="1" value="3">
+        </div>
+        <div class="field">
+          <label for="air">Room air cooling available <output id="airO"></output></label>
+          <input type="range" id="air" min="0" max="800" step="10" value="200">
+          <small>With one cooling unit out (N+1).</small>
+        </div>
+      </div>
+      <div class="results" aria-live="polite">
+        <div class="card">
+          <h3>Power <span class="badge" id="pB"></span></h3>
+          <div class="grid2"><div><span style="font-size:.88rem;color:var(--muted)">Total IT load</span><div class="big" id="pTot"></div></div><div><span style="font-size:.88rem;color:var(--muted)">If one side fails</span><div class="big" id="pWorst"></div></div></div>
+          <div class="meter"><div class="fill" id="pFill"></div><div class="mark" style="left:80%"><span>80% safe limit</span></div></div>
+          <p id="pT"></p>
+        </div>
+        <div class="card">
+          <h3>Liquid cooling <span class="badge" id="lB"></span></h3>
+          <div class="grid2"><div><span style="font-size:.88rem;color:var(--muted)">Heat into liquid</span><div class="big" id="lTot"></div></div><div><span style="font-size:.88rem;color:var(--muted)">Total coolant flow</span><div class="big" id="lFlow"></div></div></div>
+          <div class="meter"><div class="fill" id="lFill"></div><div class="mark" id="lN1"><span>one CDU down</span></div><div class="mark" id="lAll" style="background:var(--muted)"><span>all CDUs</span></div></div>
+          <p id="lT"></p>
+        </div>
+        <div class="card">
+          <h3>Room air cooling <span class="badge" id="aB"></span></h3>
+          <div class="big" id="aTot"></div>
+          <p id="aT"></p>
+        </div>
+        <div class="card">
+          <h3>Floor</h3>
+          <div class="big" id="fTot"></div>
+          <p>At about 1,360 kg per rack before coolant. Check the floor rating per rack position and along the delivery path.</p>
+        </div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VERIFY -->
+<section id="verify">
+  <div class="wrap">
+    <div class="prose">
+      <h2>Site checklist for GB200</h2>
+      <p>A walk from the delivery door to the roof. Every item is one of the three basic checks: find the limit, measure the load, keep a spare.</p>
+      <ol class="steps">
+        <li><strong>Delivery path and floor</strong>About 1,360 kg per rack. Check the floor at every rack position, plus lifts, ramps and doorways the rack travels through.</li>
+        <li><strong>Two power feeds per rack</strong>Each able to carry the full planned load (about 132 kW) alone. Check UPS, PDUs, panels and breakers on both sides.</li>
+        <li><strong>Liquid capacity with a spare</strong>Total CDU capacity with one CDU failed must exceed total liquid heat (about 115 kW per rack).</li>
+        <li><strong>Flow to every rack</strong>About 120–130 L/min per rack, including the furthest rack from the CDU.</li>
+        <li><strong>Water temperature on the hottest day</strong>Facility water, plus the CDU's approach, must stay below the vendor's coolant inlet limit.</li>
+        <li><strong>Air cooling for leftovers</strong>About 17 kW per rack into the room, with N+1 cooling units.</li>
+        <li><strong>Pumps and controls on UPS</strong>If CDU pumps lose power, GPUs overheat in seconds.</li>
+        <li><strong>Leaks and coolant quality</strong>Leak sensors with automatic shutoff, coolant chemistry within the vendor's spec, and scheduled filter changes.</li>
+        <li><strong>Commissioning tests</strong>Pressure test, flush and fill, flow balancing, load bank test, and failover tests of a feed, a pump and a whole CDU.</li>
+      </ol>
+    </div>
+    <div class="callout">
+      <strong>Plan for what comes next.</strong> NVIDIA's GB300 NVL72 reference architecture lists up to 142 kW per rack, with per-GPU power around 1,400 W. A site built with no headroom for GB200 may not fit its successor. Use the 142 kW option in the calculator to see how much margin you'd need.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap prose">
+    <p><strong>Sources used for the numbers in this guide:</strong></p>
+    <ul>
+      <li><a href="https://docs.nvidia.com/dgx/dgxgb200-user-guide/hardware.html">NVIDIA DGX GB200 user guide: hardware</a> (rack layout, power shelves, ~120 kW)</li>
+      <li><a href="https://blog.qct.io/wp-content/uploads/2025/04/QCT-Qoolrack-Stand-Alone_Advanced-Liquid-Cooling-for-NVIDIA-GB200-NVL72-Systems.pdf">QCT QoolRack datasheet for GB200 NVL72</a> (flow, liquid/air split, coolant temperatures)</li>
+      <li><a href="https://www.spheron.network/blog/nvidia-gb200-nvl72-guide/">Spheron GB200 NVL72 guide</a> (130–132 kW deployed, HPE 115 + 17 kW, rack size and weight)</li>
+      <li><a href="https://pantheon.run/learn/nvidia-gb200-nvl72-power-and-cooling">Pantheon: GB200 and GB300 power and cooling</a> (GB300 up to 142 kW)</li>
+    </ul>
+    <p>Everything here is simplified for learning. Real deployments must follow the chosen vendor's site preparation guide and a qualified engineering review.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const f=(n,d=0)=>n.toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d});
+  function badge(el,l,t){el.className='badge '+l;el.textContent=t;}
+  const NS='http://www.w3.org/2000/svg';
+  function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);parent&&parent.appendChild(e);return e;}
+
+  // ---- Rack elevation ----
+  const parts={
+    tor:{name:"Network switches",color:"#9AA3AB",desc:"Top-of-rack switches for management and connections to other racks."},
+    psu:{name:"Power shelves (8)",color:"#D08A00",desc:"Convert facility AC into ~50 V DC. Four at the top, four at the bottom, split into two independent halves."},
+    comp:{name:"Compute trays (18)",color:"#5E7F2E",desc:"Each 1U tray holds 2 Grace CPUs and 4 Blackwell GPUs under liquid cold plates."},
+    nvl:{name:"NVLink switch trays (9)",color:"#7B5EA7",desc:"Connect all 72 GPUs so they act as one giant GPU. Also liquid-cooled."},
+    blank:{name:"Blank / cable space",color:"#E7EBED",desc:"Spare units, cable management and airflow panels."},
+    man:{name:"Coolant manifolds (rear)",color:"#1C74B8",desc:"Supply (blue) and return (red) pipes. Trays click in with blind-mate quick disconnects."},
+    bus:{name:"Bus bar (rear)",color:"#B8743F",desc:"A copper spine carrying DC power from the shelves to every tray."}
+  };
+  const layout=[['tor',2],['blank',1],['psu',4],['comp',10],['nvl',9],['comp',8],['psu',4],['blank',2]];
+  const U=16, top=40, fx=175, w=210, rx=475;
+  const front=$('frontRows'), rear=$('rearRows');
+  let y=top;
+  const total=layout.reduce((a,b)=>a+b[1],0);
+  el('rect',{x:fx-8,y:top-8,width:w+16,height:total*U+16,rx:4,fill:'#2B333C'},front);
+  el('rect',{x:rx-8,y:top-8,width:w+16,height:total*U+16,rx:4,fill:'#2B333C'},rear);
+  layout.forEach(([k,n])=>{
+    for(let i=0;i<n;i++){
+      const g=el('g',{class:'rrow','data-k':k},front);
+      el('rect',{x:fx,y:y+1,width:w,height:U-2,rx:2,fill:parts[k].color,opacity:k==='blank'?1:.9},g);
+      if(k==='comp'){el('rect',{x:fx+40,y:y+4,width:22,height:U-8,fill:'#B8743F'},g);el('rect',{x:fx+80,y:y+4,width:22,height:U-8,fill:'#B8743F'},g);el('rect',{x:fx+120,y:y+4,width:22,height:U-8,fill:'#B8743F'},g);el('rect',{x:fx+160,y:y+4,width:22,height:U-8,fill:'#B8743F'},g);}
+      // rear tray stub
+      const r=el('g',{class:'rrow','data-k':k},rear);
+      el('rect',{x:rx,y:y+1,width:w,height:U-2,rx:2,fill:k==='blank'?'#E7EBED':'#C9D1D6'},r);
+      if(k==='comp'||k==='nvl'){
+        const m=el('g',{class:'rrow','data-k':'man'},rear);
+        el('circle',{cx:rx+22,cy:y+U/2,r:3.5,fill:'#1C74B8'},m); el('circle',{cx:rx+187,cy:y+U/2,r:3.5,fill:'#C23B22'},m);
+      }
+      y+=U;
+    }
+    const mid=y-(n*U)/2+5;
+    if(k!=='blank'){ const t=el('text',{x:fx-12,y:mid,'text-anchor':'end','font-size':13,fill:'#18222D',class:'rrow','data-k':k},front); t.textContent=parts[k].name.replace(/ \(.*\)/,'')+(n>1?' ×'+n:''); }
+  });
+  // manifolds & busbar on rear
+  const mg=el('g',{class:'rrow','data-k':'man'},rear);
+  el('rect',{x:rx+7,y:top,width:8,height:total*U,fill:'#1C74B8'},mg);
+  el('rect',{x:rx+195,y:top,width:8,height:total*U,fill:'#C23B22'},mg);
+  const bg=el('g',{class:'rrow','data-k':'bus'},rear);
+  el('rect',{x:rx+97,y:top,width:12,height:total*U,fill:'#B8743F'},bg);
+  const t1=el('text',{x:rx+11,y:top+total*U+28,'text-anchor':'middle','font-size':12,fill:'#11507F',class:'rrow','data-k':'man'},rear);t1.textContent='supply';
+  const t2=el('text',{x:rx+199,y:top+total*U+28,'text-anchor':'middle','font-size':12,fill:'#8A2615',class:'rrow','data-k':'man'},rear);t2.textContent='return';
+  const t3=el('text',{x:rx+103,y:top+total*U+28,'text-anchor':'middle','font-size':12,fill:'#7A4A22',class:'rrow','data-k':'bus'},rear);t3.textContent='bus bar';
+  const vb=top+total*U+50; $('rackSvg').setAttribute('viewBox','0 0 700 '+vb);
+
+  const legend=$('legend'); const svg=$('rackSvg');
+  Object.keys(parts).forEach(k=>{
+    const b=document.createElement('button'); b.setAttribute('aria-pressed','false');
+    b.innerHTML='<span class="sw" style="background:'+parts[k].color+'"></span><span><b>'+parts[k].name+'</b><span class="d">'+parts[k].desc+'</span></span>';
+    b.addEventListener('click',()=>{
+      const on=b.getAttribute('aria-pressed')!=='true';
+      legend.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));
+      svg.querySelectorAll('.rrow').forEach(r=>r.classList.remove('on'));
+      if(on){b.setAttribute('aria-pressed','true');svg.classList.add('dim');svg.querySelectorAll('.rrow[data-k="'+k+'"]').forEach(r=>r.classList.add('on'));}
+      else svg.classList.remove('dim');
+    });
+    legend.appendChild(b);
+  });
+
+  // cooling diagram trays
+  const ct=$('coolTrays');
+  for(let i=0;i<13;i++){
+    const yy=135+i*20;
+    el('rect',{x:50,y:yy,width:145,height:15,fill:i===6?'#E3DAF0':'#E6EFD9',stroke:'#18222D','stroke-width':1},ct);
+    if(i!==6){el('rect',{x:80,y:yy+3,width:16,height:9,fill:'#B8743F'},ct);el('rect',{x:130,y:yy+3,width:16,height:9,fill:'#B8743F'},ct);}
+    el('line',{x1:195,y1:yy+5,x2:206,y2:yy+5,stroke:'#1C74B8','stroke-width':1.5},ct);
+    el('line',{x1:195,y1:yy+10,x2:219,y2:yy+10,stroke:'#C23B22','stroke-width':1.5},ct);
+  }
+
+  // ---- Power toggle ----
+  const btn=$('failA');
+  btn.addEventListener('click',()=>{
+    const failed=btn.getAttribute('aria-pressed')!=='true';
+    btn.setAttribute('aria-pressed',failed);
+    $('feedA').classList.toggle('failed',failed);
+    const labels=document.querySelectorAll('#feedA .sl'), bl=document.querySelectorAll('#bShelves .sl');
+    labels.forEach((t,i)=>t.textContent='Shelf A'+(i+1)+(failed?' · 0 kW':' · 16.5 kW'));
+    bl.forEach((t,i)=>{t.textContent='Shelf B'+(i+1)+(failed?' · 33 kW (full)':' · 16.5 kW');t.setAttribute('fill',failed?'#C23B22':'#18222D');});
+    btn.textContent=failed?'Restore feed A':'Lose feed A';
+    $('powStatus').textContent=failed
+      ?'Feed A is gone, but the rack keeps running. The four B shelves now carry all 132 kW, each at its full 33 kW. That only works because feed B was sized for the whole rack.'
+      :'Normal: 132 kW shared by 8 shelves, about 16.5 kW each (half of each shelf\u2019s 33 kW).';
+  });
+
+  // ---- Sanity checker ----
+  function check(){
+    const h=+$('sh').value, fl=+$('sf').value;
+    $('shO').textContent=f(h,1)+' kW'; $('sfO').textContent=fl+' L/min';
+    const dt=h/(4.0*fl/60);
+    $('dtOut').textContent=f(dt,1)+' °C';
+    let m;
+    if(dt<3) m='A very small rise. Plenty of flow for this heat, maybe more than needed.';
+    else if(dt<=25) m='Realistic. Liquid-cooled systems typically run with a rise of roughly 5–20 °C.';
+    else if(dt<=45) m='Suspicious. That\u2019s a very large rise for a GB200 rack. Check whether the figure is per tray or per GPU.';
+    else m='Not realistic. The coolant would have to heat up far beyond what cold plates are designed for. This flow figure is almost certainly per tray, per GPU, or simply wrong.';
+    $('dtMsg').textContent=m;
+  }
+  document.querySelectorAll('.presets button').forEach(b=>b.addEventListener('click',()=>{$('sh').value=b.dataset.h;$('sf').value=b.dataset.f;check();}));
+  ['sh','sf'].forEach(id=>$(id).addEventListener('input',check));
+  check();
+
+  // ---- SuperPOD calc ----
+  function calc(){
+    const n=+$('racks').value, rk=+$('rkw').value, liq=+$('liq').value/100, dt=+$('dt').value;
+    const side=+$('side').value, cs=+$('cduSize').value, cn=+$('cduN').value, airCap=+$('air').value;
+    $('racksO').textContent=n; $('liqO').textContent=Math.round(liq*100)+'%'; $('dtO').textContent=dt+' °C';
+    $('sideO').textContent=f(side)+' kW'; $('cduSizeO').textContent=cs+' kW'; $('cduNO').textContent=cn; $('airO').textContent=airCap+' kW';
+    const issues=[];
+
+    // power
+    const tot=n*rk, worst=tot/side*100, normal=worst/2;
+    $('pTot').textContent=f(tot)+' kW'; $('pWorst').textContent=f(worst)+'%';
+    $('pFill').style.width=Math.min(worst,100)+'%'; $('pFill').style.background=worst>80?'var(--heat)':'var(--power)';
+    if(worst<=75) badge($('pB'),'good','Comfortable'); else if(worst<=80) badge($('pB'),'warn','Getting close'); else {badge($('pB'),'bad','Over safe limit'); issues.push('Each power side needs at least '+f(Math.ceil(tot/0.8/50)*50)+' kW usable to stay under 80% if the other side fails.');}
+    $('pT').innerHTML='Normally each side carries '+f(normal)+'%. If one side fails, the other carries <strong>'+f(worst)+'%</strong> of its capacity (bar shows this worst case).';
+
+    // liquid
+    const L=tot*liq, flow=L/(4.0*dt)*60, all=cs*cn, n1=cs*(cn-1);
+    $('lTot').textContent=f(L)+' kW'; $('lFlow').textContent=f(flow)+' L/min';
+    const sc=Math.max(all,L)*1.1;
+    $('lFill').style.width=Math.min(L/sc*100,100)+'%'; $('lFill').style.background=L>n1?'var(--heat)':'var(--cool)';
+    $('lAll').style.left=(all/sc*100)+'%'; $('lN1').style.left=(n1/sc*100)+'%'; $('lN1').style.display=cn>1?'block':'none';
+    if(cn===1){badge($('lB'),'bad',L<=all?'No spare CDU':'Not enough'); issues.push('Only one CDU: if it fails, liquid cooling stops for every rack.');}
+    else if(L<=n1*0.85) badge($('lB'),'good','Comfortable');
+    else if(L<=n1) badge($('lB'),'warn','Getting close');
+    else {badge($('lB'),(L<=all)?'bad':'bad',L<=all?'No spare CDU':'Not enough'); issues.push('With one CDU down you have '+f(n1)+' kW for '+f(L)+' kW of liquid heat. Add CDUs or use larger ones.');}
+    $('lT').innerHTML='CDUs give '+f(all)+' kW with all running, <strong>'+f(n1)+' kW</strong> with one down. Flow works out to about '+f(flow/n)+' L/min per rack at a '+dt+' °C rise.';
+
+    // air
+    const A=tot-L;
+    $('aTot').textContent=f(A)+' kW ≈ '+f(A/3.517)+' tons';
+    if(A<=airCap*0.85) badge($('aB'),'good','Comfortable'); else if(A<=airCap) badge($('aB'),'warn','Getting close'); else {badge($('aB'),'bad','Not enough'); issues.push('Room air cooling needs about '+f(A)+' kW (with N+1) but has '+f(airCap)+' kW.');}
+    $('aT').textContent='Heat that still goes into the room. You have '+f(airCap)+' kW of air cooling with one unit out.';
+
+    // floor
+    $('fTot').textContent=f(n*1.36,1)+' tonnes of racks';
+
+    $('verdict').innerHTML = issues.length===0
+      ? 'This hall can host <strong>'+n+' rack'+(n>1?'s':'')+'</strong> at '+rk+' kW, with a spare feed, a spare CDU and N+1 air cooling. Next step: confirm the floor, the flow to the furthest rack, and facility water temperature on the hottest day.'
+      : '<strong>'+issues.length+' thing'+(issues.length>1?'s':'')+' to fix:</strong><ul>'+issues.map(i=>'<li>'+i+'</li>').join('')+'</ul>';
+  }
+  ['racks','rkw','liq','dt','side','cduSize','cduN','air'].forEach(id=>$(id).addEventListener('input',calc));
+  calc();
+})();
+</script>
+</body>
+</html>

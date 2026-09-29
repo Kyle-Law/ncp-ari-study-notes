@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>380 Vdc Architectures for the Modern Data Center — Explained</title>
+<style>
+:root{
+  --paper:#F2F5F6; --panel:#FFFFFF; --ink:#18263B; --muted:#5B6778; --rule:#C6CFD6; --faint:#E3E8EC;
+  --ac:#C06A12; --ac-tint:#FBEBD8;
+  --dc:#0A7486; --dc-tint:#DDF1F3;
+  --dcb:#6150A8;
+  --batt:#5A8A28; --batt-tint:#E6F1D9;
+  --warn:#B3302B; --warn-tint:#F8E0DE;
+  --cond:"Bahnschrift","DIN Alternate","DIN 2014","Barlow Condensed","Roboto Condensed","Arial Narrow",sans-serif;
+  --body:"Source Sans 3","Segoe UI","Helvetica Neue",Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#15202B; --panel:#1C2A38; --ink:#E4EBF0; --muted:#9AA8B6; --rule:#3A4B5C; --faint:#243444;
+    --ac:#E89A45; --ac-tint:#3A2A18; --dc:#42B9C9; --dc-tint:#15343B; --dcb:#9A8BE0;
+    --batt:#8DBE55; --batt-tint:#243420; --warn:#E5625C; --warn-tint:#3B2020;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#15202B; --panel:#1C2A38; --ink:#E4EBF0; --muted:#9AA8B6; --rule:#3A4B5C; --faint:#243444;
+  --ac:#E89A45; --ac-tint:#3A2A18; --dc:#42B9C9; --dc-tint:#15343B; --dcb:#9A8BE0;
+  --batt:#8DBE55; --batt-tint:#243420; --warn:#E5625C; --warn-tint:#3B2020;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 var(--body)}
+a{color:var(--dc)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px}
+nav.toc{position:sticky;top:0;align-self:start;padding:40px 0;font:15px/1.5 var(--cond)}
+nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:4px 0 4px 12px;border-left:2px solid var(--rule)}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--ink);border-left-color:var(--dc)}
+main{padding:40px 0 80px;min-width:0}
+@media (max-width:980px){.wrap{grid-template-columns:1fr;gap:0}nav.toc{display:none}}
+h1,h2,h3{font-family:var(--cond);font-weight:600;line-height:1.15;letter-spacing:-.005em}
+h1{font-size:clamp(34px,5.4vw,58px);margin:0 0 12px;max-width:18ch}
+h2{font-size:30px;margin:72px 0 12px;padding-top:16px;border-top:2px solid var(--ink)}
+h3{font-size:21px;margin:36px 0 8px}
+p,ul,ol{max-width:70ch}
+li{margin:4px 0}
+.lede{font-size:20px;color:var(--muted);max-width:62ch}
+.src{font:14px/1.4 var(--cond);color:var(--muted);margin:0 0 28px}
+.key{display:flex;flex-wrap:wrap;gap:18px;font:14px var(--cond);color:var(--muted);margin:16px 0 0}
+.key span{display:inline-flex;align-items:center;gap:8px}
+.key i{display:inline-block;width:26px;height:4px;border-radius:2px}
+figure{margin:24px 0 8px;background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:18px 18px 12px}
+figure .scroll{overflow-x:auto}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font:14px/1.45 var(--cond);color:var(--muted);margin-top:10px}
+.min720{min-width:720px}.min620{min-width:600px}
+/* svg styling */
+.w{fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.thin{stroke-width:1.6}
+.ac{stroke:var(--ac)} .dc{stroke:var(--dc)} .dcb{stroke:var(--dcb)} .bt{stroke:var(--batt)}
+.blk{fill:var(--panel);stroke:var(--ink);stroke-width:1.4}
+.ghost{fill:none;stroke:var(--rule);stroke-width:1.4;stroke-dasharray:5 4}
+.ups{fill:var(--dc-tint);stroke:var(--dc);stroke-width:1.4}
+.acbox{fill:var(--ac-tint);stroke:var(--ac);stroke-width:1.4}
+.batt{fill:var(--batt-tint);stroke:var(--batt);stroke-width:1.6}
+.mod{fill:var(--panel);stroke:var(--ink);stroke-width:1.2}
+.opt{stroke-dasharray:3 3;opacity:.7}
+.sym{fill:var(--panel);stroke:var(--ink);stroke-width:1.4}
+.lbl{fill:var(--ink);font:13px var(--cond)}
+.lblb{fill:var(--ink);font:600 14px var(--cond)}
+.sm{fill:var(--muted);font:11.5px var(--cond)}
+.hd{fill:var(--ink);font:600 15px var(--cond)}
+.tie{fill:none;stroke:var(--muted);stroke-width:1.3;stroke-dasharray:4 4}
+.drop{fill:var(--panel);stroke-width:2}
+.live{stroke-dasharray:8 6;animation:flow .8s linear infinite}
+.dead{stroke:var(--rule)!important}
+.stby{stroke:var(--muted)!important;stroke-dasharray:2 5;stroke-width:2}
+.fail{fill:var(--warn-tint)!important;stroke:var(--warn)!important;stroke-width:2!important}
+.iso{opacity:.3;transition:opacity .3s}
+.swap{opacity:.35;stroke-dasharray:4 3}
+g.grp{transition:opacity .3s}
+@keyframes flow{to{stroke-dashoffset:-14}}
+@media (prefers-reduced-motion:reduce){.live{animation:none;stroke-dasharray:none}html{scroll-behavior:auto}}
+/* controls */
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.seg button{font:15px var(--cond);color:var(--ink);background:transparent;border:1.5px solid var(--rule);border-radius:4px;padding:6px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.seg button:focus-visible,input:focus-visible{outline:3px solid var(--dc);outline-offset:2px}
+.caps{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:10px}
+.caps div{font-size:15px;line-height:1.5;padding:10px 12px;border-left:3px solid var(--ac);background:var(--paper)}
+.caps div+div{border-left-color:var(--dc)}
+.caps b{font-family:var(--cond);font-weight:600;display:block}
+@media (max-width:640px){.caps{grid-template-columns:1fr}}
+.note{font-size:15.5px;background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--dcb);padding:12px 16px;border-radius:4px;max-width:74ch}
+/* table */
+.tbl{overflow-x:auto;margin:20px 0}
+table{border-collapse:collapse;font:14.5px/1.35 var(--cond);min-width:640px;width:100%;background:var(--panel)}
+th,td{border:1px solid var(--rule);padding:7px 10px;text-align:center}
+th{background:var(--faint);font-weight:600}
+td:first-child,th:first-child{text-align:left;font-weight:600}
+.hl{background:var(--dc-tint)!important;color:var(--ink)}
+/* bars */
+.bars{display:grid;gap:10px;margin:8px 0}
+.bar{display:grid;grid-template-columns:150px 1fr 110px;align-items:center;gap:12px;font:14.5px var(--cond)}
+.bar .t{height:22px;background:var(--faint);border-radius:3px;overflow:hidden}
+.bar .t span{display:block;height:100%;border-radius:3px;transition:width .35s}
+.bar .v{text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:560px){.bar{grid-template-columns:100px 1fr 80px}}
+.slider{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font:15px var(--cond);margin:6px 0 16px}
+.slider input{width:min(360px,100%)}
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px 28px;margin:14px 0}
+.pairs div{border-top:1px solid var(--rule);padding-top:8px;font-size:15.5px}
+.pairs b{font-family:var(--cond);font-weight:600;font-size:16.5px;display:block}
+dl.gl{display:grid;grid-template-columns:max-content 1fr;gap:6px 20px;max-width:78ch;font-size:15.5px}
+dl.gl dt{font-family:var(--cond);font-weight:600}
+dl.gl dd{margin:0}
+footer{font:13px var(--cond);color:var(--muted);border-top:1px solid var(--rule);margin-top:64px;padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc" aria-label="Sections">
+  <a href="#idea">The core idea</a>
+  <a href="#why">Why it came up</a>
+  <a href="#acdc">ac-UPS vs dc-UPS</a>
+  <a href="#bicsi">BICSI classes F1–F4</a>
+  <a href="#alt">Alternative topologies</a>
+  <a href="#impl">Practical build-out</a>
+  <a href="#it">The IT case</a>
+  <a href="#rel">Reliability, cost, safety</a>
+  <a href="#std">The two standards</a>
+  <a href="#read">Reading it critically</a>
+  <a href="#gloss">Glossary</a>
+</nav>
+
+<main>
+<header id="idea">
+  <h1>380 Vdc architectures for the modern data center</h1>
+  <p class="lede">A visual walkthrough of the EMerge Alliance white paper (2013). Its argument in one sentence: servers already turn everything into roughly 380 V dc internally, so distribute 380 V dc from the UPS onward and delete the conversion stages in between.</p>
+  <p class="src">Source: EMerge Alliance, “380 Vdc Architectures for the Modern Data Center”, 2013. Diagrams below are simplified redraws for explanation, not copies of the original figures.</p>
+
+  <figure>
+    <div class="scroll"><svg class="min720" viewBox="0 0 960 262" role="img" aria-label="Conversion chain comparison: ac path has four conversions, dc path has two">
+      <text x="0" y="20" class="hd">ac distribution with a double-conversion ac-UPS</text>
+      <text x="960" y="20" text-anchor="end" class="lblb" fill="var(--ac)" style="fill:var(--ac)">4 conversions to reach 12 V</text>
+      <circle cx="30" cy="63" r="16" class="sym"/><text x="30" y="68" text-anchor="middle" class="lblb">~</text>
+      <path d="M46 63 H130" class="w ac"/>
+      <rect x="130" y="40" width="120" height="46" rx="3" class="blk"/><text x="190" y="59" text-anchor="middle" class="lbl">UPS rectifier</text><text x="190" y="76" text-anchor="middle" class="sm">ac → dc</text>
+      <path d="M250 63 H290" class="w dc"/><path d="M270 63 V100" class="w dc thin"/>
+      <rect x="248" y="100" width="44" height="20" rx="2" class="batt"/><text x="270" y="114" text-anchor="middle" class="sm">batt</text>
+      <rect x="290" y="40" width="120" height="46" rx="3" class="blk"/><text x="350" y="59" text-anchor="middle" class="lbl">UPS inverter</text><text x="350" y="76" text-anchor="middle" class="sm">dc → ac</text>
+      <path d="M410 63 H490" class="w ac"/><text x="445" y="54" text-anchor="middle" class="sm">PDU, cords</text>
+      <rect x="478" y="32" width="314" height="62" rx="5" class="ghost"/><text x="484" y="110" class="sm">inside the server power supply</text>
+      <rect x="490" y="40" width="140" height="46" rx="3" class="blk"/><text x="560" y="59" text-anchor="middle" class="lbl">Rectifier + PFC boost</text><text x="560" y="76" text-anchor="middle" class="sm">ac → ~380 V dc</text>
+      <path d="M630 63 H660" class="w dc"/>
+      <rect x="660" y="40" width="120" height="46" rx="3" class="blk"/><text x="720" y="59" text-anchor="middle" class="lbl">dc/dc converter</text><text x="720" y="76" text-anchor="middle" class="sm">380 → 12 V</text>
+      <path d="M780 63 H830" class="w dc"/>
+      <rect x="830" y="40" width="130" height="46" rx="3" class="blk"/><text x="895" y="59" text-anchor="middle" class="lbl">Board regulators</text><text x="895" y="76" text-anchor="middle" class="sm">12 → 1.35 V…12 V</text>
+
+      <text x="0" y="150" class="hd">380 V dc distribution with a dc-UPS</text>
+      <text x="960" y="150" text-anchor="end" class="lblb" style="fill:var(--dc)">2 conversions to reach 12 V</text>
+      <circle cx="30" cy="193" r="16" class="sym"/><text x="30" y="198" text-anchor="middle" class="lblb">~</text>
+      <path d="M46 193 H130" class="w ac"/>
+      <rect x="130" y="170" width="160" height="46" rx="3" class="ups"/><text x="210" y="189" text-anchor="middle" class="lbl">dc-UPS rectifiers</text><text x="210" y="206" text-anchor="middle" class="sm">ac → 380 V dc</text>
+      <path d="M290 193 H660" class="w dc"/><text x="490" y="184" text-anchor="middle" class="lbl">380 V dc bus, busway or cable</text>
+      <path d="M330 193 V230" class="w dc thin"/><rect x="308" y="230" width="44" height="20" rx="2" class="batt"/><text x="330" y="244" text-anchor="middle" class="sm">batt</text>
+      <text x="490" y="215" text-anchor="middle" class="sm">no inverter, no second rectifier, no phase balancing</text>
+      <rect x="646" y="162" width="146" height="62" rx="5" class="ghost"/>
+      <rect x="660" y="170" width="120" height="46" rx="3" class="blk"/><text x="720" y="189" text-anchor="middle" class="lbl">dc/dc converter</text><text x="720" y="206" text-anchor="middle" class="sm">380 → 12 V</text>
+      <path d="M780 193 H830" class="w dc"/>
+      <rect x="830" y="170" width="130" height="46" rx="3" class="blk"/><text x="895" y="189" text-anchor="middle" class="lbl">Board regulators</text><text x="895" y="206" text-anchor="middle" class="sm">12 → 1.35 V…12 V</text>
+    </svg></div>
+    <figcaption>The server’s own power supply already rectifies and boosts its ac input to roughly 380 V dc before stepping down. Feeding it 380 V dc directly lets the design reuse the back half of an existing supply. Board-level regulation is counted separately because it is the same in both cases.</figcaption>
+  </figure>
+  <div class="key" aria-label="Colour key used in all diagrams">
+    <span><i style="background:var(--ac)"></i>ac power</span>
+    <span><i style="background:var(--dc)"></i>380 V dc (A side)</span>
+    <span><i style="background:var(--dcb)"></i>380 V dc (B side)</span>
+    <span><i style="background:var(--batt)"></i>battery / energy storage</span>
+    <span><i style="background:var(--rule)"></i>de-energised</span>
+  </div>
+</header>
+
+<section id="why">
+  <h2>Why the paper was written</h2>
+  <p>The paper starts from the fact that most electricity now ends up in electronics, which run on dc. Every ac→dc and dc→ac stage between the utility and the chip wastes energy and adds parts that can fail. Renewable sources and batteries are also natively dc, so an ac building needs extra converters to connect them.</p>
+  <p>Data centers have traditionally protected the critical bus at four scales, often combined: geographic redundancy across sites, a centralized redundant UPS per facility, UPS units placed in the equipment row (often as redundant “pods”), and dedicated protection per rack. Each approach spawned its own ac-UPS products and topologies, which the paper calls hard for operators to compare.</p>
+  <p>The authors also point out a trade-off in ac practice: to gain efficiency, operators sometimes run ac-UPSs in “eco mode”, sending the load through the bypass on raw utility power. That buys efficiency by giving up power quality. The paper offers 380 V dc as a way to improve efficiency without that sacrifice. On naming, 380 V is the normal float voltage with lead-acid batteries and 400 V is the upper limit of normal operation, so the paper treats “380 Vdc” and “400 Vdc” as the same thing. IT equipment is expected to accept 260–400 V dc.</p>
+</section>
+
+<section id="acdc">
+  <h2>ac-UPS vs dc-UPS: the structural difference</h2>
+  <p>Two differences drive everything else. In an ac-UPS the battery sits in the middle, between rectifier and inverter. In a dc-UPS the battery sits directly on the critical output bus. And a dc-UPS has no bypass at all, because there is no ac utility waveform it could switch the dc load onto. Its redundancy comes from spare rectifier modules instead.</p>
+  <p>Choose a scenario to see which path carries the load.</p>
+
+  <figure>
+    <div class="seg" role="group" aria-label="Scenario">
+      <button type="button" data-mode="normal" aria-pressed="true">Normal operation</button>
+      <button type="button" data-mode="outage" aria-pressed="false">Utility outage</button>
+      <button type="button" data-mode="failure" aria-pressed="false">Converter failure</button>
+      <button type="button" data-mode="maint" aria-pressed="false">Maintenance</button>
+    </div>
+    <div class="scroll"><svg id="upsfig" class="min720" viewBox="0 0 960 400" role="img" aria-label="Side-by-side block diagrams of an ac-UPS and a modular dc-UPS">
+      <text x="10" y="18" class="hd">ac-UPS (double conversion)</text>
+      <text x="520" y="18" class="hd">dc-UPS (modular rectifiers)</text>
+      <!-- ac side -->
+      <path id="a-in" d="M40 42 H420" class="w ac sg"/>
+      <text x="40" y="36" class="sm">input distribution</text>
+      <text x="120" y="60" text-anchor="end" class="sm" dx="-6">main</text>
+      <text x="260" y="60" text-anchor="end" class="sm" dx="-6">bypass</text>
+      <path id="a-main" d="M120 42 V90" class="w ac sg"/>
+      <path id="a-byp1" d="M260 42 V150" class="w ac sg"/>
+      <path id="a-mb" d="M390 42 V300" class="w ac sg"/>
+      <text transform="translate(406 180) rotate(90)" text-anchor="middle" class="sm">maintenance bypass</text>
+      <g id="a-ups" class="grp">
+        <rect x="56" y="76" width="276" height="154" rx="4" class="ghost"/>
+        <text x="64" y="224" class="sm">UPS module</text>
+        <path id="a-link" d="M120 130 V175" class="w dc sg"/>
+        <path id="a-bat" d="M120 153 H70" data-chg="M120 153 H70" data-dis="M70 153 H120" class="w dc sg"/>
+        <rect id="a-rect" x="70" y="90" width="100" height="40" rx="3" class="blk"/><text x="120" y="114" text-anchor="middle" class="lbl">Rectifier</text>
+        <rect id="a-inv" x="70" y="175" width="100" height="40" rx="3" class="blk"/><text x="120" y="199" text-anchor="middle" class="lbl">Inverter</text>
+        <rect id="a-sb" x="210" y="150" width="100" height="40" rx="3" class="blk"/><text x="260" y="174" text-anchor="middle" class="lbl">Static bypass</text>
+      </g>
+      <rect x="10" y="138" width="60" height="32" rx="3" class="batt"/><text x="40" y="158" text-anchor="middle" class="lbl">Battery</text>
+      <path id="a-invout" d="M120 215 V300" class="w ac sg"/>
+      <path id="a-byp2" d="M260 190 V300" class="w ac sg"/>
+      <path id="a-obus" d="M100 300 H410" class="w ac sg"/>
+      <text x="300" y="316" class="sm">output distribution</text>
+      <path id="a-load" d="M230 300 V342" class="w ac sg"/>
+      <rect x="170" y="342" width="120" height="36" rx="3" class="blk"/><text x="230" y="365" text-anchor="middle" class="lbl">Critical load</text>
+      <line x1="470" y1="10" x2="470" y2="390" stroke="var(--rule)" stroke-width="1"/>
+      <!-- dc side -->
+      <path id="d-in" d="M520 42 H940" class="w ac sg"/>
+      <text x="520" y="36" class="sm">input distribution</text>
+      <path id="d-f1" d="M575 42 V90" class="w ac sg"/>
+      <path id="d-f2" d="M665 42 V90" class="w ac sg"/>
+      <path id="d-f3" d="M755 42 V90" class="w ac sg"/>
+      <path d="M845 42 V90" class="w ac dead" style="stroke-dasharray:3 4"/>
+      <rect x="532" y="76" width="360" height="80" rx="4" class="ghost"/>
+      <text x="538" y="150" class="sm">rectifier shelf, hot-swappable plug-in modules</text>
+      <rect id="r1" x="545" y="90" width="60" height="44" rx="3" class="mod"/><path d="M549 130 L601 94" class="w thin" stroke="var(--ink)"/><text x="560" y="106" class="sm">~</text><text x="586" y="128" class="sm">=</text>
+      <rect id="r2" x="635" y="90" width="60" height="44" rx="3" class="mod"/><path d="M639 130 L691 94" class="w thin" stroke="var(--ink)"/><text x="650" y="106" class="sm">~</text><text x="676" y="128" class="sm">=</text>
+      <rect id="r3" x="725" y="90" width="60" height="44" rx="3" class="mod"/><path d="M729 130 L781 94" class="w thin" stroke="var(--ink)"/><text x="740" y="106" class="sm">~</text><text x="766" y="128" class="sm">=</text>
+      <rect x="815" y="90" width="60" height="44" rx="3" class="mod opt"/><text x="845" y="116" text-anchor="middle" class="sm">+m slot</text>
+      <text x="575" y="72" text-anchor="middle" class="sm">N</text><text x="665" y="72" text-anchor="middle" class="sm">N</text><text x="755" y="72" text-anchor="middle" class="sm">+1</text><text x="845" y="72" text-anchor="middle" class="sm">+m optional</text>
+      <path id="d-o1" d="M575 134 V200" class="w dc sg"/>
+      <path id="d-o2" d="M665 134 V200" class="w dc sg"/>
+      <path id="d-o3" d="M755 134 V200" class="w dc sg"/>
+      <path id="d-bus" d="M530 200 H940" class="w dc sg"/>
+      <text x="940" y="192" text-anchor="end" class="sm">380 V dc critical bus</text>
+      <path id="d-bat" d="M550 200 V238" data-chg="M550 200 V238" data-dis="M550 238 V200" class="w dc sg"/>
+      <rect x="520" y="238" width="60" height="32" rx="3" class="batt"/><text x="550" y="258" text-anchor="middle" class="lbl">Battery</text>
+      <text x="590" y="258" class="sm">directly on the bus</text>
+      <path id="d-load" d="M730 200 V342" class="w dc sg"/>
+      <text x="740" y="316" class="sm">output distribution</text>
+      <rect x="670" y="342" width="120" height="36" rx="3" class="blk"/><text x="730" y="365" text-anchor="middle" class="lbl">Critical load</text>
+      <text x="880" y="365" text-anchor="middle" class="sm">no bypass path</text>
+    </svg></div>
+    <div class="caps" aria-live="polite">
+      <div><b>ac-UPS</b><span id="cap-a"></span></div>
+      <div><b>dc-UPS</b><span id="cap-d"></span></div>
+    </div>
+    <figcaption>What the bypass does in an ac-UPS, the paper lists four jobs: clearing downstream short circuits (the inverter limits current, so utility may be needed to blow a fuse), riding through a UPS failure, allowing UPS maintenance, and, in eco mode, carrying the load normally. Each use requires the UPS output to stay synchronised in voltage, frequency and phase with the utility. In the dc-UPS, fault clearing instead relies on the battery’s stored energy.</figcaption>
+  </figure>
+
+  <h3>Modular vs monolithic rectifiers</h3>
+  <p>The paper distinguishes a <b>modular rectifier</b>, a plug-in unit one technician can replace without shutting anything down, from a <b>monolithic rectifier</b>, a large fixed-rating converter that needs partial or full shutdown to service. Its example system fills a main cabinet in 15 kW modules up to 120 kW, with extension cabinets and an optional battery cabinet alongside; each module weighs about 10 kg.</p>
+  <p>Both ac and dc UPSs come in either style, but the paper argues modularity is easier in dc: fewer plug-in interfaces, smaller and lighter units, no synchronisation to parallel them, and fewer components. The designs are borrowed directly from decades of −48 V dc telecom plant.</p>
+</section>
+
+<section id="bicsi">
+  <h2>Mapping onto BICSI 002-2011 availability classes</h2>
+  <p>ANSI/BICSI 002-2011 asks designers to pick a topology class from two criteria: how much annual maintenance downtime is tolerable, and how badly an outage hurts operations. The paper shows that each class has a 380 V dc equivalent that looks like the ac version minus the bypass feeders, which simplifies the upstream switchgear. Select a class to see the dc version and its column in the table.</p>
+
+  <div class="seg" role="group" aria-label="BICSI class">
+    <button type="button" data-cls="1" aria-pressed="true">Class F1</button>
+    <button type="button" data-cls="2" aria-pressed="false">Class F2</button>
+    <button type="button" data-cls="3" aria-pressed="false">Class F3</button>
+    <button type="button" data-cls="4" aria-pressed="false">Class F4</button>
+  </div>
+  <figure style="margin-top:0">
+    <div class="scroll"><svg id="bicsifig" class="min620" viewBox="0 0 760 478" role="img" aria-label="Simplified one-line diagram for the selected BICSI class"></svg></div>
+    <figcaption id="bicsicap"></figcaption>
+  </figure>
+
+  <div class="tbl"><table id="bicsitbl">
+    <thead><tr><th>Feature</th><th>F0</th><th>F1</th><th>F2</th><th>F3</th><th>F4</th></tr></thead>
+    <tbody>
+      <tr><td>Key power path feature</td><td>Single path, no UPS</td><td>Single path with UPS, no redundancy</td><td>Single path with UPS, some redundant components</td><td>Multiple independent paths, concurrently maintainable</td><td>Fault tolerant</td></tr>
+      <tr><td>Module redundancy</td><td>N</td><td>N</td><td>N+1</td><td>N+1</td><td>2(N+1)</td></tr>
+      <tr><td>System redundancy</td><td>N</td><td>N</td><td>Limited N+1</td><td>Limited N+1</td><td>2(N+1)</td></tr>
+      <tr><td>Power paths to load</td><td>1</td><td>1</td><td>1</td><td>2</td><td>2</td></tr>
+      <tr><td>UPS sources to load</td><td>0</td><td>1</td><td>1</td><td>1</td><td>2</td></tr>
+      <tr><td>Full maintenance under load</td><td>No</td><td>No</td><td>Limited</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>Generator backup</td><td>No</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>Battery backup</td><td>No</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>Fault tolerance</td><td>No</td><td>No</td><td>Limited</td><td>Limited</td><td>Yes</td></tr>
+    </tbody>
+  </table></div>
+  <p>The paper’s conclusion for this section: one dc-UPS building block covers every class. Use one system for F1 and F2 and two (2N) for F3 and F4, and grow capacity and redundancy by adding modules and batteries. That avoids buying a bypass and switchgear sized for the ultimate load on day one, which leaves “stranded” capacity. Battery recharge time is also tuned by adding rectifiers, rather than oversizing a monolithic UPS.</p>
+</section>
+
+<section id="alt">
+  <h2>Alternative dc topologies</h2>
+  <p>Beyond one-to-one equivalents, the paper describes layouts that give up strict BICSI compliance in exchange for lower cost, selective redundancy and less stranded capacity, while still offering enough resilience for many sites.</p>
+
+  <h3>Dual ac input, dual dc output</h3>
+  <figure>
+    <div class="scroll"><svg class="min620" viewBox="0 0 760 380" role="img" aria-label="dc-UPS with two ac inputs and two dc output distributions feeding dual dc PSUs">
+      <text x="290" y="20" text-anchor="middle" class="lbl">ac source A</text>
+      <text x="470" y="20" text-anchor="middle" class="lbl">alternate ac source B</text>
+      <path d="M290 28 V80" class="w ac live"/><path d="M470 28 V80" class="w ac live"/>
+      <rect x="230" y="80" width="300" height="112" rx="4" class="ups"/>
+      <path d="M290 80 V88 M290 88 L300 100" class="w thin" stroke="var(--ink)"/><path d="M470 80 V88 M470 88 L480 100" class="w thin" stroke="var(--ink)"/>
+      <line x1="300" y1="95" x2="470" y2="95" class="tie"/>
+      <text x="380" y="128" text-anchor="middle" class="lblb">Rectifier cabinet(s)</text>
+      <text x="380" y="146" text-anchor="middle" class="sm">N+M modules</text>
+      <path d="M290 172 L300 184 M290 184 V192" class="w thin" stroke="var(--ink)"/><path d="M470 172 L480 184 M470 184 V192" class="w thin" stroke="var(--ink)"/>
+      <line x1="300" y1="178" x2="470" y2="178" class="tie"/>
+      <path d="M190 136 H230" class="w dc"/>
+      <rect x="40" y="110" width="150" height="52" rx="3" class="batt"/><text x="115" y="132" text-anchor="middle" class="lbl">Battery</text><text x="115" y="150" text-anchor="middle" class="sm">internal or external</text>
+      <path d="M290 192 V232" class="w dc live"/><path d="M470 192 V232" class="w dcb live"/>
+      <rect x="220" y="232" width="140" height="40" rx="3" class="blk"/><text x="290" y="256" text-anchor="middle" class="lbl">Output distribution A</text>
+      <rect x="400" y="232" width="140" height="40" rx="3" class="blk"/><text x="470" y="256" text-anchor="middle" class="lbl">Output distribution B</text>
+      <path d="M290 272 V310" class="w dc live"/><path d="M470 272 V310" class="w dcb live"/>
+      <rect x="230" y="310" width="300" height="58" rx="4" class="blk"/>
+      <rect x="250" y="318" width="80" height="24" rx="2" class="ups"/><text x="290" y="335" text-anchor="middle" class="sm">dc PSU</text>
+      <rect x="430" y="318" width="80" height="24" rx="2" class="ups"/><text x="470" y="335" text-anchor="middle" class="sm">dc PSU</text>
+      <text x="380" y="361" text-anchor="middle" class="lbl">IT load</text>
+      <rect x="570" y="96" width="180" height="70" rx="3" class="ghost"/>
+      <text x="580" y="118" class="sm">Modules can be dedicated to A</text><text x="580" y="134" class="sm">or B, or switched between the</text><text x="580" y="150" class="sm">two sources.</text>
+      <text x="40" y="300" class="sm">Also works for 48 V dc</text><text x="40" y="316" class="sm">distribution.</text>
+    </svg></div>
+    <figcaption>Manual switching moves the UPS input and output between paths, so upstream and downstream gear can be serviced without an outage. The dc-UPS is the one shared point, but it is itself maintainable live because every major part hot-swaps. Not strictly Class F3, yet concurrently maintainable; suited to in-row distribution.</figcaption>
+  </figure>
+
+  <h3>Hybrid ac/dc</h3>
+  <p>Here one server cord takes 380 V dc from the dc-UPS and the other takes plain ac. That suits servers with one dc and one ac supply, or a single supply with both inputs, which the paper compares to Facebook’s approach. Pick an operating mode:</p>
+  <figure>
+    <div class="seg" role="group" aria-label="Hybrid operating mode">
+      <button type="button" data-hy="share" aria-pressed="true">Both share load</button>
+      <button type="button" data-hy="b" aria-pressed="false">B preferred</button>
+      <button type="button" data-hy="a" aria-pressed="false">A preferred</button>
+    </div>
+    <div class="scroll"><svg class="min620" viewBox="0 0 760 360" role="img" aria-label="Hybrid ac and dc configuration">
+      <text x="300" y="20" text-anchor="middle" class="lbl">ac source A</text>
+      <text x="560" y="20" text-anchor="middle" class="lbl">alternate ac source B</text>
+      <path d="M300 28 V80" class="w ac live"/>
+      <path d="M560 28 V232" class="w ac live"/>
+      <path d="M560 60 H390 V80" class="tie"/>
+      <rect x="210" y="80" width="190" height="110" rx="4" class="ups"/>
+      <text x="305" y="128" text-anchor="middle" class="lblb">Rectifier cabinet(s)</text><text x="305" y="146" text-anchor="middle" class="sm">N+M modules</text>
+      <path d="M170 136 H210" class="w dc"/>
+      <rect x="30" y="110" width="140" height="52" rx="3" class="batt"/><text x="100" y="140" text-anchor="middle" class="lbl">Battery</text>
+      <path d="M300 190 V232" class="w dc live"/>
+      <rect x="220" y="232" width="160" height="40" rx="3" class="blk"/><text x="300" y="256" text-anchor="middle" class="lbl">dc output distribution A</text>
+      <rect x="480" y="232" width="160" height="40" rx="3" class="acbox"/><text x="560" y="256" text-anchor="middle" class="lbl">ac output distribution B</text>
+      <path id="hy-a" d="M300 272 V306" class="w dc sg"/><path id="hy-b" d="M560 272 V306" class="w ac sg"/>
+      <rect x="240" y="306" width="380" height="48" rx="4" class="blk"/>
+      <rect id="hy-pa" x="260" y="312" width="80" height="22" rx="2" class="ups"/><text x="300" y="328" text-anchor="middle" class="sm">dc PSU</text>
+      <rect id="hy-pb" x="520" y="312" width="80" height="22" rx="2" class="acbox"/><text x="560" y="328" text-anchor="middle" class="sm">ac PSU</text>
+      <text x="430" y="348" text-anchor="middle" class="lbl">IT load</text>
+    </svg></div>
+    <div class="caps" aria-live="polite"><div style="border-left-color:var(--dcb)"><b id="hy-t"></b><span id="hy-c"></span></div></div>
+    <figcaption>Every component can be maintained without taking the critical bus down.</figcaption>
+  </figure>
+
+  <h3>Partially redundant dc busway</h3>
+  <figure>
+    <div class="scroll"><svg class="min720" viewBox="0 0 890 300" role="img" aria-label="Partially redundant 380 V dc system on two busways">
+      <text x="10" y="18" class="sm">server room or electrical room</text>
+      <text x="200" y="18" class="sm">server room or electrical room</text>
+      <text x="560" y="18" class="sm">server room</text>
+      <line x1="190" y1="8" x2="190" y2="260" class="tie"/><line x1="450" y1="8" x2="450" y2="260" class="tie"/>
+      <rect x="100" y="28" width="70" height="40" rx="3" class="batt opt"/><text x="135" y="46" text-anchor="middle" class="sm">flywheel /</text><text x="135" y="60" text-anchor="middle" class="sm">battery, opt.</text>
+      <path d="M135 68 V94" class="w dcb"/>
+      <rect x="460" y="28" width="70" height="40" rx="3" class="ups"/><text x="495" y="46" text-anchor="middle" class="sm">400 V dc UPS</text><text x="495" y="60" text-anchor="middle" class="sm">N+1</text>
+      <path d="M495 68 V94" class="w dcb"/>
+      <path d="M10 94 H880" class="w dcb live" style="stroke-width:3"/><text x="880" y="86" text-anchor="end" class="lbl" style="fill:var(--dcb)">B bus: sized for critical loads only</text>
+      <path d="M10 128 H880" class="w dc live" style="stroke-width:5"/><text x="880" y="146" text-anchor="end" class="lbl" style="fill:var(--dc)">A bus: sized for total load</text>
+      <g id="p8"></g>
+    </svg></div>
+    <figcaption>Circuit A carries everything; circuit B backs up only the loads that matter. Racks tap either bus through plug-in drops on overhead busway. UPS modules and storage can live in an electrical room or right next to the racks, and dashed boxes show capacity added later without rewiring.</figcaption>
+  </figure>
+</section>
+
+<section id="impl">
+  <h2>Practical build-out</h2>
+  <p>The paper stresses that 380 V dc can be wired exactly like ac: discrete wire in conduit, cable on wireways, or busway, subject to the local authority having jurisdiction. In the US, conductors are sized from the same NEC tables. dc-rated breakers and fuses are available off the shelf.</p>
+  <figure>
+    <div class="scroll"><svg class="min720" viewBox="0 0 940 250" role="img" aria-label="Three distribution options: wire in conduit, single bus duct, dual bus duct">
+      <text x="10" y="18" class="hd">Wire in conduit</text>
+      <rect x="10" y="120" width="44" height="90" rx="3" class="batt"/><text x="32" y="232" text-anchor="middle" class="sm">battery</text>
+      <rect x="64" y="120" width="70" height="90" rx="3" class="ups"/><text x="99" y="232" text-anchor="middle" class="sm">400 V dc UPS</text>
+      <rect x="140" y="120" width="44" height="90" rx="3" class="blk"/><text x="162" y="232" text-anchor="middle" class="sm">dist A</text>
+      <rect x="190" y="120" width="44" height="90" rx="3" class="blk"/><text x="212" y="232" text-anchor="middle" class="sm">dist B</text>
+      <path d="M54 150 H64" class="w dc"/><path d="M134 150 H140 M134 170 H190" class="w dc thin"/>
+      <path d="M162 120 V50 H255 V120" class="w dc"/><path d="M212 120 V64 H275 V120" class="w dcb"/>
+      <rect x="244" y="120" width="44" height="90" rx="3" class="blk"/><text x="266" y="232" text-anchor="middle" class="sm">rack</text>
+      <text x="255" y="138" text-anchor="middle" class="sm">A</text><text x="277" y="138" text-anchor="middle" class="sm">B</text>
+
+      <text x="330" y="18" class="hd">Single bus duct</text>
+      <path d="M330 60 H610" class="w dc" style="stroke-width:6"/>
+      <rect x="330" y="120" width="44" height="90" rx="3" class="batt"/><path d="M352 120 V60" class="w dc"/>
+      <rect x="390" y="120" width="70" height="90" rx="3" class="ups"/><path d="M425 120 V60" class="w dc"/>
+      <rect x="415" y="52" width="16" height="16" class="drop" stroke="var(--dc)"/>
+      <text x="440" y="92" class="sm">800 A breaker limit ≈ 230 kW</text>
+      <rect x="520" y="52" width="16" height="16" class="drop" stroke="var(--dc)"/><rect x="552" y="52" width="16" height="16" class="drop" stroke="var(--dc)"/>
+      <path d="M528 68 V120 M560 68 V120" class="w dc thin"/>
+      <rect x="515" y="120" width="60" height="90" rx="3" class="blk"/><text x="545" y="232" text-anchor="middle" class="sm">rack, A + B from one bus</text>
+      <text x="352" y="232" text-anchor="middle" class="sm">battery</text><text x="425" y="232" text-anchor="middle" class="sm">UPS</text>
+
+      <text x="650" y="18" class="hd">Dual bus duct</text>
+      <path d="M650 50 H930" class="w dcb" style="stroke-width:5"/>
+      <path d="M650 72 H930" class="w dc" style="stroke-width:5"/>
+      <rect x="650" y="120" width="44" height="90" rx="3" class="batt"/><path d="M662 120 V72 M682 120 V50" class="w thin dc"/>
+      <rect x="710" y="120" width="70" height="90" rx="3" class="ups"/><path d="M730 120 V72" class="w dc thin"/><path d="M760 120 V50" class="w dcb thin"/>
+      <rect x="836" y="64" width="16" height="16" class="drop" stroke="var(--dc)"/><rect x="866" y="42" width="16" height="16" class="drop" stroke="var(--dcb)"/>
+      <path d="M844 80 V120" class="w dc thin"/><path d="M874 58 V120" class="w dcb thin"/>
+      <rect x="830" y="120" width="60" height="90" rx="3" class="blk"/>
+      <text x="672" y="232" text-anchor="middle" class="sm">battery</text><text x="745" y="232" text-anchor="middle" class="sm">UPS</text><text x="860" y="232" text-anchor="middle" class="sm">rack, A and B buses</text>
+    </svg></div>
+    <figcaption>Protection choices: fuses clear faults faster, breakers are easier to operate and reset, and busway plug-ins save space and scale easily. Busway suits frequent rack moves and upgrades; two buses give higher reliability; dual-corded servers allow expansion and maintenance without dropping the critical bus.</figcaption>
+  </figure>
+
+  <h3>A small-site example, with renewables on the B side</h3>
+  <figure>
+    <div class="scroll"><svg class="min720" viewBox="0 0 960 400" role="img" aria-label="Small 30 kW site with two dc-UPSs feeding a four-bus overhead busway, plus optional renewable sources on the B bus">
+      <path d="M90 78 H790" class="w dc live" style="stroke-width:4"/>
+      <path d="M90 90 H800" class="w dcb live" style="stroke-width:4"/>
+      <text x="200" y="66" class="lbl">overhead busway, rated 600 V dc, 4 conductors (A± and B±)</text>
+      <rect x="30" y="150" width="70" height="150" rx="3" class="ups"/><text x="65" y="220" text-anchor="middle" class="lbl">UPS-A</text><text x="65" y="238" text-anchor="middle" class="sm">15–30 kW</text>
+      <rect x="104" y="170" width="44" height="130" rx="3" class="batt"/><text x="126" y="316" text-anchor="middle" class="sm">battery</text>
+      <path d="M100 250 H104" class="w dc"/>
+      <path d="M65 150 V78 H90" class="w dc"/>
+      <rect x="700" y="150" width="70" height="150" rx="3" class="ups"/><text x="735" y="220" text-anchor="middle" class="lbl">UPS-B</text><text x="735" y="238" text-anchor="middle" class="sm">15–30 kW</text>
+      <rect x="774" y="170" width="44" height="130" rx="3" class="batt"/><text x="796" y="316" text-anchor="middle" class="sm">flywheel</text>
+      <path d="M770 250 H774" class="w dc"/>
+      <path d="M735 150 V90" class="w dcb"/>
+      <g id="racks"></g>
+      <rect x="560" y="150" width="60" height="130" rx="3" class="blk"/><text x="590" y="296" text-anchor="middle" class="sm">380→48 V</text><text x="590" y="310" text-anchor="middle" class="sm">telecom rack</text>
+      <path d="M580 78 V150" class="w dc thin"/><path d="M600 90 V150" class="w dcb thin"/>
+      <path d="M640 90 V130 H680" class="w dc thin"/><text x="640" y="146" class="sm">dc lighting,</text><text x="640" y="160" class="sm">other dc loads</text>
+      <path d="M65 300 V360 H880" class="w ac"/><path d="M735 300 V360" class="w ac"/>
+      <text x="300" y="376" class="sm">480 V ac, 3-phase essential power feed (input to both UPSs)</text>
+      <rect x="860" y="310" width="50" height="30" rx="3" class="blk"/><text x="885" y="330" text-anchor="middle" class="sm">ATS</text>
+      <path d="M880 310 V270 M900 310 V290" class="w ac thin"/>
+      <circle cx="880" cy="258" r="12" class="sym"/><text x="880" y="262" text-anchor="middle" class="sm">G</text>
+      <circle cx="905" cy="276" r="7" class="sym"/><circle cx="915" cy="276" r="7" class="sym"/><text x="930" y="262" class="sm">utility</text>
+      <rect x="820" y="6" width="134" height="58" rx="4" class="ghost"/>
+      <text x="887" y="24" text-anchor="middle" class="sm">solar, wind, fuel cell,</text><text x="887" y="38" text-anchor="middle" class="sm">storage via converters</text><text x="887" y="52" text-anchor="middle" class="sm">to a dc collector bus</text>
+      <path d="M887 64 V90 H800" class="w dcb" style="stroke-dasharray:6 4"/>
+      <text x="820" y="110" class="sm">optional B-bus sources</text>
+    </svg></div>
+    <figcaption>A 30 kW site. With only UPS-A it is an N+1 design: plug-in breaker drops on the busway feed each rack and can be unplugged individually, optionally with per-drop metering. Adding UPS-B makes it 2N, either on a second busway or, as here, on the second pair of conductors inside the same busway housing. On-site dc generation can later be tied onto the B side without touching the ac infrastructure.</figcaption>
+  </figure>
+
+  <h3>How much a 400 A busway carries</h3>
+  <p>The paper compares one 400 A busway at three voltages. The dc figure counts both A and B buses in the same housing, 152 kW each.</p>
+  <div class="bars" role="img" aria-label="208 V ac 130 kW, 415 V ac 258 kW, 380 V dc 304 kW with both buses">
+    <div class="bar"><span>208 V ac, 0.9 pf</span><div class="t"><span style="width:42.8%;background:var(--ac)"></span></div><span class="v">130 kW</span></div>
+    <div class="bar"><span>415 V ac, 0.9 pf</span><div class="t"><span style="width:84.9%;background:var(--ac)"></span></div><span class="v">258 kW</span></div>
+    <div class="bar"><span>380 V dc, A + B</span><div class="t"><span style="width:100%;background:linear-gradient(90deg,var(--dc) 50%,var(--dcb) 50%)"></span></div><span class="v">304 kW</span></div>
+  </div>
+</section>
+
+<section id="it">
+  <h2>The IT case: looking outward from the chip</h2>
+  <p>CPUs, memory, drives and fans all run on dc between about 1.35 V and 12 V. An ac server power supply first rectifies and boosts to about 380 V dc, then steps down to 12 V. Picking 380 V as the distribution voltage means a dc-input supply is essentially an ac supply with its front end removed.</p>
+  <p>Three-phase ac also brings a chore dc does not: phase balancing. Single-phase servers must be spread evenly across three phases, and because server draw shifts with configuration and workload, a balanced room today can be unbalanced tomorrow. With dc there are no phases, no power factor and no phase angle. The paper adds that dc conductors avoid skin- and proximity-effect losses and the derating and filtering that harmonics require.</p>
+
+  <h3>Why not stay at −48 V dc, as telecom does?</h3>
+  <p>Current scales inversely with voltage. The paper’s example is a dense rack at 600 W per rack unit across 42 U, about 25 kW. Move the slider to compare conductor current.</p>
+  <figure>
+    <label class="slider" for="kw">Rack power <input id="kw" type="range" min="5" max="60" step="1" value="25"> <b id="kwv">25 kW</b></label>
+    <div class="bars" id="ibars"></div>
+    <figcaption>Currents are I = P / V for dc, and line current I = P / (√3 × V × 0.9) for three-phase ac. The paper compares the −48 V figure with a typical 30 A facility receptacle to show why low-voltage dc becomes impractical as rack power climbs.</figcaption>
+  </figure>
+</section>
+
+<section id="rel">
+  <h2>Reliability, cost, safety, efficiency</h2>
+  <p>The paper’s central claim is that availability and total cost of ownership share one driver: simplicity. dc has fewer series-connected parts (breakers, terminals, joints) and no load balancing, so there is less to fail and less room for operator error. The design principles it borrows from telecom:</p>
+  <div class="pairs">
+    <div><b>N+m conversion</b>Several rectifiers can fail with no immediate action needed; spares swap in on site.</div>
+    <div><b>Distributed control</b>If the main system controller fails, power delivery continues.</div>
+    <div><b>Long repair windows</b>Redundancy buys time, so failed parts can wait for scheduled replacement.</div>
+    <div><b>Fewer series breakers</b>Fewer devices in the path to trip, wear or be misoperated.</div>
+    <div><b>No synchronisation</b>Paralleling dc sources needs only simple load sharing, not phase matching.</div>
+    <div><b>Hot-swap maintenance</b>Modules are serviced live by trained on-site technicians.</div>
+  </div>
+  <p>The paper says reliability studies indicate that 380 V dc, like 48 V dc, achieves availability several orders of magnitude higher than equivalent ac-UPS systems. It defers detailed treatment of TCO, safety and efficiency to later papers. On safety it says only that the topologies assume full code and listing compliance and that dc systems lend themselves to fast control and response during faults. On efficiency it concedes that ac systems have improved a lot, and positions dc’s advantage around renewables and dc microgrids.</p>
+</section>
+
+<section id="std">
+  <h2>The two standards behind it</h2>
+  <p><b>ANSI/BICSI 002-2011</b> is primarily an ac design standard, but it recognises dc power for critical loads in two forms: as the primary source for carrier equipment, and in computer rooms for efficiency, simpler design and easier paralleling of alternative sources. It requires dc systems to meet the same availability targets as ac, with extra attention to personnel safety. The paper argues its topologies meet that objective.</p>
+  <p><b>EMerge Alliance Data/Telecom Center Standard v1.0</b> defines a nominal 380 V dc distribution system between the facility power infrastructure and the equipment in a data or telecom space. Its aims are faster installation, easier reconfiguration, safe power levels under the 2011 NEC, modular building blocks with competitive first cost, lower energy loss, and easy integration of solar, wind, fuel cells and batteries. The first release notes that circuit protection, control and arc-flash guidance will need periodic updates, and the Alliance runs a registry of compliant products. It places the ac→dc conversion at the distribution level rather than in each rack or server.</p>
+</section>
+
+<section id="read">
+  <h2>Reading it critically</h2>
+  <div class="note">
+    <p style="margin-top:0">This is an advocacy paper from an industry alliance, written with lead contributors from dc equipment vendors. The architectures are explained carefully, but several claims are asserted rather than demonstrated in the paper itself:</p>
+    <ul>
+      <li>The “several orders higher availability” claim cites studies without presenting their numbers or assumptions.</li>
+      <li>The busway comparison counts two dc buses (304 kW) against one ac circuit. Per bus, 380 V dc at 400 A is 152 kW, roughly the same as 415 V ac.</li>
+      <li>dc current has no zero crossing, so interrupting faults and managing arc flash is harder than with ac. The paper acknowledges this only indirectly, through the standard’s note that arc-flash guidance needs updating.</li>
+      <li>Economics, efficiency and safety are explicitly left to later papers, so this one does not quantify savings.</li>
+    </ul>
+    <p style="margin-bottom:0">For context, as of my most recent information, hyperscale rack designs have largely standardised on 48 V dc inside the rack, while high-voltage dc facility distribution has seen renewed interest for very dense AI racks. Check current sources if you are evaluating this for a real project.</p>
+  </div>
+</section>
+
+<section id="gloss">
+  <h2>Glossary</h2>
+  <dl class="gl">
+    <dt>N, N+1, N+m</dt><dd>N units carry the load; +1 or +m are spares that let units fail or be removed without dropping the load.</dd>
+    <dt>2N, 2(N+1)</dt><dd>Two complete, independent systems, each able to carry the full load (and each with its own spare in 2(N+1)).</dd>
+    <dt>Critical bus</dt><dd>The protected output that feeds IT equipment.</dd>
+    <dt>Static bypass</dt><dd>An automatic electronic switch in an ac-UPS that transfers the load to raw utility power.</dd>
+    <dt>Maintenance bypass</dt><dd>A manual path around the whole UPS so it can be serviced.</dd>
+    <dt>Eco mode</dt><dd>Running an ac-UPS with the load normally on the bypass to save energy.</dd>
+    <dt>Stranded capacity</dt><dd>Installed capacity that cannot be used, e.g. switchgear bought for the final load but idle for years.</dd>
+    <dt>ATS</dt><dd>Automatic transfer switch between utility and generator.</dd>
+    <dt>TVSS</dt><dd>Transient voltage surge suppression.</dd>
+    <dt>PDU</dt><dd>Power distribution unit feeding individual racks.</dd>
+    <dt>AHJ</dt><dd>Authority having jurisdiction, the local body that approves electrical installations.</dd>
+    <dt>PSU</dt><dd>The power supply inside a server.</dd>
+    <dt>ICT</dt><dd>Information and communications technology equipment.</dd>
+  </dl>
+  <footer>Explanatory companion to the EMerge Alliance white paper “380 Vdc Architectures for the Modern Data Center” (2013). Diagrams are simplified redraws; refer to the original for authoritative figures.</footer>
+</section>
+</main>
+</div>
+
+<script>
+(function(){
+  /* ---------- ac-UPS vs dc-UPS scenarios ---------- */
+  const M = {
+    normal:{a:['a-in','a-main','a-link','a-bat','a-invout','a-obus','a-load'],ab:'chg',
+            d:['d-in','d-f1','d-f2','d-f3','d-o1','d-o2','d-o3','d-bus','d-bat','d-load'],db:'chg',
+            ca:'The rectifier charges the battery and feeds the inverter, which rebuilds ac for the load. Both bypass paths sit idle but must stay synchronised with the utility.',
+            cd:'All rectifier modules share the load in parallel and float-charge the battery, which sits directly on the critical bus.'},
+    outage:{a:['a-link','a-bat','a-invout','a-obus','a-load'],ab:'dis',
+            d:['d-bus','d-bat','d-load'],db:'dis',
+            ca:'Utility is lost. The battery discharges through the inverter, which keeps producing conditioned ac.',
+            cd:'The rectifiers go idle. The battery is already on the bus, so it carries the load with no transfer of any kind.'},
+    failure:{a:['a-in','a-byp1','a-byp2','a-obus','a-load'],ab:'chg',fa:['a-inv'],
+            d:['d-in','d-f1','d-f3','d-o1','d-o3','d-bus','d-bat','d-load'],db:'chg',fd:['r2'],
+            ca:'The inverter fails. The static switch transfers the load to raw utility through the static bypass: the load stays up but is unprotected.',
+            cd:'One module fails and the remaining modules carry the load. Nothing switches; the spare module is the redundancy.'},
+    maint:{a:['a-in','a-mb','a-obus','a-load'],ab:'chg',iso:true,
+            d:['d-in','d-f1','d-f3','d-o1','d-o3','d-bus','d-bat','d-load'],db:'chg',sw:['r2'],
+            ca:'The UPS is isolated for service. The maintenance bypass feeds the load directly from utility, exposed to any disturbance until work is finished.',
+            cd:'A module is pulled from the shelf and replaced live. The bus and battery stay in service throughout.'}
+  };
+  const fig=document.getElementById('upsfig');
+  function setMode(k){
+    const m=M[k];
+    fig.querySelectorAll('.sg').forEach(p=>{
+      const on=(p.id.startsWith('a-')?m.a:m.d).includes(p.id);
+      p.classList.toggle('live',on); p.classList.toggle('dead',!on);
+    });
+    const ab=document.getElementById('a-bat'), dbt=document.getElementById('d-bat');
+    ab.setAttribute('d',ab.dataset[m.ab]); dbt.setAttribute('d',dbt.dataset[m.db]);
+    ['a-inv','r2'].forEach(id=>{const e=document.getElementById(id);e.classList.remove('fail','swap');});
+    (m.fa||[]).concat(m.fd||[]).forEach(id=>document.getElementById(id).classList.add('fail'));
+    (m.sw||[]).forEach(id=>document.getElementById(id).classList.add('swap'));
+    document.getElementById('a-ups').classList.toggle('iso',!!m.iso);
+    document.getElementById('cap-a').textContent=' '+m.ca;
+    document.getElementById('cap-d').textContent=' '+m.cd;
+    document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===k));
+  }
+  document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
+  setMode('normal');
+
+  /* ---------- BICSI class diagrams ---------- */
+  const box=(x,y,w,h,t,c='blk')=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" class="${c}"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" class="lbl">${t}</text>`;
+  const ln=(d,c)=>`<path d="${d}" class="w ${c}"/>`;
+  function column(x,o){
+    const s=o.side; let g='';
+    g+=`<circle cx="${x-8}" cy="20" r="10" class="sym"/><circle cx="${x+8}" cy="20" r="10" class="sym"/>`;
+    g+=`<text x="${x+s*26}" y="24" text-anchor="${s<0?'end':'start'}" class="sm">utility</text>`;
+    g+=ln(`M${x} 30 V64`,'ac')+box(x-62,64,124,26,'Service entrance');
+    g+=ln(`M${x} 90 V122`,'ac')+box(x-34,122,68,26,'ATS');
+    const gx=x+s*108;
+    g+=ln(`M${gx-s*12} 135 H${x+s*34}`,'ac thin');
+    for(let i=0;i<o.gens;i++){const gy=135+i*34;
+      if(i) g+=ln(`M${gx-s*12} ${gy} H${gx-s*26} V135`,'ac thin');
+      g+=`<circle cx="${gx}" cy="${gy}" r="12" class="sym"/><text x="${gx}" y="${gy+4}" text-anchor="middle" class="lbl">G</text>`;}
+    if(o.gens>1) g+=`<text x="${gx}" y="${135+34+26}" text-anchor="middle" class="sm">N+1 gensets</text>`;
+    g+=ln(`M${x} 148 V178`,'ac')+box(x-72,178,144,26,'UPS input switchboard');
+    g+=ln(`M${x} 204 V232`,'ac');
+    g+=`<rect x="${x-80}" y="232" width="160" height="66" rx="4" class="ups"/>`;
+    const tot=o.n+o.m, sp=30, st=x-(tot*sp-8)/2;
+    for(let i=0;i<tot;i++){const rx=st+i*sp;
+      g+=`<rect x="${rx}" y="242" width="22" height="22" class="mod${i>=o.n?' opt':''}"/><path d="M${rx+3} ${261} L${rx+19} ${245}" class="w thin${i>=o.n?' opt':''}" stroke="var(--ink)"/>`;}
+    g+=`<text x="${x}" y="288" text-anchor="middle" class="sm">${o.label}</text>`;
+    if(o.batt){const bx=x+s*80, rx=s<0?bx-30-54:bx+30;
+      g+=ln(`M${bx} 265 H${bx+s*30}`,'dc')+`<rect x="${rx}" y="251" width="54" height="28" rx="3" class="batt"/><text x="${rx+27}" y="269" text-anchor="middle" class="sm">battery</text>`;}
+    g+=ln(`M${x} 298 V326`,'dc')+box(x-80,326,160,26,'Computer load swbd');
+    g+=ln(`M${x} 352 V376`,'dc')+box(x-32,376,64,24,'PDU');
+    return g;
+  }
+  const C={
+    1:{svg:()=>column(300,{side:-1,gens:1,n:2,m:0,label:'N+1 rectifiers',batt:1})+ln('M300 400 V432','dc')+box(245,432,110,28,'IT load'),
+       w:600,cap:'Class F1, single path with UPS. One utility feed, one generator through an ATS, one dc-UPS with its battery on the output bus. From the dc-UPS point of view, F1 and F2 differ only in how many rectifiers run in parallel; extra modules supply battery recharge current and cover module failures, the job a bypass does in an ac-UPS.'},
+    2:{svg:()=>column(300,{side:-1,gens:2,n:2,m:1,label:'N+m rectifiers',batt:1})+ln('M300 400 V432','dc')+box(245,432,110,28,'IT load'),
+       w:600,cap:'Class F2, redundant components. Adds N+1 generators with paralleling switchgear and N+m rectifier modules (dashed = spares). Because modules hot-swap, a modular F1 system with a spare on the shelf already meets F2 in principle. More spare modules help at remote, unmanned sites.'},
+    3:{svg:()=>dual({side:-1,gens:1,n:2,m:1,label:'N+m rectifiers',batt:1},{side:1,gens:1,n:2,m:0,label:'N rectifiers, no battery',batt:0}),
+       w:760,cap:'Class F3, concurrently maintainable. Two independent paths with ties between them. The left path, with battery, normally feeds the load. The right path has rectifiers but no battery and plays the role an ac-UPS bypass would play during maintenance. Loads can be dual-corded, or single-corded.'},
+    4:{svg:()=>dual({side:-1,gens:2,n:2,m:1,label:'N+m rectifiers',batt:1},{side:1,gens:2,n:2,m:1,label:'N+m rectifiers',batt:1}),
+       w:760,cap:'Class F4, fault tolerant. Both paths get full N+m rectifiers and their own batteries, giving 2(N+1). Upgrading F3 to F4 is a matter of adding rectifier modules and batteries to the second path.'}
+  };
+  function dual(a,b){
+    return column(230,a)+column(530,b)
+      +`<path d="M292 77 H468" class="tie"/><path d="M310 339 H450" class="tie"/>`
+      +ln('M230 400 V446 H322','dc')+ln('M530 400 V446 H438','dcb')
+      +box(322,432,116,28,'Dual-cord IT load');
+  }
+  const bf=document.getElementById('bicsifig'), tbl=document.getElementById('bicsitbl');
+  function setCls(k){
+    const c=C[k];
+    bf.setAttribute('viewBox',`0 0 ${c.w} 474`); bf.innerHTML=c.svg();
+    document.getElementById('bicsicap').textContent=c.cap;
+    tbl.querySelectorAll('tr').forEach(r=>[...r.children].forEach((cell,i)=>cell.classList.toggle('hl',i===+k+1)));
+    document.querySelectorAll('[data-cls]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.cls==k));
+  }
+  document.querySelectorAll('[data-cls]').forEach(b=>b.addEventListener('click',()=>setCls(b.dataset.cls)));
+  setCls('1');
+
+  /* ---------- Hybrid modes ---------- */
+  const H={
+    share:{a:'live',b:'live',t:'Both supplies active',c:' The dc and ac supplies split the load. Either can carry it alone if the other path is lost.'},
+    b:{a:'stby',b:'live',t:'Source B preferred',c:' The ac supply carries the load and the dc supply waits on standby, taking over only when B disappears. Slightly more efficient in normal operation, but it needs a control circuit to hand over fast enough.'},
+    a:{a:'live',b:'stby',t:'Source A preferred',c:' The dc path carries the load. The ac supply only takes over while path A is running on battery, so the handover timing is not critical.'}
+  };
+  function setHy(k){
+    const h=H[k];
+    [['hy-a',h.a],['hy-b',h.b]].forEach(([id,st])=>{const e=document.getElementById(id);e.classList.remove('live','stby','dead');e.classList.add(st);});
+    document.getElementById('hy-pa').style.opacity=h.a==='live'?1:.4;
+    document.getElementById('hy-pb').style.opacity=h.b==='live'?1:.4;
+    document.getElementById('hy-t').textContent=h.t; document.getElementById('hy-c').textContent=h.c;
+    document.querySelectorAll('[data-hy]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.hy===k));
+  }
+  document.querySelectorAll('[data-hy]').forEach(b=>b.addEventListener('click',()=>setHy(b.dataset.hy)));
+  setHy('share');
+
+  /* ---------- Partial redundancy equipment row ---------- */
+  const eq=[
+    {x:20,t:['flywheel /','battery','(future)'],c:'batt opt'},
+    {x:100,t:['flywheel /','battery'],c:'batt'},
+    {x:205,t:['400 V dc','UPS','n+1'],c:'ups'},
+    {x:285,t:['400 V dc','UPS','N+1'],c:'ups'},
+    {x:365,t:['400 V dc','UPS','redundant'],c:'ups'},
+    {x:465,t:['400 V dc','UPS','(future)'],c:'ups opt'},
+    {x:560,t:['rack','critical'],c:'blk',b:1},
+    {x:640,t:['rack','non-critical'],c:'blk'},
+    {x:720,t:['rack','(future)'],c:'blk opt'},
+    {x:800,t:['facility','loads'],c:'blk',b:1}
+  ];
+  let g='';
+  eq.forEach(e=>{
+    g+=`<rect x="${e.x}" y="172" width="72" height="80" rx="3" class="${e.c}"/>`;
+    e.t.forEach((t,i)=>g+=`<text x="${e.x+36}" y="${196+i*15}" text-anchor="middle" class="sm">${t}</text>`);
+    g+=`<path d="M${e.x+24} 172 V128" class="w dc thin"/><rect x="${e.x+17}" y="121" width="14" height="14" class="drop" stroke="var(--dc)"/>`;
+    if(e.b) g+=`<path d="M${e.x+52} 172 V94" class="w dcb thin"/><rect x="${e.x+45}" y="87" width="14" height="14" class="drop" stroke="var(--dcb)"/>`;
+  });
+  document.getElementById('p8').innerHTML=g;
+
+  /* ---------- Racks for small site ---------- */
+  let r='';
+  for(let i=0;i<6;i++){const x=180+i*62, cool=i%2===1;
+    r+=`<rect x="${x}" y="150" width="50" height="130" rx="3" class="${cool?'ghost':'blk'}"/>`;
+    for(let j=0;j<6&&!cool;j++) r+=`<line x1="${x+6}" x2="${x+44}" y1="${162+j*18}" y2="${162+j*18}" stroke="var(--rule)" stroke-width="6"/>`;
+    if(cool) r+=`<text x="${x+25}" y="218" text-anchor="middle" class="sm">cooler</text>`;
+    r+=`<path d="M${x+18} 78 V150" class="w dc thin"/><path d="M${x+32} 90 V150" class="w dcb thin"/>`;
+  }
+  r+=`<text x="360" y="300" text-anchor="middle" class="sm">380 V dc server racks alternating with in-row coolers, each fed from A and B drops</text>`;
+  document.getElementById('racks').innerHTML=r;
+
+  /* ---------- Current calculator ---------- */
+  const kw=document.getElementById('kw'), kwv=document.getElementById('kwv'), ib=document.getElementById('ibars');
+  const rows=[
+    {n:'−48 V dc',f:p=>p/48,c:'var(--dc)'},
+    {n:'208 V ac, 3-ph',f:p=>p/(1.732*208*0.9),c:'var(--ac)'},
+    {n:'415 V ac, 3-ph',f:p=>p/(1.732*415*0.9),c:'var(--ac)'},
+    {n:'380 V dc',f:p=>p/380,c:'var(--dc)'}
+  ];
+  function calc(){
+    const p=+kw.value*1000; kwv.textContent=kw.value+' kW';
+    const max=p/48;
+    ib.innerHTML=rows.map(r=>{const a=r.f(p);
+      return `<div class="bar"><span>${r.n}</span><div class="t"><span style="width:${(a/max*100).toFixed(1)}%;background:${r.c}"></span></div><span class="v">${Math.round(a)} A</span></div>`;}).join('')
+      +`<div class="bar"><span>30 A receptacle</span><div class="t"><span style="width:${Math.min(100,30/max*100).toFixed(1)}%;background:var(--muted)"></span></div><span class="v">30 A</span></div>`;
+  }
+  kw.addEventListener('input',calc); calc();
+})();
+</script>
+</body>
+</html>

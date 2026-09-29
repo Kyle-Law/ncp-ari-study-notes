@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Coolant Distribution Units, explained — nVent CDU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF1F2; --panel:#F8FAFA; --ink:#17232B; --muted:#56666F; --rule:#C9D3D6;
+  --cold:#2B78C2;      /* facility water supply */
+  --coldret:#7FA9CF;   /* facility water return */
+  --sup:#0C9C94;       /* TCS supply (cool) */
+  --ret:#D9822B;       /* TCS return (warm) */
+  --hot:#C6452E;
+  --steel:#8A979E;
+  --spd:1.6s;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#131B20; --panel:#1B252B; --ink:#E4ECEE; --muted:#9AAAB2; --rule:#2F3D45;
+    --cold:#5A9FE0; --coldret:#3F6A90; --sup:#2BC2B8; --ret:#F0A04E; --hot:#E8674F; --steel:#6E7E86;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#131B20; --panel:#1B252B; --ink:#E4ECEE; --muted:#9AAAB2; --rule:#2F3D45;
+  --cold:#5A9FE0; --coldret:#3F6A90; --sup:#2BC2B8; --ret:#F0A04E; --hot:#E8674F; --steel:#6E7E86;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;line-height:1.55}
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+.prose{max-width:66ch}
+h1,h2,h3{font-stretch:75%;line-height:1.05;margin:0}
+h1{font-size:clamp(2.4rem,6vw,4.6rem);font-weight:800;letter-spacing:-.01em}
+h2{font-size:clamp(1.8rem,3.6vw,2.7rem);font-weight:750;margin-bottom:.5em}
+h3{font-size:1.35rem;font-weight:700;margin-bottom:.35em}
+p{margin:.6em 0}
+a{color:var(--cold)}
+section{padding:64px 0;border-top:1px solid var(--rule)}
+header{padding:48px 0 24px}
+.lede{font-size:1.2rem;color:var(--muted);max-width:60ch;margin-top:.8em}
+.fig{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px;margin:22px 0;overflow-x:auto}
+svg{display:block;width:100%;height:auto}
+svg text{font-family:inherit;fill:var(--ink)}
+.small{font-size:.86rem;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+@media (max-width:820px){.two{grid-template-columns:1fr}}
+
+/* pipes */
+.pipe{fill:none;stroke-width:9;stroke-linecap:round;stroke-linejoin:round}
+.flow{fill:none;stroke:#fff;stroke-opacity:.75;stroke-width:3;stroke-dasharray:6 16;stroke-linecap:round;
+  animation:run var(--spd) linear infinite}
+@keyframes run{to{stroke-dashoffset:-44}}
+@media (prefers-reduced-motion:reduce){.flow,.spin{animation:none}}
+.spin{transform-box:fill-box;transform-origin:center;animation:rot calc(var(--spd)*.8) linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* legend */
+.legend{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:.9rem;color:var(--muted);margin-top:10px}
+.legend span::before{content:"";display:inline-block;width:22px;height:6px;border-radius:3px;margin-right:7px;vertical-align:middle;background:var(--c)}
+
+/* simulator */
+.sim{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}
+@media (max-width:900px){.sim{grid-template-columns:1fr}}
+.readout{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:16px}
+.readout dl{margin:0;display:grid;grid-template-columns:1fr auto;gap:8px 12px}
+.readout dt{color:var(--muted)}
+.readout dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+input[type=range]{width:100%;accent-color:var(--sup)}
+label.ctl{display:block;font-weight:600;margin:4px 0 2px}
+button{font:inherit;border:1px solid var(--ink);background:transparent;color:var(--ink);padding:8px 14px;border-radius:4px;cursor:pointer}
+button[aria-pressed=true]{background:var(--hot);border-color:var(--hot);color:#fff}
+:focus-visible{outline:3px solid var(--cold);outline-offset:2px}
+
+/* dot grid */
+.dots{width:100%;aspect-ratio:70/50;position:relative;border:1px solid var(--rule);border-radius:4px;
+  background-image:radial-gradient(circle,var(--steel) 32%,transparent 36%);
+  background-size:calc(100%/70) calc(100%/50)}
+.dots i{position:absolute;left:0;top:0;width:calc(100%/70);height:calc(100%/50);
+  background:radial-gradient(circle,var(--cold) 60%,transparent 64%);transform:scale(2.2);
+  box-shadow:0 0 0 3px var(--paper),0 0 0 5px var(--cold);border-radius:50%}
+.drop{width:18px;height:18px;border-radius:50%;background:var(--cold);display:inline-block;vertical-align:middle}
+
+/* internals */
+.part{cursor:pointer}
+.part:hover .hl,.part:focus .hl,.part.on .hl{stroke:var(--hot);stroke-width:3}
+.part:focus{outline:none}
+#partInfo{min-height:9em}
+#partInfo h3{color:var(--hot)}
+
+/* compare */
+.col h3{display:flex;align-items:center;gap:10px}
+ul.plain{padding-left:1.1em;margin:.4em 0}
+ul.plain li{margin:.25em 0}
+
+/* capacity */
+.bars{display:grid;gap:12px;margin-top:10px}
+.bar{display:grid;grid-template-columns:170px 1fr;gap:12px;align-items:center}
+.bar b{font-weight:600}
+.bar .track{height:26px;background:var(--rule);border-radius:3px;position:relative}
+.bar .fill{height:100%;background:var(--sup);border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:#fff;font-weight:700;font-size:.85rem}
+@media (max-width:560px){.bar{grid-template-columns:1fr}}
+footer{padding:40px 0 60px;border-top:1px solid var(--rule)}
+footer li{margin:.3em 0}
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <h1>The coolant distribution unit</h1>
+  <p class="lede">A plain-language walkthrough of nVent's CDU page: what a CDU is, how heat moves through it, what's inside, and which type fits which data center.</p>
+</header>
+
+<!-- HERO SCHEMATIC -->
+<div class="wrap">
+  <div class="fig" role="img" aria-label="Schematic of the two cooling loops with the CDU in the middle">
+    <svg viewBox="0 0 1000 430" id="hero">
+      <defs>
+        <linearGradient id="plate" x1="0" x2="1"><stop offset="0" stop-color="var(--sup)"/><stop offset="1" stop-color="var(--ret)"/></linearGradient>
+      </defs>
+      <!-- zones -->
+      <rect x="20" y="40" width="300" height="370" rx="6" fill="none" stroke="var(--rule)" stroke-dasharray="4 5"/>
+      <text x="36" y="66" font-weight="700">Facility side</text>
+      <text x="36" y="86" class="small" style="fill:var(--muted);font-size:13px">Primary loop — facility water system (FWS)</text>
+      <rect x="350" y="40" width="340" height="370" rx="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="2"/>
+      <text x="366" y="66" font-weight="800" font-size="20">CDU</text>
+      <text x="366" y="86" style="fill:var(--muted);font-size:13px">The "heart and brain" between the two loops</text>
+      <rect x="720" y="40" width="260" height="370" rx="6" fill="none" stroke="var(--rule)" stroke-dasharray="4 5"/>
+      <text x="736" y="66" font-weight="700">IT side</text>
+      <text x="736" y="86" style="fill:var(--muted);font-size:13px">Secondary loop — technology cooling (TCS)</text>
+
+      <!-- cooling tower / dry cooler -->
+      <g transform="translate(70,150)">
+        <path d="M0 150 L20 20 H120 L140 150 Z" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+        <ellipse cx="70" cy="20" rx="50" ry="10" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+        <g class="spin"><path d="M70 20 l30 -4 M70 20 l-30 4 M70 20 l4 6 M70 20 l-4 -6" stroke="var(--ink)" stroke-width="3"/></g>
+        <path d="M50 -10 q8 -14 0 -26 M72 -12 q8 -14 0 -26 M94 -10 q8 -14 0 -26" stroke="var(--hot)" stroke-width="2" fill="none" opacity=".7"/>
+        <text x="70" y="178" text-anchor="middle" font-size="13">Cooling tower / dry cooler</text>
+        <text x="70" y="195" text-anchor="middle" font-size="12" style="fill:var(--muted)">Heat leaves the building</text>
+      </g>
+
+      <!-- PRIMARY pipes -->
+      <path class="pipe" stroke="var(--cold)" d="M200 185 H420"/>
+      <path class="flow" d="M200 185 H420"/>
+      <path class="pipe" stroke="var(--coldret)" d="M420 285 H200"/>
+      <path class="flow" d="M420 285 H200"/>
+      <!-- control valve -->
+      <g transform="translate(290,185)">
+        <path d="M-12 -10 L12 10 V-10 L-12 10 Z" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+        <line x1="0" y1="0" x2="0" y2="-22" stroke="var(--ink)" stroke-width="2"/><rect x="-8" y="-30" width="16" height="8" fill="var(--ink)"/>
+        <text x="0" y="-38" text-anchor="middle" font-size="12">control valve</text>
+      </g>
+
+      <!-- Heat exchanger -->
+      <rect x="420" y="150" width="70" height="170" rx="4" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+      <g stroke="var(--steel)" stroke-width="2">
+        <line x1="432" y1="158" x2="432" y2="312"/><line x1="444" y1="158" x2="444" y2="312"/><line x1="456" y1="158" x2="456" y2="312"/>
+        <line x1="468" y1="158" x2="468" y2="312"/><line x1="480" y1="158" x2="480" y2="312"/>
+      </g>
+      <text x="455" y="340" text-anchor="middle" font-size="13" font-weight="600">Heat exchanger</text>
+      <text x="455" y="356" text-anchor="middle" font-size="12" style="fill:var(--muted)">loops never mix</text>
+
+      <!-- SECONDARY supply -->
+      <path class="pipe" stroke="var(--sup)" d="M490 185 H760 V330"/>
+      <path class="flow" d="M490 185 H760 V330"/>
+      <!-- pump -->
+      <g transform="translate(560,185)">
+        <circle r="20" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+        <g class="spin"><path d="M0 -12 L10 8 H-10 Z" fill="var(--ink)"/></g>
+        <text y="-30" text-anchor="middle" font-size="12">pumps (N+1)</text>
+      </g>
+      <!-- filter -->
+      <g transform="translate(630,185)">
+        <rect x="-11" y="-14" width="22" height="28" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+        <path d="M-11 -14 L11 14 M-11 0 L4 14 M-4 -14 L11 0" stroke="var(--steel)" stroke-width="1.5"/>
+        <text y="-22" text-anchor="middle" font-size="12">filter</text>
+      </g>
+      <!-- sensors -->
+      <g font-size="11" font-weight="700">
+        <circle cx="668" cy="185" r="9" fill="var(--panel)" stroke="var(--ink)"/><text x="668" y="189" text-anchor="middle">T</text>
+        <circle cx="690" cy="185" r="9" fill="var(--panel)" stroke="var(--ink)"/><text x="690" y="189" text-anchor="middle">P</text>
+      </g>
+
+      <!-- SECONDARY return -->
+      <path class="pipe" stroke="var(--ret)" d="M940 150 V380 H520 V285 H490"/>
+      <path class="flow" d="M940 150 V380 H520 V285 H490"/>
+
+      <!-- rack -->
+      <rect x="775" y="130" width="150" height="220" rx="3" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+      <g id="servers"></g>
+      <text x="850" y="122" text-anchor="middle" font-size="13" font-weight="600">Rack + manifolds</text>
+      <text x="760" y="420" text-anchor="middle" font-size="11" style="fill:var(--muted)">supply manifold</text>
+      <text x="940" y="420" text-anchor="middle" font-size="11" style="fill:var(--muted)">return manifold</text>
+
+      <!-- heat arrows -->
+      <g fill="var(--hot)" font-size="12" font-weight="700">
+        <text x="850" y="372" text-anchor="middle">chips' heat → liquid</text>
+        <text x="306" y="238" text-anchor="middle" style="fill:var(--hot)">heat → facility water</text>
+      </g>
+    </svg>
+    <div class="legend">
+      <span style="--c:var(--cold)">Facility water supply (cool)</span>
+      <span style="--c:var(--coldret)">Facility water return (warmed)</span>
+      <span style="--c:var(--sup)">TCS coolant to chips</span>
+      <span style="--c:var(--ret)">TCS coolant back from chips (warm)</span>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>nVent's one-line definition: a CDU <strong>pumps liquid at the desired temperature directly onto the chip or server</strong>, and in doing so it controls three things — <strong>pressure, flow and temperature</strong>. nVent calls it the "heart" of a liquid‑cooled data center; elsewhere it adds "brain", because it also runs the control logic.</p>
+    <p>The key idea is the <strong>two separate loops</strong> above. nVent's Row CDU is fed from the primary facility water system, its built-in pumps drive the secondary technology cooling system loop, and a heat exchanger transfers the excess heat from the secondary coolant to the primary. The dirty, variable building water never touches the servers; the servers get clean, precisely conditioned coolant.</p>
+  </div>
+</div>
+
+<!-- WHY LIQUID -->
+<section>
+  <div class="wrap two">
+    <div class="prose">
+      <h2>Why use liquid at all?</h2>
+      <p>Modern AI chips produce far more heat than fans can carry away. nVent states that liquid has a heat‑transfer capacity roughly <strong>3,500 times</strong> higher than air, because it is so much denser.</p>
+      <p>The grid on the right makes that concrete: every grey dot is a unit volume of air; the single blue dot is the same volume of water. That one blue dot carries about as much heat as all the grey ones together.</p>
+      <p>Moving heat with less fan energy is what lets CDUs lower <strong>PUE</strong> (power usage effectiveness — total facility power divided by IT power; closer to 1.0 is better) and raise how much computing fits in each rack.</p>
+    </div>
+    <div>
+      <div class="dots" aria-label="Grid of 3,500 dots with one highlighted"><i></i></div>
+      <p class="small"><span class="drop"></span>&nbsp; 1 unit of water &nbsp;≈&nbsp; 3,500 units of air (70 × 50 dots). Ratio as stated by nVent; it compares heat capacity by volume.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SIMULATOR -->
+<section>
+  <div class="wrap">
+    <h2>What the CDU is actually controlling</h2>
+    <p class="prose">Drag the load slider. As the servers get busier, the CDU keeps the coolant going to the chips at a fixed temperature by speeding up its pumps and opening the facility water valve further. Watch the flow in the pipes above speed up as well.</p>
+    <div class="sim">
+      <div class="fig" style="margin:0">
+        <label class="ctl" for="load">IT heat load: <span id="loadLbl"></span></label>
+        <input type="range" id="load" min="10" max="100" value="55">
+        <svg viewBox="0 0 600 190" aria-label="Gauges for pump speed and valve opening">
+          <g id="g1" transform="translate(150,120)"></g>
+          <g id="g2" transform="translate(450,120)"></g>
+        </svg>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <button id="failBtn" aria-pressed="false">Simulate a pump failure</button>
+          <span class="small" id="failMsg">Both duty pumps healthy; standby pump idle.</span>
+        </div>
+      </div>
+      <div class="readout">
+        <dl>
+          <dt>Heat to remove</dt><dd id="rQ"></dd>
+          <dt>Coolant flow</dt><dd id="rF"></dd>
+          <dt>Supply to chips</dt><dd id="rTs"></dd>
+          <dt>Return from chips</dt><dd id="rTr"></dd>
+          <dt>Pump speed</dt><dd id="rP"></dd>
+          <dt>Facility valve</dt><dd id="rV"></dd>
+        </dl>
+        <p class="small" style="margin-top:12px">Illustrative numbers for an 800 kW unit, water-like coolant, 10 °C rise across the chips. Flow comes from heat = flow × specific heat × temperature rise; real units and setpoints vary.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INSIDE -->
+<section>
+  <div class="wrap">
+    <h2>Inside the box</h2>
+    <p class="prose">Select a component to see what it does. Exact layouts differ between models, but these are the building blocks a liquid‑to‑liquid CDU is made of.</p>
+    <div class="two">
+      <div class="fig" style="margin:0">
+        <svg viewBox="0 0 440 500" id="inside">
+          <rect x="20" y="20" width="400" height="460" rx="8" fill="none" stroke="var(--ink)" stroke-width="2"/>
+          <!-- pipework background -->
+          <path class="pipe" stroke="var(--cold)" d="M20 110 H150" /><path class="pipe" stroke="var(--coldret)" d="M150 190 H20"/>
+          <path class="pipe" stroke="var(--sup)" d="M230 110 H420"/>
+          <path class="pipe" stroke="var(--ret)" d="M420 400 H330 V190 H230"/>
+
+          <g class="part" tabindex="0" role="button" data-k="hx" aria-label="Plate heat exchanger">
+            <rect class="hl" x="150" y="80" width="80" height="140" rx="4" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+            <g stroke="var(--steel)" stroke-width="2"><line x1="162" y1="88" x2="162" y2="212"/><line x1="176" y1="88" x2="176" y2="212"/><line x1="190" y1="88" x2="190" y2="212"/><line x1="204" y1="88" x2="204" y2="212"/><line x1="218" y1="88" x2="218" y2="212"/></g>
+            <text x="190" y="240" text-anchor="middle" font-size="13">Heat exchanger</text>
+          </g>
+          <g class="part" tabindex="0" role="button" data-k="valve" aria-label="Facility water control valve">
+            <path class="hl" d="M70 98 L96 122 V98 L70 122 Z" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+            <rect x="77" y="74" width="12" height="12" fill="var(--ink)"/><line x1="83" y1="86" x2="83" y2="110" stroke="var(--ink)" stroke-width="2"/>
+            <text x="83" y="66" text-anchor="middle" font-size="13">Control valve</text>
+          </g>
+          <g class="part" tabindex="0" role="button" data-k="pumps" aria-label="Redundant pumps">
+            <rect class="hl" x="258" y="40" width="130" height="50" rx="4" fill="none" stroke="transparent"/>
+            <circle cx="285" cy="110" r="18" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+            <circle cx="323" cy="110" r="18" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+            <circle cx="361" cy="110" r="18" fill="var(--panel)" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 3"/>
+            <text x="323" y="70" text-anchor="middle" font-size="13">Pumps: 2 duty + 1 standby</text>
+          </g>
+          <g class="part" tabindex="0" role="button" data-k="filter" aria-label="Filter">
+            <rect class="hl" x="315" y="250" width="30" height="46" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+            <path d="M315 250 L345 296 M315 272 L330 296 M330 250 L345 272" stroke="var(--steel)" stroke-width="1.5"/>
+            <text x="298" y="278" text-anchor="end" font-size="13">Filter</text>
+          </g>
+          <g class="part" tabindex="0" role="button" data-k="tank" aria-label="Expansion tank and fill">
+            <rect class="hl" x="60" y="270" width="70" height="90" rx="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+            <rect x="62" y="318" width="66" height="40" rx="10" fill="var(--sup)" opacity=".5"/>
+            <text x="95" y="380" text-anchor="middle" font-size="13">Expansion tank</text>
+          </g>
+          <g class="part" tabindex="0" role="button" data-k="sensors" aria-label="Sensors">
+            <rect class="hl" x="340" y="138" width="70" height="34" rx="17" fill="none" stroke="transparent"/>
+            <g font-size="11" font-weight="700">
+              <circle cx="357" cy="155" r="11" fill="var(--panel)" stroke="var(--ink)"/><text x="357" y="159" text-anchor="middle">T</text>
+              <circle cx="393" cy="155" r="11" fill="var(--panel)" stroke="var(--ink)"/><text x="393" y="159" text-anchor="middle">P</text>
+            </g>
+            <text x="375" y="190" text-anchor="middle" font-size="13">Sensors</text>
+          </g>
+          <g class="part" tabindex="0" role="button" data-k="ctrl" aria-label="Controller and display">
+            <rect class="hl" x="160" y="400" width="130" height="60" rx="4" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+            <rect x="172" y="410" width="60" height="38" fill="var(--sup)" opacity=".35"/>
+            <path d="M176 440 l10 -12 l10 6 l10 -16 l10 8" stroke="var(--ink)" fill="none" stroke-width="2"/>
+            <circle cx="255" cy="420" r="5" fill="var(--sup)"/><circle cx="273" cy="420" r="5" fill="var(--ret)"/>
+            <text x="225" y="392" text-anchor="middle" font-size="13">Controller</text>
+          </g>
+          <g class="part" tabindex="0" role="button" data-k="leak" aria-label="Leak detection">
+            <rect class="hl" x="40" y="440" width="100" height="22" rx="3" fill="none" stroke="var(--ink)" stroke-dasharray="3 3"/>
+            <text x="90" y="455" text-anchor="middle" font-size="12">Leak detection</text>
+          </g>
+          <text x="30" y="140" font-size="11" style="fill:var(--muted)">facility water</text>
+          
+          <text x="410" y="422" font-size="11" style="fill:var(--muted)" text-anchor="end">from racks</text>
+        </svg>
+      </div>
+      <div class="readout" id="partInfo" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<!-- L2L vs L2A -->
+<section>
+  <div class="wrap">
+    <h2>Two ways to get rid of the heat</h2>
+    <p class="prose">Every CDU collects heat from the chips, but it has to hand that heat to something. nVent's page frames the choice around what your building already has.</p>
+    <div class="two">
+      <div class="col">
+        <div class="fig">
+          <svg viewBox="0 0 420 200" aria-label="Liquid to liquid CDU diagram">
+            <rect x="150" y="40" width="120" height="120" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+            <text x="210" y="105" text-anchor="middle" font-weight="700">L2L CDU</text>
+            <path class="pipe" stroke="var(--cold)" d="M20 75 H150"/><path class="pipe" stroke="var(--coldret)" d="M150 125 H20"/>
+            <path class="pipe" stroke="var(--sup)" d="M270 75 H400"/><path class="pipe" stroke="var(--ret)" d="M400 125 H270"/>
+            <path class="flow" d="M20 75 H150"/><path class="flow" d="M150 125 H20"/><path class="flow" d="M270 75 H400"/><path class="flow" d="M400 125 H270"/>
+            <text x="85" y="30" text-anchor="middle" font-size="13">Facility water</text>
+            <text x="335" y="30" text-anchor="middle" font-size="13">Racks</text>
+            <text x="210" y="190" text-anchor="middle" font-size="12" style="fill:var(--muted)">heat → building water → outdoors</text>
+          </svg>
+        </div>
+        <h3>Liquid‑to‑liquid (L2L)</h3>
+        <ul class="plain">
+          <li>Needs a facility water system already piped to the white space.</li>
+          <li>Built for scale: nVent quotes 800 kW+ of heat rejection for its high‑capacity L2L units.</li>
+          <li>Best for new AI/HPC halls and full liquid‑cooled deployments; pairs well with free cooling.</li>
+        </ul>
+      </div>
+      <div class="col">
+        <div class="fig">
+          <svg viewBox="0 0 420 200" aria-label="Liquid to air CDU diagram">
+            <rect x="150" y="40" width="120" height="120" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+            <text x="210" y="80" text-anchor="middle" font-weight="700">L2A CDU</text>
+            <g transform="translate(185,118)"><circle r="16" fill="none" stroke="var(--ink)" stroke-width="2"/><g class="spin"><path d="M0 0 L0 -13 M0 0 L11 7 M0 0 L-11 7" stroke="var(--ink)" stroke-width="3"/></g></g>
+            <g transform="translate(235,118)"><circle r="16" fill="none" stroke="var(--ink)" stroke-width="2"/><g class="spin"><path d="M0 0 L0 -13 M0 0 L11 7 M0 0 L-11 7" stroke="var(--ink)" stroke-width="3"/></g></g>
+            <path class="pipe" stroke="var(--sup)" d="M270 75 H400"/><path class="pipe" stroke="var(--ret)" d="M400 125 H270"/>
+            <path class="flow" d="M270 75 H400"/><path class="flow" d="M400 125 H270"/>
+            <g stroke="var(--hot)" stroke-width="3" fill="none" stroke-linecap="round">
+              <path d="M140 70 H40 M140 100 H40 M140 130 H40"/><path d="M52 62 L40 70 L52 78 M52 92 L40 100 L52 108 M52 122 L40 130 L52 138"/>
+            </g>
+            <text x="90" y="30" text-anchor="middle" font-size="13">Warm air to room</text>
+            <text x="335" y="30" text-anchor="middle" font-size="13">Racks</text>
+            <text x="210" y="190" text-anchor="middle" font-size="12" style="fill:var(--muted)">heat → room air → existing air handlers</text>
+          </svg>
+        </div>
+        <h3>Liquid‑to‑air (L2A)</h3>
+        <ul class="plain">
+          <li>No facility water needed: fans push the captured heat into the room, and the existing air handlers remove it.</li>
+          <li>nVent's LTA Sidecar supports up to two racks of liquid‑cooled equipment, and supports GB200 NVL36 in 1:1 configurations.</li>
+          <li>Best for retrofits: bringing a few liquid‑cooled AI racks into an air‑cooled hall with minimal building work.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FORM FACTORS -->
+<section>
+  <div class="wrap">
+    <h2>Where a CDU sits</h2>
+    <p class="prose">Seen from above, a data hall row. nVent offers CDUs at each scale: inside a rack, beside a pair of racks, and at the end of a whole row.</p>
+    <div class="fig">
+      <svg viewBox="0 0 1000 250" aria-label="Top-down floor plan of CDU placements">
+        <g id="floor"></g>
+      </svg>
+    </div>
+    <div class="two">
+      <div class="prose">
+        <h3>The nVent lineup, by scale</h3>
+        <p><strong>Rack CDU</strong> (AC and DC versions) sits in the rack and serves just that rack — the simplest way to add liquid to one high‑density cabinet.</p>
+        <p><strong>LTA Sidecar</strong> stands beside up to two racks and dumps heat into room air; no facility water required.</p>
+        <p><strong>Row CDU</strong> (RackChiller) is fed by facility water and supplies a whole row through manifolds; nVent's CDU800 family is built around reliability, availability and serviceability for direct‑to‑chip cooling.</p>
+        <p><strong>Project Deschutes Open CDU</strong> is a high‑pressure L2L unit built to Google's Project Deschutes 5.0 spec, contributed to the Open Compute Project, and aimed at GB200/GB300‑class and TPU deployments.</p>
+      </div>
+      <div>
+        <h3>Published capacities</h3>
+        <div class="bars">
+          <div class="bar"><b>High‑capacity L2L</b><div class="track"><div class="fill" style="width:40%">800 kW+</div></div></div>
+          <div class="bar"><b>Deschutes Open CDU</b><div class="track"><div class="fill" style="width:100%">up to 2 MW</div></div></div>
+        </div>
+        <p class="small">For scale: 2 MW is the heat of roughly 700 electric kettles (3 kW each) boiling at once. The Open CDU also moves up to 500 gpm, uses N+1 seal‑less pumps and runs at a 3 °C approach temperature (how close the coolant gets to the facility water temperature). nVent says it offers up to 5× the performance of its previous rack CDU generations.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ECOSYSTEM -->
+<section>
+  <div class="wrap">
+    <h2>The CDU is one part of a system</h2>
+    <div class="fig">
+      <svg viewBox="0 0 1000 170" aria-label="Chain of components from facility to chip">
+        <g id="chain"></g>
+      </svg>
+    </div>
+    <div class="prose">
+      <p><strong>Manifolds</strong> carry coolant from the CDU to the equipment in each rack; nVent's RackChiller manifolds use plug‑and‑play connections. <strong>Rear door heat exchangers</strong> (RDHx) cool the air leaving a rack using the same liquid; the RDHx PRO handles racks up to 78 kW. <strong>Heat rejection units</strong> cover sites without facility water. nVent also pairs its new CDUs and power distribution units on a shared control platform, so operators monitor cooling and power in one place.</p>
+      <p><strong>Choosing:</strong> have facility water and big loads → row L2L CDU. No facility water, a few AI racks → LTA Sidecar. One dense rack → rack CDU. Hyperscale, OCP‑style racks → Deschutes Open CDU.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap small">
+    <p>Sources: the nVent coolant distribution unit page, plus nVent's liquid cooling, liquid‑to‑air CDU, "three key technologies" and open‑standards pages, and DCD / Data Centre Review coverage of the SC25 launch. The nVent page itself blocked automated access, so its content was taken from search excerpts. Simulator values are illustrative, not nVent specifications.</p>
+    <ul>
+      <li><a href="https://www.nvent.com/en-us/data-solutions/coolant-distribution-unit">nvent.com — Coolant Distribution Units</a></li>
+      <li><a href="https://www.nvent.com/en-us/data-solutions/liquid-cooling">nvent.com — Data Center Liquid Cooling</a></li>
+      <li><a href="https://www.nvent.com/en-us/data-solutions/liquid-air-coolant-distribution-units-existing-data-centers">nvent.com — Liquid-to-Air CDUs in existing data centers</a></li>
+      <li><a href="https://www.nvent.com/en-us/data-solutions/ai-ready-liquid-cooling-power-built-open-standards">nvent.com — AI-ready liquid cooling on open standards</a></li>
+      <li><a href="https://www.datacenterdynamics.com/en/news/nvent-debuts-updated-liquid-cooling-products-for-ai-workloads/">DCD — nVent debuts updated liquid cooling products</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+
+/* servers with cold plates in hero */
+(function(){
+  const g=document.getElementById('servers');
+  for(let i=0;i<5;i++){
+    const y=150+i*40;
+    el('rect',{x:785,y:y,width:130,height:28,rx:2,fill:'var(--paper)',stroke:'var(--steel)'},g);
+    el('path',{d:`M760 ${y+14} H940`,stroke:'url(#plate)','stroke-width':5,fill:'none'},g);
+    el('path',{d:`M760 ${y+14} H940`,class:'flow'},g);
+    el('rect',{x:835,y:y+6,width:30,height:16,fill:'var(--ink)',opacity:.85},g);
+  }
+})();
+
+/* dot grid: place the water dot near the centre */
+(function(){const i=document.querySelector('.dots i');i.style.left=(35/70*100)+'%';i.style.top=(25/50*100)+'%';})();
+
+/* gauges */
+function gauge(g,label){
+  el('path',{d:'M-90 0 A90 90 0 0 1 90 0',fill:'none',stroke:'var(--rule)','stroke-width':14},g);
+  const arc=el('path',{fill:'none',stroke:'var(--sup)','stroke-width':14},g);
+  const needle=el('line',{x1:0,y1:0,x2:0,y2:-78,stroke:'var(--ink)','stroke-width':3,'stroke-linecap':'round'},g);
+  el('circle',{r:6,fill:'var(--ink)'},g);
+  const val=el('text',{y:40,'text-anchor':'middle','font-size':22,'font-weight':700},g,'');
+  el('text',{y:62,'text-anchor':'middle','font-size':14,style:'fill:var(--muted)'},g,label);
+  return p=>{const a=Math.PI*(1-p);const x=90*Math.cos(a),y=-90*Math.sin(a);
+    arc.setAttribute('d',`M-90 0 A90 90 0 0 1 ${x.toFixed(1)} ${y.toFixed(1)}`);
+    needle.setAttribute('transform',`rotate(${(p*180-90).toFixed(1)})`);val.textContent=Math.round(p*100)+'%';};
+}
+const setPump=gauge(document.getElementById('g1'),'pump speed');
+const setValve=gauge(document.getElementById('g2'),'facility valve open');
+
+let failed=false;
+const load=document.getElementById('load');
+function update(){
+  const pct=+load.value, Q=800*pct/100, dT=10, Ts=30;
+  const flowLs=Q/(4.18*dT);             // kg/s ≈ L/s
+  const lpm=flowLs*60;
+  let pump=Math.min(1,0.25+0.7*pct/100);
+  if(failed) pump=Math.min(1,pump*1.05);
+  const valve=Math.min(1,0.1+0.85*pct/100);
+  document.getElementById('loadLbl').textContent=pct+'%';
+  document.getElementById('rQ').textContent=Math.round(Q)+' kW';
+  document.getElementById('rF').textContent=Math.round(lpm).toLocaleString()+' L/min';
+  document.getElementById('rTs').textContent=Ts+' °C (held)';
+  document.getElementById('rTr').textContent=(Ts+dT)+' °C';
+  document.getElementById('rP').textContent=Math.round(pump*100)+'%';
+  document.getElementById('rV').textContent=Math.round(valve*100)+'%';
+  setPump(pump);setValve(valve);
+  const spd=(2.6-1.9*pct/100).toFixed(2)+'s';
+  document.documentElement.style.setProperty('--spd',spd);
+}
+load.addEventListener('input',update);
+document.getElementById('failBtn').addEventListener('click',e=>{
+  failed=!failed;e.currentTarget.setAttribute('aria-pressed',failed);
+  e.currentTarget.textContent=failed?'Restore the pump':'Simulate a pump failure';
+  document.getElementById('failMsg').textContent=failed
+   ?'Pump A stopped. The standby pump starts automatically; flow and supply temperature stay on target. This is what N+1 redundancy buys you.'
+   :'Both duty pumps healthy; standby pump idle.';
+  update();
+});
+update();
+
+/* inside the box */
+const parts={
+ hx:['Heat exchanger','A stack of thin metal plates. Facility water flows on one side of each plate, IT coolant on the other, so heat crosses over but the two liquids never mix. The smaller the temperature gap it needs (its "approach"), the warmer the facility water can be, which means more free cooling.'],
+ valve:['Facility water control valve','Opens and closes to let more or less building water through the heat exchanger. This is how the CDU holds the coolant going to the chips at a steady temperature when the load changes.'],
+ pumps:['Redundant pumps (N+1)','The pumps push coolant around the secondary loop through every rack. There is always one more pump than needed, so if one fails, another takes over with no drop in cooling. Variable-speed drives let them run only as fast as the load demands.'],
+ filter:['Filter','Direct-to-chip cold plates have tiny channels that clog easily. The filter strips out particles so the coolant stays clean for years.'],
+ tank:['Expansion tank and fill','Liquid expands as it warms. The tank absorbs that change and keeps the loop at a stable pressure, and it is where coolant is topped up.'],
+ sensors:['Temperature and pressure sensors','Sensors on supply and return lines report temperature, pressure and flow many times a second. They are what lets the CDU control pressure, flow and temperature, the three things nVent highlights.'],
+ ctrl:['Controller','The "brain". It reads the sensors, adjusts pump speed and the valve, raises alarms and reports to building management software. nVent\'s newest CDUs share a common control platform with its power distribution units.'],
+ leak:['Leak detection','Sensors in the base of the unit spot any escaping liquid early so the system can alarm or isolate before it reaches IT equipment.']
+};
+const info=document.getElementById('partInfo');
+function show(k){
+  document.querySelectorAll('.part').forEach(p=>p.classList.toggle('on',p.dataset.k===k));
+  info.innerHTML=`<h3>${parts[k][0]}</h3><p>${parts[k][1]}</p>`;
+}
+document.querySelectorAll('.part').forEach(p=>{
+  p.addEventListener('click',()=>show(p.dataset.k));
+  p.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();show(p.dataset.k);}});
+});
+show('hx');
+
+/* floor plan */
+(function(){
+  const g=document.getElementById('floor');
+  const rack=(x,y,fill)=>el('rect',{x,y,width:48,height:70,rx:2,fill:fill||'var(--panel)',stroke:'var(--ink)','stroke-width':1.5},g);
+  // zone 1: rack CDU
+  el('text',{x:70,y:30,'text-anchor':'middle','font-weight':700},g,'Rack CDU');
+  rack(46,60); el('rect',{x:50,y:112,width:40,height:14,fill:'var(--sup)'},g);
+  el('text',{x:70,y:160,'text-anchor':'middle','font-size':12,style:'fill:var(--muted)'},g,'1 rack');
+  // zone 2: LTA sidecar
+  el('text',{x:270,y:30,'text-anchor':'middle','font-weight':700},g,'LTA Sidecar');
+  rack(200,60);rack(250,60);el('rect',{x:300,y:60,width:40,height:70,rx:2,fill:'var(--ret)',opacity:.8},g);
+  el('text',{x:320,y:100,'text-anchor':'middle','font-size':11,'font-weight':700,style:'fill:#fff'},g,'L2A');
+  for(let i=0;i<3;i++)el('path',{d:`M345 ${75+i*20} q15 -6 30 0`,stroke:'var(--hot)','stroke-width':2,fill:'none'},g);
+  el('text',{x:270,y:160,'text-anchor':'middle','font-size':12,style:'fill:var(--muted)'},g,'up to 2 racks, heat to room air');
+  // zone 3: row CDU
+  el('text',{x:700,y:30,'text-anchor':'middle','font-weight':700},g,'Row CDU');
+  el('rect',{x:440,y:60,width:60,height:70,rx:2,fill:'var(--sup)'},g);
+  el('text',{x:470,y:100,'text-anchor':'middle','font-size':11,'font-weight':700,style:'fill:#fff'},g,'L2L');
+  for(let i=0;i<8;i++)rack(510+i*56,60);
+  el('path',{d:'M470 140 H960',stroke:'var(--sup)','stroke-width':5},g);
+  el('path',{d:'M470 150 H960',stroke:'var(--ret)','stroke-width':5},g);
+  el('path',{d:'M470 140 H960',class:'flow'},g);
+  el('path',{d:'M960 150 H470',class:'flow'},g);
+  el('path',{d:'M440 200 H400',stroke:'var(--cold)','stroke-width':6},g);
+  el('path',{d:'M470 130 V200 H400',stroke:'var(--cold)','stroke-width':6,fill:'none'},g);
+  el('text',{x:395,y:225,'font-size':12,style:'fill:var(--muted)'},g,'facility water in');
+  el('text',{x:715,y:180,'text-anchor':'middle','font-size':12,style:'fill:var(--muted)'},g,'manifolds under the floor or overhead feed every rack in the row');
+  el('text',{x:715,y:235,'text-anchor':'middle','font-size':12,style:'fill:var(--muted)'},g,'the Deschutes Open CDU applies the same idea at hyperscale: one unit, up to 2 MW');
+})();
+
+/* chain */
+(function(){
+  const g=document.getElementById('chain');
+  const items=[['Outdoors','tower or dry cooler','var(--coldret)'],['Facility water','primary loop','var(--cold)'],['CDU','exchange + control','var(--ink)'],['Manifolds','distribute per rack','var(--sup)'],['Cold plates','or rear doors (RDHx)','var(--ret)'],['Chips','GPUs, CPUs','var(--hot)']];
+  const w=150,gap=18;
+  items.forEach((it,i)=>{
+    const x=10+i*(w+gap);
+    el('rect',{x,y:40,width:w,height:80,rx:6,fill:'var(--panel)',stroke:it[2],'stroke-width':i===2?3:2},g);
+    el('text',{x:x+w/2,y:74,'text-anchor':'middle','font-weight':700,'font-size':15},g,it[0]);
+    el('text',{x:x+w/2,y:96,'text-anchor':'middle','font-size':12,style:'fill:var(--muted)'},g,it[1]);
+    if(i<items.length-1)el('path',{d:`M${x+w+2} 80 h${gap-4}`,stroke:'var(--muted)','stroke-width':2,'marker-end':''},g);
+  });
+  el('text',{x:990,y:150,'text-anchor':'end','font-size':12,style:'fill:var(--hot)'},g,'heat travels right to left, from the chip out to the sky');
+})();
+</script>
+</body>
+</html>

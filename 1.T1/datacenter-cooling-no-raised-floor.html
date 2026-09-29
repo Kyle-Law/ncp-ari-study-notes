@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>No raised floor? Cooling a data center on a slab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2F4F3; --panel:#FFFFFF; --ink:#18222D; --muted:#566270; --line:#C9D1D6;
+    --power:#D08A00; --power-soft:#FBEFD2;
+    --cool:#1C74B8; --cool-soft:#DCEBF6;
+    --heat:#C23B22; --heat-soft:#F7DDD7;
+    --ok:#2E7D4F; --ok-soft:#DCEFE3;
+    --body:"Barlow","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+    --label:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.6}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+  .prose{max-width:720px}
+  h1,h2,h3{line-height:1.15;margin:0}
+  h1{font-size:clamp(2.4rem,6vw,4.2rem);font-weight:700;letter-spacing:-.01em}
+  h2{font-size:clamp(1.6rem,3.2vw,2.2rem);font-weight:700;margin-bottom:.5em}
+  h3{font-size:1.2rem;font-weight:600;margin:1.4em 0 .4em}
+  p{margin:0 0 1em}
+  a{color:var(--cool)}
+  :focus-visible{outline:3px solid var(--cool);outline-offset:2px}
+
+  header{padding:64px 0 40px;border-bottom:1px solid var(--line)}
+  .back{font-size:.95rem;display:inline-block;margin-bottom:20px}
+  .lede{font-size:1.25rem;color:var(--muted);max-width:660px;margin-top:18px}
+  .rule{margin-top:28px;background:var(--ink);color:#fff;border-radius:8px;padding:18px 22px;max-width:720px;font-size:1.1rem}
+  .rule strong{color:#9FD0F5}
+  nav.toc{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:28px;font-size:.95rem}
+  nav.toc a{color:var(--ink);text-decoration:none;border-bottom:2px solid var(--line)}
+  nav.toc a:hover{border-color:var(--ink)}
+
+  section{padding:60px 0;border-bottom:1px solid var(--line)}
+  .kicker{font-family:var(--label);font-size:1.1rem;color:var(--muted);display:block;margin-bottom:6px}
+
+  figure{margin:24px 0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px}
+  figcaption{font-size:.92rem;color:var(--muted);margin-top:12px}
+  .diagram{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .diagram svg{display:block;width:100%;height:auto}
+  svg text{font-family:var(--label)}
+  .flow{stroke-dasharray:10 8;animation:flow 1.2s linear infinite}
+  @keyframes flow{to{stroke-dashoffset:-18}}
+
+  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:8px}
+  .facts div{background:var(--panel);border-radius:6px;padding:14px 16px;border-top:4px solid var(--line);font-size:.97rem}
+  .facts .good{border-color:var(--ok)}
+  .facts .watch{border-color:var(--heat)}
+  .facts .check{border-color:var(--cool)}
+  .facts strong{display:block;margin-bottom:2px}
+  .twin{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+  .twin figure{margin:0}
+
+  /* density tool */
+  .density{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px}
+  .density label{display:flex;justify-content:space-between;align-items:baseline;font-weight:600}
+  .density output{font-family:var(--label);font-size:1.6rem}
+  .density input{width:100%;accent-color:var(--ink);margin:8px 0 22px}
+  .ranges{position:relative}
+  .rrow{display:grid;grid-template-columns:190px 1fr;align-items:center;gap:12px;padding:6px 0}
+  .rname{font-size:.95rem;transition:color .2s}
+  .track{position:relative;height:18px;background:#EDF0F2;border-radius:4px}
+  .bar{position:absolute;top:0;bottom:0;border-radius:4px;background:#B9C2C9;transition:background .2s}
+  .rrow.fit .bar{background:var(--cool)}
+  .rrow.fit .rname{font-weight:700}
+  .rrow:not(.fit) .rname{color:var(--muted)}
+  .cursor{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--heat);pointer-events:none}
+  .axis{display:grid;grid-template-columns:190px 1fr;gap:12px;margin-top:4px}
+  .ticks{position:relative;height:20px;font-family:var(--label);font-size:.85rem;color:var(--muted)}
+  .ticks span{position:absolute;transform:translateX(-50%)}
+  .dnote{margin-top:14px;font-size:.98rem}
+  @media (max-width:600px){.rrow,.axis{grid-template-columns:120px 1fr}.rname{font-size:.85rem}}
+
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:20px 0}
+  ol.steps li{counter-increment:s;position:relative;padding:0 0 18px 48px}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;background:var(--cool);color:#fff;font-family:var(--label);font-weight:600;display:grid;place-items:center}
+  ol.steps strong{display:block}
+
+  table{border-collapse:collapse;width:100%;font-size:.97rem}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-weight:600;background:#E7EBED}
+  .tablewrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;margin-top:16px}
+  footer{padding:40px 0 64px;color:var(--muted);font-size:.92rem}
+  @media (prefers-reduced-motion:reduce){.flow{animation:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="back" href="datacenter-power-cooling-guide.html">Part 1: Power in, heat out</a>
+    <h1>No raised floor?</h1>
+    <p class="lede">Many modern data centers put racks straight onto the concrete slab. Without space under the floor for cold air, they deliver it other ways. Here's how each one works, and how you'd check it.</p>
+    <div class="rule">The goal never changes: <strong>cold air to the server fronts, hot air back to the cooling units, and the two never mix.</strong> Only the route changes.</div>
+    <nav class="toc" aria-label="Sections">
+      <a href="#compare">Raised vs. slab</a>
+      <a href="#flood">Overhead supply</a>
+      <a href="#hac">Hot aisle containment</a>
+      <a href="#inrow">In-row cooling</a>
+      <a href="#rdhx">Rear-door cooling</a>
+      <a href="#liquid">Liquid cooling</a>
+      <a href="#density">Which fits?</a>
+      <a href="#verify">How to verify</a>
+    </nav>
+  </div>
+</header>
+
+<!-- COMPARE -->
+<section id="compare">
+  <div class="wrap">
+    <div class="prose">
+      <h2>Raised floor vs. slab floor</h2>
+      <p>In a raised-floor room, the space under the tiles acts as a giant cold-air duct. On a slab floor there is no such space, so the design leans on two other ideas: bring cold air from <em>above or beside</em> the racks, or cool the air <em>right at the rack</em>, so it hardly travels at all.</p>
+    </div>
+    <div class="facts">
+      <div class="good"><strong>Why sites choose slab</strong>Cheaper to build, holds heavy racks easily, no hidden cable mess under the floor, and suits the newer cooling methods below.</div>
+      <div class="watch"><strong>What becomes harder</strong>Air can't be "aimed" through floor tiles, so separating hot and cold air relies on containment and careful layout.</div>
+      <div class="check"><strong>Where cables go</strong>Overhead, in trays and ladder racks. Keep them from blocking air returns and ducts.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 1 FLOOD / OVERHEAD -->
+<section id="flood">
+  <div class="wrap">
+    <div class="prose">
+      <span class="kicker">Method 1</span>
+      <h2>Overhead supply (room flooding)</h2>
+      <p>Cooling units along the wall push cold air through ducts in the ceiling, which drop it into the cold aisle. Hot air rises and drifts back toward the cooling units. It's simple, but nothing stops some hot air from falling back into the cold aisle.</p>
+    </div>
+    <figure>
+      <div class="diagram">
+        <svg viewBox="0 0 1000 400" style="min-width:760px" role="img" aria-labelledby="t1">
+          <title id="t1">Side view: a cooling unit feeds a ceiling duct that drops cold air into the cold aisle; hot air rises and returns to the unit, with some leaking back into the cold aisle</title>
+          <defs>
+            <marker id="c1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1C74B8"/></marker>
+            <marker id="h1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C23B22"/></marker>
+          </defs>
+          <line x1="0" y1="30" x2="1000" y2="30" stroke="#18222D" stroke-width="3"/>
+          <rect x="0" y="340" width="1000" height="26" fill="#9AA3AB"/>
+          <text x="820" y="358" font-size="15" fill="#fff">Concrete slab</text>
+          <!-- unit -->
+          <rect x="30" y="140" width="110" height="200" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+          <text x="85" y="240" text-anchor="middle" font-size="18" font-weight="600" fill="#18222D">Cooling</text>
+          <text x="85" y="260" text-anchor="middle" font-size="18" font-weight="600" fill="#18222D">unit</text>
+          <!-- duct -->
+          <path d="M110 140 V48 H540 V72 H134 V140" fill="#DCEBF6" stroke="#1C74B8" stroke-width="2"/>
+          <rect x="465" y="72" width="70" height="8" fill="#1C74B8"/>
+          <text x="300" y="66" text-anchor="middle" font-size="15" fill="#11507F">Supply duct</text>
+          <!-- racks -->
+          <rect x="360" y="180" width="70" height="160" fill="#fff" stroke="#18222D" stroke-width="2"/>
+          <rect x="570" y="180" width="70" height="160" fill="#fff" stroke="#18222D" stroke-width="2"/>
+          <g fill="#E7EBED" stroke="#18222D" stroke-width="1">
+            <rect x="366" y="190" width="58" height="20"/><rect x="366" y="216" width="58" height="20"/><rect x="366" y="242" width="58" height="20"/><rect x="366" y="268" width="58" height="20"/><rect x="366" y="294" width="58" height="20"/>
+            <rect x="576" y="190" width="58" height="20"/><rect x="576" y="216" width="58" height="20"/><rect x="576" y="242" width="58" height="20"/><rect x="576" y="268" width="58" height="20"/><rect x="576" y="294" width="58" height="20"/>
+          </g>
+          <rect x="445" y="150" width="110" height="24" rx="4" fill="#DCEBF6"/>
+          <text x="500" y="168" text-anchor="middle" font-size="16" font-weight="600" fill="#11507F">Cold aisle</text>
+          <rect x="250" y="150" width="90" height="24" rx="4" fill="#F7DDD7"/>
+          <text x="295" y="168" text-anchor="middle" font-size="16" font-weight="600" fill="#8A2615">Hot aisle</text>
+          <rect x="660" y="150" width="90" height="24" rx="4" fill="#F7DDD7"/>
+          <text x="705" y="168" text-anchor="middle" font-size="16" font-weight="600" fill="#8A2615">Hot aisle</text>
+          <!-- cold -->
+          <g stroke="#1C74B8" stroke-width="4" fill="none">
+            <path class="flow" d="M485 84 V140"/><path class="flow" d="M515 84 V140"/>
+            <path class="flow" d="M485 180 V230 H436" marker-end="url(#c1)"/>
+            <path class="flow" d="M485 230 V290 H436" marker-end="url(#c1)"/>
+            <path class="flow" d="M515 180 V230 H564" marker-end="url(#c1)"/>
+            <path class="flow" d="M515 230 V290 H564" marker-end="url(#c1)"/>
+          </g>
+          <!-- hot -->
+          <g stroke="#C23B22" stroke-width="4" fill="none">
+            <path class="flow" d="M360 250 H300 V110 H85 V136" marker-end="url(#h1)"/>
+            <path class="flow" d="M640 250 H710 V110 H620"/>
+            <path class="flow" d="M620 110 C 570 110, 560 125, 548 140" marker-end="url(#h1)"/>
+          </g>
+          <text x="720" y="100" font-size="15" fill="#8A2615">Some hot air falls back</text>
+          <text x="720" y="118" font-size="15" fill="#8A2615">into the cold aisle (mixing)</text>
+        </svg>
+      </div>
+      <figcaption>Overhead supply with open aisles. The red curl on the right is the weakness: without walls, hot and cold air mix.</figcaption>
+    </figure>
+    <div class="facts">
+      <div class="good"><strong>Good for</strong>Small rooms and low-power racks, roughly up to 5 kW each.</div>
+      <div class="watch"><strong>Watch out for</strong>Hot spots at the tops of racks and at the ends of rows, where hot air wraps around.</div>
+      <div class="check"><strong>Check</strong>Airflow from each diffuser, and inlet temperatures at the top of racks furthest from the unit.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 HOT AISLE CONTAINMENT -->
+<section id="hac">
+  <div class="wrap">
+    <div class="prose">
+      <span class="kicker">Method 2</span>
+      <h2>Hot aisle containment</h2>
+      <p>The racks are turned so their backs face each other, and that hot aisle is closed in with doors at both ends and a roof or chimney on top. Hot air is trapped and ducted straight back to the cooling units. The rest of the room becomes one big cold space, so it no longer matters exactly where the cold air comes from. This is the most common slab-floor design.</p>
+    </div>
+    <figure>
+      <div class="diagram">
+        <svg viewBox="0 0 1000 400" style="min-width:760px" role="img" aria-labelledby="t2">
+          <title id="t2">Side view: two racks back to back with an enclosed hot aisle between them; a chimney carries hot air into a ceiling space and back to the cooling unit, while the rest of the room is cold</title>
+          <defs>
+            <marker id="c2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1C74B8"/></marker>
+            <marker id="h2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C23B22"/></marker>
+          </defs>
+          <!-- cold room -->
+          <rect x="0" y="92" width="1000" height="248" fill="#DCEBF6" opacity=".45"/>
+          <!-- ceiling + plenum -->
+          <line x1="0" y1="30" x2="1000" y2="30" stroke="#18222D" stroke-width="3"/>
+          <rect x="0" y="30" width="1000" height="60" fill="#F7DDD7" opacity=".6"/>
+          <line x1="0" y1="90" x2="1000" y2="90" stroke="#18222D" stroke-width="2"/>
+          <text x="820" y="66" font-size="15" fill="#8A2615">Ceiling return space</text>
+          <rect x="0" y="340" width="1000" height="26" fill="#9AA3AB"/>
+          <text x="820" y="358" font-size="15" fill="#fff">Concrete slab</text>
+          <!-- unit -->
+          <rect x="30" y="140" width="110" height="200" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+          <text x="85" y="240" text-anchor="middle" font-size="18" font-weight="600" fill="#18222D">Cooling</text>
+          <text x="85" y="260" text-anchor="middle" font-size="18" font-weight="600" fill="#18222D">unit</text>
+          <rect x="70" y="90" width="30" height="50" fill="#F7DDD7" stroke="#18222D" stroke-width="1.5"/>
+          <!-- hot aisle -->
+          <rect x="400" y="170" width="200" height="170" fill="#F7DDD7"/>
+          <rect x="440" y="90" width="120" height="80" fill="#F7DDD7"/>
+          <g stroke="#18222D" stroke-width="3" fill="none">
+            <path d="M400 170 H440 V90"/><path d="M600 170 H560 V90"/>
+          </g>
+          <!-- racks -->
+          <rect x="330" y="170" width="70" height="170" fill="#fff" stroke="#18222D" stroke-width="2"/>
+          <rect x="600" y="170" width="70" height="170" fill="#fff" stroke="#18222D" stroke-width="2"/>
+          <g fill="#E7EBED" stroke="#18222D" stroke-width="1">
+            <rect x="336" y="180" width="58" height="22"/><rect x="336" y="208" width="58" height="22"/><rect x="336" y="236" width="58" height="22"/><rect x="336" y="264" width="58" height="22"/><rect x="336" y="292" width="58" height="22"/>
+            <rect x="606" y="180" width="58" height="22"/><rect x="606" y="208" width="58" height="22"/><rect x="606" y="236" width="58" height="22"/><rect x="606" y="264" width="58" height="22"/><rect x="606" y="292" width="58" height="22"/>
+          </g>
+          <text x="500" y="324" text-anchor="middle" font-size="16" font-weight="600" fill="#8A2615">Hot aisle, enclosed</text>
+          <text x="500" y="160" text-anchor="middle" font-size="14" fill="#8A2615">chimney / roof</text>
+          <!-- cold flows -->
+          <g stroke="#1C74B8" stroke-width="4" fill="none">
+            <path class="flow" d="M140 230 H326" marker-end="url(#c2)"/>
+            <path class="flow" d="M140 290 H326" marker-end="url(#c2)"/>
+            <path class="flow" d="M900 230 H674" marker-end="url(#c2)"/>
+            <path class="flow" d="M900 290 H674" marker-end="url(#c2)"/>
+          </g>
+          <text x="150" y="200" font-size="15" fill="#11507F">Whole room is the cold side</text>
+          <text x="760" y="215" font-size="15" fill="#11507F">Cold room air</text>
+          <!-- hot flows -->
+          <g stroke="#C23B22" stroke-width="4" fill="none">
+            <path class="flow" d="M400 230 H470"/><path class="flow" d="M400 290 H470"/>
+            <path class="flow" d="M600 230 H530"/><path class="flow" d="M600 290 H530"/>
+            <path class="flow" d="M500 290 V60 H85 V136" marker-end="url(#h2)"/>
+          </g>
+          <text x="500" y="380" text-anchor="middle" font-size="14" fill="#566270">Doors close both ends of the hot aisle</text>
+        </svg>
+      </div>
+      <figcaption>Hot air can't escape into the room, so it can't mix with the cold air.</figcaption>
+    </figure>
+    <div class="facts">
+      <div class="good"><strong>Good for</strong>Most slab-floor rooms. Roughly up to 15–20 kW per rack with good sealing.</div>
+      <div class="watch"><strong>Watch out for</strong>Doors left open, missing roof panels, gaps under racks, and missing blanking panels. Every leak lets hot air out.</div>
+      <div class="check"><strong>Check</strong>Room (cold side) temperature, hot aisle temperature (it will be hot, often 35–45 °C, and that's normal), and air pressure between the two sides.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 IN-ROW -->
+<section id="inrow">
+  <div class="wrap">
+    <div class="prose">
+      <span class="kicker">Method 3</span>
+      <h2>In-row cooling</h2>
+      <p>Narrow cooling units sit <em>inside</em> the row, between the racks, looking like just another rack. Each one pulls hot air from the hot aisle behind it and blows cold air into the cold aisle in front. The air only travels a meter or two, so this handles hotter racks well. It's easiest to understand looking down from the ceiling.</p>
+    </div>
+    <figure>
+      <div class="diagram">
+        <svg viewBox="0 0 1000 400" style="min-width:760px" role="img" aria-labelledby="t3">
+          <title id="t3">Top-down view of two rows of racks with narrow in-row cooling units between them, pulling hot air from the shared middle aisle and pushing cold air into the outer aisles</title>
+          <defs>
+            <marker id="c3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1C74B8"/></marker>
+            <marker id="h3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C23B22"/></marker>
+          </defs>
+          <text x="20" y="24" font-size="15" fill="#566270">Looking down from the ceiling</text>
+          <!-- aisles -->
+          <rect x="60" y="36" width="620" height="58" fill="#DCEBF6" opacity=".7"/>
+          <rect x="60" y="154" width="620" height="92" fill="#F7DDD7" opacity=".8"/>
+          <rect x="60" y="306" width="620" height="58" fill="#DCEBF6" opacity=".7"/>
+          <text x="700" y="70" font-size="16" font-weight="600" fill="#11507F">Cold aisle</text>
+          <text x="700" y="205" font-size="16" font-weight="600" fill="#8A2615">Hot aisle</text>
+          <text x="700" y="340" font-size="16" font-weight="600" fill="#11507F">Cold aisle</text>
+          <!-- row 1 -->
+          <g stroke="#18222D" stroke-width="2">
+            <rect x="80" y="94" width="80" height="60" fill="#fff"/><rect x="160" y="94" width="80" height="60" fill="#fff"/>
+            <rect x="240" y="94" width="50" height="60" fill="#BFDDF2"/>
+            <rect x="290" y="94" width="80" height="60" fill="#fff"/><rect x="370" y="94" width="80" height="60" fill="#fff"/>
+            <rect x="450" y="94" width="50" height="60" fill="#BFDDF2"/>
+            <rect x="500" y="94" width="80" height="60" fill="#fff"/><rect x="580" y="94" width="80" height="60" fill="#fff"/>
+          </g>
+          <!-- row 2 -->
+          <g stroke="#18222D" stroke-width="2">
+            <rect x="80" y="246" width="80" height="60" fill="#fff"/><rect x="160" y="246" width="80" height="60" fill="#fff"/>
+            <rect x="240" y="246" width="50" height="60" fill="#BFDDF2"/>
+            <rect x="290" y="246" width="80" height="60" fill="#fff"/><rect x="370" y="246" width="80" height="60" fill="#fff"/>
+            <rect x="450" y="246" width="50" height="60" fill="#BFDDF2"/>
+            <rect x="500" y="246" width="80" height="60" fill="#fff"/><rect x="580" y="246" width="80" height="60" fill="#fff"/>
+          </g>
+          <g font-size="14" fill="#566270" text-anchor="middle">
+            <text x="120" y="129">rack</text><text x="200" y="129">rack</text><text x="330" y="129">rack</text><text x="410" y="129">rack</text><text x="540" y="129">rack</text><text x="620" y="129">rack</text>
+            <text x="120" y="281">rack</text><text x="200" y="281">rack</text><text x="330" y="281">rack</text><text x="410" y="281">rack</text><text x="540" y="281">rack</text><text x="620" y="281">rack</text>
+          </g>
+          <!-- row 1 air -->
+          <g stroke="#1C74B8" stroke-width="3.5" fill="none">
+            <path d="M265 92 V46"  marker-end="url(#c3)"/><path d="M475 92 V46" marker-end="url(#c3)"/>
+            <path class="flow" d="M255 50 H135 V90" marker-end="url(#c3)"/>
+            <path class="flow" d="M275 50 H330 V90" marker-end="url(#c3)"/>
+            <path class="flow" d="M465 50 H410 V90" marker-end="url(#c3)"/>
+            <path class="flow" d="M485 50 H600 V90" marker-end="url(#c3)"/>
+          </g>
+          <g stroke="#C23B22" stroke-width="3.5" fill="none">
+            <path d="M120 156 V186" marker-end="url(#h3)"/><path d="M200 156 V186" marker-end="url(#h3)"/><path d="M330 156 V186" marker-end="url(#h3)"/><path d="M410 156 V186" marker-end="url(#h3)"/><path d="M540 156 V186" marker-end="url(#h3)"/><path d="M620 156 V186" marker-end="url(#h3)"/>
+            <path class="flow" d="M265 196 V158" marker-end="url(#h3)"/><path class="flow" d="M475 196 V158" marker-end="url(#h3)"/>
+          </g>
+          <!-- row 2 air -->
+          <g stroke="#1C74B8" stroke-width="3.5" fill="none">
+            <path d="M265 308 V354"  marker-end="url(#c3)"/><path d="M475 308 V354" marker-end="url(#c3)"/>
+            <path class="flow" d="M255 350 H135 V310" marker-end="url(#c3)"/>
+            <path class="flow" d="M275 350 H330 V310" marker-end="url(#c3)"/>
+            <path class="flow" d="M465 350 H410 V310" marker-end="url(#c3)"/>
+            <path class="flow" d="M485 350 H600 V310" marker-end="url(#c3)"/>
+          </g>
+          <g stroke="#C23B22" stroke-width="3.5" fill="none">
+            <path d="M120 244 V214" marker-end="url(#h3)"/><path d="M200 244 V214" marker-end="url(#h3)"/><path d="M330 244 V214" marker-end="url(#h3)"/><path d="M410 244 V214" marker-end="url(#h3)"/><path d="M540 244 V214" marker-end="url(#h3)"/><path d="M620 244 V214" marker-end="url(#h3)"/>
+            <path class="flow" d="M265 204 V242" marker-end="url(#h3)"/><path class="flow" d="M475 204 V242" marker-end="url(#h3)"/>
+          </g>
+          <!-- legend -->
+          <rect x="820" y="150" width="30" height="22" fill="#BFDDF2" stroke="#18222D" stroke-width="1.5"/>
+          <text x="860" y="167" font-size="15" fill="#18222D">In-row cooler</text>
+          <rect x="820" y="184" width="30" height="22" fill="#fff" stroke="#18222D" stroke-width="1.5"/>
+          <text x="860" y="201" font-size="15" fill="#18222D">Server rack</text>
+          <text x="820" y="236" font-size="14" fill="#566270">Coolers pull hot air in</text>
+          <text x="820" y="254" font-size="14" fill="#566270">from the hot aisle and</text>
+          <text x="820" y="272" font-size="14" fill="#566270">push cold air out front.</text>
+        </svg>
+      </div>
+      <figcaption>Each cooler serves the few racks beside it. That's why capacity must be checked row by row, not just for the whole room.</figcaption>
+    </figure>
+    <div class="facts">
+      <div class="good"><strong>Good for</strong>Medium to high density, roughly 10–30 kW per rack, and rooms that grow one row at a time.</div>
+      <div class="watch"><strong>Watch out for</strong>If one cooler fails, the racks right next to it heat up first. Neighbors must be able to cover.</div>
+      <div class="check"><strong>Check</strong>Load per row vs. coolers in that row, N+1 per row, and the chilled water or refrigerant supply feeding them.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 REAR DOOR -->
+<section id="rdhx">
+  <div class="wrap">
+    <div class="prose">
+      <span class="kicker">Method 4</span>
+      <h2>Rear-door heat exchanger</h2>
+      <p>The back door of the rack is swapped for a radiator, like the one in a car, with cold water flowing through it. Hot air leaving the servers passes through the door and comes out already cooled to room temperature. Each rack effectively cools itself, so the room barely notices it.</p>
+    </div>
+    <figure>
+      <div class="diagram">
+        <svg viewBox="0 0 1000 380" style="min-width:760px" role="img" aria-labelledby="t4">
+          <title id="t4">Side view of a rack with a water-cooled rear door: room air at 24 degrees enters, heats to about 40 degrees in the servers, and leaves through the door back at about 24 degrees</title>
+          <defs>
+            <marker id="c4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1C74B8"/></marker>
+          </defs>
+          <line x1="0" y1="30" x2="1000" y2="30" stroke="#18222D" stroke-width="3"/>
+          <rect x="0" y="330" width="1000" height="26" fill="#9AA3AB"/>
+          <!-- rack -->
+          <rect x="380" y="80" width="150" height="250" fill="#fff" stroke="#18222D" stroke-width="2"/>
+          <g fill="#E7EBED" stroke="#18222D" stroke-width="1">
+            <rect x="388" y="92" width="134" height="30"/><rect x="388" y="130" width="134" height="30"/><rect x="388" y="168" width="134" height="30"/><rect x="388" y="206" width="134" height="30"/><rect x="388" y="244" width="134" height="30"/><rect x="388" y="282" width="134" height="30"/>
+          </g>
+          <rect x="530" y="80" width="30" height="250" fill="#FBEFD2" stroke="#18222D" stroke-width="2"/>
+          <path d="M545 90 L537 105 L553 120 L537 135 L553 150 L537 165 L553 180 L537 195 L553 210 L537 225 L553 240 L537 255 L553 270 L537 285 L553 300 L545 318" stroke="#1C74B8" stroke-width="2.5" fill="none"/>
+          <text x="455" y="70" text-anchor="middle" font-size="16" font-weight="600" fill="#18222D">Rack</text>
+          <!-- pipes -->
+          <path d="M540 80 V30" stroke="#1C74B8" stroke-width="6"/>
+          <path d="M552 80 V30" stroke="#C23B22" stroke-width="6"/>
+          <text x="575" y="52" font-size="15" fill="#11507F">cold water in</text>
+          <text x="575" y="70" font-size="15" fill="#8A2615">warm water out, to chiller</text>
+          <text x="585" y="205" font-size="16" font-weight="600" fill="#7A5200">Cooling door</text>
+          <text x="585" y="224" font-size="14" fill="#566270">water coil absorbs the heat</text>
+          <!-- air -->
+          <g stroke="#1C74B8" stroke-width="4" fill="none">
+            <path class="flow" d="M160 140 H376" marker-end="url(#c4)"/>
+            <path class="flow" d="M160 220 H376" marker-end="url(#c4)"/>
+            <path class="flow" d="M160 300 H376" marker-end="url(#c4)"/>
+            <path class="flow" d="M564 140 H800" marker-end="url(#c4)"/>
+            <path class="flow" d="M564 260 H800" marker-end="url(#c4)"/>
+            <path class="flow" d="M564 300 H800" marker-end="url(#c4)"/>
+          </g>
+          <!-- temp badges -->
+          <rect x="160" y="95" width="120" height="28" rx="4" fill="#DCEBF6"/>
+          <text x="220" y="115" text-anchor="middle" font-size="16" font-weight="600" fill="#11507F">Room ≈ 24 °C</text>
+                    <text x="455" y="370" text-anchor="middle" font-size="15" font-weight="600" fill="#8A2615">Inside ≈ 40 °C</text>
+          <rect x="680" y="95" width="160" height="28" rx="4" fill="#DCEBF6"/>
+          <text x="760" y="115" text-anchor="middle" font-size="16" font-weight="600" fill="#11507F">Leaves ≈ 24 °C</text>
+        </svg>
+      </div>
+      <figcaption>The air is heated inside the servers and cooled again inside the door, before it ever reaches the room.</figcaption>
+    </figure>
+    <div class="facts">
+      <div class="good"><strong>Good for</strong>High-density racks, roughly 20–50 kW, and upgrading a few hot racks in an older room.</div>
+      <div class="watch"><strong>Watch out for</strong>Water near IT equipment. Leak detection and good piping matter. Doors left open bypass the coil.</div>
+      <div class="check"><strong>Check</strong>Air temperature leaving the door (should match the room), water supply temperature and flow rate, and leak sensors.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 LIQUID -->
+<section id="liquid">
+  <div class="wrap">
+    <div class="prose">
+      <span class="kicker">Method 5</span>
+      <h2>Liquid cooling</h2>
+      <p>Air struggles once a rack goes beyond roughly 30–40 kW, which is common with AI and GPU servers. Liquid carries heat far better than air, so these systems bring liquid right to the hottest parts. There are two main styles.</p>
+    </div>
+    <div class="twin">
+      <figure>
+        <div class="diagram">
+          <svg viewBox="0 0 480 300" role="img" aria-labelledby="t5a">
+            <title id="t5a">Direct-to-chip: cool liquid flows through metal plates sitting on each processor and leaves warm</title>
+            <text x="240" y="26" text-anchor="middle" font-size="18" font-weight="600" fill="#18222D">Direct-to-chip</text>
+            <rect x="50" y="70" width="380" height="180" rx="6" fill="#E7F0E9" stroke="#18222D" stroke-width="2"/>
+            <text x="240" y="238" text-anchor="middle" font-size="14" fill="#566270">server board, seen from above</text>
+            <rect x="140" y="120" width="70" height="70" rx="4" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <rect x="270" y="120" width="70" height="70" rx="4" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <text x="175" y="160" text-anchor="middle" font-size="14" fill="#18222D">chip +</text>
+            <text x="175" y="176" text-anchor="middle" font-size="14" fill="#18222D">cold plate</text>
+            <text x="305" y="160" text-anchor="middle" font-size="14" fill="#18222D">chip +</text>
+            <text x="305" y="176" text-anchor="middle" font-size="14" fill="#18222D">cold plate</text>
+            <path class="flow" d="M10 140 H140" stroke="#1C74B8" stroke-width="5" fill="none"/>
+            <path class="flow" d="M210 140 H270" stroke="#D08A00" stroke-width="5" fill="none"/>
+            <path class="flow" d="M340 140 H470" stroke="#C23B22" stroke-width="5" fill="none"/>
+            <text x="14" y="126" font-size="14" fill="#11507F">cool in</text>
+            <text x="466" y="126" text-anchor="end" font-size="14" fill="#8A2615">warm out</text>
+            <text x="240" y="285" text-anchor="middle" font-size="14" fill="#566270">Pipes run to a CDU, which passes the heat to the building's water.</text>
+          </svg>
+        </div>
+        <figcaption>Liquid flows through metal plates sitting directly on the processors. Fans still cool the smaller parts.</figcaption>
+      </figure>
+      <figure>
+        <div class="diagram">
+          <svg viewBox="0 0 480 300" role="img" aria-labelledby="t5b">
+            <title id="t5b">Immersion: servers stand upright in a tank of non-conductive liquid which absorbs the heat and is pumped to a heat exchanger</title>
+            <text x="240" y="26" text-anchor="middle" font-size="18" font-weight="600" fill="#18222D">Immersion</text>
+            <rect x="60" y="80" width="300" height="180" fill="#fff" stroke="#18222D" stroke-width="2.5"/>
+            <rect x="62" y="104" width="296" height="154" fill="#DCEBF6"/>
+            <g fill="#E7EBED" stroke="#18222D" stroke-width="1.5">
+              <rect x="90" y="96" width="26" height="150"/><rect x="140" y="96" width="26" height="150"/><rect x="190" y="96" width="26" height="150"/><rect x="240" y="96" width="26" height="150"/><rect x="290" y="96" width="26" height="150"/>
+            </g>
+            <g stroke="#C23B22" stroke-width="2.5" fill="none">
+              <path d="M128 200 q6 -10 0 -20 q-6 -10 0 -20 q6 -10 0 -20"/>
+              <path d="M228 200 q6 -10 0 -20 q-6 -10 0 -20 q6 -10 0 -20"/>
+              <path d="M278 200 q6 -10 0 -20 q-6 -10 0 -20 q6 -10 0 -20"/>
+            </g>
+            <text x="210" y="280" text-anchor="middle" font-size="14" fill="#566270">tank of special liquid that doesn't conduct electricity</text>
+            <rect x="390" y="120" width="80" height="60" rx="4" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <text x="430" y="146" text-anchor="middle" font-size="13" fill="#18222D">heat</text>
+            <text x="430" y="162" text-anchor="middle" font-size="13" fill="#18222D">exchanger</text>
+            <path class="flow" d="M360 130 H390" stroke="#C23B22" stroke-width="5"/>
+            <path class="flow" d="M390 170 H360" stroke="#1C74B8" stroke-width="5"/>
+          </svg>
+        </div>
+        <figcaption>Whole servers sit in a bath of liquid. No fans needed.</figcaption>
+      </figure>
+    </div>
+    <div class="facts" style="margin-top:20px">
+      <div class="good"><strong>Good for</strong>Very high density: direct-to-chip roughly 30–100+ kW per rack, immersion even more.</div>
+      <div class="watch"><strong>Watch out for</strong>Most sites are hybrid. Liquid takes most of the heat, but some still goes to the air, so room cooling is still needed.</div>
+      <div class="check"><strong>Check</strong>CDU capacity, coolant temperature and flow, pump redundancy, and how much heat still goes to air.</div>
+    </div>
+  </div>
+</section>
+
+<!-- DENSITY TOOL -->
+<section id="density">
+  <div class="wrap">
+    <div class="prose">
+      <h2>Which method fits a rack?</h2>
+      <p>The biggest factor is how much power each rack uses, because that's how much heat it makes. Slide to a rack power and see which methods usually suit it. The ranges are rough guides for learning, not design limits.</p>
+    </div>
+    <div class="density">
+      <label for="kw">Power per rack <output id="kwOut">8 kW</output></label>
+      <input type="range" id="kw" min="1" max="120" step="1" value="8">
+      <div class="ranges" id="ranges"></div>
+      <div class="axis"><span></span><div class="ticks" id="ticks"></div></div>
+      <p class="dnote" id="dnote"></p>
+    </div>
+  </div>
+</section>
+
+<!-- VERIFY -->
+<section id="verify">
+  <div class="wrap">
+    <div class="prose">
+      <h2>How to verify: same three steps</h2>
+      <p>The basic method from Part 1 doesn't change. What changes is <em>where</em> you look.</p>
+      <ol class="steps">
+        <li><strong>Find the limit.</strong>Add up cooling capacity. For in-row coolers and rear doors, capacity lives in each row or rack, so compare each location's load to its own cooling, not just room totals.</li>
+        <li><strong>Measure server inlet temperatures.</strong>Still aim for about 18–27 °C at the server fronts, low, middle and high on each rack.</li>
+        <li><strong>Plan for one unit failing (N+1).</strong>With in-row cooling, ask whether the neighboring coolers can cover. With water-based systems, check spare pumps and chillers too.</li>
+      </ol>
+    </div>
+
+    <h3>What's different to check on a slab floor</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Instead of…</th><th>Check this</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Floor tiles and under-floor pressure</td><td>Ceiling returns, ducts and diffusers are clear</td><td>Cable trays and lights often block overhead air paths.</td></tr>
+          <tr><td>Tile placement</td><td>Containment doors, roof panels, blanking panels, gaps under racks</td><td>Containment does the separating job the floor used to do. Every leak counts.</td></tr>
+          <tr><td>Room-level cooling total only</td><td>Load vs. cooling per row or per rack</td><td>In-row and rear-door cooling is local. One hot row can fail while the room total looks fine.</td></tr>
+          <tr><td>Air system only</td><td>Water side: supply temperature, flow, pumps, CDUs, leak detection</td><td>In-row, rear-door and liquid systems depend on water reaching them.</td></tr>
+          <tr><td>Everything on air</td><td>How much heat goes to liquid vs. air</td><td>Liquid-cooled servers still release some heat into the room.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Quick comparison</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Method</th><th>Where cold comes from</th><th>Rough rack range</th><th>Main thing to check</th></tr></thead>
+        <tbody>
+          <tr><td>Overhead supply</td><td>Ceiling ducts from wall units</td><td>Up to ~5 kW</td><td>Hot spots at rack tops and row ends</td></tr>
+          <tr><td>Hot aisle containment</td><td>Anywhere; hot air is trapped</td><td>Up to ~15–20 kW</td><td>Containment leaks</td></tr>
+          <tr><td>In-row cooling</td><td>Units between racks</td><td>~10–30 kW</td><td>Capacity and N+1 per row</td></tr>
+          <tr><td>Rear-door heat exchanger</td><td>Water coil on each rack door</td><td>~20–50 kW</td><td>Door exit temperature, water flow</td></tr>
+          <tr><td>Direct-to-chip liquid</td><td>Cold plates on chips</td><td>~30–100+ kW</td><td>CDU, coolant flow, leftover air heat</td></tr>
+          <tr><td>Immersion</td><td>Tank of liquid</td><td>~50–200 kW</td><td>Fluid temperature, heat exchanger</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap prose">
+    <p>Ranges are simplified for learning and vary by manufacturer and site design. Real projects rely on vendor specifications and engineering review.</p>
+    <p><a href="datacenter-power-cooling-guide.html">Back to Part 1: Power in, heat out</a></p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const MAX = 120;
+  const methods = [
+    {n:"Overhead supply", a:1, b:5},
+    {n:"Raised floor (for reference)", a:1, b:10},
+    {n:"Hot aisle containment", a:3, b:20},
+    {n:"In-row cooling", a:10, b:30},
+    {n:"Rear-door exchanger", a:20, b:50},
+    {n:"Direct-to-chip liquid", a:30, b:110},
+    {n:"Immersion", a:50, b:120}
+  ];
+  const wrap = document.getElementById('ranges');
+  const pct = v => (v/MAX*100);
+  methods.forEach((m,i)=>{
+    const row = document.createElement('div');
+    row.className='rrow'; row.id='r'+i;
+    row.innerHTML = '<span class="rname">'+m.n+'</span><div class="track"><div class="bar" style="left:'+pct(m.a)+'%;width:'+(pct(m.b)-pct(m.a))+'%"></div><div class="cursor"></div></div>';
+    wrap.appendChild(row);
+  });
+  const ticks = document.getElementById('ticks');
+  [0,20,40,60,80,100,120].forEach(t=>{
+    const s=document.createElement('span'); s.style.left=pct(t)+'%'; s.textContent=t+(t===120?'+ kW':''); ticks.appendChild(s);
+  });
+  const input = document.getElementById('kw');
+  function update(){
+    const v = +input.value;
+    document.getElementById('kwOut').textContent = v+' kW';
+    const fits=[];
+    methods.forEach((m,i)=>{
+      const row=document.getElementById('r'+i);
+      const ok = v>=m.a && v<=m.b;
+      row.classList.toggle('fit',ok);
+      row.querySelector('.cursor').style.left = pct(v)+'%';
+      if(ok) fits.push(m.n);
+    });
+    let msg;
+    if(v<=5) msg='A typical office-style server rack. Almost any method works; simple overhead supply or containment is enough.';
+    else if(v<=15) msg='A common enterprise rack. Hot aisle containment is the usual slab-floor choice.';
+    else if(v<=30) msg='A dense rack. Air still works, but the cooling needs to be close: in-row coolers or rear doors.';
+    else if(v<=50) msg='Very dense. Rear-door cooling or liquid to the chips. This is where air starts to struggle.';
+    else msg='AI/GPU territory. Liquid cooling is the practical option.';
+    document.getElementById('dnote').textContent = msg;
+  }
+  input.addEventListener('input',update);
+  update();
+})();
+</script>
+</body>
+</html>

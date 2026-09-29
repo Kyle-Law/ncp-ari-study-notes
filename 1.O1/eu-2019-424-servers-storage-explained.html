@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Regulation (EU) 2019/424 explained: ecodesign for servers and data storage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F4F6; --panel:#FFFFFF; --ink:#15212C; --muted:#56646F; --line:#D3DAE0; --grid:#E3E8EC;
+  --blue:#1D4E89; --blue-soft:#DDE8F4; --amber:#C98600; --amber-soft:#FAEFD3;
+  --teal:#23806F; --teal-soft:#DAF0EB; --red:#B8392E; --red-soft:#F7DEDB; --slate:#7C8B98;
+  --sans:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --serif:"IBM Plex Serif", Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0F161D; --panel:#16202A; --ink:#E4EAF0; --muted:#9AA8B4; --line:#2A3743; --grid:#22303B;
+    --blue:#6EA2DE; --blue-soft:#1B2E44; --amber:#EDB13E; --amber-soft:#3A2D12;
+    --teal:#4BBEA6; --teal-soft:#15332D; --red:#EE7466; --red-soft:#3C1E1B; --slate:#8594A1;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--sans)}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);max-width:1200px;margin:0 auto}
+nav.toc{position:sticky;top:0;height:100vh;overflow:auto;padding:28px 18px 28px 24px;border-right:1px solid var(--line);font-size:14px}
+nav.toc .code{font-family:var(--serif);font-weight:600;font-size:17px;margin-bottom:14px;display:block;color:var(--ink);text-decoration:none}
+nav.toc ol{list-style:none;padding:0;margin:0}
+nav.toc li a{display:block;padding:5px 8px;border-radius:4px;color:var(--muted);text-decoration:none}
+nav.toc li a:hover{background:var(--blue-soft);color:var(--ink)}
+nav.toc .ref{font-size:12px;color:var(--slate)}
+main{padding:36px 40px 80px;min-width:0}
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr}
+  nav.toc{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}
+  nav.toc ol{display:flex;flex-wrap:wrap;gap:4px}
+  main{padding:24px 18px 60px}
+}
+
+header.hero{max-width:900px}
+.hero h1{font-family:var(--serif);font-weight:600;font-size:clamp(30px,4.4vw,46px);line-height:1.12;margin:0 0 14px;letter-spacing:-.01em}
+.hero p.lede{font-size:19px;color:var(--muted);max-width:66ch;margin:0 0 26px}
+.hero .source{font-size:13px;color:var(--slate);margin-top:10px}
+
+section{max-width:900px;margin-top:64px;scroll-margin-top:16px}
+section > h2{font-family:var(--serif);font-weight:600;font-size:28px;line-height:1.2;margin:0 0 6px;display:flex;gap:14px;align-items:baseline}
+section > h2 .num{font-family:var(--sans);font-size:15px;font-weight:600;color:var(--blue);min-width:28px}
+.where{font-size:13px;color:var(--slate);margin:0 0 18px 42px}
+section p, section li{max-width:72ch}
+h3{font-size:18px;margin:28px 0 8px}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin:18px 0}
+.panel.tight{padding:14px 16px}
+.scroll-x{overflow-x:auto}
+svg{display:block;width:100%;height:auto;font-family:var(--sans)}
+svg .grid{stroke:var(--grid);stroke-width:1}
+svg .axis{stroke:var(--line);stroke-width:1.5}
+svg .tick{fill:var(--muted);font-size:12px}
+svg .lbl{fill:var(--ink);font-size:13px}
+svg .lbl-b{fill:var(--ink);font-size:13px;font-weight:600}
+svg .small{fill:var(--muted);font-size:11.5px}
+svg .inbar{fill:#fff;font-size:12px;font-weight:600}
+svg .tot{fill:var(--ink);font-size:13px;font-weight:600}
+.caption{font-size:13.5px;color:var(--muted);margin-top:8px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:700px){.two{grid-template-columns:1fr}}
+
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:13px}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px}
+.tag.y{background:var(--teal-soft);color:var(--teal)}
+.tag.n{background:var(--grid);color:var(--muted)}
+.tag.d{background:var(--amber-soft);color:var(--amber)}
+
+.excl{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:14px 0}
+.excl div{border-left:3px solid var(--slate);padding:6px 12px;background:var(--panel);border-radius:0 6px 6px 0;font-size:14.5px}
+.excl b{display:block}
+.excl small{color:var(--muted)}
+
+/* forms */
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px 16px}
+label.f{display:flex;flex-direction:column;font-size:13.5px;color:var(--muted);gap:4px}
+label.f input,label.f select{font:15px var(--sans);padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:6px 16px;margin-top:10px;font-size:14.5px}
+.checks label{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.checks input{margin-top:5px}
+fieldset{border:0;padding:0;margin:0 0 12px}
+legend{font-weight:600;font-size:14px;margin-bottom:6px}
+.result{margin-top:16px;padding:14px 16px;border-radius:8px;background:var(--blue-soft)}
+.result.pass{background:var(--teal-soft)}
+.result.fail{background:var(--red-soft)}
+.result h4{margin:0 0 6px;font-size:16px}
+.result ul{margin:6px 0 0;padding-left:20px}
+.big{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+
+/* verification flow */
+.flow{display:flex;flex-direction:column;align-items:stretch;gap:0}
+.step{display:grid;grid-template-columns:34px 1fr;gap:12px;position:relative;padding-bottom:18px}
+.step:not(:last-child)::before{content:"";position:absolute;left:16px;top:34px;bottom:0;width:2px;background:var(--line)}
+.step .dot{width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.step .body{padding-top:5px}
+.step .body b{display:block}
+.branch{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;font-size:13.5px}
+.branch span{padding:3px 10px;border-radius:6px}
+.branch .ok{background:var(--teal-soft);color:var(--teal)}
+.branch .ko{background:var(--red-soft);color:var(--red)}
+.branch .nx{background:var(--amber-soft);color:var(--amber)}
+
+.comp{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.comp div{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:14px;display:flex;gap:10px;align-items:center}
+.comp svg{width:28px;height:28px;flex:none}
+.note{border-left:3px solid var(--amber);padding:8px 14px;background:var(--amber-soft);border-radius:0 6px 6px 0;font-size:14.5px;margin:16px 0}
+.formula{font-family:var(--serif);font-size:18px;padding:14px 16px;background:var(--bg);border-radius:8px;overflow-x:auto;white-space:nowrap}
+footer{max-width:900px;margin-top:70px;font-size:13px;color:var(--slate);border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="Contents">
+  <a class="code" href="#top">Regulation (EU) 2019/424</a>
+  <ol>
+    <li><a href="#scope">Scope <span class="ref">Art. 1–2</span></a></li>
+    <li><a href="#why">Why it exists <span class="ref">Recitals</span></a></li>
+    <li><a href="#matrix">Requirements map <span class="ref">Art. 3</span></a></li>
+    <li><a href="#psu">Power supplies <span class="ref">II 1.1</span></a></li>
+    <li><a href="#idle">Idle power <span class="ref">II 2.1</span></a></li>
+    <li><a href="#active">Active efficiency <span class="ref">II 2.2, III</span></a></li>
+    <li><a href="#material">Repair, data, firmware <span class="ref">II 1.2</span></a></li>
+    <li><a href="#info">Information duties <span class="ref">II 3</span></a></li>
+    <li><a href="#classes">Operating classes <span class="ref">Table 6</span></a></li>
+    <li><a href="#verify">Market checks <span class="ref">Art. 5, IV</span></a></li>
+    <li><a href="#bench">Benchmarks <span class="ref">Art. 7, V</span></a></li>
+    <li><a href="#other">Other articles <span class="ref">Art. 4, 6, 8–10</span></a></li>
+  </ol>
+</nav>
+
+<main id="top">
+<header class="hero">
+  <h1>Ecodesign rules for servers and data storage, explained</h1>
+  <p class="lede">Commission Regulation (EU) 2019/424 sets minimum energy performance and repair-friendliness rules that most enterprise servers and online storage systems must meet before they can be sold in the EU. Here is what it requires, when, and how it's checked.</p>
+  <div class="panel scroll-x" aria-label="Timeline of key dates">
+    <svg viewBox="0 0 900 190" style="min-width:640px" role="img" aria-label="Timeline from 2019 to 2023">
+      <line x1="40" x2="870" y1="100" y2="100" class="axis"/>
+      <g class="tick" text-anchor="middle">
+        <line x1="40" x2="40" y1="94" y2="106" class="axis"/><text x="40" y="124">2019</text>
+        <line x1="222" x2="222" y1="94" y2="106" class="axis"/><text x="222" y="124">2020</text>
+        <line x1="404" x2="404" y1="94" y2="106" class="axis"/><text x="404" y="124">2021</text>
+        <line x1="587" x2="587" y1="94" y2="106" class="axis"/><text x="587" y="124">2022</text>
+        <line x1="769" x2="769" y1="94" y2="106" class="axis"/><text x="769" y="124">2023</text>
+      </g>
+      <!-- phases -->
+      <rect x="84" y="92" width="169" height="16" rx="3" fill="var(--grid)"/>
+      <rect x="253" y="92" width="617" height="16" rx="3" fill="var(--blue)" opacity=".85"/>
+      <rect x="435" y="92" width="435" height="16" rx="3" fill="var(--teal)" opacity=".9"/>
+      <rect x="769" y="92" width="101" height="16" rx="3" fill="var(--amber)"/>
+      <!-- markers -->
+      <g>
+        <circle cx="84" cy="100" r="7" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+        <line x1="84" x2="84" y1="40" y2="92" stroke="var(--ink)"/>
+        <text x="90" y="32" class="lbl-b">Published 18 Mar 2019</text>
+        <text x="90" y="50" class="small">In force 7 Apr 2019</text>
+
+        <circle cx="253" cy="100" r="7" fill="var(--blue)" stroke="var(--panel)" stroke-width="2"/>
+        <line x1="253" x2="253" y1="108" y2="146" stroke="var(--blue)"/>
+        <text x="259" y="160" class="lbl-b">1 Mar 2020</text>
+        <text x="259" y="177" class="small">Core rules apply; Reg. 617/2013 amended</text>
+
+        <circle cx="435" cy="100" r="7" fill="var(--teal)" stroke="var(--panel)" stroke-width="2"/>
+        <line x1="435" x2="435" y1="40" y2="92" stroke="var(--teal)"/>
+        <text x="441" y="32" class="lbl-b">1 Mar 2021</text>
+        <text x="441" y="50" class="small">Firmware availability duty</text>
+
+        <circle cx="617" cy="100" r="7" fill="var(--panel)" stroke="var(--slate)" stroke-width="2" stroke-dasharray="3 2"/>
+        <line x1="617" x2="617" y1="108" y2="146" stroke="var(--slate)" stroke-dasharray="3 3"/>
+        <text x="623" y="160" class="lbl-b">Mar 2022</text>
+        <text x="623" y="177" class="small">Commission review due</text>
+
+        <circle cx="769" cy="100" r="7" fill="var(--amber)" stroke="var(--panel)" stroke-width="2"/>
+        <line x1="769" x2="769" y1="40" y2="92" stroke="var(--amber)"/>
+        <text x="775" y="32" class="lbl-b">1 Jan 2023</text>
+        <text x="775" y="50" class="small">Stricter PSU tier</text>
+      </g>
+    </svg>
+    <div class="legend">
+      <span><i style="background:var(--blue)"></i>Efficiency, repair, data deletion and information rules</span>
+      <span><i style="background:var(--teal)"></i>+ firmware availability</span>
+      <span><i style="background:var(--amber)"></i>+ tighter PSU limits</span>
+    </div>
+  </div>
+  <p class="source">Based on the text published in the Official Journal, L 74, 18 March 2019, pp. 46–66. Legal instruments get amended; check EUR-Lex for the current consolidated version before relying on this for compliance.</p>
+</header>
+
+<!-- SCOPE -->
+<section id="scope">
+  <h2><span class="num">1</span>What it covers</h2>
+  <p class="where">Article 1 (scope) and Article 2 (definitions)</p>
+  <p>Two product groups are in scope: <strong>servers</strong> and <strong>online data storage products</strong>. A server here is a machine that serves client devices over a network (not via keyboard and mouse), runs server operating systems or hypervisors, supports error‑correcting or buffered memory, and lets all its processors share memory under a single OS. An online data storage product is a complete storage system that delivers random‑access data with a time to first data under 80 ms.</p>
+  <p>Nine kinds of product are carved out, mostly because they are niche, highly specialised, or already covered elsewhere:</p>
+  <div class="excl">
+    <div><b>Embedded‑application servers</b><small>Software living permanently in an industrial or consumer device</small></div>
+    <div><b>Small‑scale servers</b><small>Remain under Regulation (EU) No 617/2013 on computers</small></div>
+    <div><b>More than four processor sockets</b><small>Counted per node for multi‑node servers</small></div>
+    <div><b>Server appliances</b><small>Pre‑loaded OS and software for a dedicated function, no user software</small></div>
+    <div><b>Large servers</b><small>Resilient, shipped in full racks, 32+ dedicated I/O slots</small></div>
+    <div><b>Fully fault tolerant servers</b><small>Every component duplicated across two nodes running identical workloads</small></div>
+    <div><b>Network servers</b><small>More than 11 ports, 12 Gb/s+ total, software‑defined networking</small></div>
+    <div><b>Small data storage</b><small>Three data storage devices at most</small></div>
+    <div><b>Large data storage</b><small>More than 400 devices, no single point of failure, non‑disruptive servicing</small></div>
+  </div>
+
+  <h3>Check a product</h3>
+  <div class="panel" id="scopeTool">
+    <div class="form">
+      <label class="f">Product kind
+        <select id="sKind"><option value="server">Server</option><option value="storage">Data storage product</option></select>
+      </label>
+      <label class="f srv">Processor sockets (per node)
+        <select id="sSock"><option>1</option><option selected>2</option><option>3</option><option>4</option><option value="5">More than 4</option></select>
+      </label>
+      <label class="f sto" hidden>Number of data storage devices (max config)
+        <input id="sDev" type="number" min="0" value="24">
+      </label>
+    </div>
+    <fieldset class="srv" style="margin-top:14px">
+      <legend>Does any of these describe the server?</legend>
+      <div class="checks">
+        <label><input type="checkbox" class="sx"> Runs an embedded application</label>
+        <label><input type="checkbox" class="sx"> Small‑scale server under Reg. 617/2013</label>
+        <label><input type="checkbox" class="sx"> Server appliance (no user‑supplied software)</label>
+        <label><input type="checkbox" class="sx"> Large server (full racks, 32+ I/O slots)</label>
+        <label><input type="checkbox" class="sx"> Fully fault tolerant</label>
+        <label><input type="checkbox" class="sx"> Network server (&gt;11 ports, SDN)</label>
+      </div>
+      <legend style="margin-top:14px">Special design features</legend>
+      <div class="checks">
+        <label><input type="checkbox" id="sRes"> Resilient server</label>
+        <label><input type="checkbox" id="sHpc"> HPC server</label>
+        <label><input type="checkbox" id="sApa"> Integrated accelerator (APA)</label>
+        <label><input type="checkbox" id="sDc"> Runs on DC power only</label>
+      </div>
+    </fieldset>
+    <fieldset class="sto" hidden style="margin-top:14px">
+      <div class="checks">
+        <label><input type="checkbox" id="tOnline" checked> Online: random access, first data in under 80 ms</label>
+        <label><input type="checkbox" id="tLarge"> High‑end/mainframe with no single point of failure, non‑disruptive serviceability and integrated controller</label>
+        <label><input type="checkbox" id="tDc"> Runs on DC power only</label>
+      </div>
+    </fieldset>
+    <div id="scopeOut" class="result" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- WHY -->
+<section id="why">
+  <h2><span class="num">2</span>Why it exists</h2>
+  <p class="where">Recitals 4–7</p>
+  <p>The preparatory study found two environmental issues worth regulating: electricity use while running, and resource efficiency (repair, reuse, upgrade and recycling). Projected consumption for 2030 is large once you count the cooling and backup power that each watt of IT load drags along with it.</p>
+  <div class="two">
+    <div class="panel"><h3 style="margin-top:0">Projected EU consumption in 2030</h3><div id="chEnergy"></div>
+      <div class="legend"><span><i style="background:var(--blue)"></i>Product itself</span><span><i style="background:var(--amber)"></i>Infrastructure (cooling, UPS)</span></div></div>
+    <div class="panel"><h3 style="margin-top:0">Expected annual savings by 2030</h3><div id="chSave"></div>
+      <div class="legend"><span><i style="background:var(--blue)"></i>Direct</span><span><i style="background:var(--amber)"></i>Infrastructure</span></div></div>
+  </div>
+  <p>Together that is roughly <strong>9 TWh a year</strong>, which the Commission compares to Estonia's electricity consumption in 2014, and about <strong>3.0 Mt CO₂‑equivalent</strong> (2.1 Mt from servers, 0.9 Mt from storage).</p>
+</section>
+
+<!-- MATRIX -->
+<section id="matrix">
+  <h2><span class="num">3</span>Which rule applies to what, and when</h2>
+  <p class="where">Article 3 and Annex II</p>
+  <div class="panel scroll-x">
+    <table>
+      <thead><tr><th>Annex II point</th><th>Requirement</th><th>From</th><th>Servers</th><th>Online storage</th></tr></thead>
+      <tbody>
+        <tr><td>1.1.1</td><td>PSU efficiency and power factor, tier 1</td><td>1 Mar 2020</td><td><span class="tag y">Yes</span></td><td><span class="tag y">Yes</span></td></tr>
+        <tr><td>1.1.2</td><td>PSU efficiency and power factor, tier 2</td><td>1 Jan 2023</td><td><span class="tag y">Yes</span></td><td><span class="tag y">Yes</span></td></tr>
+        <tr><td>1.2.1</td><td>Key components can be disassembled</td><td>1 Mar 2020</td><td><span class="tag y">Yes</span></td><td><span class="tag y">Yes</span></td></tr>
+        <tr><td>1.2.2</td><td>Secure data deletion function</td><td>1 Mar 2020</td><td><span class="tag y">Yes</span></td><td><span class="tag y">Yes</span></td></tr>
+        <tr><td>1.2.3</td><td>Firmware and security updates available</td><td>1 Mar 2021</td><td><span class="tag y">Yes</span></td><td><span class="tag y">Yes</span></td></tr>
+        <tr><td>2.1</td><td>Maximum idle state power</td><td>1 Mar 2020</td><td><span class="tag d">1–2 sockets</span></td><td><span class="tag n">No</span></td></tr>
+        <tr><td>2.2</td><td>Minimum active state efficiency</td><td>1 Mar 2020</td><td><span class="tag d">1–2 sockets</span></td><td><span class="tag n">No</span></td></tr>
+        <tr><td>3.1</td><td>Product information (servers)</td><td>1 Mar 2020</td><td><span class="tag y">Yes</span></td><td><span class="tag n">No</span></td></tr>
+        <tr><td>3.2</td><td>Product information (storage)</td><td>1 Mar 2020</td><td><span class="tag n">No</span></td><td><span class="tag y">Yes</span></td></tr>
+        <tr><td>3.3</td><td>Repair and recycling information for third parties</td><td>1 Mar 2020</td><td><span class="tag y">Yes</span></td><td><span class="tag y">Yes</span></td></tr>
+        <tr><td>3.4</td><td>Technical documentation for conformity assessment</td><td>1 Mar 2020</td><td><span class="tag y">Yes</span></td><td><span class="tag y">Yes</span></td></tr>
+      </tbody>
+    </table>
+    <p class="caption">PSU limits don't apply to DC‑only products. Idle power and active efficiency limits don't apply to resilient servers, HPC servers or servers with an integrated accelerator, although these must still publish their measured values.</p>
+  </div>
+  <p>Storage products have no energy performance limits of their own yet. Article 8 asks the Commission to consider setting them in its review.</p>
+</section>
+
+<!-- PSU -->
+<section id="psu">
+  <h2><span class="num">4</span>Power supply efficiency</h2>
+  <p class="where">Annex II points 1.1.1 and 1.1.2, Tables 1 and 2</p>
+  <p>Every AC‑powered server and storage product must use power supply units (PSUs) that convert mains power efficiently across the load range, not only at the sweet spot. Efficiency is checked at 10 %, 20 %, 50 % and 100 % of rated load, and power factor at 50 % load. The 2023 tier raised the bar for multi‑output units and added a 10 % load point for single‑output units, since servers often idle at low load for long periods.</p>
+  <div class="panel"><div id="chPsu"></div>
+    <div class="legend">
+      <span><i style="background:var(--blue)"></i>Single output</span>
+      <span><i style="background:var(--amber)"></i>Multi output</span>
+      <span>Dashed line: from 1 Mar 2020 · Solid line: from 1 Jan 2023</span>
+    </div>
+    <p class="caption">The vertical axis starts at 86 % to make the differences visible. No limit applies at 10 % load except for single‑output PSUs from 2023. The 2023 multi‑output line sits exactly on top of the 2020 single‑output line: multi‑output units had to catch up to the earlier single‑output level.</p>
+  </div>
+  <div class="panel tight scroll-x">
+    <table>
+      <thead><tr><th>Minimum power factor at 50 % load</th><th class="n">From 2020</th><th class="n">From 2023</th></tr></thead>
+      <tbody><tr><td>Multi output</td><td class="n">0.90</td><td class="n">0.95</td></tr><tr><td>Single output</td><td class="n">0.95</td><td class="n">0.95</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- IDLE -->
+<section id="idle">
+  <h2><span class="num">5</span>Idle state power</h2>
+  <p class="where">Annex II point 2.1, Tables 3 and 4 (servers with one or two sockets)</p>
+  <p>Idle means the OS has loaded and the server could do work, but nothing is requested. Servers spend a lot of time here, so the regulation caps idle power. The cap isn't a single number: it starts from a base allowance for the server type and adds allowances for each component that legitimately consumes power.</p>
+  <div class="formula">P<sub>idle</sub> ≤ P<sub>base</sub> + Σ P<sub>add,i</sub></div>
+  <div class="two" style="margin-top:14px">
+    <div class="panel tight scroll-x"><table>
+      <thead><tr><th>Base allowance (Table 3)</th><th class="n">W</th></tr></thead>
+      <tbody><tr><td>1‑socket (not blade/multi‑node)</td><td class="n">25</td></tr><tr><td>2‑socket (not blade/multi‑node)</td><td class="n">38</td></tr><tr><td>Blade or multi‑node, per node</td><td class="n">40</td></tr></tbody></table></div>
+    <div class="panel tight scroll-x"><table>
+      <thead><tr><th>Extra allowances (Table 4)</th><th>W</th></tr></thead>
+      <tbody>
+        <tr><td>CPU performance</td><td>10 × Perf<sub>CPU</sub> (1 socket), 7 × Perf<sub>CPU</sub> (2 sockets)</td></tr>
+        <tr><td>Redundant PSU</td><td>10 each</td></tr>
+        <tr><td>HDD or SSD</td><td>5.0 each</td></tr>
+        <tr><td>Memory above 4 GB</td><td>0.18 per GB</td></tr>
+        <tr><td>Buffered DDR channels above 8</td><td>4.0 each</td></tr>
+        <tr><td>Extra network ports</td><td>2 to 26 per active port, by speed</td></tr>
+      </tbody></table></div>
+  </div>
+  <p>For blade servers, idle power is the chassis total divided by the number of installed blades; for multi‑node servers it's the enclosure total divided by the number of nodes.</p>
+
+  <h3>Idle power allowance calculator</h3>
+  <div class="panel" id="idleTool">
+    <div class="form">
+      <label class="f">Form factor<select id="iForm"><option value="std">Standard (rack or tower)</option><option value="blade">Blade or multi‑node</option></select></label>
+      <label class="f">Sockets (per node)<select id="iSock"><option>1</option><option selected>2</option></select></label>
+      <label class="f">Perf<sub style="font-size:10px">CPU</sub> score<input id="iPerf" type="number" step="0.1" min="0" value="3"></label>
+      <label class="f">Redundant PSUs<input id="iPsu" type="number" min="0" value="1"></label>
+      <label class="f">HDDs + SSDs<input id="iDrv" type="number" min="0" value="2"></label>
+      <label class="f">Installed memory (GB)<input id="iMem" type="number" min="0" value="128"></label>
+      <label class="f">Buffered DDR channels<input id="iDdr" type="number" min="0" value="16"></label>
+      <label class="f">Measured idle power (W, optional)<input id="iMeas" type="number" min="0" step="0.1" placeholder="e.g. 140"></label>
+    </div>
+    <fieldset style="margin-top:14px">
+      <legend>Active network ports beyond the first two onboard ports of ≥ 1 Gb/s</legend>
+      <div class="form">
+        <label class="f">1 Gb/s (2 W)<input class="iPort" data-w="2" type="number" min="0" value="0"></label>
+        <label class="f">&gt;1 to &lt;10 Gb/s (4 W)<input class="iPort" data-w="4" type="number" min="0" value="0"></label>
+        <label class="f">10 to &lt;25 Gb/s (15 W)<input class="iPort" data-w="15" type="number" min="0" value="2"></label>
+        <label class="f">25 to &lt;50 Gb/s (20 W)<input class="iPort" data-w="20" type="number" min="0" value="0"></label>
+        <label class="f">≥ 50 Gb/s (26 W)<input class="iPort" data-w="26" type="number" min="0" value="0"></label>
+      </div>
+    </fieldset>
+    <div id="chIdle" style="margin-top:16px"></div>
+    <div class="legend" id="idleLegend"></div>
+    <div id="idleOut" class="result" aria-live="polite"></div>
+    <p class="caption">Perf<sub>CPU</sub> is the normalised CPU performance score from the standard test (EN 303 470 / SERT). The default of 3 is only an example value.</p>
+  </div>
+</section>
+
+<!-- ACTIVE -->
+<section id="active">
+  <h2><span class="num">6</span>Active state efficiency</h2>
+  <p class="where">Annex II point 2.2, Table 5; Annex III point 3</p>
+  <p>Idle power alone could reward a slow server. Active state efficiency measures useful work per watt while the machine is busy. The test runs eleven small workloads ("worklets") that stress the CPU, memory and storage; each gets an efficiency score of 1 000 × performance ÷ power. These are rolled up in three steps using geometric means, so no single worklet can dominate the result.</p>
+  <div class="panel"><div id="chWeights"></div>
+    <p class="caption">Weighting of the three workload types in the final score, with the worklets that make up each.</p></div>
+  <div class="formula">Eff<sub>server</sub> = exp[ 0.65 · ln(Eff<sub>CPU</sub>) + 0.30 · ln(Eff<sub>Memory</sub>) + 0.05 · ln(Eff<sub>Storage</sub>) ]</div>
+  <p>The three sub‑scores are themselves geometric means: of 7 worklets for the CPU, 2 for memory, 2 for storage. The measured score must reach the minimum for its type:</p>
+  <div class="two">
+    <div class="panel"><div id="chMinEff"></div><p class="caption">Minimum Eff<sub>server</sub> (Table 5)</p></div>
+    <div class="panel" id="effTool">
+      <h3 style="margin-top:0">Try the formula</h3>
+      <div class="form" style="grid-template-columns:1fr 1fr">
+        <label class="f">Eff<sub style="font-size:10px">CPU</sub><input id="eC" type="number" step="0.1" min="0.01" value="14"></label>
+        <label class="f">Eff<sub style="font-size:10px">Memory</sub><input id="eM" type="number" step="0.1" min="0.01" value="9"></label>
+        <label class="f">Eff<sub style="font-size:10px">Storage</sub><input id="eS" type="number" step="0.1" min="0.01" value="4"></label>
+        <label class="f">Type<select id="eT"><option value="9">1‑socket</option><option value="9.5" selected>2‑socket</option><option value="8">Blade / multi‑node</option></select></label>
+      </div>
+      <div id="effOut" class="result" aria-live="polite"></div>
+    </div>
+  </div>
+  <p>Servers with an add‑in accelerator card (expansion APA) are tested with the card removed. Resilient, HPC and integrated‑APA servers are exempt from both the idle and active limits.</p>
+</section>
+
+<!-- MATERIAL -->
+<section id="material">
+  <h2><span class="num">7</span>Repair, data deletion and firmware</h2>
+  <p class="where">Annex II point 1.2; Recitals 8–12</p>
+  <p>These circular‑economy rules aim to keep hardware in use longer by making it easier for refurbishers, repairers and recyclers to work on it, without compromising data protection under the GDPR.</p>
+  <h3>Components that must be removable</h3>
+  <p>Joining, fastening or sealing techniques must not prevent these from being taken apart for repair or reuse (when present):</p>
+  <div class="comp" id="compGrid"></div>
+
+  <h3>Secure data deletion</h3>
+  <p>A built‑in way to wipe all data from every storage device must be provided, overwriting it so recovery becomes infeasible for a given level of effort. It could live in the BIOS/firmware, on a bootable disc or USB stick shipped with the product, or in software for the supported operating systems. Manufacturers must explain how to use it and which deletion standards it supports.</p>
+
+  <h3>How long firmware must stay available</h3>
+  <div class="panel scroll-x"><div id="chFirmware" style="min-width:600px"></div>
+    <p class="caption">Example: a model first sold in 2021 and last sold in 2025. The latest firmware version may be free or offered at a fair, transparent, non‑discriminatory cost; security updates must be free.</p></div>
+</section>
+
+<!-- INFO -->
+<section id="info">
+  <h2><span class="num">8</span>Information manufacturers must publish</h2>
+  <p class="where">Annex II points 3.1 to 3.4</p>
+  <p>Information must stay available from first placing on the market until at least eight years after the last unit of a model is sold. Custom one‑off products are exempt from the public information duty.</p>
+  <div class="panel scroll-x">
+    <table>
+      <thead><tr><th style="width:24%">Who sees it</th><th style="width:22%">Where</th><th>What</th></tr></thead>
+      <tbody>
+        <tr><td><b>Everyone</b> (servers, 3.1)</td><td>Manual and free public website</td><td>Product type, manufacturer, model and configuration numbers, year; PSU efficiency, power factor and rated output; idle power and the components claimed as allowances; maximum power; operating condition class and idle power at its upper temperature; active efficiency and performance; data deletion instructions; compatible chassis for blades; configurations covered by a product family</td></tr>
+        <tr><td><b>Everyone</b> (storage, 3.2)</td><td>Manual and free public website</td><td>Product type, manufacturer, model, year; PSU efficiency and power factor; operating condition class with a statement that it was tested within those boundaries; data deletion instructions</td></tr>
+        <tr><td><b>Repairers, refurbishers, recyclers, brokers</b> (3.3)</td><td>Free, after registering on a website</td><td>Weight band (&lt;5 g, 5–25 g, &gt;25 g) of cobalt in batteries and neodymium in hard drives; disassembly steps with the operation, the fasteners to undo and the tools needed</td></tr>
+        <tr><td><b>Market surveillance authorities</b> (3.4)</td><td>Technical documentation</td><td>All of the above for the relevant product</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>For product families, the performance figures are reported for two reference builds: a low‑end configuration (weakest processor, two drives, minimum memory across all channels) and a high‑end configuration (strongest processor, two drives, generous memory).</p>
+</section>
+
+<!-- CLASSES -->
+<section id="classes">
+  <h2><span class="num">9</span>Operating condition classes</h2>
+  <p class="where">Annex II Table 6, aligned with ASHRAE thermal guidelines</p>
+  <p>Manufacturers must declare which environmental class the product is tested to work in. A higher class tolerates hotter, more humid rooms, which lets data centres cool less aggressively and save energy. There is no minimum class yet; Article 8 flags this for review.</p>
+  <div class="panel"><div id="chClasses"></div>
+    <div class="legend"><span><i style="background:var(--blue);opacity:.35"></i>Allowable dry‑bulb range</span><span><i style="background:var(--teal)"></i>Recommended range (18–27 °C for all)</span></div></div>
+  <div class="panel tight scroll-x"><table>
+    <thead><tr><th>Class</th><th>Allowable humidity (non‑condensing)</th><th class="n">Max dew point</th></tr></thead>
+    <tbody>
+      <tr><td>A1</td><td>−12 °C DP and 8 % RH to 17 °C DP and 80 % RH</td><td class="n">17 °C</td></tr>
+      <tr><td>A2</td><td>−12 °C DP and 8 % RH to 21 °C DP and 80 % RH</td><td class="n">21 °C</td></tr>
+      <tr><td>A3</td><td>−12 °C DP and 8 % RH to 24 °C DP and 85 % RH</td><td class="n">24 °C</td></tr>
+      <tr><td>A4</td><td>−12 °C DP and 8 % RH to 24 °C DP and 90 % RH</td><td class="n">24 °C</td></tr>
+    </tbody></table>
+    <p class="caption">Recommended humidity for all classes: −9 °C DP to 15 °C DP and 60 % RH. Maximum rate of change: 5/20 °C per hour.</p></div>
+</section>
+
+<!-- VERIFY -->
+<section id="verify">
+  <h2><span class="num">10</span>How authorities check compliance</h2>
+  <p class="where">Article 5 and Annex IV</p>
+  <p>National market surveillance authorities test products using the methods in Annex III. The tolerances below exist only to absorb measurement uncertainty during these checks; manufacturers may not use them to pad their declared values.</p>
+  <div class="panel">
+    <div class="flow">
+      <div class="step"><div class="dot">1</div><div class="body"><b>Test one unit</b>The model, or for a product family, a configuration. If a random configuration is picked, it is compared with the high‑end declared values.</div></div>
+      <div class="step"><div class="dot">2</div><div class="body"><b>Check the paperwork</b>Declared values must not be more favourable than the measurements, must meet the limits, and published information must not beat the declared values.
+        <div class="branch"><span class="ko">Fails → model and whole family non‑compliant</span></div></div></div>
+      <div class="step"><div class="dot">3</div><div class="body"><b>Compare measurements with tolerances</b>
+        <div class="branch"><span class="ok">Within tolerance → compliant</span><span class="ko">Outside, and fewer than 5 made per year → non‑compliant</span><span class="nx">Outside, 5 or more per year → step 4</span></div></div></div>
+      <div class="step"><div class="dot">4</div><div class="body"><b>Test three more units</b>Or, for a family, one low‑end and one high‑end configuration. The average must be within tolerance.
+        <div class="branch"><span class="ok">Within → compliant</span><span class="ko">Outside → model and family non‑compliant</span></div></div></div>
+      <div class="step"><div class="dot">5</div><div class="body"><b>Share the decision</b>Non‑compliance findings go to the other Member States and the Commission without delay.</div></div>
+    </div>
+  </div>
+  <div class="panel"><h3 style="margin-top:0">Verification tolerances (Table 7)</h3><div id="chTol"></div>
+    <p class="caption">Bars show how far a measured value may fall short of (or exceed, for power) the declared value before the check fails.</p></div>
+  <div class="note">Defeat devices are banned outright (Article 6 and Annex IV). A product that detects it is being tested and changes its behaviour to score better is automatically non‑compliant.</div>
+</section>
+
+<!-- BENCH -->
+<section id="bench">
+  <h2><span class="num">11</span>Best available technology benchmarks</h2>
+  <p class="where">Article 7 and Annex V, Tables 8 and 9 (market as of 7 April 2019)</p>
+  <p>These are not limits. They show what the best products on the market achieved when the regulation was adopted, giving buyers and designers a target well beyond the legal minimum.</p>
+  <div class="two">
+    <div class="panel"><h3 style="margin-top:0">Active state efficiency</h3><div id="chBenchEff"></div>
+      <p class="caption">Dashed lines mark the legal minimums of 8.0, 9.0 and 9.5.</p></div>
+    <div class="panel"><h3 style="margin-top:0">Idle power (W)</h3><div id="chBenchIdle"></div>
+      <p class="caption">Lower is better. The resilient server (222 W) is shown to scale.</p></div>
+  </div>
+  <div class="panel tight scroll-x"><table>
+    <thead><tr><th>Benchmark PSU (Table 9)</th><th class="n">10 %</th><th class="n">20 %</th><th class="n">50 %</th><th class="n">100 %</th></tr></thead>
+    <tbody>
+      <tr><td>Nameplate &lt; 750 W</td><td class="n">91.17 %</td><td class="n">93.76 %</td><td class="n">94.72 %</td><td class="n">94.14 %</td></tr>
+      <tr><td>Nameplate ≥ 750 W</td><td class="n">95.02 %</td><td class="n">95.99 %</td><td class="n">96.09 %</td><td class="n">94.69 %</td></tr>
+    </tbody></table>
+    <p class="caption">Both benchmarks achieve a power factor above 0.95. The best benchmark operating class is A4 for rack servers and A3 for towers, blades, resilient servers and storage.</p></div>
+</section>
+
+<!-- OTHER -->
+<section id="other">
+  <h2><span class="num">12</span>The remaining articles</h2>
+  <p class="where">Articles 4, 6, 8, 9 and 10</p>
+  <h3>Conformity assessment (Article 4)</h3>
+  <p>Manufacturers self‑certify through internal design control or a management system (Annexes IV or V of the Ecodesign Directive 2009/125/EC), with the technical documentation containing the information in Annex II point 3.4.</p>
+  <h3>Handover from Regulation 617/2013 (Article 9)</h3>
+  <p>Computer servers used to fall under the general computers regulation. From 1 March 2020 they were removed from it to avoid overlap, leaving only small‑scale servers there.</p>
+  <h3>Review (Article 8)</h3>
+  <p>By March 2022 the Commission had to assess whether to:</p>
+  <ul>
+    <li>tighten the idle power and active efficiency limits, and revise definitions and scope;</li>
+    <li>add information on more critical raw materials (tantalum, gallium, dysprosium, palladium) for recyclers;</li>
+    <li>exempt appliances, large, fully fault tolerant and network servers, and exclude resilient, HPC and integrated‑APA servers from the energy limits;</li>
+    <li>set new requirements on processor power management, operating condition class, and the efficiency of storage products.</li>
+  </ul>
+  <h3>Entry into force (Article 10)</h3>
+  <p>The regulation entered into force on the twentieth day after publication (7 April 2019) and applies directly in every Member State without national transposition.</p>
+</section>
+
+<footer>This explainer summarises Commission Regulation (EU) 2019/424 in plain language for orientation. It isn't legal advice; the Official Journal text and any later amendments are authoritative.</footer>
+</main>
+</div>
+
+<script>
+const fmt = v => (Math.round(v*100)/100).toLocaleString('en');
+const C = {blue:'var(--blue)', amber:'var(--amber)', teal:'var(--teal)', slate:'var(--slate)', red:'var(--red)'};
+
+/* horizontal stacked bars */
+function hStack(id, rows, max, unit, o={}){
+  const W=o.W||560, L=o.L||130, R=o.R||70, rowH=o.rowH||44, top=o.refLabel?26:8, barH=o.barH||22;
+  const H=top+rows.length*rowH+26, span=W-L-R, sc=v=>span*v/max, step=o.step||max/5;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.aria||''}">`;
+  for(let t=0;t<=max+1e-9;t+=step){const x=L+sc(t);s+=`<line x1="${x}" x2="${x}" y1="${top}" y2="${H-22}" class="grid"/><text x="${x}" y="${H-6}" class="tick" text-anchor="middle">${fmt(t)}</text>`;}
+  rows.forEach((r,i)=>{
+    const y=top+i*rowH+(rowH-barH)/2; let x=L, tot=0;
+    s+=`<text x="${L-10}" y="${y+barH/2+4}" class="lbl" text-anchor="end">${r.label}</text>`;
+    r.segs.forEach(g=>{const w=Math.max(0,sc(g[0]));
+      s+=`<rect x="${x}" y="${y}" width="${w}" height="${barH}" fill="${g[1]}" ${g[3]?`opacity="${g[3]}"`:''}><title>${g[2]}: ${fmt(g[0])} ${unit}</title></rect>`;
+      if(w>30 && !o.noInner) s+=`<text x="${x+w/2}" y="${y+barH/2+4}" class="inbar" text-anchor="middle">${fmt(g[0])}</text>`;
+      x+=w; tot+=g[0];});
+    if(!o.noTotal) s+=`<text x="${x+6}" y="${y+barH/2+4}" class="tot">${fmt(tot)}${unit?' '+unit:''}</text>`;
+  });
+  (o.refs||[]).forEach(rf=>{const x=L+sc(rf.v);s+=`<line x1="${x}" x2="${x}" y1="${top-4}" y2="${H-22}" stroke="${rf.c||C.red}" stroke-width="1.5" stroke-dasharray="4 3"/>`;});
+  if(o.refLabel) s+=`<text x="${L+sc(o.refLabel.v)}" y="14" class="small" text-anchor="middle">${o.refLabel.t}</text>`;
+  document.getElementById(id).innerHTML=s+'</svg>';
+}
+
+/* energy */
+hStack('chEnergy',[
+  {label:'Servers',segs:[[48,C.blue,'Direct'],[27,C.amber,'Infrastructure']]},
+  {label:'Data storage',segs:[[30,C.blue,'Direct'],[17,C.amber,'Infrastructure']]}
+],80,'TWh',{step:20,aria:'Projected 2030 consumption'});
+hStack('chSave',[
+  {label:'Servers',segs:[[2.4,C.blue,'Direct'],[3.7,C.amber,'Infrastructure']]},
+  {label:'Data storage',segs:[[0.8,C.blue,'Direct'],[2.0,C.amber,'Infrastructure']]}
+],7,'TWh',{step:1,aria:'Savings by 2030'});
+
+/* PSU line chart */
+(function(){
+  const W=640,H=300,L=52,R=20,T=16,B=40, yMin=86,yMax=97, cats=['10 %','20 %','50 %','100 %'];
+  const x=i=>L+(W-L-R)*(i+.5)/cats.length, y=v=>T+(H-T-B)*(1-(v-yMin)/(yMax-yMin));
+  const series=[
+    {n:'Single 2020',c:C.blue,d:true,v:[null,90,94,91]},
+    {n:'Single 2023',c:C.blue,d:false,v:[90,94,96,91]},
+    {n:'Multi 2020',c:C.amber,d:true,v:[null,88,92,88]},
+    {n:'Multi 2023',c:C.amber,d:false,v:[null,90,94,91]},
+  ];
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Minimum PSU efficiency by load level">`;
+  for(let v=yMin;v<=yMax;v+=1){if(v%2)continue;s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" class="grid"/><text x="${L-8}" y="${y(v)+4}" class="tick" text-anchor="end">${v} %</text>`;}
+  cats.forEach((c,i)=>s+=`<text x="${x(i)}" y="${H-14}" class="tick" text-anchor="middle">${c} load</text>`);
+  series.forEach((sr,k)=>{
+    const pts=sr.v.map((v,i)=>v==null?null:[x(i),y(v)]).filter(Boolean);
+    s+=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="${sr.c}" stroke-width="2.5" ${sr.d?'stroke-dasharray="6 4"':''}/>`;
+    sr.v.forEach((v,i)=>{if(v==null)return;const off=(k%2?4:-4);
+      s+=`<circle cx="${x(i)}" cy="${y(v)}" r="5" fill="${sr.d?'var(--panel)':sr.c}" stroke="${sr.c}" stroke-width="2"><title>${sr.n}: ${v} %</title></circle>`;
+      if(!sr.d) s+=`<text x="${x(i)+9}" y="${y(v)+(sr.c===C.amber?14:-8)}" class="small">${v}</text>`;});
+  });
+  document.getElementById('chPsu').innerHTML=s+'</svg>';
+})();
+
+/* scope checker */
+(function(){
+  const $=id=>document.getElementById(id);
+  const upd=()=>{
+    const k=$('sKind').value;
+    document.querySelectorAll('.srv').forEach(e=>e.hidden=k!=='server');
+    document.querySelectorAll('.sto').forEach(e=>e.hidden=k!=='storage');
+    const out=$('scopeOut'); let reqs=[], excl=null;
+    if(k==='server'){
+      const sock=+$('sSock').value;
+      if(sock>4) excl='Servers with more than four processor sockets are excluded.';
+      else if([...document.querySelectorAll('.sx')].some(c=>c.checked)) excl='This server type is excluded by Article 1(2).';
+      if(!excl){
+        const dc=$('sDc').checked;
+        if(!dc) reqs.push('PSU efficiency and power factor: tier 1 from 1 Mar 2020, tier 2 from 1 Jan 2023 (1.1.1, 1.1.2)');
+        reqs.push('Disassembly of key components (1.2.1) and secure data deletion (1.2.2) from 1 Mar 2020');
+        reqs.push('Firmware and security update availability from 1 Mar 2021 (1.2.3)');
+        const exempt=$('sRes').checked||$('sHpc').checked||$('sApa').checked;
+        if(sock<=2 && !exempt) reqs.push('Idle power cap (2.1) and minimum active efficiency (2.2) from 1 Mar 2020');
+        else if(sock<=2) reqs.push('No idle/active limits (resilient, HPC or integrated APA), but values must still be published');
+        else reqs.push('No idle/active limits (these apply to 1–2 socket servers only), but values must still be published');
+        reqs.push('Public product information (3.1), third‑party repair information (3.3), technical documentation (3.4)');
+      }
+    } else {
+      const dev=+$('sDev').value;
+      if(!$('tOnline').checked) excl='Only online data storage products are covered.';
+      else if(dev<=3) excl='Storage products with three or fewer devices are "small data storage products" and excluded.';
+      else if(dev>400 && $('tLarge').checked) excl='This meets the definition of a large data storage product, which is excluded.';
+      if(!excl){
+        if(!$('tDc').checked) reqs.push('PSU efficiency and power factor: tier 1 from 1 Mar 2020, tier 2 from 1 Jan 2023 (1.1.1, 1.1.2)');
+        reqs.push('Disassembly of key components (1.2.1) and secure data deletion (1.2.2) from 1 Mar 2020');
+        reqs.push('Firmware and security update availability from 1 Mar 2021 (1.2.3)');
+        reqs.push('Public product information (3.2), third‑party repair information (3.3), technical documentation (3.4)');
+      }
+    }
+    out.className='result '+(excl?'':'pass');
+    out.innerHTML = excl ? `<h4>Out of scope</h4>${excl}` : `<h4>In scope. Applicable requirements:</h4><ul>${reqs.map(r=>`<li>${r}</li>`).join('')}</ul>`;
+  };
+  document.getElementById('scopeTool').addEventListener('input',upd); upd();
+})();
+
+/* idle calculator */
+(function(){
+  const $=id=>document.getElementById(id), n=id=>Math.max(0,+$(id).value||0);
+  const cols=[C.slate,C.blue,'#5B8FC7',C.teal,'#8A6FB5',C.amber,'#C4664F'];
+  const upd=()=>{
+    const blade=$('iForm').value==='blade', sock=+$('iSock').value;
+    const base= blade?40:(sock===1?25:38);
+    const ports=[...document.querySelectorAll('.iPort')].reduce((a,e)=>a+Math.max(0,+e.value||0)*(+e.dataset.w),0);
+    const parts=[
+      ['Base',base],
+      ['CPU performance',(sock===1?10:7)*n('iPerf')],
+      ['Redundant PSUs',10*n('iPsu')],
+      ['Drives',5*n('iDrv')],
+      ['Memory > 4 GB',0.18*Math.max(0,n('iMem')-4)],
+      ['DDR channels > 8',4*Math.max(0,n('iDdr')-8)],
+      ['Network ports',ports]
+    ];
+    const tot=parts.reduce((a,p)=>a+p[1],0), meas=$('iMeas').value===''?null:+$('iMeas').value;
+    const max=Math.ceil(Math.max(tot,meas||0)*1.1/25)*25||50;
+    const rows=[{label:'Allowed',segs:parts.filter(p=>p[1]>0).map(p=>[p[1],cols[parts.indexOf(p)],p[0]])}];
+    if(meas!=null) rows.push({label:'Measured',segs:[[meas, meas<=tot?C.teal:C.red,'Measured idle']]});
+    hStack('chIdle',rows,max,'W',{step:max/5,noInner:true,aria:'Idle power allowance breakdown'});
+    $('idleLegend').innerHTML=parts.map((p,i)=>`<span><i style="background:${cols[i]}"></i>${p[0]}: ${fmt(p[1])} W</span>`).join('');
+    const o=$('idleOut');
+    if(meas==null){o.className='result';o.innerHTML=`<div>Maximum allowed idle power</div><div class="big">${fmt(tot)} W</div>`;}
+    else{const ok=meas<=tot;o.className='result '+(ok?'pass':'fail');
+      o.innerHTML=`<div>Allowed ${fmt(tot)} W · measured ${fmt(meas)} W</div><div class="big">${ok?'Within the limit':'Exceeds the limit'}</div><div>${ok?'Headroom':'Excess'}: ${fmt(Math.abs(tot-meas))} W</div>`;}
+  };
+  $('idleTool').addEventListener('input',upd); upd();
+})();
+
+/* weights bar */
+(function(){
+  const W=680,H=150,L=10,R=10, span=W-L-R;
+  const g=[['CPU',0.65,C.blue,['Compress','LU','SOR','Crypto','Sort','SHA256','Hybrid SSJ']],
+           ['Memory',0.30,C.teal,['Flood3','Capacity3']],
+           ['Storage',0.05,C.amber,['Sequential','Random']]];
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Workload weights">`, x=L;
+  g.forEach(([n,w,c,wk],gi)=>{const ww=span*w;
+    s+=`<rect x="${x}" y="10" width="${ww-3}" height="40" rx="4" fill="${c}"/>`;
+    if(ww>80) s+=`<text x="${x+10}" y="36" class="inbar" style="font-size:14px">${n} ${w*100} %</text>`;
+    else s+=`<text x="${x+ww/2-1}" y="36" class="inbar" text-anchor="middle">${w*100}%</text>`;
+    // worklet chips
+    const cw = gi===0 ? (ww-3)/wk.length : null;
+    wk.forEach((k,i)=>{
+      let cx,cy;
+      if(gi===0){cx=x+cw*i+cw/2;cy=72;}
+      else if(gi===1){cx=x+(ww-3)*(i+.5)/2;cy=72;}
+      else return;
+      s+=`<text x="${cx}" y="${cy}" class="small" text-anchor="${gi===2?'middle':'middle'}">${k}</text>`;
+    });
+    x+=ww;});
+  s+=`<text x="${L}" y="${H-24}" class="small">Storage is 5 % (worklets Sequential and Random, shown at the right).</text>`;
+  s+=`<text x="${L}" y="${H-6}" class="small">Each worklet efficiency = 1 000 × performance ÷ power; worklets combine by geometric mean.</text>`;
+  document.getElementById('chWeights').innerHTML=s+'</svg>';
+})();
+
+hStack('chMinEff',[
+  {label:'1‑socket',segs:[[9.0,C.blue,'Minimum']]},
+  {label:'2‑socket',segs:[[9.5,C.blue,'Minimum']]},
+  {label:'Blade / multi‑node',segs:[[8.0,C.blue,'Minimum']]}
+],12,'',{L:140,W:420,R:40,step:2,aria:'Minimum active efficiency'});
+
+/* efficiency calc */
+(function(){
+  const $=id=>document.getElementById(id);
+  const upd=()=>{
+    const c=Math.max(.01,+$('eC').value||.01), m=Math.max(.01,+$('eM').value||.01), st=Math.max(.01,+$('eS').value||.01);
+    const e=Math.exp(.65*Math.log(c)+.30*Math.log(m)+.05*Math.log(st)), min=+$('eT').value, ok=e>=min;
+    const o=$('effOut'); o.className='result '+(ok?'pass':'fail');
+    o.innerHTML=`<div>Eff<sub>server</sub></div><div class="big">${e.toFixed(2)}</div><div>${ok?'Meets':'Below'} the minimum of ${min}</div>`;
+  };
+  $('effTool').addEventListener('input',upd); upd();
+})();
+
+/* components */
+(function(){
+  const icon=p=>`<svg viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linejoin="round">${p}</g></svg>`;
+  const items=[
+    ['Data storage devices','<rect x="5" y="4" width="18" height="20" rx="2"/><circle cx="14" cy="13" r="5"/><circle cx="14" cy="13" r="1"/>'],
+    ['Memory','<rect x="3" y="9" width="22" height="9" rx="1"/><path d="M7 18v4M11 18v4M15 18v4M19 18v4"/>'],
+    ['Processor (CPU)','<rect x="7" y="7" width="14" height="14" rx="1"/><path d="M10 3v4M14 3v4M18 3v4M10 21v4M14 21v4M18 21v4M3 10h4M3 14h4M3 18h4M21 10h4M21 14h4M21 18h4"/>'],
+    ['Motherboard','<rect x="3" y="3" width="22" height="22" rx="2"/><rect x="7" y="7" width="7" height="7"/><path d="M17 8h5M17 12h5M7 19h15"/>'],
+    ['Expansion / graphics card','<path d="M3 8h22v11H3z"/><path d="M6 19v4h12v-4"/><circle cx="18" cy="13.5" r="3"/>'],
+    ['Power supply unit','<rect x="3" y="6" width="22" height="16" rx="2"/><path d="M15 9l-4 6h5l-3 5"/>'],
+    ['Chassis','<rect x="4" y="3" width="20" height="22" rx="1"/><path d="M4 10h20M4 17h20M8 6.5h4M8 13.5h4M8 20.5h4"/>'],
+    ['Batteries','<rect x="4" y="8" width="18" height="12" rx="2"/><path d="M22 12h3v4h-3M8 14h6M11 11v6"/>']
+  ];
+  document.getElementById('compGrid').innerHTML=items.map(([n,p])=>`<div>${icon(p)}<span>${n}</span></div>`).join('');
+})();
+
+/* firmware timeline */
+(function(){
+  const W=700,H=190,L=150,R=20, y0=2020, y1=2034, sc=y=>L+(W-L-R)*(y-y0)/(y1-y0);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Firmware availability example">`;
+  for(let y=y0;y<=y1;y++){const x=sc(y);s+=`<line x1="${x}" x2="${x}" y1="20" y2="${H-30}" class="grid"/>`;if(y%2===0)s+=`<text x="${x}" y="${H-12}" class="tick" text-anchor="middle">${y}</text>`;}
+  const bar=(row,a,b,c,t,lbl)=>{const y=24+row*44;return `<text x="${L-10}" y="${y+16}" class="lbl" text-anchor="end">${lbl}</text><rect x="${sc(a)}" y="${y}" width="${sc(b)-sc(a)}" height="22" rx="3" fill="${c}"/><text x="${sc(a)+8}" y="${y+15}" class="inbar">${t}</text>`;};
+  s+=bar(0,2021,2025,C.slate,'On sale 2021–2025','Model on sale');
+  s+=bar(1,2023,2033,C.blue,'Latest firmware: 2 yrs after first sale → 8 yrs after last','Latest firmware');
+  s+=bar(2,2021,2033,C.teal,'Security updates, free: first sale → 8 yrs after last','Security updates');
+  s+=`<line x1="${sc(2033)}" x2="${sc(2033)}" y1="14" y2="${H-30}" stroke="var(--red)" stroke-dasharray="4 3" stroke-width="1.5"/>`;
+  document.getElementById('chFirmware').innerHTML=s+'</svg>';
+})();
+
+/* operating classes */
+(function(){
+  const W=640,H=230,L=50,R=20,T=14, t0=0,t1=50, sc=t=>L+(W-L-R)*(t-t0)/(t1-t0);
+  const cls=[['A1',15,32],['A2',10,35],['A3',5,40],['A4',5,45]];
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Operating condition temperature ranges">`;
+  for(let t=0;t<=50;t+=5){const x=sc(t);s+=`<line x1="${x}" x2="${x}" y1="${T}" y2="${H-30}" class="grid"/><text x="${x}" y="${H-12}" class="tick" text-anchor="middle">${t} °C</text>`;}
+  cls.forEach(([n,a,b],i)=>{const y=T+8+i*46;
+    s+=`<text x="${L-12}" y="${y+18}" class="lbl-b" text-anchor="end">${n}</text>`;
+    s+=`<rect x="${sc(a)}" y="${y}" width="${sc(b)-sc(a)}" height="26" rx="4" fill="var(--blue)" opacity=".35"><title>${n}: ${a}–${b} °C allowable</title></rect>`;
+    s+=`<rect x="${sc(18)}" y="${y+6}" width="${sc(27)-sc(18)}" height="14" rx="2" fill="var(--teal)"/>`;
+    s+=`<text x="${sc(a)-6}" y="${y+18}" class="small" text-anchor="end">${a}</text><text x="${sc(b)+6}" y="${y+18}" class="small">${b}</text>`;});
+  document.getElementById('chClasses').innerHTML=s+'</svg>';
+})();
+
+/* tolerances */
+hStack('chTol',[
+  {label:'PSU efficiency',segs:[[2,C.blue,'May be lower by']]},
+  {label:'Power factor',segs:[[10,C.blue,'May be lower by']]},
+  {label:'Idle & max power',segs:[[10,C.amber,'May be higher by']]},
+  {label:'Active efficiency',segs:[[10,C.blue,'May be lower by']]}
+],12,'%',{L:140,W:560,step:2,noInner:true,aria:'Verification tolerances'});
+
+/* benchmarks */
+const bench=[['Tower, 1 socket',21.3,17],['Rack, 1 socket',18,17.7],['Rack, 2 socket low',49.9,18],['Rack, 2 socket high',67,26.1],['Rack, 4 socket',65.1,34.8],['Blade, 2 socket',75,47.3],['Blade, 4 socket',63.3,21.9],['Resilient, 2 socket',222,9.6]];
+hStack('chBenchEff',bench.map(b=>({label:b[0],segs:[[b[2],C.teal,'Efficiency']]})),50,'',{L:150,W:480,R:40,rowH:32,barH:18,step:10,noInner:true,refs:[{v:8},{v:9},{v:9.5}],refLabel:{v:9,t:'legal min.'},aria:'Benchmark active efficiency'});
+hStack('chBenchIdle',bench.map(b=>({label:b[0],segs:[[b[1],C.amber,'Idle power']]})),240,'',{L:150,W:480,R:40,rowH:32,barH:18,step:60,noInner:true,aria:'Benchmark idle power'});
+</script>
+</body>
+</html>

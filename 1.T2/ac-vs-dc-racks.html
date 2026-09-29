@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AC vs DC powered racks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eceee9;
+    --panel: #f7f8f5;
+    --ink: #1c2229;
+    --muted: #5b6570;
+    --rule: #c9cec6;
+    --ac: #d9960f;
+    --ac-soft: #f6e6bf;
+    --dc: #2463d1;
+    --dc-soft: #d6e2f7;
+    --loss: #c2412d;
+    --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+    --body: "Barlow", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161a1f; --panel: #1f252c; --ink: #e8ebe6; --muted: #9aa4ad; --rule: #36404a;
+      --ac: #f0b43a; --ac-soft: #3d3220; --dc: #6b9cf0; --dc-soft: #1e2d47; --loss: #ec7a64;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161a1f; --panel: #1f252c; --ink: #e8ebe6; --muted: #9aa4ad; --rule: #36404a;
+    --ac: #f0b43a; --ac-soft: #3d3220; --dc: #6b9cf0; --dc-soft: #1e2d47; --loss: #ec7a64;
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--body); font-size: 1.0625rem; line-height: 1.6;
+  }
+  main { max-width: 1040px; margin: 0 auto; padding: 0 1.25rem 4rem; }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.05; margin: 0; }
+  h1 { font-size: clamp(2.8rem, 8vw, 5.4rem); font-weight: 700; letter-spacing: -0.01em; }
+  h2 { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 600; margin-bottom: .6rem; }
+  h3 { font-size: 1.35rem; font-weight: 600; }
+  p { margin: 0 0 1rem; max-width: 68ch; }
+  .muted { color: var(--muted); }
+  svg { max-width: 100%; height: auto; display: block; }
+  section { padding: 3.2rem 0 0; }
+  .ac { color: var(--ac); } .dc { color: var(--dc); }
+
+  /* Hero */
+  .hero { padding: 3rem 0 1rem; }
+  .hero p { font-size: 1.2rem; margin-top: 1rem; }
+  .waves { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 2rem; }
+  .wave { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 1rem 1rem .6rem; overflow: hidden; }
+  .wave-label { font-family: var(--display); font-size: 1.5rem; font-weight: 600; }
+  .wave small { display: block; color: var(--muted); font-size: .92rem; }
+  .scroll { animation: slide 2.4s linear infinite; }
+  @keyframes slide { to { transform: translateX(-150px); } }
+  @media (prefers-reduced-motion: reduce) { .scroll { animation: none; } }
+
+  /* Power chains */
+  .chain-wrap { overflow-x: auto; margin: 1.2rem 0; padding-bottom: .4rem; }
+  .chain { display: flex; align-items: stretch; gap: 0; min-width: 760px; }
+  .stage {
+    flex: 1; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px;
+    padding: .7rem .75rem; font-size: .93rem; line-height: 1.35;
+  }
+  .stage b { display: block; font-family: var(--display); font-size: 1.12rem; font-weight: 600; margin-bottom: .2rem; }
+  .stage .conv { display: inline-block; margin-top: .45rem; font-size: .82rem; padding: .1rem .45rem; border-radius: 3px; }
+  .chain.acc .conv { background: var(--ac-soft); }
+  .chain.dcc .conv { background: var(--dc-soft); }
+  .chain.acc .stage { border-top: 4px solid var(--ac); }
+  .chain.dcc .stage { border-top: 4px solid var(--dc); }
+  .arrow { flex: 0 0 34px; display: flex; align-items: center; justify-content: center; }
+  .chain-title { display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap; margin-top: 1.6rem; }
+  .chain-title span { color: var(--muted); font-size: .95rem; }
+
+  /* Rack drawings */
+  .racks { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.2rem; }
+  figure { margin: 0; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 1rem; }
+  figcaption { font-size: .95rem; color: var(--muted); margin-top: .6rem; }
+  figcaption strong { color: var(--ink); }
+
+  /* Controls & charts */
+  .tool { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 1.2rem; margin-top: 1.2rem; }
+  .control { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+  .control label { font-weight: 600; }
+  .control output { font-family: var(--display); font-size: 1.7rem; font-weight: 700; min-width: 5ch; }
+  input[type=range] { flex: 1; min-width: 200px; accent-color: var(--ink); }
+  input[type=range]:focus-visible { outline: 2px solid var(--dc); outline-offset: 4px; }
+  .bar-row { display: grid; grid-template-columns: 11rem 1fr 7.5rem; gap: .8rem; align-items: center; margin: .55rem 0; font-size: .95rem; }
+  .track { height: 22px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+  .fill { height: 100%; border-radius: 3px; transition: width .25s ease; }
+  .val { font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; }
+  .note { font-size: .88rem; color: var(--muted); margin: .8rem 0 0; }
+  .stack { display: flex; height: 100%; }
+
+  /* Voltage scale */
+  .scale-text { font-family: var(--body); font-size: 13px; fill: var(--ink); }
+  .scale-sub { font-size: 11.5px; fill: var(--muted); }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; margin-top: 1.2rem; }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: .96rem; background: var(--panel); }
+  th, td { text-align: left; vertical-align: top; padding: .75rem .9rem; border-bottom: 1px solid var(--rule); }
+  thead th { font-family: var(--display); font-size: 1.2rem; font-weight: 600; }
+  thead th:nth-child(2) { border-bottom: 3px solid var(--ac); }
+  thead th:nth-child(3) { border-bottom: 3px solid var(--dc); }
+  tbody th { font-weight: 600; width: 22%; }
+
+  .takeaway { border-left: 4px solid var(--ink); padding: .4rem 0 .4rem 1.2rem; margin-top: 1.4rem; font-size: 1.12rem; }
+
+  @media (max-width: 700px) {
+    .waves, .racks { grid-template-columns: 1fr; }
+    .bar-row { grid-template-columns: 1fr 6.5rem; }
+    .bar-row .track { grid-column: 1 / -1; grid-row: 2; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+<header class="hero">
+  <h1>Two ways to feed a rack</h1>
+  <p>Every server, switch and storage array runs on low-voltage DC inside. The real difference between an AC rack and a DC rack is <em>where</em> grid power gets turned into that DC, and how many times it's converted on the way.</p>
+
+  <div class="waves" aria-hidden="true">
+    <div class="wave">
+      <div class="wave-label ac">Alternating current</div>
+      <small>Voltage swings positive and negative, crossing zero 100–120 times a second</small>
+      <svg viewBox="0 0 450 120" preserveAspectRatio="xMidYMid slice">
+        <line x1="0" y1="60" x2="450" y2="60" stroke="var(--rule)" stroke-dasharray="4 4"/>
+        <g class="scroll">
+          <path d="M0 60 Q37.5 -20 75 60 T150 60 T225 60 T300 60 T375 60 T450 60 T525 60 T600 60 T675 60"
+                fill="none" stroke="var(--ac)" stroke-width="4" stroke-linecap="round"/>
+        </g>
+      </svg>
+    </div>
+    <div class="wave">
+      <div class="wave-label dc">Direct current</div>
+      <small>Voltage holds steady at one polarity, like a battery</small>
+      <svg viewBox="0 0 450 120">
+        <line x1="0" y1="60" x2="450" y2="60" stroke="var(--rule)" stroke-dasharray="4 4"/>
+        <line x1="0" y1="26" x2="450" y2="26" stroke="var(--dc)" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<section id="chain">
+  <h2>Where the conversion happens</h2>
+  <p>Follow the power from the utility feed to the chips. In an AC rack, power is converted back and forth several times, and the last conversion happens inside every single device. In a DC rack, it's converted once, centrally, and delivered as DC straight to the equipment.</p>
+
+  <div class="chain-title"><h3 class="ac">AC-powered rack</h3><span>3 AC/DC conversions before the board</span></div>
+  <div class="chain-wrap">
+    <div class="chain acc">
+      <div class="stage"><b>Utility feed</b>Medium or low-voltage AC from the grid<br><span class="conv">AC in</span></div>
+      <div class="arrow"><svg width="22" height="14" viewBox="0 0 22 14"><path d="M0 7h18M13 2l6 5-6 5" fill="none" stroke="var(--ac)" stroke-width="2"/></svg></div>
+      <div class="stage"><b>Double-conversion UPS</b>Rectifies to charge batteries, then inverts back<br><span class="conv">AC → DC → AC</span></div>
+      <div class="arrow"><svg width="22" height="14" viewBox="0 0 22 14"><path d="M0 7h18M13 2l6 5-6 5" fill="none" stroke="var(--ac)" stroke-width="2"/></svg></div>
+      <div class="stage"><b>PDU / transformer</b>Steps down to 208–415V and splits into outlets<br><span class="conv">AC → AC</span></div>
+      <div class="arrow"><svg width="22" height="14" viewBox="0 0 22 14"><path d="M0 7h18M13 2l6 5-6 5" fill="none" stroke="var(--ac)" stroke-width="2"/></svg></div>
+      <div class="stage"><b>Server PSU ×2</b>One pair in every device, rectifying to 12V<br><span class="conv">AC → DC</span></div>
+      <div class="arrow"><svg width="22" height="14" viewBox="0 0 22 14"><path d="M0 7h18M13 2l6 5-6 5" fill="none" stroke="var(--ac)" stroke-width="2"/></svg></div>
+      <div class="stage"><b>Board regulators</b>12V down to ~1V for CPU, GPU, memory<br><span class="conv">DC → DC</span></div>
+    </div>
+  </div>
+
+  <div class="chain-title"><h3 class="dc">DC-powered rack</h3><span>1 AC/DC conversion before the board</span></div>
+  <div class="chain-wrap">
+    <div class="chain dcc">
+      <div class="stage"><b>Utility feed</b>Medium or low-voltage AC from the grid<br><span class="conv">AC in</span></div>
+      <div class="arrow"><svg width="22" height="14" viewBox="0 0 22 14"><path d="M0 7h18M13 2l6 5-6 5" fill="none" stroke="var(--dc)" stroke-width="2"/></svg></div>
+      <div class="stage"><b>Central rectifiers</b>A shared power shelf or room-level plant<br><span class="conv">AC → DC</span></div>
+      <div class="arrow"><svg width="22" height="14" viewBox="0 0 22 14"><path d="M0 7h18M13 2l6 5-6 5" fill="none" stroke="var(--dc)" stroke-width="2"/></svg></div>
+      <div class="stage"><b>DC bus + batteries</b>Batteries sit directly on the bus; no inverter<br><span class="conv">DC</span></div>
+      <div class="arrow"><svg width="22" height="14" viewBox="0 0 22 14"><path d="M0 7h18M13 2l6 5-6 5" fill="none" stroke="var(--dc)" stroke-width="2"/></svg></div>
+      <div class="stage"><b>Busbar to devices</b>Servers clip on; no AC power supply inside<br><span class="conv">DC → DC</span></div>
+      <div class="arrow"><svg width="22" height="14" viewBox="0 0 22 14"><path d="M0 7h18M13 2l6 5-6 5" fill="none" stroke="var(--dc)" stroke-width="2"/></svg></div>
+      <div class="stage"><b>Board regulators</b>Down to ~1V for CPU, GPU, memory<br><span class="conv">DC → DC</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="rack">
+  <h2>What the rack looks like</h2>
+  <p>The architectural difference is visible in the hardware. AC racks have power strips down the sides and a cord into every device. DC racks move the power supplies out of the servers into a shared shelf, and a copper busbar runs up the back.</p>
+
+  <div class="racks">
+    <figure>
+      <svg viewBox="0 0 300 440" role="img" aria-labelledby="acRackT">
+        <title id="acRackT">AC rack: vertical PDU strips on both sides, each server with two internal power supplies and two cords</title>
+        <rect x="50" y="10" width="200" height="420" rx="4" fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+        <!-- PDUs -->
+        <rect x="18" y="30" width="18" height="380" rx="3" fill="var(--ac-soft)" stroke="var(--ac)" stroke-width="2"/>
+        <rect x="264" y="30" width="18" height="380" rx="3" fill="var(--ac-soft)" stroke="var(--ac)" stroke-width="2"/>
+        <text x="27" y="24" text-anchor="middle" class="scale-text scale-sub">PDU A</text>
+        <text x="273" y="24" text-anchor="middle" class="scale-text scale-sub">PDU B</text>
+        <g id="acServers">
+          <!-- generated -->
+        </g>
+      </svg>
+      <figcaption><strong class="ac">AC rack.</strong> Every device carries its own pair of power supplies (orange) and plugs into redundant PDU strips. Dozens of small converters, each adding heat and a failure point.</figcaption>
+    </figure>
+    <figure>
+      <svg viewBox="0 0 300 440" role="img" aria-labelledby="dcRackT">
+        <title id="dcRackT">DC rack: central power shelf and battery shelf feeding a vertical busbar; servers have no internal AC power supplies</title>
+        <rect x="50" y="10" width="200" height="420" rx="4" fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+        <!-- busbar -->
+        <rect x="232" y="22" width="10" height="396" rx="2" fill="var(--dc)"/>
+        <text x="270" y="220" text-anchor="middle" class="scale-text scale-sub" transform="rotate(90 270 220)">48V busbar</text>
+        <g id="dcServers"></g>
+      </svg>
+      <figcaption><strong class="dc">DC rack.</strong> A shared power shelf rectifies once and a battery shelf rides directly on the DC busbar. Servers just clip on, with more room inside for compute.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="efficiency">
+  <h2>Where the watts go</h2>
+  <p>Each conversion wastes a few percent as heat, which then has to be cooled. Drag the slider to see how the losses add up for a rack at a given IT load.</p>
+
+  <div class="tool">
+    <div class="control">
+      <label for="load">Rack IT load</label>
+      <input type="range" id="load" min="5" max="200" step="5" value="40">
+      <output id="loadOut">40 kW</output>
+    </div>
+    <div id="effBars"></div>
+    <p class="note">Illustrative stage efficiencies. AC chain: double-conversion UPS 94%, PDU/transformer 98%, server PSU 94%. DC chain: rectifier 97.5%, busbar 99.5%, 48V→12V converter 97.5%. Real figures depend on equipment, load level, and UPS mode.</p>
+  </div>
+</section>
+
+<section id="current">
+  <h2>Why voltage matters: the current problem</h2>
+  <p>Power equals voltage times current. At a low voltage like 48V, a high-power rack needs enormous current, which means thick copper, heavy busbars, and more resistive loss. That's why AI-era racks drawing hundreds of kilowatts are pushing DC up to 800V.</p>
+
+  <div class="tool">
+    <div class="control">
+      <label for="rp">Rack power</label>
+      <input type="range" id="rp" min="10" max="1000" step="10" value="120">
+      <output id="rpOut">120 kW</output>
+    </div>
+    <div id="curBars"></div>
+    <p class="note">I = P ÷ V for DC; I = P ÷ (√3 × V × 0.95 power factor) per phase for three-phase AC. Conductor size scales roughly with current.</p>
+  </div>
+</section>
+
+<section id="flavors">
+  <h2>The flavors of DC</h2>
+  <p>"DC rack" covers a wide range of voltages, each with a different history and purpose. The dashed line marks roughly where DC stops being touch-safe (extra-low voltage, about 60V).</p>
+  <figure>
+    <svg viewBox="0 0 700 250" role="img" aria-labelledby="scaleT">
+      <title id="scaleT">Logarithmic voltage scale showing 12V, 48V, 230V AC, 380V DC, 415V AC and 800V DC</title>
+      <rect x="40" y="120" width="241" height="10" fill="var(--dc-soft)"/>
+      <line x1="40" y1="125" x2="660" y2="125" stroke="var(--ink)" stroke-width="2"/>
+      <line x1="281" y1="40" x2="281" y2="205" stroke="var(--loss)" stroke-dasharray="5 4" stroke-width="1.5"/>
+      <text x="287" y="52" class="scale-text scale-sub">~60V: touch-safe limit</text>
+      <text x="40" y="232" class="scale-text scale-sub">10V</text>
+      <text x="340" y="232" text-anchor="middle" class="scale-text scale-sub">100V</text>
+      <text x="660" y="232" text-anchor="end" class="scale-text scale-sub">1,000V (log scale)</text>
+      <!-- markers: DC above, AC below -->
+      <g>
+        <circle cx="64" cy="125" r="7" fill="var(--dc)"/>
+        <text x="64" y="100" text-anchor="middle" class="scale-text" font-weight="600">12V DC</text>
+        <text x="64" y="84" text-anchor="middle" class="scale-text scale-sub">early OCP</text>
+      </g>
+      <g>
+        <circle cx="251" cy="125" r="7" fill="var(--dc)"/>
+        <text x="236" y="100" text-anchor="middle" class="scale-text" font-weight="600">48V DC</text>
+        <text x="220" y="84" text-anchor="middle" class="scale-text scale-sub">telecom (−48V), OCP busbar</text>
+      </g>
+      <g>
+        <circle cx="530" cy="125" r="7" fill="var(--dc)"/>
+        <text x="520" y="100" text-anchor="middle" class="scale-text" font-weight="600">380V DC</text>
+        <text x="520" y="84" text-anchor="middle" class="scale-text scale-sub">HVDC data halls</text>
+      </g>
+      <g>
+        <circle cx="630" cy="125" r="7" fill="var(--dc)"/>
+        <text x="636" y="100" text-anchor="middle" class="scale-text" font-weight="600">800V DC</text>
+        <text x="636" y="84" text-anchor="middle" class="scale-text scale-sub">AI racks</text>
+      </g>
+      <g>
+        <rect x="455" y="118" width="14" height="14" fill="var(--ac)" transform="rotate(45 462 125)"/>
+        <text x="455" y="160" text-anchor="middle" class="scale-text" font-weight="600">230V AC</text>
+        <text x="455" y="176" text-anchor="middle" class="scale-text scale-sub">single-phase</text>
+      </g>
+      <g>
+        <rect x="535" y="118" width="14" height="14" fill="var(--ac)" transform="rotate(45 542 125)"/>
+        <text x="570" y="160" text-anchor="middle" class="scale-text" font-weight="600">415V AC</text>
+        <text x="570" y="176" text-anchor="middle" class="scale-text scale-sub">three-phase</text>
+      </g>
+    </svg>
+    <figcaption><strong>−48V telecom</strong> has powered phone exchanges for decades, with battery strings floating on the bus. <strong>12V and 48V busbars</strong> came from hyperscalers via the Open Compute Project. <strong>380V and 800V DC</strong> reduce current for very dense halls and AI racks, at the cost of stricter safety handling.</figcaption>
+  </figure>
+</section>
+
+<section id="safety">
+  <h2>The arc problem</h2>
+  <p>When you open a switch under load, an arc can form across the gap. AC helps put it out for free: the voltage passes through zero every half-cycle, and the arc tends to die there. DC never crosses zero, so an arc can sustain itself. High-voltage DC needs breakers, connectors and procedures specifically rated for it.</p>
+  <figure>
+    <svg viewBox="0 0 700 220" role="img" aria-labelledby="arcT">
+      <title id="arcT">AC waveform with zero crossings marked as arc extinguishing points, compared to a DC line with no zero crossings</title>
+      <text x="10" y="22" class="scale-text" font-weight="600" fill="var(--ac)">AC</text>
+      <line x1="40" y1="60" x2="690" y2="60" stroke="var(--rule)" stroke-dasharray="4 4"/>
+      <path d="M40 60 Q77.5 0 115 60 T190 60 T265 60 T340 60 T415 60 T490 60 T565 60 T640 60" fill="none" stroke="var(--ac)" stroke-width="3"/>
+      <g fill="var(--panel)" stroke="var(--ink)" stroke-width="2">
+        <circle cx="115" cy="60" r="6"/><circle cx="190" cy="60" r="6"/><circle cx="265" cy="60" r="6"/>
+        <circle cx="340" cy="60" r="6"/><circle cx="415" cy="60" r="6"/><circle cx="490" cy="60" r="6"/>
+        <circle cx="565" cy="60" r="6"/><circle cx="640" cy="60" r="6"/>
+      </g>
+      <text x="40" y="112" class="scale-text scale-sub">○ Zero crossing: a natural chance for the arc to extinguish</text>
+
+      <text x="10" y="160" class="scale-text" font-weight="600" fill="var(--dc)">DC</text>
+      <line x1="40" y1="190" x2="690" y2="190" stroke="var(--rule)" stroke-dasharray="4 4"/>
+      <line x1="40" y1="156" x2="640" y2="156" stroke="var(--dc)" stroke-width="3"/>
+      <text x="40" y="212" class="scale-text scale-sub">No zero crossing: the breaker has to force the arc out</text>
+    </svg>
+  </figure>
+</section>
+
+<section id="compare">
+  <h2>Side by side</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>AC-powered rack</th><th>DC-powered rack</th></tr></thead>
+      <tbody>
+        <tr><th>Where conversion happens</th><td>Inside every device's power supply</td><td>Centrally, in a power shelf or room-level rectifier plant</td></tr>
+        <tr><th>Conversion stages</th><td>Several (UPS double conversion plus per-device PSUs)</td><td>One AC→DC step, then DC→DC</td></tr>
+        <tr><th>Efficiency</th><td>Lower; losses stack across stages</td><td>Typically a few percent better end to end</td></tr>
+        <tr><th>Battery backup</th><td>UPS with inverter in the power path</td><td>Batteries connect directly to the DC bus</td></tr>
+        <tr><th>Cabling</th><td>Moderate current at 208–415V; standard cords and plugs</td><td>Very high current at 48V (thick busbars); lower at 380–800V</td></tr>
+        <tr><th>Safety</th><td>Well understood; zero crossing helps break arcs</td><td>48V is touch-safe; high-voltage DC needs DC-rated protection</td></tr>
+        <tr><th>Equipment choice</th><td>Universal; nearly everything ships with AC supplies</td><td>Narrower; needs DC-input or busbar-ready hardware</td></tr>
+        <tr><th>Density and heat</th><td>PSUs take space and add heat in each server</td><td>More room for compute; heat concentrated in one shelf</td></tr>
+        <tr><th>Typical home</th><td>Enterprise data centers and colocation</td><td>Telecom central offices, hyperscalers, high-density AI</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="takeaway">AC racks are the flexible default: any equipment, familiar skills, standard parts. DC racks trade that flexibility for fewer conversions, simpler battery backup and higher density, which is why telecom has used them for decades and AI data centers are moving toward them now.</p>
+</section>
+
+</main>
+
+<script>
+(function () {
+  // Draw rack contents
+  const ns = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent) {
+    const e = document.createElementNS(ns, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    parent.appendChild(e);
+    return e;
+  }
+
+  const acG = document.getElementById("acServers");
+  for (let i = 0; i < 10; i++) {
+    const y = 26 + i * 40;
+    el("rect", { x: 60, y: y, width: 180, height: 32, rx: 2, fill: "var(--panel)", stroke: "var(--muted)", "stroke-width": 1.5 }, acG);
+    el("rect", { x: 196, y: y + 5, width: 16, height: 22, rx: 1.5, fill: "var(--ac)" }, acG);
+    el("rect", { x: 216, y: y + 5, width: 16, height: 22, rx: 1.5, fill: "var(--ac)" }, acG);
+    for (let s = 0; s < 4; s++) el("rect", { x: 70 + s * 26, y: y + 10, width: 18, height: 12, rx: 1, fill: "var(--rule)" }, acG);
+    el("path", { d: `M36 ${y + 16} C 44 ${y + 16}, 48 ${y + 22}, 60 ${y + 22}`, fill: "none", stroke: "var(--ac)", "stroke-width": 1.5 }, acG);
+    el("path", { d: `M264 ${y + 16} C 256 ${y + 16}, 250 ${y + 22}, 240 ${y + 22}`, fill: "none", stroke: "var(--ac)", "stroke-width": 1.5 }, acG);
+  }
+
+  const dcG = document.getElementById("dcServers");
+  const rows = [];
+  for (let i = 0; i < 10; i++) rows.push(26 + i * 40);
+  rows.forEach((y, i) => {
+    if (i === 4) {
+      el("rect", { x: 60, y: y, width: 168, height: 32, rx: 2, fill: "var(--dc-soft)", stroke: "var(--dc)", "stroke-width": 2 }, dcG);
+      for (let r = 0; r < 6; r++) el("rect", { x: 66 + r * 26, y: y + 5, width: 20, height: 22, rx: 1.5, fill: "var(--dc)" }, dcG);
+      const t = el("text", { x: 144, y: y - 4, "text-anchor": "middle", class: "scale-text scale-sub" }, dcG);
+      t.textContent = "Power shelf (rectifiers)";
+    } else if (i === 5) {
+      el("rect", { x: 60, y: y, width: 168, height: 32, rx: 2, fill: "var(--panel)", stroke: "var(--dc)", "stroke-width": 2 }, dcG);
+      for (let r = 0; r < 4; r++) {
+        el("rect", { x: 70 + r * 38, y: y + 8, width: 28, height: 16, rx: 2, fill: "none", stroke: "var(--dc)", "stroke-width": 1.5 }, dcG);
+        el("rect", { x: 98 + r * 38, y: y + 13, width: 3, height: 6, fill: "var(--dc)" }, dcG);
+      }
+      const t = el("text", { x: 144, y: y + 46, "text-anchor": "middle", class: "scale-text scale-sub" }, dcG);
+      t.textContent = "Battery backup shelf";
+    } else {
+      el("rect", { x: 60, y: y, width: 168, height: 32, rx: 2, fill: "var(--panel)", stroke: "var(--muted)", "stroke-width": 1.5 }, dcG);
+      for (let s = 0; s < 6; s++) el("rect", { x: 70 + s * 24, y: y + 10, width: 17, height: 12, rx: 1, fill: "var(--rule)" }, dcG);
+    }
+    el("rect", { x: 226, y: y + 12, width: 8, height: 8, fill: "var(--dc)" }, dcG);
+  });
+
+  // Efficiency tool
+  const load = document.getElementById("load");
+  const loadOut = document.getElementById("loadOut");
+  const effBars = document.getElementById("effBars");
+  const acEff = 0.94 * 0.98 * 0.94;
+  const dcEff = 0.975 * 0.995 * 0.975;
+  const fmt = n => n.toLocaleString(undefined, { maximumFractionDigits: 1 });
+
+  function drawEff() {
+    const L = +load.value;
+    loadOut.value = L + " kW";
+    const acIn = L / acEff, dcIn = L / dcEff;
+    const max = acIn;
+    const row = (name, color, input) => {
+      const loss = input - L;
+      return `<div class="bar-row">
+        <span><strong style="color:${color}">${name}</strong><br><span class="muted">${(L / input * 100).toFixed(1)}% efficient</span></span>
+        <div class="track"><div class="stack" style="width:${input / max * 100}%">
+          <div class="fill" style="width:${L / input * 100}%;background:${color};border-radius:3px 0 0 3px"></div>
+          <div class="fill" style="width:${loss / input * 100}%;background:var(--loss);border-radius:0 3px 3px 0"></div>
+        </div></div>
+        <span class="val">${fmt(input)} kW in<br><span style="color:var(--loss)">${fmt(loss)} kW lost</span></span>
+      </div>`;
+    };
+    const saved = acIn - dcIn;
+    effBars.innerHTML = row("AC chain", "var(--ac)", acIn) + row("DC chain", "var(--dc)", dcIn) +
+      `<p class="note" style="color:var(--ink)">At ${L} kW, the DC chain draws about <strong>${fmt(saved)} kW less</strong> from the grid, or roughly <strong>${Math.round(saved * 8760).toLocaleString()} kWh a year</strong> per rack, before counting the cooling needed to remove that heat.</p>` +
+      `<p class="note"><span style="display:inline-block;width:10px;height:10px;background:var(--loss);border-radius:2px"></span> Red segment: power lost as heat in conversion.</p>`;
+  }
+  load.addEventListener("input", drawEff);
+  drawEff();
+
+  // Current tool
+  const rp = document.getElementById("rp");
+  const rpOut = document.getElementById("rpOut");
+  const curBars = document.getElementById("curBars");
+  const systems = [
+    { name: "48V DC busbar", color: "var(--dc)", amps: P => P / 48 },
+    { name: "415V AC, 3-phase", color: "var(--ac)", amps: P => P / (Math.sqrt(3) * 415 * 0.95) },
+    { name: "400V DC", color: "var(--dc)", amps: P => P / 400 },
+    { name: "800V DC", color: "var(--dc)", amps: P => P / 800 }
+  ];
+  function drawCur() {
+    const P = +rp.value * 1000;
+    rpOut.value = rp.value + " kW";
+    const vals = systems.map(s => s.amps(P));
+    const max = Math.max(...vals);
+    curBars.innerHTML = systems.map((s, i) => `<div class="bar-row">
+      <span><strong style="color:${s.color}">${s.name}</strong></span>
+      <div class="track"><div class="fill" style="width:${Math.max(vals[i] / max * 100, 0.6)}%;background:${s.color}"></div></div>
+      <span class="val">${Math.round(vals[i]).toLocaleString()} A</span>
+    </div>`).join("") +
+    `<p class="note" style="color:var(--ink)">At ${rp.value} kW, a 48V rack needs <strong>${Math.round(vals[0] / vals[3])}×</strong> the current of an 800V rack.</p>`;
+  }
+  rp.addEventListener("input", drawCur);
+  drawCur();
+})();
+</script>
+</body>
+</html>

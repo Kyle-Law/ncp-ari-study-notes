@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>3-Phase Power, Illustrated</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF0EB; --surface:#F8F9F6; --ink:#17202B; --muted:#5B6570; --grid:#D3D8D0;
+  --l1:#1E2329; --l2:#C22F3B; --l3:#2361AE; --n:#8B949B; --amber:#D9950B;
+  --roomdark:#0E141C; --roomlight:#FFE7A3;
+  --sans:"Archivo","Helvetica Neue",Arial,system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#131920; --surface:#1A222B; --ink:#E6EAEE; --muted:#9AA4AE; --grid:#2C3640;
+    --l1:#D5DAE0; --l2:#F0646E; --l3:#6FA3EE; --n:#7E8891; --amber:#F2B53A;
+    --roomdark:#070A0E; --roomlight:#FFE7A3;
+  }
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:70px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:1.075rem;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{color:var(--l2)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+.wrap{max-width:1040px;margin:0 auto;padding:0 22px}
+.prose{max-width:66ch}
+
+/* Hero */
+.hero{padding-top:56px;padding-bottom:28px}
+.source{color:var(--muted);font-size:.95rem;margin:0 0 18px}
+h1{font-stretch:125%;font-variation-settings:"wdth" 125;font-weight:850;font-size:clamp(2.5rem,7.2vw,5.4rem);line-height:.93;letter-spacing:-.025em;margin:0 0 22px;max-width:13ch}
+.lede{font-size:1.2rem;max-width:58ch;margin:0 0 28px}
+
+/* Sticky controls */
+.controls{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--grid);padding-top:env(safe-area-inset-top,0px)}
+.controls .wrap{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;padding-top:10px;padding-bottom:10px;font-size:.92rem}
+.controls label{color:var(--muted)}
+.ctl{display:flex;align-items:center;gap:8px}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:5px;overflow:hidden}
+.seg button{font:inherit;font-weight:600;background:transparent;color:var(--ink);border:0;padding:6px 12px;cursor:pointer}
+.seg button+button{border-left:1.5px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.btn{font:inherit;font-weight:600;background:transparent;color:var(--ink);border:1.5px solid var(--ink);border-radius:5px;padding:6px 14px;cursor:pointer;min-width:84px}
+input[type=range]{accent-color:var(--amber)}
+
+/* Sections */
+section{padding:56px 0 8px;border-top:1px solid var(--grid)}
+h2{font-stretch:112%;font-variation-settings:"wdth" 112;font-weight:780;font-size:clamp(1.6rem,3.4vw,2.2rem);line-height:1.1;letter-spacing:-.01em;margin:0 0 16px;max-width:24ch}
+h3{font-weight:700;font-size:1.1rem;margin:28px 0 6px}
+p{margin:0 0 14px}
+
+figure{margin:24px 0 30px}
+.panel{background:var(--surface);border:1px solid var(--grid);border-radius:6px;padding:14px}
+canvas{display:block;width:100%}
+figcaption{color:var(--muted);font-size:.93rem;margin-top:10px;max-width:70ch}
+.readout{font-family:var(--mono);font-size:.86rem;color:var(--ink);margin-top:8px;min-height:1.4em}
+.row{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:10px}
+
+.key{display:inline-flex;align-items:center;gap:6px;font-size:.9rem;white-space:nowrap}
+.key i{display:inline-block;width:18px;height:3px;border-radius:2px}
+.k1 i{background:var(--l1)} .k2 i{background:var(--l2)} .k3 i{background:var(--l3)} .kn i{background:var(--n)} .ka i{background:var(--amber);height:4px}
+.w1{color:var(--l1)} .w2{color:var(--l2)} .w3{color:var(--l3)}
+
+.note{border-left:3px solid var(--amber);padding:6px 0 6px 14px;margin:18px 0;max-width:66ch;color:var(--ink)}
+.note[hidden]{display:none}
+
+.two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:18px;align-items:start}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+
+/* SVG diagrams */
+svg.diagram{width:100%;height:auto;display:block;font-family:var(--sans)}
+.diagram text{fill:var(--ink);font-size:14px}
+.diagram .sm{font-size:12px;fill:var(--muted)}
+.diagram .box{fill:var(--paper);stroke:var(--ink);stroke-width:1.5}
+.diagram .wl1{stroke:var(--l1)} .diagram .wl2{stroke:var(--l2)} .diagram .wl3{stroke:var(--l3)} .diagram .wn{stroke:var(--n);stroke-dasharray:5 4}
+.diagram .wire{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.diagram .dot1{fill:var(--l1)} .diagram .dot2{fill:var(--l2)} .diagram .dot3{fill:var(--l3)}
+.bank{cursor:pointer;transition:opacity .2s}
+.bank.dim{opacity:.28}
+.bank .box{transition:stroke .2s}
+.bank.on .box{stroke:var(--amber);stroke-width:3}
+.outlet{fill:none;stroke:var(--ink);stroke-width:1.5}
+
+/* Calculator */
+.bars{display:grid;gap:12px;margin-top:8px}
+.bar{display:grid;grid-template-columns:minmax(150px,230px) 1fr;gap:12px;align-items:center}
+.bar .lbl{font-size:.92rem}
+.bar .track{background:var(--paper);border:1px solid var(--grid);border-radius:4px;height:30px;position:relative;overflow:hidden}
+.bar .fill{height:100%;background:var(--n);transition:width .25s ease}
+.bar.hot .fill{background:var(--amber)}
+.bar .val{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:.85rem;font-weight:600;color:var(--ink)}
+@media (max-width:560px){.bar{grid-template-columns:1fr}}
+
+table{border-collapse:collapse;width:100%;font-size:.97rem;margin:16px 0 8px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--grid);vertical-align:top}
+thead th{font-weight:700;border-bottom:2px solid var(--ink)}
+tbody th{font-weight:600;color:var(--muted)}
+.tablewrap{overflow-x:auto}
+
+footer{border-top:1px solid var(--grid);margin-top:48px;padding-top:26px;padding-bottom:60px;color:var(--muted);font-size:.92rem}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="wrap hero">
+  <p class="source">An illustrated walkthrough of <a href="https://synaccess.com/resources/3-phase-power-explained">“3-Phase Power Explained”</a> by Synaccess Networks</p>
+  <h1>Three runners keep the lights on</h1>
+  <p class="lede">Picture a dark room with treadmills in it. Each runner wears shoes that flash when they hit the belt. One runner gives you flickering light with dark gaps between steps. Three runners, staggered so a foot is always landing, keep the room lit. That's the difference between single-phase and three-phase power.</p>
+
+  <figure class="panel" style="margin-top:0">
+    <div class="row">
+      <div class="seg" role="group" aria-label="Number of runners">
+        <button type="button" data-room="single" aria-pressed="true">Single-phase: one runner</button>
+        <button type="button" data-room="three" aria-pressed="false">Three-phase: three runners</button>
+      </div>
+    </div>
+    <canvas id="room" role="img" aria-label="Animated room lit by runners' shoes, with a trace of room brightness over time"></canvas>
+    <figcaption id="roomCap"></figcaption>
+  </figure>
+</header>
+
+<nav class="controls" aria-label="Animation and voltage controls">
+  <div class="wrap">
+    <div class="ctl">
+      <label id="regLbl">Voltage standard</label>
+      <div class="seg" role="group" aria-labelledby="regLbl">
+        <button type="button" data-reg="na" aria-pressed="true">North America 120/208 V</button>
+        <button type="button" data-reg="iec" aria-pressed="false">Malaysia / IEC 230/400 V</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <button type="button" class="btn" id="play">Pause</button>
+      <label for="speed">Speed</label>
+      <input id="speed" type="range" min="0.05" max="1" step="0.05" value="0.35">
+    </div>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="grid">
+    <h2>From the grid to the rack</h2>
+    <div class="prose">
+      <p>Generators produce alternating current, and it travels across the grid and into industrial buildings as three-phase power. A data center then has to decide how to hand that power to the equipment in each rack. There are two basic choices.</p>
+    </div>
+    <figure class="panel">
+      <svg class="diagram" viewBox="0 0 940 350" role="img" aria-label="Diagram: three-phase power from the grid feeds a building, which can send single-phase or three-phase power to rack PDUs">
+        <!-- utility -->
+        <rect class="box" x="10" y="120" width="160" height="96" rx="6"/>
+        <text x="90" y="160" text-anchor="middle" font-weight="700">Generator</text>
+        <text x="90" y="182" text-anchor="middle" class="sm">and utility grid</text>
+        <text x="90" y="200" text-anchor="middle" class="sm">three-phase AC</text>
+        <!-- grid to switchgear -->
+        <line class="wire wl1" x1="170" y1="138" x2="280" y2="138"/>
+        <line class="wire wl2" x1="170" y1="156" x2="280" y2="156"/>
+        <line class="wire wl3" x1="170" y1="174" x2="280" y2="174"/>
+        <line class="wire wn"  x1="170" y1="198" x2="280" y2="198"/>
+        <text x="225" y="128" text-anchor="middle" class="sm">L1 L2 L3 + N</text>
+        <!-- building -->
+        <rect class="box" x="280" y="110" width="170" height="116" rx="6"/>
+        <text x="365" y="160" text-anchor="middle" font-weight="700">Building</text>
+        <text x="365" y="182" text-anchor="middle" class="sm">switchgear and</text>
+        <text x="365" y="198" text-anchor="middle" class="sm">distribution panels</text>
+        <!-- option 1 wires -->
+        <path class="wire wl1" d="M450 130 H520 V62 H640"/>
+        <path class="wire wn"  d="M450 144 H536 V82 H640"/>
+        <text x="590" y="52" text-anchor="middle" class="sm">1 hot + neutral</text>
+        <!-- option 2 wires -->
+        <path class="wire wl1" d="M450 180 H520 V244 H640"/>
+        <path class="wire wl2" d="M450 192 H508 V262 H640"/>
+        <path class="wire wl3" d="M450 204 H496 V280 H640"/>
+        <path class="wire wn"  d="M450 216 H484 V298 H640"/>
+        <text x="540" y="338" class="sm">3 hots (+ neutral in some setups)</text>
+        <!-- PDUs -->
+        <rect class="box" x="640" y="26" width="290" height="92" rx="6"/>
+        <text x="656" y="56" font-weight="700">Option 1: single-phase PDU</text>
+        <text x="656" y="80" class="sm">Every outlet: line to neutral</text>
+        <text x="656" y="102"><tspan data-v="vph"></tspan> V at the outlets</text>
+        <rect class="box" x="640" y="222" width="290" height="92" rx="6"/>
+        <text x="656" y="252" font-weight="700">Option 2: three-phase PDU</text>
+        <text x="656" y="276" class="sm">Three groups of outlets, one per phase pair</text>
+        <text x="656" y="298"><tspan data-v="outletTP"></tspan></text>
+      </svg>
+      <figcaption>Single-phase distribution sends one hot (line) wire and a neutral to the rack. Three-phase distribution sends all three hot wires, one per phase, sometimes with a neutral too.</figcaption>
+    </figure>
+  </section>
+
+  <section id="rms">
+    <h2>Peak voltage vs. the number on the label</h2>
+    <div class="prose">
+      <p>In a <span data-v="svcName"></span> service, each hot wire swings between roughly +<span data-v="vpk"></span> V and −<span data-v="vpk"></span> V relative to neutral, <span data-v="hz"></span> times a second. Nobody calls it “<span data-v="vpk"></span> volts,” though. AC is described by its RMS value: the steady DC voltage that would deliver the same power to a load.</p>
+      <p>For a sine wave, RMS is the peak divided by √2. So <span data-v="vpk"></span> V peak ÷ 1.414 ≈ <strong><span data-v="vph"></span> VAC</strong>.</p>
+    </div>
+    <figure class="panel">
+      <canvas id="rmsCv" role="img" aria-label="Sine wave showing peak voltage and the lower RMS level"></canvas>
+      <div class="readout" id="rmsRead"></div>
+      <figcaption>The solid lines mark the peaks. The dashed amber line is the RMS value printed on equipment labels.</figcaption>
+    </figure>
+  </section>
+
+  <section id="single">
+    <h2>Single-phase: one runner, two shoes</h2>
+    <div class="prose">
+      <p>Back to the runner. Let the positive half of the wave be the left shoe and the negative half the right shoe. At each peak, either shoe lights the room equally well. Polarity doesn't matter; both halves of the cycle deliver usable energy.</p>
+      <p>The catch is the moment in between, when the voltage crosses zero. For an instant, neither shoe is down and the room is dark.</p>
+    </div>
+    <figure class="panel">
+      <div class="row"><span class="key k1"><i></i>L1 to neutral</span><span class="key ka"><i></i>shoe lit (light output)</span></div>
+      <canvas id="singleCv" role="img" aria-label="Single-phase waveform with positive half labelled left shoe and negative half labelled right shoe"></canvas>
+      <div class="readout" id="singleRead"></div>
+    </figure>
+    <div class="prose">
+      <p>A single-phase rack PDU is built for exactly this: it takes one line and neutral, and wires every outlet line-to-neutral. Plug anything in and it runs at <span data-v="vph"></span> VAC.</p>
+    </div>
+  </section>
+
+  <section id="three">
+    <h2>Three-phase: three runners, a third of a cycle apart</h2>
+    <div class="prose">
+      <p>A three-phase system has three hot wires, and each one measures <span data-v="vph"></span> VAC to neutral. What makes it three-phase is timing: each wire's wave is shifted by a third of a cycle (120°) from the next.</p>
+      <p>On the left, each wire is an arrow spinning around the circle. The height of an arrow's tip is that wire's voltage at this instant, and the dotted lines carry it across to the waveforms.</p>
+    </div>
+    <figure class="panel">
+      <div class="row"><span class="key k1"><i></i>L1</span><span class="key k2"><i></i>L2 (120° later)</span><span class="key k3"><i></i>L3 (240° later)</span></div>
+      <canvas id="threeCv" role="img" aria-label="Rotating phasor diagram of three phases linked to three overlapping sine waves"></canvas>
+      <div class="readout" id="threeRead"></div>
+    </figure>
+
+    <h3>Why the room never goes dark</h3>
+    <div class="prose">
+      <p>Whenever one wave passes through zero, the other two are well away from it. Feed equal loads from all three, and the total power they draw doesn't pulse at all: it stays perfectly flat. A single-phase load, by contrast, gets power in bursts that fall to zero twice every cycle.</p>
+    </div>
+    <figure class="panel">
+      <div class="row"><span class="key kn"><i></i>single-phase load</span><span class="key ka"><i></i>three balanced loads, combined</span></div>
+      <canvas id="powCv" role="img" aria-label="Instantaneous power: single-phase pulses between zero and double, three-phase is constant"></canvas>
+      <figcaption>Both curves deliver the same average power. Only the three-phase one delivers it smoothly.</figcaption>
+    </figure>
+  </section>
+
+  <section id="delta">
+    <h2>Line-to-line: how a delta PDU gets more voltage</h2>
+    <div class="prose">
+      <p>A three-phase rack PDU takes all three phases in and splits them into three groups of outlets. Many are wired in a <em>delta</em> configuration: instead of connecting each outlet from a hot wire to neutral, it connects them between two hot wires.</p>
+      <p>In the analogy, that's two runners whose shoes are lit at the same moment, so the room gets brighter. Electrically, the outlet sees the <em>difference</em> between two waves that are 120° apart, and that difference is √3 times bigger: <span data-v="vph"></span> V × 1.732 ≈ <strong><span data-v="vll"></span> V</strong>. Higher voltage means the same power at less current, which is more efficient for the equipment.</p>
+    </div>
+
+    <p class="note" id="iecNote" hidden>In 230/400 V countries like Malaysia, three-phase rack PDUs are usually wired in wye (star) instead: each outlet group sits between one hot wire and neutral and gets 230 V, because 400 V line-to-line is above what IT power supplies accept. The line-to-line math below still describes what's on the wires.</p>
+
+    <figure class="panel">
+      <div class="row">
+        <span style="color:var(--muted);font-size:.92rem">Choose an outlet group:</span>
+        <div class="seg" role="group" aria-label="Outlet group">
+          <button type="button" data-pair="0" aria-pressed="true">A: L1–L2</button>
+          <button type="button" data-pair="1" aria-pressed="false">B: L2–L3</button>
+          <button type="button" data-pair="2" aria-pressed="false">C: L3–L1</button>
+        </div>
+      </div>
+      <div class="two">
+        <svg class="diagram" id="pdu" viewBox="0 0 470 310" role="img" aria-label="Delta PDU wiring: three outlet groups, each connected between two phases">
+          <text x="18" y="22" class="sm">Input</text>
+          <line class="wire wl1" x1="40" y1="34" x2="40" y2="290"/>
+          <line class="wire wl2" x1="80" y1="34" x2="80" y2="290"/>
+          <line class="wire wl3" x1="120" y1="34" x2="120" y2="290"/>
+          <text x="40" y="304" text-anchor="middle" class="sm">L1</text>
+          <text x="80" y="304" text-anchor="middle" class="sm">L2</text>
+          <text x="120" y="304" text-anchor="middle" class="sm">L3</text>
+
+          <g class="bank on" data-pair="0">
+            <path class="wire wl1" d="M40 58 H230"/><circle class="dot1" cx="40" cy="58" r="5"/>
+            <path class="wire wl2" d="M80 86 H230"/><circle class="dot2" cx="80" cy="86" r="5"/>
+            <rect class="box" x="230" y="38" width="226" height="68" rx="6"/>
+            <text x="244" y="62" font-weight="700">Group A: L1–L2</text>
+            <text x="244" y="88" class="sm"><tspan data-v="vll"></tspan> V outlets</text>
+            <rect class="outlet" x="358" y="54" width="18" height="30" rx="3"/><rect class="outlet" x="384" y="54" width="18" height="30" rx="3"/><rect class="outlet" x="410" y="54" width="18" height="30" rx="3"/>
+          </g>
+          <g class="bank dim" data-pair="1">
+            <path class="wire wl2" d="M80 146 H230"/><circle class="dot2" cx="80" cy="146" r="5"/>
+            <path class="wire wl3" d="M120 174 H230"/><circle class="dot3" cx="120" cy="174" r="5"/>
+            <rect class="box" x="230" y="126" width="226" height="68" rx="6"/>
+            <text x="244" y="150" font-weight="700">Group B: L2–L3</text>
+            <text x="244" y="176" class="sm"><tspan data-v="vll"></tspan> V outlets</text>
+            <rect class="outlet" x="358" y="142" width="18" height="30" rx="3"/><rect class="outlet" x="384" y="142" width="18" height="30" rx="3"/><rect class="outlet" x="410" y="142" width="18" height="30" rx="3"/>
+          </g>
+          <g class="bank dim" data-pair="2">
+            <path class="wire wl3" d="M120 234 H230"/><circle class="dot3" cx="120" cy="234" r="5"/>
+            <path class="wire wl1" d="M40 262 H230"/><circle class="dot1" cx="40" cy="262" r="5"/>
+            <rect class="box" x="230" y="214" width="226" height="68" rx="6"/>
+            <text x="244" y="238" font-weight="700">Group C: L3–L1</text>
+            <text x="244" y="264" class="sm"><tspan data-v="vll"></tspan> V outlets</text>
+            <rect class="outlet" x="358" y="230" width="18" height="30" rx="3"/><rect class="outlet" x="384" y="230" width="18" height="30" rx="3"/><rect class="outlet" x="410" y="230" width="18" height="30" rx="3"/>
+          </g>
+        </svg>
+        <div>
+          <canvas id="deltaCv" role="img" aria-label="Two phase voltages and their difference, the line-to-line outlet voltage"></canvas>
+        </div>
+      </div>
+      <div class="readout" id="deltaRead"></div>
+      <figcaption>The amber wave is the outlet voltage: the chosen pair of phases subtracted from each other. In the phasor view it's the arrow joining their two tips, redrawn from the centre. It's √3 times longer than either phase, and it never needs neutral.</figcaption>
+    </figure>
+  </section>
+
+  <section id="calc">
+    <h2>What that buys you at the rack</h2>
+    <div class="prose">
+      <p>Power is voltage times current, and breakers limit the current. So the way a circuit is wired decides how much equipment one feed can run. At the same current rating, a three-phase feed delivers √3 × V<sub>L–L</sub> × I: three times what a single <span data-v="vph"></span> V circuit can.</p>
+    </div>
+    <figure class="panel">
+      <div class="row">
+        <label for="amps">Circuit current rating</label>
+        <input id="amps" type="range" min="10" max="63" step="1" value="30" style="flex:1;min-width:160px;max-width:360px">
+        <span class="readout" id="ampsOut" style="margin:0"></span>
+      </div>
+      <div class="bars" id="bars"></div>
+      <figcaption id="calcCap"></figcaption>
+    </figure>
+  </section>
+
+  <section id="summary">
+    <h2>The short version</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th scope="col"></th><th scope="col">Single-phase</th><th scope="col">Three-phase</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Runners</th><td>One. The room flickers and goes dark between steps.</td><td>Three, staggered. At least one foot is always down.</td></tr>
+          <tr><th scope="row">Wires to the rack</th><td>One hot + neutral</td><td>Three hots, sometimes + neutral</td></tr>
+          <tr><th scope="row">Outlet voltage</th><td><span data-v="vph"></span> V, line-to-neutral</td><td><span data-v="vll"></span> V line-to-line (delta), or <span data-v="vph"></span> V line-to-neutral (wye)</td></tr>
+          <tr><th scope="row">Power flow</th><td>Pulses, touching zero twice per cycle</td><td>Constant with balanced loads</td></tr>
+          <tr><th scope="row">Power per feed</th><td>V × I</td><td>√3 × V<sub>L–L</sub> × I</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>Based on <a href="https://synaccess.com/resources/3-phase-power-explained">3-Phase Power Explained</a> by Synaccess Networks (updated September 2025). Diagrams and interactive plots are original illustrations of its analogy. The constant-power, wye-wiring and circuit-capacity notes extend the article. Figures are nominal; real circuits are sized to local electrical code (in North America, continuous loads are typically limited to 80% of the breaker rating).</p>
+</footer>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const TAU = Math.PI * 2, S3 = Math.sqrt(3);
+const PH = [0, -TAU / 3, -2 * TAU / 3];
+const NAMES = ['L1', 'L2', 'L3'];
+const PAIRS = [[0, 1], [1, 2], [2, 0]];
+const REG = {
+  na:  { vph: 120, vll: 208, hz: 60, svc: 'North American “208 V”' },
+  iec: { vph: 230, vll: 400, hz: 50, svc: 'Malaysian / IEC 230/400 V' }
+};
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let reg = 'na', theta = 1.1, playing = !reduce, speed = 0.35, roomMode = 'single', pair = 0;
+const vpk = () => REG[reg].vph * Math.SQRT2;
+
+/* ---------- colours ---------- */
+const C = {};
+function readColors() {
+  const s = getComputedStyle(document.documentElement);
+  ['paper','surface','ink','muted','grid','l1','l2','l3','n','amber','roomdark','roomlight']
+    .forEach(k => C[k] = s.getPropertyValue('--' + k).trim());
+}
+readColors();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+function hexRgb(h) { h = h.replace('#',''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); const n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function mix(a, b, t) { const A = hexRgb(a), B = hexRgb(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',')})`; }
+function alpha(hex, a) { const [r, g, b] = hexRgb(hex); return `rgba(${r},${g},${b},${a})`; }
+
+/* ---------- canvas helpers ---------- */
+function fit(c, hOf) {
+  const d = window.devicePixelRatio || 1, w = c.clientWidth || 300, h = hOf(w);
+  if (c.style.height !== h + 'px') c.style.height = h + 'px';
+  const W = Math.round(w * d), H = Math.round(h * d);
+  if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+  const x = c.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, w, h);
+  return { x, w, h };
+}
+function arrow(x, x0, y0, x1, y1, col, w = 2.5, dash) {
+  x.save(); x.strokeStyle = col; x.fillStyle = col; x.lineWidth = w; x.lineCap = 'round';
+  if (dash) x.setLineDash(dash);
+  x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y1); x.stroke(); x.setLineDash([]);
+  if (!dash) {
+    const a = Math.atan2(y1 - y0, x1 - x0), L = 9 + w;
+    x.beginPath(); x.moveTo(x1, y1);
+    x.lineTo(x1 - L * Math.cos(a - 0.4), y1 - L * Math.sin(a - 0.4));
+    x.lineTo(x1 - L * Math.cos(a + 0.4), y1 - L * Math.sin(a + 0.4));
+    x.closePath(); x.fill();
+  }
+  x.restore();
+}
+function dot(x, px, py, r, col) { x.fillStyle = col; x.beginPath(); x.arc(px, py, r, 0, TAU); x.fill(); }
+function text(x, s, px, py, o = {}) {
+  x.font = `${o.weight || 500} ${o.size || 12}px ${o.mono ? getComputedStyle(document.body).getPropertyValue('--mono') || 'monospace' : 'Archivo, Arial, sans-serif'}`;
+  x.fillStyle = o.color || C.muted; x.textAlign = o.align || 'left'; x.textBaseline = o.base || 'alphabetic';
+  x.fillText(s, px, py);
+}
+
+/* Generic waveform plot. Returns cursor angle. */
+function wavePlot(x, b, o) {
+  const cyc = o.cycles || 2, span = cyc * TAU, vmax = o.vmax;
+  const X = t => b.x + (t / span) * b.w, Y = v => b.y + b.h / 2 - (v / vmax) * (b.h / 2);
+  const tc = ((theta % span) + span) % span;
+  x.save();
+  // grid
+  x.lineWidth = 1; x.strokeStyle = C.grid;
+  for (let k = 0; k <= cyc * 4; k++) { const xx = Math.round(X(k * TAU / 4)) + .5; x.beginPath(); x.moveTo(xx, b.y); x.lineTo(xx, b.y + b.h); x.stroke(); }
+  (o.ticks || []).forEach(v => {
+    const yy = Math.round(Y(v)) + .5; x.strokeStyle = C.grid; x.beginPath(); x.moveTo(b.x, yy); x.lineTo(b.x + b.w, yy); x.stroke();
+    text(x, (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(Math.round(v)), b.x - 6, Y(v) + 4, { align: 'right', size: 11 });
+  });
+  x.strokeStyle = C.muted; x.beginPath(); x.moveTo(b.x, Math.round(Y(0)) + .5); x.lineTo(b.x + b.w, Math.round(Y(0)) + .5); x.stroke();
+  for (let k = 0; k <= cyc * 2; k++) text(x, (k * 180) + '°', X(k * TAU / 2), b.y + b.h + 16, { align: k === 0 ? 'left' : k === cyc * 2 ? 'right' : 'center', size: 11 });
+  if (o.yLabel) text(x, o.yLabel, b.x - 6, b.y - 2, { align: 'right', size: 11 });
+  // reference lines
+  (o.hlines || []).forEach(hl => {
+    x.strokeStyle = hl.color; x.lineWidth = 1.5; x.setLineDash(hl.dash || []);
+    x.beginPath(); x.moveTo(b.x, Y(hl.v)); x.lineTo(b.x + b.w, Y(hl.v)); x.stroke(); x.setLineDash([]);
+    if (hl.label) text(x, hl.label, b.x + b.w - 4, Y(hl.v) + (hl.v >= 0 ? -5 : 14), { align: 'right', color: hl.color, weight: 600, size: 12 });
+  });
+  const N = Math.max(120, Math.round(b.w));
+  // fills
+  (o.series || []).forEach(s => {
+    ['fillPos', 'fillNeg'].forEach((k, j) => {
+      if (!s[k]) return;
+      x.fillStyle = s[k]; x.beginPath(); x.moveTo(X(0), Y(0));
+      for (let i = 0; i <= N; i++) { const t = span * i / N, v = s.f(t); x.lineTo(X(t), Y(j ? Math.min(0, v) : Math.max(0, v))); }
+      x.lineTo(X(span), Y(0)); x.closePath(); x.fill();
+    });
+  });
+  // curves
+  (o.series || []).forEach(s => {
+    x.globalAlpha = s.alpha ?? 1; x.strokeStyle = s.color; x.lineWidth = s.w || 2; x.setLineDash(s.dash || []); x.lineJoin = 'round';
+    x.beginPath();
+    for (let i = 0; i <= N; i++) { const t = span * i / N; i ? x.lineTo(X(t), Y(s.f(t))) : x.moveTo(X(t), Y(s.f(t))); }
+    x.stroke(); x.setLineDash([]); x.globalAlpha = 1;
+  });
+  if (o.after) o.after(X, Y);
+  // cursor
+  if (o.cursor !== false) {
+    const cx = X(tc);
+    x.strokeStyle = alpha(C.ink.startsWith('#') ? C.ink : '#17202B', .45); x.lineWidth = 1; x.setLineDash([3, 3]);
+    x.beginPath(); x.moveTo(cx, b.y); x.lineTo(cx, b.y + b.h); x.stroke(); x.setLineDash([]);
+    (o.series || []).forEach(s => { if (s.noDot) return; dot(x, cx, Y(s.f(tc)), 4.5, s.color); });
+  }
+  x.restore();
+  return { tc, X, Y };
+}
+
+function phasorFrame(x, cx, cy, r) {
+  x.save(); x.strokeStyle = C.grid; x.lineWidth = 1;
+  x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.stroke();
+  x.beginPath(); x.moveTo(cx - r - 8, cy); x.lineTo(cx + r + 8, cy); x.moveTo(cx, cy - r - 8); x.lineTo(cx, cy + r + 8); x.stroke();
+  x.restore();
+}
+const tip = (i, cx, cy, r) => [cx + r * Math.cos(theta + PH[i]), cy - r * Math.sin(theta + PH[i])];
+
+/* ---------- hero room ---------- */
+function light(t) {
+  if (roomMode === 'single') return Math.abs(Math.sin(t));
+  return (Math.abs(Math.sin(t)) + Math.abs(Math.sin(t + PH[1])) + Math.abs(Math.sin(t + PH[2]))) / 2;
+}
+function drawRoom() {
+  const { x, w, h } = fit($('#room'), w => w < 620 ? 470 : 330);
+  const vert = w < 620;
+  const sc = vert ? { x: 0, y: 0, w, h: 270 } : { x: 0, y: 0, w: w * 0.55, h };
+  const tr = vert ? { x: 44, y: 300, w: w - 56, h: h - 330 } : { x: w * 0.55 + 56, y: 22, w: w * 0.45 - 68, h: h - 56 };
+  const L = light(theta);
+  // room
+  x.save();
+  x.beginPath(); x.roundRect ? x.roundRect(sc.x, sc.y, sc.w, sc.h, 6) : x.rect(sc.x, sc.y, sc.w, sc.h); x.clip();
+  x.fillStyle = mix(C.roomdark, '#5a4a26', L * 0.55); x.fillRect(sc.x, sc.y, sc.w, sc.h);
+  const g = x.createRadialGradient(sc.x + sc.w / 2, sc.y + sc.h * 0.35, 0, sc.x + sc.w / 2, sc.y + sc.h * 0.35, sc.w * 0.7);
+  g.addColorStop(0, alpha(C.roomlight, 0.85 * L)); g.addColorStop(1, alpha(C.roomlight, 0));
+  x.fillStyle = g; x.fillRect(sc.x, sc.y, sc.w, sc.h);
+  text(x, `Room brightness ${Math.round(L * 100)}%`, sc.x + 14, sc.y + 24, { color: L > .55 ? '#1b1b1b' : '#e8e8e8', weight: 700, size: 13, mono: true });
+  // treadmills
+  const colW = sc.w / 3, beltY = sc.y + sc.h - 58;
+  for (let i = 0; i < 3; i++) {
+    const on = roomMode === 'three' || i === 0;
+    const s = Math.sin(theta + PH[i]);
+    const cx = sc.x + colW * (i + .5);
+    x.globalAlpha = on ? 1 : 0.35;
+    // belt
+    x.fillStyle = '#2b323c'; x.fillRect(cx - colW * 0.38, beltY, colW * 0.76, 12);
+    x.fillStyle = '#48525f'; x.fillRect(cx - colW * 0.38, beltY + 12, 6, 16); x.fillRect(cx + colW * 0.38 - 6, beltY + 12, 6, 16);
+    // runner
+    const hipY = beltY - 42;
+    const lift = k => on ? 12 * Math.max(0, k) : 0;
+    const lF = [cx - 11, beltY - 5 - (on ? lift(-s) : 0)], rF = [cx + 11, beltY - 5 - (on ? lift(s) : 0)];
+    x.strokeStyle = '#cfd6de'; x.lineWidth = 3; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(lF[0], lF[1]); x.lineTo(cx, hipY); x.lineTo(rF[0], rF[1]); x.moveTo(cx, hipY); x.lineTo(cx + (on ? 4 : 0), hipY - 34); x.stroke();
+    x.beginPath(); x.arc(cx + (on ? 5 : 0), hipY - 44, 8, 0, TAU); x.fillStyle = '#cfd6de'; x.fill();
+    // shoes
+    [[lF, on && s > 0 ? s : 0], [rF, on && s < 0 ? -s : 0]].forEach(([p, b]) => {
+      x.save();
+      if (b > 0.05) { x.shadowColor = C.roomlight; x.shadowBlur = 22 * b; }
+      x.fillStyle = b > 0.05 ? mix('#5a5f66', '#ffd76a', b) : '#5a5f66';
+      x.beginPath(); x.ellipse(p[0], p[1], 9, 5, 0, 0, TAU); x.fill(); x.restore();
+    });
+    x.globalAlpha = 1;
+    const lc = L > .55 ? '#1b1b1b' : '#e8e8e8';
+    text(x, `${NAMES[i]} runner`, cx, beltY + 44, { align: 'center', color: lc, weight: 700, size: 12 });
+    if (!on) text(x, 'standing by', cx, beltY - 96, { align: 'center', color: lc, size: 11 });
+  }
+  x.restore();
+  // trace
+  const span = 2 * TAU, Xt = u => tr.x + (u / span) * tr.w, Yt = v => tr.y + tr.h - v * tr.h;
+  x.strokeStyle = C.grid; x.lineWidth = 1;
+  [0, .5, 1].forEach(v => { x.beginPath(); x.moveTo(tr.x, Yt(v) + .5); x.lineTo(tr.x + tr.w, Yt(v) + .5); x.stroke(); });
+  text(x, 'full', tr.x - 6, Yt(1) + 4, { align: 'right', size: 11 });
+  text(x, 'dark', tr.x - 6, Yt(0) + 4, { align: 'right', size: 11 });
+  text(x, 'Brightness over the last two cycles', tr.x, tr.y - 8, { size: 11 });
+  text(x, 'now', tr.x + tr.w, tr.y + tr.h + 16, { align: 'right', size: 11 });
+  const N = Math.round(tr.w);
+  x.beginPath(); x.moveTo(Xt(0), Yt(0));
+  for (let i = 0; i <= N; i++) { const u = span * i / N; x.lineTo(Xt(u), Yt(light(theta - span + u))); }
+  x.lineTo(Xt(span), Yt(0)); x.closePath(); x.fillStyle = alpha(C.amber, .22); x.fill();
+  x.beginPath();
+  for (let i = 0; i <= N; i++) { const u = span * i / N; const yy = Yt(light(theta - span + u)); i ? x.lineTo(Xt(u), yy) : x.moveTo(Xt(u), yy); }
+  x.strokeStyle = C.amber; x.lineWidth = 2.5; x.stroke();
+  dot(x, Xt(span), Yt(L), 5, C.amber);
+  if (roomMode === 'three') {
+    x.setLineDash([5, 4]); x.strokeStyle = C.ink; x.lineWidth = 1;
+    x.beginPath(); x.moveTo(tr.x, Yt(S3 / 2)); x.lineTo(tr.x + tr.w, Yt(S3 / 2)); x.stroke(); x.setLineDash([]);
+    text(x, 'never below 87%', tr.x + 4, Yt(S3 / 2) + 14, { color: C.ink, weight: 600, size: 11 });
+  }
+}
+
+/* ---------- RMS ---------- */
+function drawRMS() {
+  const { x, w, h } = fit($('#rmsCv'), w => w < 600 ? 230 : 270);
+  const P = vpk(), R = REG[reg].vph;
+  const { tc } = wavePlot(x, { x: 46, y: 22, w: w - 56, h: h - 50 }, {
+    vmax: P * 1.18, ticks: [P, R, -R, -P], yLabel: 'volts',
+    hlines: [
+      { v: P, label: `peak +${Math.round(P)} V`, color: C.ink },
+      { v: -P, label: `peak −${Math.round(P)} V`, color: C.ink },
+      { v: R, label: `RMS ${R} V`, color: C.amber, dash: [7, 4] }
+    ],
+    series: [{ f: t => P * Math.sin(t), color: C.l1, w: 2.5 }]
+  });
+  $('#rmsRead').textContent = `L1 to neutral right now: ${fmtV(P * Math.sin(tc))}`;
+}
+const fmtV = v => `${v >= 0 ? '+' : '−'}${Math.abs(Math.round(v))} V`;
+
+/* ---------- single-phase shoes ---------- */
+function drawSingle() {
+  const { x, w, h } = fit($('#singleCv'), w => w < 600 ? 240 : 280);
+  const P = vpk();
+  const { tc } = wavePlot(x, { x: 46, y: 22, w: w - 56, h: h - 50 }, {
+    vmax: P * 1.18, ticks: [P, -P], yLabel: 'volts',
+    series: [{ f: t => P * Math.sin(t), color: C.l1, w: 2.5, fillPos: alpha(C.amber, .30), fillNeg: alpha(C.amber, .30) }],
+    after: (X, Y) => {
+      for (let k = 0; k < 2; k++) {
+        text(x, 'left shoe lit', X(k * TAU + TAU / 4), Y(P * .42), { align: 'center', color: C.ink, weight: 600, size: 12 });
+        text(x, 'right shoe lit', X(k * TAU + 3 * TAU / 4), Y(-P * .42) + 4, { align: 'center', color: C.ink, weight: 600, size: 12 });
+        [k * TAU + TAU / 2, (k + 1) * TAU].forEach(t => { if (t < 2 * TAU) { dot(x, X(t), Y(0), 5, C.surface); x.strokeStyle = C.l2; x.lineWidth = 2; x.beginPath(); x.arc(X(t), Y(0), 5, 0, TAU); x.stroke(); } });
+      }
+      dot(x, X(0), Y(0), 0, C.l2);
+    }
+  });
+  const v = P * Math.sin(tc), near = Math.abs(Math.sin(tc)) < 0.12;
+  $('#singleRead').textContent = `${fmtV(v)}  ${near ? 'near a zero crossing: room almost dark' : v > 0 ? 'left shoe down' : 'right shoe down'}   (red rings mark the dark instants)`;
+}
+
+/* ---------- three-phase ---------- */
+function drawThree() {
+  const { x, w, h } = fit($('#threeCv'), w => w < 640 ? 500 : 300);
+  const P = vpk(), vmax = P * 1.18, vert = w < 640;
+  let b, cx, cy, r;
+  if (vert) { cx = w / 2; cy = 120; r = 95; b = { x: 46, y: 262, w: w - 56, h: h - 290 }; }
+  else { b = { x: 300, y: 20, w: w - 310, h: h - 48 }; cy = b.y + b.h / 2; r = (P / vmax) * b.h / 2; cx = 30 + r + 10; }
+  const { tc, X, Y } = wavePlot(x, b, {
+    vmax, ticks: [P, -P], yLabel: 'volts',
+    series: [0, 1, 2].map(i => ({ f: t => P * Math.sin(t + PH[i]), color: C['l' + (i + 1)], w: 2.3 }))
+  });
+  phasorFrame(x, cx, cy, r);
+  const cols = [C.l1, C.l2, C.l3];
+  for (let i = 0; i < 3; i++) {
+    const [tx, ty] = tip(i, cx, cy, r);
+    if (!vert) { x.save(); x.strokeStyle = alpha(hexOr(cols[i]), .55); x.setLineDash([2, 4]); x.lineWidth = 1.2; x.beginPath(); x.moveTo(tx, ty); x.lineTo(X(tc), Y(P * Math.sin(tc + PH[i]))); x.stroke(); x.restore(); }
+    arrow(x, cx, cy, tx, ty, cols[i], 3);
+    text(x, NAMES[i], tx + (tx >= cx ? 8 : -8), ty + (ty < cy ? -6 : 14), { align: tx >= cx ? 'left' : 'right', color: cols[i], weight: 700, size: 12 });
+  }
+  dot(x, cx, cy, 3, C.ink);
+  const vs = [0, 1, 2].map(i => P * Math.sin(tc + PH[i]));
+  $('#threeRead').textContent = `L1 ${fmtV(vs[0])}   L2 ${fmtV(vs[1])}   L3 ${fmtV(vs[2])}   sum ${fmtV(vs[0] + vs[1] + vs[2] + 0)}`.replace('−0 V', '0 V');
+}
+const hexOr = c => c.startsWith('#') ? c : '#888888';
+
+function drawPow() {
+  const { x, w, h } = fit($('#powCv'), w => w < 600 ? 190 : 210);
+  const b = { x: 46, y: 18, w: w - 56, h: h - 44 };
+  const span = 2 * TAU, X = t => b.x + (t / span) * b.w, Y = v => b.y + b.h - (v / 2.2) * b.h;
+  const tc = ((theta % span) + span) % span;
+  x.strokeStyle = C.grid; x.lineWidth = 1;
+  for (let k = 0; k <= 8; k++) { const xx = Math.round(X(k * TAU / 4)) + .5; x.beginPath(); x.moveTo(xx, b.y); x.lineTo(xx, b.y + b.h); x.stroke(); }
+  [0, 1, 2].forEach(v => { x.beginPath(); x.moveTo(b.x, Y(v) + .5); x.lineTo(b.x + b.w, Y(v) + .5); x.stroke(); });
+  text(x, '0', b.x - 6, Y(0) + 4, { align: 'right', size: 11 });
+  text(x, 'avg', b.x - 6, Y(1) + 4, { align: 'right', size: 11 });
+  text(x, '2×', b.x - 6, Y(2) + 4, { align: 'right', size: 11 });
+  const N = Math.round(b.w), f1 = t => 2 * Math.sin(t) ** 2;
+  x.beginPath(); for (let i = 0; i <= N; i++) { const t = span * i / N; i ? x.lineTo(X(t), Y(f1(t))) : x.moveTo(X(t), Y(f1(t))); }
+  x.strokeStyle = C.n; x.lineWidth = 2; x.stroke();
+  x.beginPath(); x.moveTo(X(0), Y(1)); x.lineTo(X(span), Y(1)); x.strokeStyle = C.amber; x.lineWidth = 3.5; x.stroke();
+  x.setLineDash([3, 3]); x.strokeStyle = C.muted; x.lineWidth = 1; x.beginPath(); x.moveTo(X(tc), b.y); x.lineTo(X(tc), b.y + b.h); x.stroke(); x.setLineDash([]);
+  dot(x, X(tc), Y(f1(tc)), 4.5, C.n); dot(x, X(tc), Y(1), 5, C.amber);
+}
+
+/* ---------- delta ---------- */
+function drawDelta() {
+  const c = $('#deltaCv');
+  const { x, w, h } = fit(c, w => w < 520 ? 470 : 340);
+  const P = vpk(), PL = P * S3, vmax = PL * 1.12, [i, j] = PAIRS[pair], vert = w < 520;
+  let b, cx, cy, r;
+  if (vert) { b = { x: 46, y: 250, w: w - 56, h: h - 278 }; cx = w / 2; cy = 115; r = 58; }
+  else { b = { x: 46, y: 22, w: w - 56, h: 150 }; cx = w / 2; cy = 262; r = 40; }
+  const cols = [C.l1, C.l2, C.l3];
+  const { tc } = wavePlot(x, b, {
+    vmax, ticks: [PL, -PL], yLabel: 'volts',
+    hlines: [{ v: REG[reg].vll, label: `RMS ${REG[reg].vll} V`, color: C.amber, dash: [7, 4] }],
+    series: [
+      { f: t => P * Math.sin(t + PH[i]), color: cols[i], w: 1.6, alpha: .55, noDot: true },
+      { f: t => P * Math.sin(t + PH[j]), color: cols[j], w: 1.6, alpha: .55, noDot: true },
+      { f: t => P * (Math.sin(t + PH[i]) - Math.sin(t + PH[j])), color: C.amber, w: 3.2 }
+    ]
+  });
+  phasorFrame(x, cx, cy, r * S3);
+  x.save(); x.strokeStyle = C.grid; x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.stroke(); x.restore();
+  const ti = tip(i, cx, cy, r), tj = tip(j, cx, cy, r);
+  arrow(x, cx, cy, ti[0], ti[1], cols[i], 2.5);
+  arrow(x, cx, cy, tj[0], tj[1], cols[j], 2.5);
+  arrow(x, tj[0], tj[1], ti[0], ti[1], C.amber, 1.5, [4, 3]);
+  const dx = ti[0] - tj[0], dy = ti[1] - tj[1];
+  arrow(x, cx, cy, cx + dx, cy + dy, C.amber, 3.2);
+  text(x, `${NAMES[i]} − ${NAMES[j]}`, cx + dx + (dx >= 0 ? 8 : -8), cy + dy + 4, { align: dx >= 0 ? 'left' : 'right', color: C.amber, weight: 700, size: 12 });
+  const v = P * (Math.sin(tc + PH[i]) - Math.sin(tc + PH[j]));
+  $('#deltaRead').textContent = `Group ${'ABC'[pair]} (${NAMES[i]}–${NAMES[j]}): ${REG[reg].vll} V RMS, ${Math.round(PL)} V peak. Right now ${fmtV(v)}`;
+}
+
+/* ---------- calculator ---------- */
+function calc() {
+  const I = +$('#amps').value, r = REG[reg];
+  $('#ampsOut').textContent = `${I} A`;
+  const rows = [
+    { lbl: `${r.vph} V single-phase (L–N)`, kva: r.vph * I / 1000 },
+    { lbl: `${r.vll} V single-phase (L–L)`, kva: r.vll * I / 1000 },
+    { lbl: `${r.vll} V three-phase`, kva: S3 * r.vll * I / 1000, hot: true }
+  ];
+  const max = rows[2].kva;
+  $('#bars').innerHTML = rows.map(o => `<div class="bar${o.hot ? ' hot' : ''}"><span class="lbl">${o.lbl}</span><div class="track"><div class="fill" style="width:${(o.kva / max * 100).toFixed(1)}%"></div><span class="val">${o.kva.toFixed(1)} kVA</span></div></div>`).join('');
+  $('#calcCap').textContent = `At ${I} A, the three-phase feed carries ${(rows[2].kva / rows[0].kva).toFixed(1)}× the power of a ${r.vph} V circuit, using three hot wires instead of one.` + (reg === 'na' ? ' For continuous loads, North American code limits you to 80% of these figures.' : '');
+}
+
+/* ---------- text & controls ---------- */
+function updateText() {
+  const r = REG[reg];
+  const vals = {
+    vph: r.vph, vll: r.vll, hz: r.hz, vpk: Math.round(vpk()), svcName: r.svc,
+    outletTP: reg === 'na' ? `${r.vll} V outlets (delta, L–L)` : `${r.vph} V outlets (usually wye, L–N)`
+  };
+  $$('[data-v]').forEach(el => el.textContent = vals[el.dataset.v]);
+  $('#iecNote').hidden = reg !== 'iec';
+  roomCaption(); calc();
+}
+function roomCaption() {
+  const hz = REG[reg].hz;
+  $('#roomCap').textContent = roomMode === 'single'
+    ? `One runner: the light drops to zero twice per cycle. At ${hz} Hz that's ${hz * 2} dark instants every second. Each runner is a hot wire; brightness stands in for voltage.`
+    : `Three runners, each a third of a cycle behind the last: some foot is always down, so the light never falls below 87% of its peak.`;
+}
+function press(sel, attr, val) { $$(sel).forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === String(val)))); }
+
+$$('[data-room]').forEach(b => b.addEventListener('click', () => { roomMode = b.dataset.room; press('[data-room]', 'room', roomMode); roomCaption(); }));
+$$('[data-reg]').forEach(b => b.addEventListener('click', () => { reg = b.dataset.reg; press('[data-reg]', 'reg', reg); updateText(); }));
+function setPair(p) {
+  pair = p; press('button[data-pair]', 'pair', p);
+  $$('.bank').forEach(g => { const on = +g.dataset.pair === p; g.classList.toggle('on', on); g.classList.toggle('dim', !on); });
+}
+$$('button[data-pair]').forEach(b => b.addEventListener('click', () => setPair(+b.dataset.pair)));
+$$('.bank').forEach(g => g.addEventListener('click', () => setPair(+g.dataset.pair)));
+const playBtn = $('#play');
+function syncPlay() { playBtn.textContent = playing ? 'Pause' : 'Play'; }
+playBtn.addEventListener('click', () => { playing = !playing; syncPlay(); });
+$('#speed').addEventListener('input', e => speed = +e.target.value);
+$('#amps').addEventListener('input', calc);
+syncPlay(); updateText();
+
+/* ---------- loop ---------- */
+const draws = [['room', drawRoom], ['rmsCv', drawRMS], ['singleCv', drawSingle], ['threeCv', drawThree], ['powCv', drawPow], ['deltaCv', drawDelta]];
+const visible = new Set(draws.map(d => d[0]));
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? visible.add(e.target.id) : visible.delete(e.target.id)), { rootMargin: '100px' });
+  draws.forEach(([id]) => io.observe(document.getElementById(id)));
+}
+let last = performance.now(), dirty = true;
+addEventListener('resize', () => dirty = true);
+document.addEventListener('click', () => dirty = true);
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (playing) theta += dt * TAU * speed;
+  if (playing || dirty) {
+    draws.forEach(([id, fn]) => { if (visible.has(id) || dirty) { try { fn(); } catch (e) { console.error(id, e); } } });
+    dirty = false;
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

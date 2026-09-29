@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data center formulas, from easy to deep</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2F4F3; --panel:#FFFFFF; --ink:#18222D; --muted:#566270; --line:#C9D1D6;
+    --power:#D08A00; --power-soft:#FBEFD2;
+    --cool:#1C74B8; --cool-soft:#DCEBF6;
+    --heat:#C23B22; --heat-soft:#F7DDD7;
+    --ok:#2E7D4F; --ok-soft:#DCEFE3;
+    --copper:#B8743F;
+    --l1:#2E7D4F; --l2:#D08A00; --l3:#1C74B8; --l4:#B8743F; --l5:#18222D;
+    --body:"Barlow","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+    --label:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.6}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+  .prose{max-width:720px}
+  h1,h2,h3{line-height:1.15;margin:0}
+  h1{font-size:clamp(2.3rem,5.6vw,4rem);font-weight:700;letter-spacing:-.01em}
+  h2{font-size:clamp(1.6rem,3.2vw,2.2rem);font-weight:700;margin-bottom:.4em}
+  p{margin:0 0 1em}
+  a{color:var(--cool)}
+  :focus-visible{outline:3px solid var(--cool);outline-offset:2px}
+
+  header{padding:60px 0 36px;border-bottom:1px solid var(--line)}
+  .back{font-size:.92rem;display:flex;gap:6px 18px;flex-wrap:wrap;margin-bottom:20px}
+  .lede{font-size:1.2rem;color:var(--muted);max-width:700px;margin-top:16px}
+
+  /* ladder */
+  .ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:30px;align-items:end}
+  .ladder a{display:block;text-decoration:none;color:#fff;border-radius:6px 6px 0 0;padding:10px 12px;font-family:var(--label);font-size:1rem;line-height:1.2}
+  .ladder a b{display:block;font-size:1.4rem}
+  @media (max-width:640px){.ladder{grid-template-columns:1fr}.ladder a{height:auto!important;border-radius:6px}}
+
+  .tools{position:sticky;top:0;z-index:5;background:rgba(242,244,243,.96);backdrop-filter:blur(4px);border-bottom:1px solid var(--line)}
+  .tools .wrap{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
+  .tools input{font:inherit;font-size:.95rem;padding:8px 12px;border:1px solid var(--line);border-radius:6px;min-width:220px;flex:1;max-width:360px;background:#fff}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chips a{font-family:var(--label);font-size:.95rem;text-decoration:none;color:var(--ink);padding:4px 10px;border-radius:14px;border:1px solid var(--line);background:#fff}
+  .chips a:hover{border-color:var(--ink)}
+
+  /* primer */
+  section{padding:52px 0;border-bottom:1px solid var(--line)}
+  .units{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:18px}
+  .units div{background:var(--panel);border-radius:6px;padding:12px 14px;font-size:.95rem}
+  .units b{font-family:var(--label);font-size:1.2rem;display:block}
+  .units span{color:var(--muted)}
+
+  .levelhead{display:flex;gap:16px;align-items:flex-start;margin-bottom:22px}
+  .lvbadge{flex:none;width:56px;height:56px;border-radius:10px;color:#fff;display:grid;place-items:center;font-family:var(--label);font-weight:600;font-size:1.7rem}
+  .levelhead p{color:var(--muted);margin:.3em 0 0;max-width:680px}
+
+  /* cards */
+  .fcard{background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--lc,#999);border-radius:8px;padding:22px 24px;margin:0 0 20px}
+  .fcard h3{font-size:1.3rem;font-weight:700;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .dots{display:inline-flex;gap:3px}
+  .dots i{width:9px;height:9px;border-radius:50%;background:#D5DBDF;display:inline-block}
+  .dots i.on{background:var(--lc)}
+  .plain{color:var(--muted);margin:.35em 0 .9em}
+  .eq{background:#F5F7F8;border:1px solid #E1E6E9;border-radius:6px;padding:14px 16px;font-size:1.15rem;font-weight:500;overflow-x:auto;line-height:1.7}
+  .eq .v{color:var(--lc);font-weight:700}
+  .vars{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:14px 0 4px;font-size:.95rem}
+  .vars dt{font-weight:700;color:var(--lc)}
+  .vars dd{margin:0;color:var(--ink)}
+  .body{display:grid;grid-template-columns:minmax(240px,320px) 1fr;gap:22px;margin-top:16px}
+  @media (max-width:760px){.body{grid-template-columns:1fr}}
+  .mini{background:#F5F7F8;border-radius:6px;padding:14px 16px}
+  .mini .t{font-family:var(--label);font-size:.95rem;color:var(--muted);margin-bottom:6px}
+  .mini label{display:grid;grid-template-columns:1fr 104px;align-items:center;gap:8px;font-size:.9rem;margin:6px 0}
+  .mini label span.u{color:var(--muted)}
+  .mini input,.mini select{font:inherit;font-size:.95rem;width:100%;padding:5px 8px;border:1px solid var(--line);border-radius:5px;background:#fff}
+  .mini .out{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:.98rem}
+  .mini .out b{font-family:var(--label);font-size:1.25rem}
+  .notes p{font-size:.97rem;margin:0 0 .8em}
+  .notes .tag{font-family:var(--label);font-weight:600;font-size:1rem;display:block;color:var(--ink)}
+  .notes .watch .tag{color:var(--heat)}
+  .notes .ex .tag{color:var(--ok)}
+  .badge{display:inline-block;font-family:var(--label);font-weight:600;font-size:.9rem;padding:1px 8px;border-radius:4px;margin-left:4px}
+  .badge.good{background:var(--ok-soft);color:var(--ok)}
+  .badge.warn{background:var(--power-soft);color:#7A5200}
+  .badge.bad{background:var(--heat-soft);color:var(--heat)}
+  .empty{display:none;color:var(--muted);padding:20px 0}
+
+  /* master */
+  .master{background:var(--ink);color:#fff;border-radius:10px;padding:26px 28px;font-size:1.35rem;font-weight:600;line-height:1.5}
+  .master small{display:block;font-weight:400;font-size:.95rem;color:#C6CED6;margin-top:8px}
+  table{border-collapse:collapse;width:100%;font-size:.95rem}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-weight:600;background:#E7EBED}
+  .tablewrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;margin-top:16px}
+  td .lv{display:inline-block;width:22px;height:22px;border-radius:4px;color:#fff;text-align:center;font-family:var(--label);font-weight:600;line-height:22px}
+  .steps{counter-reset:s;list-style:none;padding:0;margin:18px 0}
+  .steps li{counter-increment:s;position:relative;padding:0 0 14px 44px}
+  .steps li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;font-family:var(--label);font-weight:600;display:grid;place-items:center}
+  footer{padding:40px 0 64px;color:var(--muted);font-size:.92rem}
+  @media print{.tools,.mini{display:none}.body{grid-template-columns:1fr}.fcard{break-inside:avoid}}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="back">
+      <a href="datacenter-power-cooling-guide.html">Part 1: Power in, heat out</a>
+      <a href="datacenter-cooling-no-raised-floor.html">Part 2: No raised floor</a>
+      <a href="datacenter-direct-to-chip-cooling.html">Part 3: Liquid to the chip</a>
+      <a href="datacenter-gb200-nvl72-guide.html">Part 4: GB200 NVL72</a>
+    </div>
+    <h1>Data center formulas, from easy to deep</h1>
+    <p class="lede">Every formula from the earlier guides, plus a few extra that fill the gaps, ordered from simplest to most advanced. Each one explains what the letters mean, why it works, the common mistake, and has a small calculator to try.</p>
+    <nav class="ladder" aria-label="Difficulty levels">
+      <a href="#level1" style="background:var(--l1);height:70px"><b>1</b>Foundations</a>
+      <a href="#level2" style="background:var(--l2);height:90px"><b>2</b>Capacity and margins</a>
+      <a href="#level3" style="background:var(--l3);height:110px"><b>3</b>Electrical and airflow</a>
+      <a href="#level4" style="background:var(--l4);height:130px"><b>4</b>Liquid cooling</a>
+      <a href="#level5" style="background:var(--l5);height:150px"><b>5</b>Putting it together</a>
+    </nav>
+  </div>
+</header>
+
+<div class="tools">
+  <div class="wrap">
+    <input type="search" id="q" placeholder="Search formulas (e.g. tons, flow, amps)" aria-label="Search formulas">
+    <div class="chips">
+      <a href="#units">Units</a><a href="#level1">L1</a><a href="#level2">L2</a><a href="#level3">L3</a><a href="#level4">L4</a><a href="#level5">L5</a><a href="#cheat">Cheat sheet</a>
+    </div>
+  </div>
+</div>
+
+<section id="units">
+  <div class="wrap">
+    <div class="prose">
+      <h2>Before you start: the units</h2>
+      <p>Most confusion comes from units, not maths. Here's every unit used on this page.</p>
+    </div>
+    <div class="units">
+      <div><b>W, kW, MW</b><span>Power: how fast energy is used. 1 kW = 1,000 W; 1 MW = 1,000 kW.</span></div>
+      <div><b>kVA</b><span>"Apparent" power the wires carry. Slightly more than kW in most systems.</span></div>
+      <div><b>PF</b><span>Power factor, 0 to 1. The share of kVA that does useful work (kW).</span></div>
+      <div><b>V</b><span>Volts: electrical "pressure". Common: 230 V single-phase, 400/415 V three-phase (208 V in North America).</span></div>
+      <div><b>A</b><span>Amps: how much current flows. Breakers are rated in amps.</span></div>
+      <div><b>BTU/hr</b><span>Rate of heat, used mostly in the US. 1 kW = 3,412 BTU/hr.</span></div>
+      <div><b>Ton (cooling)</b><span>12,000 BTU/hr = 3.517 kW of heat removal. Not a weight.</span></div>
+      <div><b>ΔT ("delta T")</b><span>Temperature <em>difference</em>, such as how much air or water warms up.</span></div>
+      <div><b>CFM, m³/h</b><span>Airflow volume: cubic feet per minute, or cubic meters per hour.</span></div>
+      <div><b>L/s, L/min</b><span>Liquid flow. 1 L/s = 60 L/min.</span></div>
+      <div><b>kg/m²</b><span>Floor loading: weight spread over an area.</span></div>
+      <div><b>%</b><span>Load or margin as a share of capacity.</span></div>
+    </div>
+  </div>
+</section>
+
+<main id="levels"></main>
+
+<section id="level5">
+  <div class="wrap">
+    <div class="levelhead"><div class="lvbadge" style="background:var(--l5)">5</div><div><h2>Putting it together</h2><p>Every formula above feeds one idea. Once this clicks, you can check any resource in any data center.</p></div></div>
+    <div class="master">
+      Headroom = (capacity with one unit failed × safety margin) − measured peak load
+      <small>Positive: room to grow. Negative: already over the limit. The resource with the smallest headroom is the one you'll hit first.</small>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Resource</th><th>Capacity with a failure</th><th>Margin</th><th>Peak load</th><th>Formulas used</th></tr></thead>
+        <tbody>
+          <tr><td>Power (2N)</td><td>One side's capacity</td><td>80%</td><td>Total IT kW</td><td>Load %, 80% rule, 2N, kVA/kW, circuits</td></tr>
+          <tr><td>Room air cooling</td><td>(units − 1) × unit capacity</td><td>~85–90%</td><td>IT heat × (1 + extra) or air share of liquid racks</td><td>Heat = power, tons, N+1, capture ratio</td></tr>
+          <tr><td>Airflow</td><td>Supply airflow with one unit off</td><td>~90%</td><td>Airflow the servers pull</td><td>CFM or m³/h, ΔT conversion</td></tr>
+          <tr><td>Liquid (CDU)</td><td>(CDUs − 1) × CDU capacity</td><td>~85–90%</td><td>Total liquid heat</td><td>Capture ratio, liquid heat, CDU N+1</td></tr>
+          <tr><td>Coolant flow</td><td>Pump flow with one pump off</td><td>~90%</td><td>Flow needed at design ΔT</td><td>Flow needed, ΔT sanity check</td></tr>
+          <tr><td>Water temperature</td><td>Vendor inlet limit</td><td>A few °C</td><td>Facility supply + approach, hottest day</td><td>Approach</td></tr>
+          <tr><td>Floor</td><td>Rated kg/m²</td><td>Engineer's factor</td><td>Rack weight ÷ footprint</td><td>Floor load</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="prose" style="margin-top:26px">
+      <h3 style="font-size:1.2rem;margin-bottom:.4em">Worked example: which runs out first?</h3>
+      <p>Take the small room from Part 1: 40 kW of servers, one 100 kW UPS, and three 5-ton cooling units.</p>
+      <ol class="steps">
+        <li><strong>Power headroom:</strong> 100 × 0.8 − 40 = <strong>40 kW</strong>. (Single UPS, so no failure case; in real life you'd want redundancy.)</li>
+        <li><strong>Heat load:</strong> 40 × 1.05 = 42 kW ≈ 11.9 tons.</li>
+        <li><strong>Cooling with one unit failed:</strong> (3 − 1) × 5 = 10 tons = 35.2 kW.</li>
+        <li><strong>Cooling headroom:</strong> 35.2 − 42 = <strong>−6.8 kW</strong>. Already short.</li>
+        <li><strong>Answer:</strong> cooling runs out first. It's the thing to fix before adding any servers.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section id="cheat">
+  <div class="wrap">
+    <h2>Cheat sheet</h2>
+    <p class="prose">All formulas on one table, in difficulty order. Handy to print.</p>
+    <div class="tablewrap"><table><thead><tr><th>Lvl</th><th>Formula</th><th>Equation</th></tr></thead><tbody id="cheatBody"></tbody></table></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap prose">
+    <p>Constants are rounded for learning: 3,412 BTU/hr per kW; 3.517 kW per ton; 1.08 for standard air in imperial units; 1.2 kg/m³ and 1.005 kJ/kg·°C for air; 4.19 kJ/L·°C for water and about 4.0 for PG25. Real designs use exact fluid properties, local electrical codes, and vendor specifications.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+const f=(n,d=0)=>isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d}):'—';
+const B=(l,t)=>'<span class="badge '+l+'">'+t+'</span>';
+const V=s=>'<span class="v">'+s+'</span>';
+
+const LEVELS={
+ 1:{name:"Foundations",color:"var(--l1)",desc:"Unit conversions and simple ratios. If you can multiply and divide, you can do all of these."},
+ 2:{name:"Capacity and margins",color:"var(--l2)",desc:"How full things are, how much room is left, and how to plan for something breaking."},
+ 3:{name:"Electrical and airflow details",color:"var(--l3)",desc:"The formulas engineers use to size circuits and air. A little more physics, all explained."},
+ 4:{name:"Liquid cooling",color:"var(--l4)",desc:"How water and coolant carry heat, and how to check liquid systems like GB200."}
+};
+
+const F=[
+/* ---------- LEVEL 1 ---------- */
+{lvl:1,d:1,title:"Heat equals power",plain:"Almost every watt a server uses turns into heat that must be removed.",
+ eq:V("Heat")+" (kW) ≈ "+V("IT power")+" (kW)",
+ vars:[["IT power","Electricity the servers actually use (kW)"],["Heat","Heat the cooling system must remove (kW)"]],
+ inputs:[{k:"p",l:"IT power",v:40,u:"kW"}],
+ calc:v=>"Heat ≈ <b>"+f(v.p)+" kW</b><br>= "+f(v.p*3412)+" BTU/hr ≈ "+f(v.p/3.517,1)+" tons",
+ why:"Energy can't vanish. Servers don't store energy or do physical work like lifting things, so all the electricity they use ends up as heat in the room.",
+ watch:"Other things add heat too: UPS and transformer losses, lights and people. See \"Total heat load\" in Level 2.",
+ ex:"Servers drawing 40 kW put about 40 kW of heat into the room."},
+
+{lvl:1,d:1,title:"Load percentage",plain:"How full a piece of equipment is.",
+ eq:"Load % = "+V("load")+" ÷ "+V("capacity")+" × 100",
+ vars:[["load","Measured load (kW, kVA or A)"],["capacity","The equipment's rating, in the same unit"]],
+ inputs:[{k:"l",l:"Measured load",v:40,u:"kW"},{k:"c",l:"Rated capacity",v:100,u:"kW"}],
+ calc:v=>{const p=v.l/v.c*100;return "Load = <b>"+f(p,1)+"%</b> "+(p<=60?B("good","Comfortable"):p<=80?B("warn","Getting close"):B("bad","Over 80%"));},
+ why:"A percentage lets you compare equipment of any size on the same scale.",
+ watch:"Use the peak over several weeks, not today's reading. Use measured load, not the server label (nameplate), which is often 30–60% higher than real use.",
+ ex:"40 kW on a 100 kW UPS = 40% loaded."},
+
+{lvl:1,d:1,title:"The 80% rule",plain:"Don't run a breaker or circuit near its full rating for long periods.",
+ eq:"Max continuous load = "+V("rating")+" × 0.8",
+ vars:[["rating","Breaker or circuit rating (A)"]],
+ inputs:[{k:"r",l:"Breaker rating",v:32,u:"A"}],
+ calc:v=>"Safe continuous load: <b>"+f(v.r*0.8,1)+" A</b>",
+ why:"Wires and breakers warm up under load. Running at 100% for hours can overheat them or trip the breaker. Electrical codes such as the US NEC set 80% for continuous loads, and data centers run continuously.",
+ watch:"Rules differ by country, and some breakers are rated for 100% continuous use. Always confirm with a qualified electrician.",
+ ex:"A 30 A breaker should carry at most 24 A continuously."},
+
+{lvl:1,d:1,title:"kW to BTU/hr",plain:"Two units for the same thing: the rate of heat.",
+ eq:"BTU/hr = "+V("kW")+" × 3,412     kW = "+V("BTU/hr")+" ÷ 3,412",
+ vars:[["kW","Heat in kilowatts"],["BTU/hr","British thermal units per hour"]],
+ inputs:[{k:"k",l:"Heat",v:10,u:"kW"}],
+ calc:v=>"<b>"+f(v.k*3412)+" BTU/hr</b>",
+ why:"1 watt equals 3.412 BTU/hr. It's purely a unit conversion. US equipment often uses BTU/hr; most of the world uses kW.",
+ watch:"BTU on its own is an amount of energy. BTU/hr is a rate, like kW. Don't drop the \"/hr\".",
+ ex:"10 kW = 34,120 BTU/hr."},
+
+{lvl:1,d:1,title:"Cooling tons",plain:"A common way to describe cooling capacity.",
+ eq:"1 ton = 12,000 BTU/hr = 3.517 kW     Tons = "+V("heat")+" (kW) ÷ 3.517",
+ vars:[["heat","Heat to remove (kW)"]],
+ inputs:[{k:"h",l:"Heat",v:40,u:"kW"}],
+ calc:v=>"<b>"+f(v.h/3.517,1)+" tons</b> of cooling",
+ why:"It's historical: one ton is the cooling you get from melting one short ton (2,000 lb) of ice over 24 hours.",
+ watch:"It has nothing to do with weight. Also, check that a cooling unit's rating is its <em>sensible</em> capacity (lowering air temperature), which is what data centers need, not total capacity.",
+ ex:"40 kW ÷ 3.517 ≈ 11.4 tons."},
+
+{lvl:1,d:2,title:"Floor load",plain:"Can the floor hold the racks?",
+ eq:"Total = "+V("racks")+" × "+V("rack weight")+"     Pressure (kg/m²) = rack weight ÷ ("+V("width")+" × "+V("depth")+")",
+ vars:[["rack weight","Weight of one full rack (kg)"],["width, depth","Rack footprint (m)"]],
+ inputs:[{k:"n",l:"Racks",v:8,u:""},{k:"w",l:"Rack weight",v:1360,u:"kg"},{k:"a",l:"Width",v:0.6,u:"m",s:0.01},{k:"b",l:"Depth",v:1.068,u:"m",s:0.001}],
+ calc:v=>"Total: <b>"+f(v.n*v.w/1000,1)+" tonnes</b><br>Under each rack: <b>"+f(v.w/(v.a*v.b))+" kg/m²</b>",
+ why:"Floors are rated in kg per square meter, or per rack position. Dividing weight by footprint shows how hard the rack presses on the floor.",
+ watch:"Add coolant, cables and moving equipment. Check lifts, ramps and raised-floor supports along the delivery path, not just the final spot.",
+ ex:"A GB200 rack (~1,360 kg on 0.6 × 1.068 m) presses about 2,100 kg/m²."},
+
+/* ---------- LEVEL 2 ---------- */
+{lvl:2,d:2,title:"Headroom",plain:"How much more you can safely add.",
+ eq:"Headroom = "+V("capacity")+" × "+V("margin")+" − "+V("peak load"),
+ vars:[["capacity","Rated capacity (kW)"],["margin","Safe share of capacity, often 0.8"],["peak load","Highest measured load (kW)"]],
+ inputs:[{k:"c",l:"Capacity",v:100,u:"kW"},{k:"m",l:"Margin",v:80,u:"%"},{k:"p",l:"Peak load",v:40,u:"kW"}],
+ calc:v=>{const h=v.c*v.m/100-v.p;return "Headroom: <b>"+f(h)+" kW</b> "+(h>=0?B("good","Room to grow"):B("bad","Over the limit"));},
+ why:"Capacity minus what you use is what's left. The margin keeps you away from the edge.",
+ watch:"A negative answer means you're already over the safe limit, even if nothing has failed yet.",
+ ex:"100 × 0.8 − 40 = 40 kW of headroom."},
+
+{lvl:2,d:2,title:"Total heat load",plain:"IT heat plus everything else warming the room.",
+ eq:"Heat = "+V("IT power")+" × (1 + "+V("extra")+")     Tons = Heat ÷ 3.517",
+ vars:[["IT power","Measured server power (kW)"],["extra","Other heat as a share of IT: UPS losses, lights, people"]],
+ inputs:[{k:"p",l:"IT power",v:40,u:"kW"},{k:"e",l:"Extra heat",v:5,u:"%"}],
+ calc:v=>{const h=v.p*(1+v.e/100);return "Heat: <b>"+f(h,1)+" kW</b> ≈ <b>"+f(h/3.517,1)+" tons</b>";},
+ why:"UPS systems lose a few percent as heat (often 3–8%), transformers and lights add a little, and each person adds about 100 W.",
+ watch:"If the UPS sits in a separate room, its heat goes there, not into the data hall. Count heat where it actually lands.",
+ ex:"40 kW × 1.05 = 42 kW ≈ 11.9 tons."},
+
+{lvl:2,d:2,title:"2N: two independent paths",plain:"Two full copies of the power path; either one can run everything.",
+ eq:"Normal per side = "+V("load")+" ÷ 2 ÷ "+V("side capacity")+"     After a failure = load ÷ side capacity",
+ vars:[["load","Total load (kW)"],["side capacity","Capacity of one path (kW)"]],
+ inputs:[{k:"l",l:"Total load",v:80,u:"kW"},{k:"c",l:"One side's capacity",v:100,u:"kW"}],
+ calc:v=>{const n=v.l/2/v.c*100,w=v.l/v.c*100;return "Normal: <b>"+f(n)+"%</b> per side<br>One side failed: <b>"+f(w)+"%</b> "+(w<=80?B("good","Survives"):w<=100?B("warn","Survives, no margin"):B("bad","Overloads"));},
+ why:"Normally the two sides share the load. If one fails, the other must carry everything alone.",
+ watch:"More than 50% per side in normal operation means a failure would overload the surviving side. Check every link (UPS, PDU, breakers) on both sides.",
+ ex:"80 kW on two 100 kW sides: 40% each normally, 80% after a failure."},
+
+{lvl:2,d:2,title:"N+1: one spare unit",plain:"Plan as if one unit is always broken.",
+ eq:"Usable capacity = ("+V("units")+" − 1) × "+V("unit capacity"),
+ vars:[["units","Number of identical units (cooling, CDUs, pumps)"],["unit capacity","Capacity of one unit"]],
+ inputs:[{k:"n",l:"Units",v:3,u:""},{k:"t",l:"Each unit",v:5,u:"tons"},{k:"h",l:"Heat load",v:42,u:"kW"}],
+ calc:v=>{const u=(v.n-1)*v.t*3.517,h=u-v.h;return "Usable: <b>"+f((v.n-1)*v.t,1)+" tons</b> ("+f(u,1)+" kW)<br>Headroom: <b>"+f(h,1)+" kW</b> "+(h>=0?B("good","OK"):B("bad","Short"));},
+ why:"Units break or are switched off for maintenance. Capacity only counts if it's there on a bad day.",
+ watch:"If units are different sizes, subtract the biggest one, not the smallest.",
+ ex:"Three 5-ton units: 10 tons usable (35.2 kW). With 42 kW of heat, that's 6.8 kW short."},
+
+{lvl:2,d:2,title:"PUE (power usage effectiveness)",plain:"How much extra energy the building spends beyond the IT itself.",
+ eq:"PUE = "+V("total facility power")+" ÷ "+V("IT power"),
+ vars:[["total facility power","Everything: IT, cooling, UPS losses, lights (kW)"],["IT power","Just the IT equipment (kW)"]],
+ inputs:[{k:"t",l:"Total facility",v:1300,u:"kW"},{k:"i",l:"IT power",v:1000,u:"kW"}],
+ calc:v=>{const p=v.t/v.i;return "PUE = <b>"+f(p,2)+"</b><br>Overhead: "+f(v.t-v.i)+" kW ("+f((p-1)*100)+"% on top of IT)";},
+ why:"1.0 would mean zero overhead. Typical sites are around 1.3–1.6; efficient liquid-cooled sites can reach about 1.1–1.2.",
+ watch:"Measure over a full year. A single reading on a cool day looks better than reality. Always measure IT power at the same point.",
+ ex:"1,300 kW total ÷ 1,000 kW IT = 1.3."},
+
+/* ---------- LEVEL 3 ---------- */
+{lvl:3,d:3,title:"kVA and kW (power factor)",plain:"Why equipment has two power ratings.",
+ eq:"kW = "+V("kVA")+" × "+V("PF"),
+ vars:[["kVA","Apparent power the wires carry"],["PF","Power factor, 0 to 1"],["kW","Real power that does work (and becomes heat)"]],
+ inputs:[{k:"a",l:"Apparent power",v:500,u:"kVA"},{k:"p",l:"Power factor",v:0.9,u:"",s:0.01}],
+ calc:v=>"Real power: <b>"+f(v.a*v.p,1)+" kW</b>",
+ why:"In AC systems some current sloshes back and forth without doing useful work. PF is the share that does. Modern IT equipment runs at about 0.95–0.99.",
+ watch:"UPS units are often rated in both kVA and kW. Your real limit is whichever you hit first.",
+ ex:"A 500 kVA UPS at PF 0.9 delivers 450 kW."},
+
+{lvl:3,d:3,title:"Single-phase circuit capacity",plain:"How much a normal circuit can safely supply.",
+ eq:"kW = "+V("V")+" × "+V("A")+" × "+V("PF")+" × 0.8 ÷ 1,000",
+ vars:[["V","Voltage"],["A","Breaker rating (amps)"],["PF","Power factor (use 1 for a quick estimate)"],["0.8","The 80% rule"]],
+ inputs:[{k:"v",l:"Voltage",v:230,u:"V"},{k:"a",l:"Breaker",v:32,u:"A"},{k:"p",l:"Power factor",v:1,u:"",s:0.01}],
+ calc:v=>"Safe capacity: <b>"+f(v.v*v.a*v.p*0.8/1000,2)+" kW</b>",
+ why:"Power = voltage × current. Dividing by 1,000 turns watts into kW, and the 0.8 keeps you inside the 80% rule.",
+ watch:"Use the breaker rating, not the socket or cable rating, unless those are lower.",
+ ex:"208 V × 30 A × 0.8 ≈ 5.0 kW; 230 V × 32 A × 0.8 ≈ 5.9 kW."},
+
+{lvl:3,d:3,title:"Three-phase circuit capacity",plain:"Bigger circuits use three wires carrying power in turn.",
+ eq:"kW = "+V("V")+" × "+V("A")+" × 1.732 × "+V("PF")+" × 0.8 ÷ 1,000",
+ vars:[["V","Line-to-line voltage (e.g. 400, 415, 208)"],["A","Breaker rating per phase"],["1.732","√3, from three phases"]],
+ inputs:[{k:"v",l:"Voltage (L-L)",v:415,u:"V"},{k:"a",l:"Breaker",v:32,u:"A"},{k:"p",l:"Power factor",v:1,u:"",s:0.01}],
+ calc:v=>"Safe capacity: <b>"+f(v.v*v.a*1.732*v.p*0.8/1000,1)+" kW</b>",
+ why:"Three wires carry alternating current, each a third of a cycle (120°) behind the other. Measured between two wires, the combined power works out to √3 ≈ 1.732 times V × A.",
+ watch:"Keep the three phases balanced (within about 10–15%). The busiest phase trips first, even when the total looks fine.",
+ ex:"208 V × 30 A × 1.732 × 0.8 ≈ 8.6 kW; 415 V × 32 A ≈ 18.4 kW."},
+
+{lvl:3,d:3,title:"Amps from kW",plain:"Work backwards: how much current will this load draw?",
+ eq:"Single-phase: A = "+V("kW")+" × 1,000 ÷ ("+V("V")+" × PF)<br>Three-phase: A = kW × 1,000 ÷ (V × 1.732 × PF)",
+ vars:[["kW","Load"],["V","Voltage (line-to-line for three-phase)"]],
+ inputs:[{k:"k",l:"Load",v:132,u:"kW"},{k:"v",l:"Voltage",v:415,u:"V"},{k:"p",l:"Power factor",v:1,u:"",s:0.01},{k:"ph",l:"Phases",v:"3",opts:[["1","Single"],["3","Three"]]}],
+ calc:v=>{const a=v.k*1000/(v.v*(v.ph==3?1.732:1)*v.p);return "Current: <b>"+f(a)+" A</b>"+(v.ph==3?" per phase":"")+"<br>Breaker needed (80% rule): ≥ "+f(a/0.8)+" A";},
+ why:"It's the circuit formula rearranged. Useful for checking whether a breaker, cable or busway can take a new load.",
+ watch:"Big loads like a GB200 rack are usually split across several feeds and power shelves, so check each feed separately.",
+ ex:"132 kW at 415 V three-phase ≈ 184 A; with the 80% rule you'd need about 230 A of breaker."},
+
+{lvl:3,d:3,title:"Temperature rise: °C and °F",plain:"Converting a temperature difference is not the same as converting a temperature.",
+ eq:"ΔT °F = "+V("ΔT °C")+" × 1.8     (no +32!)",
+ vars:[["ΔT","A temperature difference, such as air warming 11 °C through a server"]],
+ inputs:[{k:"c",l:"Rise",v:11,u:"°C"}],
+ calc:v=>"<b>"+f(v.c*1.8,1)+" °F</b> rise",
+ why:"The +32 in the normal formula only shifts where zero sits. A difference doesn't care where zero is, so only the scale (1.8) matters.",
+ watch:"The classic mistake: saying a 10 °C rise is 50 °F. It's 18 °F.",
+ ex:"A 20 °F rise ≈ 11 °C."},
+
+{lvl:3,d:4,title:"Airflow needed (imperial)",plain:"How much air must move to carry the heat away.",
+ eq:"CFM = "+V("BTU/hr")+" ÷ (1.08 × "+V("ΔT °F")+")",
+ vars:[["CFM","Cubic feet of air per minute"],["BTU/hr","Heat (kW × 3,412)"],["ΔT °F","How much the air warms up"]],
+ inputs:[{k:"k",l:"Heat",v:10,u:"kW"},{k:"t",l:"Air rise",v:20,u:"°F"}],
+ calc:v=>"<b>"+f(v.k*3412/(1.08*v.t))+" CFM</b> ("+f(3412/(1.08*v.t))+" per kW)",
+ why:"1.08 bundles air's properties: density 0.075 lb/ft³ × specific heat 0.24 BTU/lb·°F × 60 minutes per hour.",
+ watch:"Servers set their own airflow with their fans. If the room supplies less air than the servers pull, they suck hot air back in (recirculation).",
+ ex:"About 160 CFM per kW at a 20 °F rise."},
+
+{lvl:3,d:4,title:"Airflow needed (metric)",plain:"The same idea in metric units.",
+ eq:"m³/s = "+V("kW")+" ÷ (1.2 × 1.005 × "+V("ΔT °C")+")     m³/h = m³/s × 3,600",
+ vars:[["1.2","Air density (kg/m³)"],["1.005","Specific heat of air (kJ/kg·°C)"],["ΔT °C","How much the air warms up"]],
+ inputs:[{k:"k",l:"Heat",v:10,u:"kW"},{k:"t",l:"Air rise",v:11,u:"°C"}],
+ calc:v=>{const s=v.k/(1.2*1.005*v.t);return "<b>"+f(s,2)+" m³/s</b> = <b>"+f(s*3600)+" m³/h</b>";},
+ why:"Heat carried = mass of air × specific heat × temperature rise. Divide by density to turn mass into volume.",
+ watch:"Hot air and high-altitude air are thinner, so you need more volume for the same heat.",
+ ex:"10 kW at an 11 °C rise ≈ 0.75 m³/s ≈ 2,700 m³/h."},
+
+{lvl:3,d:4,title:"N+N power shelves (GB200)",plain:"2N built inside a single rack.",
+ eq:"Connected = "+V("shelves")+" × "+V("input per shelf")+"     Each side = connected ÷ 2",
+ vars:[["shelves","Power shelves in the rack"],["input per shelf","Input power each shelf can take (kW)"]],
+ inputs:[{k:"n",l:"Shelves",v:8,u:""},{k:"i",l:"Input per shelf",v:33,u:"kW"},{k:"l",l:"Rack load",v:132,u:"kW"}],
+ calc:v=>{const c=v.n*v.i,s=c/2,ns=v.l/v.n,fs=v.l/(v.n/2);return "Connected: <b>"+f(c)+" kW</b>; each side "+f(s)+" kW<br>Per shelf: "+f(ns,1)+" kW normally, "+f(fs,1)+" kW if one side fails "+(fs<=v.i?B("good","OK"):B("bad","Overloaded"));},
+ why:"Half the shelves connect to feed A, half to feed B. Either half must power the whole rack.",
+ watch:"Each facility feed must be able to deliver a full side (about 132 kW for GB200), not just half the rack.",
+ ex:"8 × 33 = 264 kW connected, 132 kW per side."},
+
+/* ---------- LEVEL 4 ---------- */
+{lvl:4,d:4,title:"Heat carried by liquid",plain:"How much heat a flowing liquid removes.",
+ eq:"kW = "+V("flow")+" (L/s) × "+V("c")+" × "+V("ΔT")+" (°C)",
+ vars:[["flow","Coolant flow in liters per second (L/min ÷ 60)"],["c","Heat per liter per °C: water 4.19, PG25 ≈ 4.0"],["ΔT","How much the coolant warms up (°C)"]],
+ inputs:[{k:"q",l:"Flow",v:120,u:"L/min"},{k:"c",l:"Coolant",v:"4.19",opts:[["4.19","Water"],["4.0","PG25"]]},{k:"t",l:"Rise",v:10,u:"°C"}],
+ calc:v=>"Heat removed: <b>"+f(v.q/60*v.c*v.t,1)+" kW</b>",
+ why:"It takes 4.19 kJ to warm 1 kg of water by 1 °C, and 1 liter of water weighs about 1 kg. Flow × energy per °C × degrees = energy per second = kW.",
+ watch:"Flow is often quoted in L/min. Forget to divide by 60 and your answer is 60 times too big.",
+ ex:"2 L/s × 4.19 × 10 °C ≈ 84 kW."},
+
+{lvl:4,d:4,title:"Flow needed",plain:"How much coolant must flow to carry a given heat.",
+ eq:"L/min = "+V("kW")+" ÷ ("+V("c")+" × "+V("ΔT")+") × 60",
+ vars:[["kW","Heat going into the liquid"],["c","4.19 water, ≈ 4.0 PG25"],["ΔT","Design temperature rise (°C)"]],
+ inputs:[{k:"k",l:"Liquid heat",v:80,u:"kW"},{k:"c",l:"Coolant",v:"4.19",opts:[["4.19","Water"],["4.0","PG25"]]},{k:"t",l:"Rise",v:10,u:"°C"}],
+ calc:v=>{const q=v.k/(v.c*v.t)*60;return "Flow: <b>"+f(q)+" L/min</b> ("+f(q/60,2)+" L/s)<br>= "+f(q/v.k,2)+" L/min per kW";},
+ why:"The liquid heat formula rearranged. Rule of thumb: about 1.5 L/min per kW at a 10 °C rise.",
+ watch:"Halve the rise and you need double the flow. Pumps and pipes have limits, so ΔT is a real design choice.",
+ ex:"80 kW at a 10 °C rise with water ≈ 115 L/min."},
+
+{lvl:4,d:4,title:"Sanity check: temperature rise",plain:"Test whether a published flow figure makes sense.",
+ eq:"ΔT = "+V("kW")+" ÷ ("+V("c")+" × "+V("flow")+" L/s)",
+ vars:[["kW","Heat into the liquid"],["flow","Stated coolant flow"]],
+ inputs:[{k:"k",l:"Liquid heat",v:115,u:"kW"},{k:"q",l:"Stated flow",v:130,u:"L/min"},{k:"c",l:"Coolant",v:"4.0",opts:[["4.19","Water"],["4.0","PG25"]]}],
+ calc:v=>{const t=v.k/(v.c*v.q/60);return "Rise: <b>"+f(t,1)+" °C</b> "+(t<3?B("warn","Very small"):t<=25?B("good","Realistic"):B("bad","Unrealistic"));},
+ why:"If the result is a normal rise (roughly 5–20 °C), the numbers agree with each other. If it's huge, something's off.",
+ watch:"A rise above about 25–30 °C for a whole rack usually means the flow figure is per tray or per GPU, or simply wrong.",
+ ex:"GB200: 115 kW at 130 L/min ≈ 13 °C (realistic). At 20 L/min it would be ≈ 86 °C (not realistic)."},
+
+{lvl:4,d:4,title:"Capture ratio: liquid vs air",plain:"How a liquid-cooled rack's heat splits between liquid and room air.",
+ eq:"Liquid heat = "+V("P")+" × "+V("r")+"     Air heat = P × (1 − r)",
+ vars:[["P","Rack power (kW)"],["r","Share captured by liquid (e.g. 0.87)"]],
+ inputs:[{k:"p",l:"Rack power",v:132,u:"kW"},{k:"r",l:"Captured by liquid",v:87,u:"%"},{k:"n",l:"Racks",v:1,u:""}],
+ calc:v=>{const L=v.p*v.r/100*v.n,A=v.p*(1-v.r/100)*v.n;return "Liquid: <b>"+f(L,1)+" kW</b><br>Air: <b>"+f(A,1)+" kW</b> ≈ "+f(A/3.517,1)+" tons";},
+ why:"Cold plates only cover the hottest chips. Memory, power parts, network cards and drives still warm the air.",
+ watch:"The air share is easy to forget. For one GB200 rack it's about 17 kW, more than a whole ordinary rack.",
+ ex:"132 kW × 87% ≈ 115 kW to liquid, ≈ 17 kW to air."},
+
+{lvl:4,d:5,title:"Approach temperature",plain:"Why the coolant is always a bit warmer than the water cooling it.",
+ eq:"Coolant supply = "+V("facility water supply")+" + "+V("approach"),
+ vars:[["facility water supply","Temperature of building water entering the CDU"],["approach","The heat exchanger's gap, often 2–5 °C"]],
+ inputs:[{k:"w",l:"Facility water",v:32,u:"°C"},{k:"a",l:"Approach",v:4,u:"°C"},{k:"m",l:"Vendor inlet limit",v:45,u:"°C"}],
+ calc:v=>{const s=v.w+v.a,g=v.m-s;return "Coolant supply: <b>"+f(s,1)+" °C</b><br>Margin to limit: "+f(g,1)+" °C "+(g>=3?B("good","OK"):g>=0?B("warn","Tight"):B("bad","Too warm"));},
+ why:"Heat only flows from hot to cold, so a heat exchanger's output can never quite reach the temperature of the water cooling it.",
+ watch:"Check the hottest day of the year, when cooling towers and dry coolers deliver their warmest water.",
+ ex:"32 °C facility water + 4 °C approach = 36 °C coolant, 9 °C below a 45 °C limit."},
+
+{lvl:4,d:5,title:"CDU capacity with a spare",plain:"N+1 applied to coolant distribution units.",
+ eq:"("+V("CDUs")+" − 1) × "+V("CDU capacity")+" ≥ "+V("total liquid heat"),
+ vars:[["CDUs","Number of CDUs serving the racks"],["CDU capacity","Rating at your actual water temperatures"],["total liquid heat","Sum of liquid heat for all racks"]],
+ inputs:[{k:"n",l:"CDUs",v:3,u:""},{k:"s",l:"Each CDU",v:600,u:"kW"},{k:"l",l:"Liquid heat",v:920,u:"kW"}],
+ calc:v=>{const u=(v.n-1)*v.s,h=u-v.l;return "With one down: <b>"+f(u)+" kW</b><br>Headroom: "+f(h)+" kW "+(h>=0?B("good","Pass"):B("bad","Fail"));},
+ why:"If one CDU fails, the rest must still remove all the liquid heat, or the GPUs overheat within seconds.",
+ watch:"CDU ratings depend on water temperature and approach. Use the rating at your conditions, and keep CDU pumps on UPS power.",
+ ex:"3 × 600 kW: 1,200 kW with one down ≥ 920 kW. Pass. 2 × 600 kW would give only 600 kW. Fail."}
+];
+
+// ---- render ----
+const main=document.getElementById('levels');
+let idx=0;
+[1,2,3,4].forEach(L=>{
+  const meta=LEVELS[L];
+  const sec=document.createElement('section'); sec.id='level'+L;
+  let h='<div class="wrap"><div class="levelhead"><div class="lvbadge" style="background:'+meta.color+'">'+L+'</div><div><h2>'+meta.name+'</h2><p>'+meta.desc+'</p></div></div>';
+  F.filter(x=>x.lvl===L).forEach(x=>{
+    x.id='f'+(idx++);
+    const dots='<span class="dots" aria-label="Difficulty '+x.d+' of 5">'+[1,2,3,4,5].map(i=>'<i class="'+(i<=x.d?'on':'')+'"></i>').join('')+'</span>';
+    const vars='<dl class="vars">'+x.vars.map(v=>'<dt>'+v[0]+'</dt><dd>'+v[1]+'</dd>').join('')+'</dl>';
+    const ins=x.inputs.map(i=>{
+      const iid=x.id+'_'+i.k;
+      const ctl=i.opts?'<select id="'+iid+'">'+i.opts.map(o=>'<option value="'+o[0]+'"'+(o[0]==i.v?' selected':'')+'>'+o[1]+'</option>').join('')+'</select>'
+        :'<input type="number" id="'+iid+'" value="'+i.v+'" step="'+(i.s||'any')+'">';
+      return '<label for="'+iid+'"><span>'+i.l+(i.u?' <span class="u">('+i.u+')</span>':'')+'</span>'+ctl+'</label>';
+    }).join('');
+    h+='<article class="fcard" id="'+x.id+'" style="--lc:'+meta.color+'" data-text="'+(x.title+' '+x.plain+' '+x.eq.replace(/<[^>]+>/g,'')).toLowerCase().replace(/"/g,'')+'">'
+      +'<h3>'+x.title+' '+dots+'</h3><p class="plain">'+x.plain+'</p>'
+      +'<div class="eq">'+x.eq.replace(/ {3,}/g,'<br>')+'</div>'+vars
+      +'<div class="body"><div class="mini"><div class="t">Try it</div>'+ins+'<div class="out" id="'+x.id+'_out" aria-live="polite"></div></div>'
+      +'<div class="notes"><p><span class="tag">Why it works</span>'+x.why+'</p><p class="watch"><span class="tag">Watch out</span>'+x.watch+'</p><p class="ex"><span class="tag">Example</span>'+x.ex+'</p></div></div>'
+      +'</article>';
+  });
+  h+='<p class="empty">No formulas in this level match your search.</p></div>';
+  sec.innerHTML=h; main.appendChild(sec);
+});
+
+F.forEach(x=>{
+  const run=()=>{
+    const v={};
+    x.inputs.forEach(i=>{const e=document.getElementById(x.id+'_'+i.k);v[i.k]=parseFloat(e.value);});
+    document.getElementById(x.id+'_out').innerHTML=x.calc(v);
+  };
+  x.inputs.forEach(i=>document.getElementById(x.id+'_'+i.k).addEventListener('input',run));
+  run();
+});
+
+// cheat sheet
+const cb=document.getElementById('cheatBody'); const col={1:'var(--l1)',2:'var(--l2)',3:'var(--l3)',4:'var(--l4)'};
+cb.innerHTML=F.map(x=>'<tr><td><span class="lv" style="background:'+col[x.lvl]+'">'+x.lvl+'</span></td><td><a href="#'+x.id+'">'+x.title+'</a></td><td>'+x.eq.replace(/<span class="v">|<\/span>/g,'').replace(/ {3,}/g,'; ')+'</td></tr>').join('')
+ +'<tr><td><span class="lv" style="background:var(--l5)">5</span></td><td><a href="#level5">Master pattern</a></td><td>Headroom = (capacity with one unit failed × margin) − peak load</td></tr>';
+
+// search
+const q=document.getElementById('q');
+q.addEventListener('input',()=>{
+  const s=q.value.trim().toLowerCase();
+  [1,2,3,4].forEach(L=>{
+    const sec=document.getElementById('level'+L); let shown=0;
+    sec.querySelectorAll('.fcard').forEach(c=>{const ok=!s||c.dataset.text.includes(s);c.style.display=ok?'':'none';if(ok)shown++;});
+    sec.querySelector('.empty').style.display=shown?'none':'block';
+  });
+});
+})();
+</script>
+</body>
+</html>

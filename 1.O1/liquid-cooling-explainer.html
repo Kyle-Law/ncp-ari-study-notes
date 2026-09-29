@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liquid cooling architectures for AI data centers, explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,500;112,700;100,400;100,600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EAEFF1; --panel:#FFFFFF; --ink:#13202A; --muted:#55646E; --rule:#C6D1D6;
+  --hot:#C7313E; --cold:#2E7CBF; --tcs-hot:#DD7B22; --tcs-cold:#2F9457;
+  --steel:#8C9AA3; --steel-2:#D5DDE1;
+  --sans:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--paper:#0E181F;--panel:#16232C;--ink:#E3EBEE;--muted:#9AABB5;--rule:#2A3A45;--steel:#5F717C;--steel-2:#243540;}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:18px;line-height:1.6}
+h1,h2,h3,h4,button,label,.sans{font-family:var(--sans)}
+a{color:var(--cold)}
+:focus-visible{outline:3px solid var(--tcs-hot);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+/* hero */
+header{padding:56px 0 24px}
+h1{font-stretch:112%;font-weight:700;font-size:clamp(2rem,4.6vw,3.4rem);line-height:1.05;letter-spacing:-.01em;margin:0 0 16px;max-width:17ch}
+.lede{max-width:62ch;color:var(--muted);margin:0}
+.source{font-family:var(--sans);font-size:.85rem;color:var(--muted);margin-top:14px}
+
+.loop-stage{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:24px;margin:32px 0 16px;align-items:stretch}
+.loop-svg{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:8px}
+.loop-svg svg{width:100%;height:auto;display:block}
+.node{cursor:pointer}
+.node rect,.node path.body{transition:stroke-width .15s}
+.node:hover rect,.node:focus rect,.node.active rect{stroke:var(--ink);stroke-width:2.5}
+.node:focus{outline:none}
+.flow{fill:none;stroke-width:5;stroke-linecap:round;stroke-dasharray:10 12;animation:flow 1.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-44}}
+@media (prefers-reduced-motion:reduce){.flow{animation:none;stroke-dasharray:none}}
+.svg-label{font-family:var(--sans);font-size:13px;fill:var(--ink);font-weight:600}
+.svg-small{font-family:var(--sans);font-size:11px;fill:var(--muted)}
+.loop-tag{font-family:var(--sans);font-size:12px;font-weight:700}
+
+.info{background:var(--panel);border:1px solid var(--rule);border-left:6px solid var(--tcs-hot);border-radius:6px;padding:20px 22px}
+.info h3{margin:0 0 6px;font-size:1.25rem;font-stretch:112%}
+.info p{margin:0 0 10px;font-size:1rem}
+.hint{font-family:var(--sans);font-size:.85rem;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:18px;font-family:var(--sans);font-size:.85rem;color:var(--muted);margin-top:4px}
+.legend span::before{content:"";display:inline-block;width:22px;height:5px;border-radius:3px;margin-right:6px;vertical-align:middle;background:var(--c)}
+
+/* sections */
+section{padding:56px 0;border-top:1px solid var(--rule)}
+.sec{display:grid;grid-template-columns:220px minmax(0,1fr);gap:32px}
+.sec > h2{font-stretch:112%;font-weight:700;font-size:1.6rem;line-height:1.1;margin:0;color:var(--ink)}
+.sec p{max-width:66ch;margin:0 0 16px}
+
+.steps{list-style:none;padding:0;margin:8px 0 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--panel)}
+.steps li{padding:20px;border-right:1px solid var(--rule)}
+.steps li:last-child{border-right:0}
+.steps .n{font-family:var(--sans);font-stretch:112%;font-weight:700;font-size:2.2rem;line-height:1;color:var(--steel)}
+.steps h3{font-size:1.05rem;margin:10px 0 6px}
+.steps p{font-size:.95rem;margin:0;color:var(--muted)}
+.steps .oos{font-family:var(--sans);font-size:.78rem;color:var(--muted);border:1px solid var(--rule);border-radius:3px;padding:1px 6px;display:inline-block;margin-top:8px}
+
+.func{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden;margin-top:8px}
+.func div{background:var(--panel);padding:18px}
+.func h3{font-size:1rem;margin:0 0 6px}
+.func p{font-size:.93rem;margin:0;color:var(--muted)}
+
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:.93rem;background:var(--panel)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:6px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:.85rem}
+tr:last-child td{border-bottom:0}
+tr.focus td{background:color-mix(in srgb,var(--cold) 9%,transparent)}
+.pill{display:inline-block;font-size:.75rem;padding:1px 7px;border-radius:10px;background:var(--cold);color:#fff;font-weight:600}
+
+/* capacity chart */
+.cap{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:20px;margin-top:8px}
+.cap-row{display:grid;grid-template-columns:170px minmax(0,1fr);gap:12px;align-items:center;margin:10px 0;font-family:var(--sans);font-size:.9rem}
+.track{position:relative;height:26px;background:var(--steel-2);border-radius:4px}
+.bar{position:absolute;top:0;bottom:0;border-radius:4px;display:flex;align-items:center;padding:0 8px;color:#fff;font-size:.8rem;font-weight:600;white-space:nowrap}
+.axis{display:grid;grid-template-columns:170px minmax(0,1fr);gap:12px;font-family:var(--sans);font-size:.75rem;color:var(--muted)}
+.axis .ticks{position:relative;height:18px}
+.axis .ticks span{position:absolute;transform:translateX(-50%)}
+
+/* matrix */
+.matrix{display:grid;grid-template-columns:minmax(0,1.3fr) repeat(2,minmax(0,1fr));border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--panel);font-family:var(--sans)}
+.matrix > div{padding:14px;border-bottom:1px solid var(--rule);border-right:1px solid var(--rule)}
+.matrix > div:nth-child(3n){border-right:0}
+.matrix > div:nth-last-child(-n+3){border-bottom:0}
+.mh{font-size:.82rem;color:var(--muted);font-weight:600}
+.mrow{font-size:.95rem;font-weight:600}
+.mrow small{display:block;font-weight:400;color:var(--muted);font-size:.82rem;margin-top:2px}
+.cell{padding:8px!important}
+.cell button{width:100%;height:100%;min-height:58px;text-align:left;border:1px solid var(--rule);background:transparent;color:var(--ink);border-radius:4px;padding:8px 10px;cursor:pointer;font-size:.9rem}
+.cell button:hover{border-color:var(--ink)}
+.cell button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.cell button.rec{box-shadow:inset 0 0 0 3px var(--tcs-hot)}
+.matrix-detail{margin-top:16px;background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:20px}
+.matrix-detail h3{margin:0 0 8px;font-stretch:112%}
+
+/* method tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px}
+.tabs button{font-size:.92rem;border:1px solid var(--rule);background:var(--panel);color:var(--ink);padding:9px 14px;border-radius:4px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.method{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+.method .mini{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:10px}
+.method .mini svg{width:100%;height:auto;display:block}
+.pc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:20px}
+.pc div{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:16px 18px}
+.pc h4{margin:0 0 8px;font-size:.95rem}
+.pc ul{margin:0;padding-left:18px;font-size:.93rem}
+.pc li{margin-bottom:6px}
+.pc .plus h4{color:var(--tcs-cold)}
+.pc .minus h4{color:var(--hot)}
+.pc .when h4{color:var(--cold)}
+
+/* selector */
+.tool{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:24px}
+fieldset{border:0;padding:0;margin:0 0 20px}
+legend{font-family:var(--sans);font-weight:600;margin-bottom:8px;font-size:1rem}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts label{font-size:.9rem;border:1px solid var(--rule);border-radius:4px;padding:8px 12px;cursor:pointer;display:flex;gap:8px;align-items:center}
+.opts input{accent-color:var(--ink)}
+.opts label:has(input:checked){border-color:var(--ink);background:color-mix(in srgb,var(--ink) 7%,transparent)}
+.stepname{font-family:var(--sans);font-stretch:112%;font-weight:700;font-size:1.15rem;margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--rule)}
+.result{margin-top:8px;border-left:6px solid var(--tcs-hot);padding:16px 20px;background:color-mix(in srgb,var(--tcs-hot) 8%,var(--panel));border-radius:0 6px 6px 0}
+.result h3{margin:0 0 6px;font-stretch:112%;font-size:1.3rem}
+.result p{margin:0 0 8px;font-size:.98rem}
+.result ul{margin:6px 0 0;padding-left:18px;font-size:.93rem}
+.tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px}
+
+dl{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px 20px;margin:0;font-size:.97rem}
+dt{font-family:var(--sans);font-weight:700}
+dd{margin:0;color:var(--muted)}
+
+footer{padding:40px 0 64px;border-top:1px solid var(--rule);font-family:var(--sans);font-size:.85rem;color:var(--muted)}
+
+@media (max-width:860px){
+  .loop-stage,.sec,.method,.tool-grid{grid-template-columns:1fr}
+  .sec{gap:16px}
+  .steps{grid-template-columns:1fr}
+  .steps li{border-right:0;border-bottom:1px solid var(--rule)}
+  .steps li:last-child{border-bottom:0}
+  .pc{grid-template-columns:1fr}
+  .cap-row,.axis{grid-template-columns:110px minmax(0,1fr)}
+  .matrix{font-size:.85rem}
+  dl{grid-template-columns:1fr}
+  dd{margin-bottom:8px}
+}
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <h1>Getting heat out of an AI rack, one loop at a time</h1>
+  <p class="lede">An interactive walkthrough of Schneider Electric White Paper 133. AI servers run hot enough that air alone stops being practical, so heat has to travel through a chain of liquid loops before it leaves the building. Click any part of the diagram to see what it does.</p>
+  <p class="source">Based on "Navigating Liquid Cooling Architectures for Data Centers with AI Workloads", WP133 v2.1, by Paul Lin, Robert Bunger and Victor Avelar.</p>
+
+  <div class="loop-stage">
+    <div class="loop-svg">
+      <svg viewBox="0 0 720 360" role="img" aria-labelledby="loopTitle">
+        <title id="loopTitle">Three cooling loops: technology cooling system between racks and CDU, facility water system between CDU and chiller, condenser water system between chiller and cooling tower</title>
+        <!-- building outline -->
+        <rect x="170" y="40" width="530" height="270" fill="none" stroke="var(--steel)" stroke-width="2" rx="4"/>
+        <line x1="400" y1="40" x2="400" y2="310" stroke="var(--steel)" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <text x="550" y="62" text-anchor="middle" class="svg-small">IT space</text>
+        <text x="285" y="62" text-anchor="middle" class="svg-small">Plant room</text>
+        <text x="80" y="62" text-anchor="middle" class="svg-small">Outdoors</text>
+
+        <!-- CWS: tower <-> chiller -->
+        <path class="flow" stroke="var(--tcs-hot)" d="M230 200 L130 200 L130 150"/>
+        <path class="flow" stroke="var(--cold)" d="M60 150 L60 250 L230 250"/>
+        <!-- FWS: chiller <-> CDU -->
+        <path class="flow" stroke="var(--cold)" d="M340 250 L480 250 L480 220"/>
+        <path class="flow" stroke="var(--hot)" d="M480 150 L480 120 L340 120 L340 190"/>
+        <!-- TCS: CDU <-> rack -->
+        <path class="flow" stroke="var(--tcs-cold)" d="M520 200 L610 200"/>
+        <path class="flow" stroke="var(--tcs-hot)" d="M610 170 L520 170"/>
+
+        <!-- loop labels -->
+        <text x="100" y="285" class="loop-tag" fill="var(--muted)">CWS</text>
+        <text x="395" y="275" class="loop-tag" fill="var(--muted)" text-anchor="middle">FWS</text>
+        <text x="565" y="230" class="loop-tag" fill="var(--muted)" text-anchor="middle">TCS</text>
+
+        <!-- tower -->
+        <g class="node" tabindex="0" role="button" data-k="tower" aria-label="Cooling tower">
+          <path class="body" d="M30 150 L100 150 L88 90 L42 90 Z" fill="var(--steel-2)" stroke="var(--steel)" stroke-width="1.5"/>
+          <rect x="30" y="88" width="70" height="64" fill="transparent" stroke="none"/>
+          <text x="65" y="125" text-anchor="middle" class="svg-label">Tower</text>
+        </g>
+        <!-- chiller -->
+        <g class="node" tabindex="0" role="button" data-k="chiller" aria-label="Chiller">
+          <rect x="230" y="180" width="110" height="90" rx="4" fill="var(--steel-2)" stroke="var(--steel)" stroke-width="1.5"/>
+          <text x="285" y="222" text-anchor="middle" class="svg-label">Chiller</text>
+          <text x="285" y="240" text-anchor="middle" class="svg-small">heat rejection</text>
+        </g>
+        <!-- CDU -->
+        <g class="node" tabindex="0" role="button" data-k="cdu" aria-label="Coolant distribution unit">
+          <rect x="450" y="140" width="70" height="90" rx="4" fill="var(--steel-2)" stroke="var(--steel)" stroke-width="1.5"/>
+          <text x="485" y="182" text-anchor="middle" class="svg-label">CDU</text>
+          <text x="485" y="199" text-anchor="middle" class="svg-small">L-L</text>
+        </g>
+        <!-- rack -->
+        <g class="node" tabindex="0" role="button" data-k="rack" aria-label="Liquid-cooled server rack">
+          <rect x="610" y="100" width="70" height="170" rx="3" fill="var(--steel-2)" stroke="var(--steel)" stroke-width="1.5"/>
+          <g stroke="var(--steel)" stroke-width="1">
+            <line x1="620" y1="125" x2="670" y2="125"/><line x1="620" y1="145" x2="670" y2="145"/>
+            <line x1="620" y1="165" x2="670" y2="165"/><line x1="620" y1="185" x2="670" y2="185"/>
+            <line x1="620" y1="205" x2="670" y2="205"/><line x1="620" y1="225" x2="670" y2="225"/>
+          </g>
+          <text x="645" y="255" text-anchor="middle" class="svg-label">AI rack</text>
+        </g>
+      </svg>
+    </div>
+    <div class="info" id="info" aria-live="polite">
+      <h3>Start at the rack</h3>
+      <p>Heat moves right to left: from the chips into the technology cooling system (TCS), across the CDU into the facility water system (FWS), through the chiller into the condenser water system (CWS), and out through the cooling tower.</p>
+      <p class="hint">Select a component in the diagram for details.</p>
+    </div>
+  </div>
+  <div class="legend">
+    <span style="--c:var(--tcs-hot)">Warm coolant leaving the load</span>
+    <span style="--c:var(--tcs-cold)">Conditioned TCS coolant</span>
+    <span style="--c:var(--hot)">Warm facility water</span>
+    <span style="--c:var(--cold)">Cool facility / condenser water</span>
+  </div>
+</header>
+
+<main>
+<section class="wrap">
+  <div class="sec">
+    <h2>Three questions define any architecture</h2>
+    <div>
+      <p>The paper argues that you can describe any liquid cooling setup with three choices, made in order from the chip outward. The paper deliberately skips the first one and focuses on the last two.</p>
+      <ol class="steps">
+        <li><div class="n">1</div><h3>How is heat captured in the server?</h3><p>Cold plates carrying water or refrigerant, or servers immersed in a dielectric fluid.</p><span class="oos">Outside the paper's scope</span></li>
+        <li><div class="n">2</div><h3>What type of CDU?</h3><p>Defined by how it exchanges heat (to air or to water) and by its size and mounting (in the rack or on the floor).</p></li>
+        <li><div class="n">3</div><h3>How does heat reach the outdoors?</h3><p>Through the existing air system, through the existing facility water, or through a new dedicated system.</p></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="sec">
+    <h2>What a CDU actually does</h2>
+    <div>
+      <p>A coolant distribution unit sits between the IT loop and everything else. Its core job is isolation: the water in a chip's cold plate has much stricter requirements than facility water, which could corrode the tiny channels inside. Inside, a CDU is essentially pumps, a heat exchanger, filtration and controls, working together to deliver five functions.</p>
+      <div class="func">
+        <div><h3>Temperature control</h3><p>Holds TCS supply temperature to what the IT vendor specifies, based on chip case limits.</p></div>
+        <div><h3>Flow control</h3><p>Pushes enough coolant through manifolds, connectors and cold plates in every rack it serves.</p></div>
+        <div><h3>Pressure control</h3><p>Manages maximum system pressure and differential pressure. Some units run under vacuum (a leak-prevention system) so a breach draws air in instead of spilling coolant.</p></div>
+        <div><h3>Fluid treatment</h3><p>Filtration and chemistry, often propylene glycol mixes, to stop biological growth and keep water clean.</p></div>
+        <div><h3>Heat exchange and isolation</h3><p>Moves heat out of the TCS while keeping its fluid physically separate from the rest of the plant.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="sec">
+    <h2>Two attributes pick the CDU</h2>
+    <div>
+      <p>Only two CDU attributes are "critical", meaning a wrong choice forces you to redo the architecture: the type of heat exchange, and the capacity and form factor. Everything else (controller, filter type and so on) can wait for detailed design.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Heat exchange</th><th>What happens</th><th></th></tr></thead>
+          <tbody>
+            <tr class="focus"><td>Liquid to air (L-A)</td><td>TCS coolant runs through a radiator coil and heat goes into room air</td><td><span class="pill">Focus</span></td></tr>
+            <tr class="focus"><td>Liquid to liquid (L-L)</td><td>TCS heat passes to a facility water loop</td><td><span class="pill">Focus</span></td></tr>
+            <tr><td>Refrigerant to air (R-A)</td><td>Two-phase cold plates reject heat to air, like an air-cooled condenser</td><td></td></tr>
+            <tr><td>Refrigerant to liquid (R-L)</td><td>Two-phase cold plates reject heat to facility water, like a water-cooled condenser</td><td></td></tr>
+            <tr><td>Liquid to refrigerant (L-R)</td><td>TCS loop rejects heat to a pumped refrigerant system</td><td></td></tr>
+            <tr><td>Refrigerant to refrigerant (R-R)</td><td>Uncommon</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:16px">The refrigerant variants follow the same decision logic as their liquid counterparts, so the paper concentrates on L-A and L-L. Capacity is where the four CDU types really separate:</p>
+      <div class="cap" aria-label="CDU capacity ranges, logarithmic scale">
+        <div class="cap-row"><span>L-A rack-mounted</span><div class="track"><div class="bar" data-lo="20" data-hi="40" style="background:var(--tcs-hot)">20–40 kW</div></div></div>
+        <div class="cap-row"><span>L-A floor-mounted</span><div class="track"><div class="bar" data-lo="20" data-hi="60" style="background:var(--tcs-hot)">up to ~60 kW</div></div></div>
+        <div class="cap-row"><span>L-L rack-mounted</span><div class="track"><div class="bar" data-lo="40" data-hi="80" style="background:var(--cold)">40–80 kW</div></div></div>
+        <div class="cap-row"><span>L-L floor-mounted</span><div class="track"><div class="bar" data-lo="300" data-hi="1500" style="background:var(--cold)">300 kW to 1 MW+</div></div></div>
+        <div class="axis"><span></span><div class="ticks" id="ticks"></div></div>
+      </div>
+      <p class="hint" style="margin-top:8px">Log scale. Rack-mounted units serve one rack; floor-mounted units serve a row or several rows.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="methods">
+  <div class="sec">
+    <h2>Step 1: choose the heat rejection method</h2>
+    <div>
+      <p>This choice fixes the heat exchange type. Rejecting into room air means L-A; anything involving water means L-L. The paper weighs four factors: compatibility with existing cooling, deployment size, speed of deployment, and energy efficiency. You rarely get all four; the most compatible option is usually not the most efficient, because air carries heat far less effectively than water.</p>
+      <div class="tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-m="air">Reject to air in IT space</button>
+        <button role="tab" aria-selected="false" data-m="fws">Reject to facility water</button>
+        <button role="tab" aria-selected="false" data-m="ded">Dedicated heat rejection</button>
+      </div>
+      <div id="methodPanel" role="tabpanel"></div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="sec">
+    <h2>Step 2: choose CDU form factor</h2>
+    <div>
+      <p>Form factor is independent of Step 1, which is what makes the two-step approach work. The key trade is isolation versus scale: one CDU per rack contains failures, one CDU per row gets cheaper and more efficient as racks multiply.</p>
+      <div class="method" style="grid-template-columns:1fr 1fr">
+        <div class="pc" style="grid-template-columns:1fr;margin-top:0">
+          <div><h3 style="margin:0 0 4px;font-family:var(--sans);font-stretch:112%">Rack-mounted</h3><p style="margin:0;font-size:.93rem;color:var(--muted)">Sits at the bottom of one rack; that rack gets its own TCS loop.</p></div>
+          <div class="plus"><h4>Advantages</h4><ul><li>Can ship pre-integrated and tested with the servers</li><li>A leak or contamination stays within one rack</li><li>Redundancy (1N or 2N pumps) set per rack</li><li>Simple for a traditional site adding a few liquid racks</li></ul></div>
+          <div class="minus"><h4>Disadvantages</h4><ul><li>Cost per kW rises as rack count grows</li><li>Consumes IT rack space</li><li>Caps density near 40 kW (L-A) or 80 kW (L-L)</li><li>Commissioning a CDU per rack slows large rollouts</li><li>Many small pumps are less efficient than one large unit</li></ul></div>
+          <div class="when"><h4>When to use</h4><ul><li>Roughly 1 to 10 liquid-cooled racks</li><li>Speed matters and the deployment is small</li></ul></div>
+        </div>
+        <div class="pc" style="grid-template-columns:1fr;margin-top:0">
+          <div><h3 style="margin:0 0 4px;font-family:var(--sans);font-stretch:112%">Floor-mounted</h3><p style="margin:0;font-size:.93rem;color:var(--muted)">Serves a row or several rows from one shared TCS loop.</p></div>
+          <div class="plus"><h4>Advantages</h4><ul><li>Lower cost per kW at scale</li><li>In retrofits, can drop into former CRAH positions to limit piping</li><li>Leaves rack space for IT</li><li>Supports higher rack densities</li><li>Faster install and better efficiency as rack count grows</li><li>Larger fluid volume gives more thermal ride-through</li></ul></div>
+          <div class="minus"><h4>Disadvantages</h4><ul><li>Every rack on the loop shares common-cause failures (leaks, contamination, controls)</li><li>Takes up floor space</li></ul></div>
+          <div class="when"><h4>When to use</h4><ul><li>More than 10 liquid-cooled racks</li><li>Workloads such as training clusters can ride out losing flow to all racks on one CDU</li><li>No vertical space left in the racks</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="sec">
+    <h2>The six architectures</h2>
+    <div>
+      <p>Three heat rejection methods times two form factors. Select a cell to see how that combination plays out. The cell highlighted in orange is the current recommendation from the selector below.</p>
+      <div class="matrix" id="matrix">
+        <div class="mh">Heat rejection method</div><div class="mh">Rack-mounted CDU</div><div class="mh">Floor-mounted CDU</div>
+        <div class="mrow">Existing system, to air in IT space<small>L-A CDU</small></div>
+        <div class="cell"><button data-c="air-rack">L-A, rack</button></div>
+        <div class="cell"><button data-c="air-floor">L-A, floor</button></div>
+        <div class="mrow">Existing system, to facility water<small>L-L CDU</small></div>
+        <div class="cell"><button data-c="fws-rack">L-L, rack</button></div>
+        <div class="cell"><button data-c="fws-floor">L-L, floor</button></div>
+        <div class="mrow">Dedicated system, to independent water<small>L-L CDU</small></div>
+        <div class="cell"><button data-c="ded-rack">L-L, rack</button></div>
+        <div class="cell"><button data-c="ded-floor">L-L, floor</button></div>
+      </div>
+      <div class="matrix-detail" id="matrixDetail" aria-live="polite">
+        <p class="hint" style="margin:0">Select a combination above.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="selector">
+  <div class="sec">
+    <h2>Find your architecture</h2>
+    <div>
+      <p>This applies the paper's "when to implement" guidance to your answers. Treat it as a first pass to frame a conversation with your design team, not a design decision.</p>
+      <form class="tool" id="tool" onsubmit="return false">
+        <div class="tool-grid">
+          <div>
+            <p class="stepname">Step 1: heat rejection</p>
+            <fieldset><legend>Can you connect to chilled or condenser water?</legend>
+              <div class="opts">
+                <label><input type="radio" name="water" value="tap" checked> Yes, tap-offs exist</label>
+                <label><input type="radio" name="water" value="yes"> Yes, with new work</label>
+                <label><input type="radio" name="water" value="no"> No, or not acceptable</label>
+              </div></fieldset>
+            <fieldset><legend>How large is the liquid-cooled deployment?</legend>
+              <div class="opts">
+                <label><input type="radio" name="scale" value="small" checked> A server to a few racks</label>
+                <label><input type="radio" name="scale" value="mid"> Mid to large</label>
+                <label><input type="radio" name="scale" value="big"> Significant, and growing</label>
+              </div></fieldset>
+            <fieldset><legend>What matters most?</legend>
+              <div class="opts">
+                <label><input type="radio" name="prio" value="speed" checked> Speed of deployment</label>
+                <label><input type="radio" name="prio" value="cost"> Lower upfront investment</label>
+                <label><input type="radio" name="prio" value="eff"> Energy efficiency</label>
+              </div></fieldset>
+          </div>
+          <div>
+            <p class="stepname">Step 2: CDU form factor</p>
+            <fieldset><legend>Number of liquid-cooled racks</legend>
+              <div class="opts">
+                <label><input type="radio" name="racks" value="few" checked> 1 to 10</label>
+                <label><input type="radio" name="racks" value="many"> More than 10</label>
+              </div></fieldset>
+            <fieldset><legend>Liquid heat load per rack</legend>
+              <div class="opts">
+                <label><input type="radio" name="dens" value="40" checked> Up to 40 kW</label>
+                <label><input type="radio" name="dens" value="80"> 40 to 80 kW</label>
+                <label><input type="radio" name="dens" value="hi"> Over 80 kW</label>
+              </div></fieldset>
+            <fieldset><legend>Can the workload tolerate losing flow to all racks on one CDU?</legend>
+              <div class="opts">
+                <label><input type="radio" name="ccf" value="yes" checked> Yes</label>
+                <label><input type="radio" name="ccf" value="no"> No</label>
+              </div></fieldset>
+            <fieldset><legend>Free vertical space in racks for a CDU?</legend>
+              <div class="opts">
+                <label><input type="radio" name="space" value="yes" checked> Yes</label>
+                <label><input type="radio" name="space" value="no"> No</label>
+              </div></fieldset>
+          </div>
+        </div>
+        <div class="result" id="result" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="sec">
+    <h2>Glossary</h2>
+    <dl>
+      <dt>TCS</dt><dd>Technology cooling system. The secondary loop running from the CDU through the IT equipment.</dd>
+      <dt>FWS</dt><dd>Facility water system. The primary loop between the CDU and the chiller or heat rejection plant.</dd>
+      <dt>CWS</dt><dd>Condenser water system. Carries heat from the chiller to a cooling tower.</dd>
+      <dt>CDU</dt><dd>Coolant distribution unit. Isolates the TCS and controls its temperature, flow, pressure and chemistry.</dd>
+      <dt>CRAC / CRAH</dt><dd>Computer room air conditioner / air handler. Conventional room air cooling.</dd>
+      <dt>L-A, L-L</dt><dd>Liquid-to-air and liquid-to-liquid heat exchange.</dd>
+      <dt>LPS</dt><dd>Leak-prevention system. A CDU that runs the TCS under negative pressure.</dd>
+      <dt>Ride-through</dt><dd>How long the fluid in a loop can absorb heat if cooling stops. Larger loops ride through longer.</dd>
+    </dl>
+  </div>
+</section>
+</main>
+
+<footer class="wrap">
+  Explainer built from Schneider Electric White Paper 133, version 2.1. Figures and ranges are the paper's; wording is a summary. Consult the original and a qualified engineer before making design decisions.
+</footer>
+
+<script>
+/* ---------- hero diagram ---------- */
+const nodeInfo = {
+  rack:{t:"AI rack and the TCS",b:["Accelerators capture heat through cold plates or immersion. The coolant here, the technology cooling system, has strict limits on temperature, flow and chemistry set by the IT vendor.","Typically 60 to 90% of a liquid-cooled server's heat leaves through the liquid. The rest still needs air cooling from CRAHs or a rear-door heat exchanger."]},
+  cdu:{t:"Coolant distribution unit",b:["The boundary between IT and facility. It pumps and conditions the TCS coolant and passes its heat across a heat exchanger without mixing the fluids.","This one is liquid-to-liquid. A liquid-to-air CDU would dump heat into the room instead, and the facility loop would be untouched."]},
+  chiller:{t:"Facility heat rejection",b:["The facility water system (primary loop) carries heat from the CDU to the plant. This could be the chiller already serving the air-cooled room, or a dedicated system built for liquid cooling.","Dedicated systems can run warmer water, around 40°C supply in the paper's example, which allows far more free-cooling hours."]},
+  tower:{t:"Out to the atmosphere",b:["On water-cooled chiller plants, a condenser water system carries heat to a cooling tower. Air-cooled chillers and dry coolers reject heat directly to outdoor air.","Warmer return water also opens up heat reuse, for example district or space heating."]}
+};
+const info = document.getElementById('info');
+document.querySelectorAll('.node').forEach(n=>{
+  const show=()=>{
+    document.querySelectorAll('.node').forEach(x=>x.classList.remove('active'));
+    n.classList.add('active');
+    const d=nodeInfo[n.dataset.k];
+    info.innerHTML=`<h3>${d.t}</h3>`+d.b.map(p=>`<p>${p}</p>`).join('');
+  };
+  n.addEventListener('click',show);
+  n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();show();}});
+});
+
+/* ---------- capacity chart (log scale 10 kW – 2 MW) ---------- */
+const LO=Math.log10(10), HI=Math.log10(2000);
+const pos=v=>((Math.log10(v)-LO)/(HI-LO))*100;
+document.querySelectorAll('.bar').forEach(b=>{
+  const l=pos(+b.dataset.lo), r=pos(+b.dataset.hi);
+  b.style.left=l+'%'; b.style.width=(r-l)+'%';
+});
+const ticks=document.getElementById('ticks');
+[[10,'10 kW'],[50,'50'],[100,'100'],[500,'500'],[1000,'1 MW']].forEach(([v,l])=>{
+  const s=document.createElement('span'); s.style.left=pos(v)+'%'; s.textContent=l; ticks.appendChild(s);
+});
+
+/* ---------- step 1 method tabs ---------- */
+const methodSVG = {
+  air:`<svg viewBox="0 0 320 170" role="img" aria-label="Liquid-to-air CDU rejects heat into room air, handled by existing CRAH and chiller">
+    <rect x="12" y="40" width="70" height="60" rx="3" fill="var(--steel-2)" stroke="var(--steel)"/><text x="47" y="75" text-anchor="middle" class="svg-label">Chiller</text>
+    <rect x="130" y="40" width="50" height="60" rx="3" fill="var(--steel-2)" stroke="var(--steel)"/><text x="155" y="75" text-anchor="middle" class="svg-label">CRAH</text>
+    <path class="flow" stroke="var(--hot)" d="M130 55 L82 55"/><path class="flow" stroke="var(--cold)" d="M82 85 L130 85"/>
+    <rect x="215" y="30" width="95" height="120" rx="4" fill="none" stroke="var(--steel)" stroke-dasharray="4 3"/>
+    <rect x="225" y="45" width="30" height="90" fill="var(--steel-2)" stroke="var(--steel)"/><text x="240" y="150" text-anchor="middle" class="svg-small">rack</text>
+    <rect x="270" y="45" width="30" height="90" fill="var(--steel-2)" stroke="var(--tcs-hot)" stroke-width="2"/><text x="285" y="94" text-anchor="middle" class="svg-small">L-A</text>
+    <path class="flow" stroke="var(--tcs-hot)" d="M255 70 L270 70"/><path class="flow" stroke="var(--tcs-cold)" d="M270 110 L255 110"/>
+    <path d="M215 60 Q195 45 182 60" fill="none" stroke="var(--hot)" stroke-width="3"/><path d="M182 85 Q195 100 215 90" fill="none" stroke="var(--cold)" stroke-width="3"/>
+    <text x="160" y="20" text-anchor="middle" class="svg-small">Liquid loop stays inside the room; room air carries the heat</text></svg>`,
+  fws:`<svg viewBox="0 0 320 170" role="img" aria-label="Liquid-to-liquid CDU connected to the existing chilled water loop">
+    <rect x="12" y="55" width="70" height="60" rx="3" fill="var(--steel-2)" stroke="var(--steel)"/><text x="47" y="90" text-anchor="middle" class="svg-label">Chiller</text>
+    <rect x="150" y="55" width="45" height="60" rx="3" fill="var(--steel-2)" stroke="var(--tcs-hot)" stroke-width="2"/><text x="172" y="90" text-anchor="middle" class="svg-label">CDU</text>
+    <path class="flow" stroke="var(--hot)" d="M150 68 L82 68"/><path class="flow" stroke="var(--cold)" d="M82 102 L150 102"/>
+    <rect x="240" y="45" width="30" height="80" fill="var(--steel-2)" stroke="var(--steel)"/><rect x="278" y="45" width="30" height="80" fill="var(--steel-2)" stroke="var(--steel)"/>
+    <path class="flow" stroke="var(--tcs-cold)" d="M195 80 L240 80"/><path class="flow" stroke="var(--tcs-hot)" d="M240 95 L195 95"/>
+    <text x="116" y="140" text-anchor="middle" class="svg-small">FWS (primary)</text><text x="218" y="140" text-anchor="middle" class="svg-small">TCS</text>
+    <text x="160" y="25" text-anchor="middle" class="svg-small">CDU taps into the chilled water already feeding the CRAHs</text></svg>`,
+  ded:`<svg viewBox="0 0 320 170" role="img" aria-label="Dedicated dry cooler serves the CDU at 40 degrees C, separate chiller serves air cooling at 20 degrees C">
+    <rect x="12" y="30" width="75" height="50" rx="3" fill="var(--steel-2)" stroke="var(--tcs-hot)" stroke-width="2"/><text x="50" y="52" text-anchor="middle" class="svg-label">Dry cooler</text><text x="50" y="68" text-anchor="middle" class="svg-small">~40°C supply</text>
+    <rect x="160" y="30" width="45" height="50" rx="3" fill="var(--steel-2)" stroke="var(--steel)"/><text x="182" y="60" text-anchor="middle" class="svg-label">CDU</text>
+    <path class="flow" stroke="var(--hot)" d="M160 42 L87 42"/><path class="flow" stroke="var(--tcs-hot)" d="M87 68 L160 68"/>
+    <rect x="250" y="25" width="28" height="60" fill="var(--steel-2)" stroke="var(--steel)"/><rect x="284" y="25" width="28" height="60" fill="var(--steel-2)" stroke="var(--steel)"/>
+    <path class="flow" stroke="var(--tcs-cold)" d="M205 48 L250 48"/><path class="flow" stroke="var(--tcs-hot)" d="M250 62 L205 62"/>
+    <rect x="12" y="105" width="75" height="50" rx="3" fill="var(--steel-2)" stroke="var(--steel)"/><text x="50" y="127" text-anchor="middle" class="svg-label">Chiller</text><text x="50" y="143" text-anchor="middle" class="svg-small">~20°C supply</text>
+    <rect x="160" y="105" width="45" height="50" rx="3" fill="var(--steel-2)" stroke="var(--steel)"/><text x="182" y="135" text-anchor="middle" class="svg-label">CRAH</text>
+    <path class="flow" stroke="var(--hot)" d="M160 117 L87 117"/><path class="flow" stroke="var(--cold)" d="M87 143 L160 143"/>
+    <text x="265" y="130" text-anchor="middle" class="svg-small">air-cooled</text><text x="265" y="144" text-anchor="middle" class="svg-small">racks</text></svg>`
+};
+const methods = {
+  air:{d:"The liquid loop is a closed system inside the IT room. An L-A CDU (rack or floor) moves heat from coolant into room air, and the existing CRAHs and chiller remove it as they always have. Also called closed-loop local heat rejection.",
+    plus:["Works with most existing cooling infrastructure","No changes to the existing plant","Can be prefabricated and standardised","A TCS problem affects only a few servers or racks"],
+    minus:["Less efficient: more heat exchanges and fans than L-L","CDUs consume rack or floor space","Expensive at large scale","Many separate loops to monitor for water quality","Harder to reach full concurrent maintainability or redundancy","Small loops have little thermal ride-through if CDU fans fail"],
+    when:["No chilled or condenser water available, or connecting to it isn't allowed","Enough spare air-cooling capacity, confirmed by airflow analysis or CFD","Small deployments, from one server to several racks","Speed of deployment is the top priority"]},
+  fws:{d:"An L-L CDU connects to the chilled or condenser water that already serves the site. Server heat crosses the CDU's heat exchanger into the facility loop, then leaves through the existing plant, or gets reused, for example for district heating.",
+    plus:["Lower investment by reusing the existing heat rejection plant","More liquid capacity, better efficiency and quieter (less airflow over servers) than rejecting to room air","In retrofits, CDUs can reclaim space that CRAHs used to occupy"],
+    minus:["More site work than L-A: connecting CDUs to facility water and piping the TCS to racks"],
+    when:["Mid to large deployments at sites with a chiller plant","Water tap-offs already exist","Efficiency outranks speed of deployment"]},
+  ded:{d:"A new heat rejection system is built just for liquid cooling, using L-L CDUs. Freed from the constraints of a shared air-cooling plant, it can run much warmer water. The paper's example pairs a dry cooler with trim compressor at about 40°C supply for liquid cooling, alongside a free-cooling chiller at about 20°C for the remaining air cooling.",
+    plus:["Highest efficiency; mechanical cooling only needed on the hottest days in most climates","Warmer return water suits heat reuse, such as space heating or preheating process water","Doesn't disturb the existing cooling system"],
+    minus:["Requires designing a new facility-level piping system","Requires investment in a new heat rejection plant","Takes longest to deploy"],
+    when:["Significant liquid-cooled deployments are expected","High energy efficiency is a priority"]}
+};
+const panel=document.getElementById('methodPanel');
+const li=a=>a.map(x=>`<li>${x}</li>`).join('');
+function showMethod(k){
+  const m=methods[k];
+  panel.innerHTML=`<div class="method"><div><p>${m.d}</p></div><div class="mini">${methodSVG[k]}</div></div>
+  <div class="pc"><div class="plus"><h4>Advantages</h4><ul>${li(m.plus)}</ul></div>
+  <div class="minus"><h4>Disadvantages</h4><ul>${li(m.minus)}</ul></div>
+  <div class="when"><h4>When to use</h4><ul>${li(m.when)}</ul></div></div>`;
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.m===k));
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>showMethod(b.dataset.m)));
+showMethod('air');
+
+/* ---------- six-architecture matrix ---------- */
+const mName={air:"Existing system, reject to air in IT space",fws:"Existing system, reject to facility water",ded:"Dedicated system, reject to independent water"};
+const combo={
+  "air-rack":"The quickest path for a handful of racks. Each rack carries its own L-A CDU (roughly 20–40 kW) and heat goes into the room. Nothing in the plant changes, but you need spare air capacity and you'll lose some rack space.",
+  "air-floor":"A floor-standing L-A unit serves several racks, up to about 60 kW in total. It keeps rack space free and still avoids any facility piping, but that ceiling means it only fits small, moderately dense clusters.",
+  "fws-rack":"Each rack gets an L-L CDU (roughly 40–80 kW) piped to existing chilled water. Good for a few dense racks at a site with tap-offs; cost per kW rises as you add racks.",
+  "fws-floor":"The common retrofit pattern for larger AI rows: one L-L CDU of 300 kW to over 1 MW serves many racks from existing chilled water, often dropped into the footprint of retired CRAHs.",
+  "ded-rack":"A dedicated warm-water plant feeding per-rack L-L CDUs. Efficient at the plant level, but per-rack CDUs erode the gains as the deployment grows, so this suits a small first phase of a planned larger build.",
+  "ded-floor":"The scale-and-efficiency option: a purpose-built warm-water plant feeding large floor-mounted L-L CDUs. Longest to design and build, highest investment, best long-run efficiency and heat-reuse potential."
+};
+const detail=document.getElementById('matrixDetail');
+function showCombo(c){
+  const [m,f]=c.split('-');
+  document.querySelectorAll('.cell button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===c));
+  detail.innerHTML=`<h3>${mName[m]}, ${f==='rack'?'rack-mounted':'floor-mounted'} CDU</h3><p style="margin:0">${combo[c]}</p>`;
+}
+document.querySelectorAll('.cell button').forEach(b=>b.addEventListener('click',()=>showCombo(b.dataset.c)));
+
+/* ---------- selector ---------- */
+const form=document.getElementById('tool'), out=document.getElementById('result');
+function val(n){return form.querySelector(`input[name="${n}"]:checked`).value}
+function evaluate(){
+  const water=val('water'),scale=val('scale'),prio=val('prio'),racks=val('racks'),dens=val('dens'),ccf=val('ccf'),space=val('space');
+  let m, why=[], notes=[];
+  // Step 1
+  if(scale==='big' && (prio==='eff'||water==='no')){m='ded';why.push('A significant, growing deployment favours a dedicated plant, and the paper rates it the most efficient option.');}
+  else if(water==='no'){
+    if(scale==='small'||prio==='speed'){m='air';why.push('Without usable facility water, rejecting heat into the room keeps the plant untouched.');}
+    else {m='ded';why.push('Without facility water and with a larger deployment, building dedicated heat rejection avoids the cost and inefficiency of many L-A units.');}
+  }
+  else if(scale==='small' && prio==='speed'){m='air';why.push('For a few racks where speed matters most, L-A CDUs avoid any plant work.');}
+  else if(prio==='eff' && scale!=='small'){m= water==='tap'?'fws':'ded';why.push(water==='tap'?'Existing tap-offs make facility water the efficient, lower-investment route.':'Since new water work is needed anyway and efficiency leads, a dedicated plant is worth weighing against extending the existing one.');}
+  else {m='fws';why.push(water==='tap'?'Tap-offs already exist, so connecting L-L CDUs to facility water reuses the plant you have.':'Connecting to the existing chilled water reuses the plant, at the cost of some piping work.');}
+  if(m==='air'&&scale!=='small') notes.push('L-A becomes costly and harder to make redundant as deployments grow; revisit if the cluster expands.');
+  if(m==='air') notes.push('Confirm spare air-cooling capacity with airflow analysis or CFD first.');
+  if(m==='ded'&&prio==='speed') notes.push('A dedicated plant has the longest lead time, which conflicts with a speed priority.');
+
+  // Step 2
+  let f, why2=[];
+  const cap = m==='air' ? 40 : 80;
+  if(racks==='many'){f='floor';why2.push('More than 10 racks tips cost, install time and efficiency toward floor-mounted CDUs.');}
+  else if(space==='no'){f='floor';why2.push('No free space in the racks rules out rack-mounted CDUs.');}
+  else if((dens==='80'&&m==='air')||dens==='hi'){f='floor';why2.push(`Per-rack load exceeds what a rack-mounted ${m==='air'?'L-A':'L-L'} CDU handles (about ${cap} kW).`);}
+  else {f='rack';why2.push('With 1 to 10 racks, per-rack CDUs are simple, fast and contain failures to one rack.');}
+  if(f==='floor'&&ccf==='no') notes.push('All racks on one floor CDU share a single TCS loop. Since your workload can\'t tolerate that, plan for redundant CDUs or split loops.');
+  if(f==='rack'&&ccf==='yes'&&racks==='few') {/* fine */}
+  if(m==='air'&&(dens!=='40')) notes.push('L-A heat exchange tops out around 60 kW even floor-mounted. At these densities a water-based (L-L) architecture is the realistic path.');
+
+  out.innerHTML=`<h3>${mName[m]}, ${f==='rack'?'rack-mounted':'floor-mounted'} ${m==='air'?'L-A':'L-L'} CDU</h3>
+    <p>${why.join(' ')} ${why2.join(' ')}</p>${notes.length?`<ul>${li(notes)}</ul>`:''}
+    <p class="hint" style="margin:10px 0 0"><a href="#methods">Review the trade-offs for this method</a></p>`;
+  document.querySelectorAll('.cell button').forEach(b=>b.classList.toggle('rec',b.dataset.c===`${m}-${f}`));
+  return `${m}-${f}`;
+}
+form.addEventListener('change',evaluate);
+showCombo(evaluate());
+</script>
+</body>
+</html>

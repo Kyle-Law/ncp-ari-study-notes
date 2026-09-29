@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Intelligent PDUs, explained with diagrams</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* IEC 60446 wiring colours used as the accent system */
+  --paper:#F2F4F6;
+  --panel:#FFFFFF;
+  --ink:#1A2733;
+  --muted:#56657A;
+  --rule:#D5DCE3;
+  --l1:#7B4A26;      /* phase L1 brown */
+  --l2:#222B33;      /* phase L2 black */
+  --l3:#8A949E;      /* phase L3 grey  */
+  --neutral:#2A68B0; /* neutral blue – primary accent */
+  --earth:#7FA523;   /* earth green – sensors / OK */
+  --warn:#D99A1E;
+  --crit:#C43D32;
+  --soft-blue:#E3EDF8;
+  --soft-green:#EDF4DF;
+  --soft-warn:#FBF0DA;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#131A21; --panel:#1B242D; --ink:#E6ECF2; --muted:#9AA8B8; --rule:#2E3A46;
+    --l1:#C98A5A; --l2:#C9D2DA; --l3:#7D8995; --neutral:#6FA6E8; --earth:#A5CB4A;
+    --warn:#EDB54A; --crit:#EF6A5E; --soft-blue:#1D2E42; --soft-green:#23301A; --soft-warn:#3A2F17;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#131A21; --panel:#1B242D; --ink:#E6ECF2; --muted:#9AA8B8; --rule:#2E3A46;
+  --l1:#C98A5A; --l2:#C9D2DA; --l3:#7D8995; --neutral:#6FA6E8; --earth:#A5CB4A;
+  --warn:#EDB54A; --crit:#EF6A5E; --soft-blue:#1D2E42; --soft-green:#23301A; --soft-warn:#3A2F17;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:1.0625rem;line-height:1.6;
+}
+h1,h2,h3{font-family:"Barlow Semi Condensed","Barlow",system-ui,sans-serif;line-height:1.15;margin:0}
+h1{font-size:clamp(2.2rem,5.5vw,3.6rem);font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(1.6rem,3.2vw,2.2rem);font-weight:700;margin-bottom:.6rem}
+h3{font-size:1.25rem;font-weight:600;margin-bottom:.35rem}
+p{margin:0 0 1rem}
+a{color:var(--neutral)}
+a:focus-visible,button:focus-visible,input:focus-visible,.outlet-btn:focus-visible{outline:3px solid var(--neutral);outline-offset:2px}
+img,svg{max-width:100%;height:auto}
+.wrap{max-width:1080px;margin:0 auto;padding:0 1.25rem}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+
+/* ---- phase stripe: the page's one recurring signature ---- */
+.phase-stripe{display:flex;height:6px}
+.phase-stripe span{flex:1}
+.phase-stripe span:nth-child(1){background:var(--l1)}
+.phase-stripe span:nth-child(2){background:var(--l2)}
+.phase-stripe span:nth-child(3){background:var(--l3)}
+.phase-stripe span:nth-child(4){background:var(--neutral)}
+
+/* ---- hero ---- */
+.hero{display:grid;grid-template-columns:1fr auto;gap:2.5rem;align-items:center;padding:3.5rem 0 3rem}
+.hero .lede{font-size:1.2rem;color:var(--muted);max-width:52ch;margin-top:1rem}
+.hero-pdu{width:170px}
+@media (max-width:720px){.hero{grid-template-columns:1fr}.hero-pdu{display:none}}
+
+/* ---- contents ---- */
+nav.toc{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.8rem 0;margin-bottom:1rem}
+nav.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.4rem 1.4rem}
+nav.toc a{text-decoration:none;color:var(--ink);font-weight:500}
+nav.toc a:hover{color:var(--neutral)}
+
+section{padding:3rem 0;border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:0}
+
+.figure{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:1.25rem;margin:1.5rem 0;overflow-x:auto}
+.figure figcaption{font-size:.92rem;color:var(--muted);margin-top:.6rem}
+.figure svg{display:block;min-width:620px;width:100%}
+.figure.narrow svg{min-width:0}
+
+/* svg tokens */
+.s-ink{fill:var(--ink)} .s-muted{fill:var(--muted)} .s-panel{fill:var(--panel)} .s-paper{fill:var(--paper)}
+.s-blue{fill:var(--neutral)} .s-l1{fill:var(--l1)} .s-l2{fill:var(--l2)} .s-l3{fill:var(--l3)} .s-earth{fill:var(--earth)}
+.s-warn{fill:var(--warn)} .s-crit{fill:var(--crit)}
+.s-softblue{fill:var(--soft-blue)} .s-softgreen{fill:var(--soft-green)} .s-softwarn{fill:var(--soft-warn)}
+.st-rule{stroke:var(--rule)} .st-ink{stroke:var(--ink)} .st-muted{stroke:var(--muted)} .st-blue{stroke:var(--neutral)}
+.st-l1{stroke:var(--l1)} .st-earth{stroke:var(--earth)} .st-warn{stroke:var(--warn)} .st-crit{stroke:var(--crit)}
+svg text{font-family:"Barlow",system-ui,sans-serif}
+.t-title{font-family:"Barlow Semi Condensed","Barlow",sans-serif;font-weight:600;font-size:15px}
+.t-body{font-size:13px}
+.t-small{font-size:11.5px}
+.power{stroke-width:4;fill:none;stroke-linecap:round}
+.data{stroke-width:2;fill:none;stroke-dasharray:6 5}
+
+/* layout helpers */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:1.25rem}
+.card.monitored{border-top:5px solid var(--neutral)}
+.card.switched{border-top:5px solid var(--l1)}
+.tag{display:inline-block;font-size:.85rem;font-weight:600;padding:.1rem .55rem;border-radius:999px;margin-bottom:.5rem}
+.tag.blue{background:var(--soft-blue);color:var(--neutral)}
+.tag.brown{background:var(--soft-warn);color:var(--l1)}
+
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.98rem}
+th,td{text-align:left;padding:.65rem .75rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;font-size:1.02rem}
+td .yes{color:var(--earth);font-weight:700} td .no{color:var(--muted)}
+.tbl{overflow-x:auto;margin:1.5rem 0;background:var(--panel);border:1px solid var(--rule);border-radius:10px}
+
+.feature{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:1.5rem;align-items:center;padding:1.75rem 0;border-top:1px dashed var(--rule)}
+.feature:first-of-type{border-top:0}
+@media (max-width:760px){.feature{grid-template-columns:1fr}}
+.feature .figure{margin:0}
+
+/* switched PDU demo */
+.demo{display:grid;grid-template-columns:auto 1fr;gap:1.5rem;align-items:start}
+@media (max-width:620px){.demo{grid-template-columns:1fr}}
+.strip{background:var(--l2);border-radius:8px;padding:.7rem .55rem;display:grid;gap:.45rem;width:120px}
+:root[data-theme="dark"] .strip{background:#0D1318}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .strip{background:#0D1318}}
+.strip .lcd{background:#3E5B2F;color:#D8F0B8;font-size:.78rem;font-weight:600;text-align:center;border-radius:4px;padding:.25rem}
+.outlet-btn{display:flex;align-items:center;gap:.45rem;width:100%;border:0;border-radius:5px;padding:.35rem .45rem;background:#39434D;color:#E6ECF2;font:inherit;font-size:.82rem;cursor:pointer;text-align:left}
+.outlet-btn .led{width:9px;height:9px;border-radius:50%;background:var(--earth);flex:none;box-shadow:0 0 6px var(--earth)}
+.outlet-btn.off .led{background:#5B6570;box-shadow:none}
+.outlet-btn.booting .led{background:var(--warn);box-shadow:0 0 6px var(--warn)}
+.outlet-btn.phaseA{border-left:4px solid var(--l1)}
+.outlet-btn.phaseB{border-left:4px solid var(--neutral)}
+.log{font-size:.92rem;background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:1rem;min-height:9rem}
+.log ol{margin:.3rem 0 0;padding-left:1.2rem}
+.btnrow{display:flex;flex-wrap:wrap;gap:.5rem;margin:.75rem 0}
+.btn{font:inherit;font-weight:600;font-size:.92rem;border:1px solid var(--rule);background:var(--panel);color:var(--ink);border-radius:6px;padding:.4rem .8rem;cursor:pointer}
+.btn:hover{border-color:var(--neutral)}
+
+/* threshold demo */
+.slider-row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin:.5rem 0 1rem}
+.slider-row input{flex:1;min-width:200px;accent-color:var(--neutral)}
+.status{font-weight:700;padding:.2rem .7rem;border-radius:999px}
+.status.ok{background:var(--soft-green);color:var(--earth)}
+.status.warn{background:var(--soft-warn);color:var(--warn)}
+.status.crit{background:var(--crit);color:#fff}
+
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1.5rem}
+@media (max-width:820px){.pillars{grid-template-columns:1fr}}
+.pillars .card h3{display:flex;align-items:center;gap:.5rem}
+.pillars ul{margin:.5rem 0 0;padding-left:1.1rem}
+.pillars li{margin-bottom:.35rem}
+
+.source{font-size:.92rem;color:var(--muted);padding:2rem 0 3rem}
+.theme-toggle{position:fixed;right:1rem;bottom:calc(1rem + env(safe-area-inset-bottom,0px));z-index:5}
+</style>
+</head>
+<body>
+<div class="phase-stripe" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <h1>What is an intelligent PDU?</h1>
+      <p class="lede">A rack power strip that also measures, reports and, in some models, switches the power it delivers. This page walks through how one is built, where it sits in the data centre, and what to look for when choosing one.</p>
+    </div>
+    <!-- Hero: a vertical rack PDU -->
+    <svg class="hero-pdu" viewBox="0 0 170 420" role="img" aria-label="Illustration of a vertical intelligent rack PDU with display and outlets">
+      <rect x="45" y="10" width="80" height="400" rx="8" class="s-l2"/>
+      <rect x="55" y="24" width="60" height="30" rx="3" fill="#3E5B2F"/>
+      <text x="85" y="44" text-anchor="middle" font-size="13" font-weight="700" fill="#D8F0B8">7.4 kW</text>
+      <rect x="60" y="62" width="50" height="20" rx="3" class="s-blue"/>
+      <text x="85" y="76" text-anchor="middle" font-size="9" fill="#fff">NET  SNSR</text>
+      <g id="hero-outlets"></g>
+      <line x1="85" y1="410" x2="85" y2="420" class="st-ink" stroke-width="6"/>
+      <!-- data leader lines -->
+      <path d="M125 36 H165" class="st-blue data"/>
+      <circle cx="165" cy="36" r="3" class="s-blue"/>
+      <path d="M45 72 H5" class="st-earth data"/>
+      <circle cx="5" cy="72" r="3" class="s-earth"/>
+    </svg>
+  </header>
+
+  <nav class="toc" aria-label="Contents">
+    <ol>
+      <li><a href="#basics">Basic vs intelligent</a></li>
+      <li><a href="#chain">Where it sits</a></li>
+      <li><a href="#inside">Inside the unit</a></li>
+      <li><a href="#types">Monitored vs switched</a></li>
+      <li><a href="#features">Common features</a></li>
+      <li><a href="#alerts">Alerts &amp; thresholds</a></li>
+      <li><a href="#selecting">Choosing one</a></li>
+      <li><a href="#services">Services</a></li>
+    </ol>
+  </nav>
+
+  <!-- ========== 1. BASICS ========== -->
+  <section id="basics">
+    <h2>Basic PDU vs intelligent PDU</h2>
+    <div class="prose">
+      <p>A power distribution unit (PDU) takes one or more incoming feeds and splits them across the outlets that servers, switches and storage plug into. A <strong>basic</strong> PDU does only that. An <strong>intelligent</strong> (or "smart") PDU does the same job but adds a network-connected controller, so operators can see live power data remotely, get warned before problems happen, and, on switched models, turn individual outlets on and off.</p>
+      <p>Why this matters more now: rack densities are climbing. The source article notes that racks under 10 kW are still typical, 15 kW is common in hyperscale sites, and some deployments approach 25 kW. More power per rack means less headroom, so knowing exactly what each rack is drawing becomes essential.</p>
+    </div>
+
+    <figure class="figure">
+      <svg viewBox="0 0 720 230" role="img" aria-label="Bar chart of rack power density: under 10 kW typical, 15 kW hyperscale, near 25 kW for some deployments">
+        <text x="20" y="28" class="t-title s-ink">Rack power density is rising</text>
+        <!-- axis -->
+        <line x1="170" y1="50" x2="170" y2="200" class="st-rule" stroke-width="1"/>
+        <g class="t-small s-muted">
+          <text x="170" y="220" text-anchor="middle">0</text>
+          <text x="330" y="220" text-anchor="middle">10 kW</text>
+          <text x="490" y="220" text-anchor="middle">20 kW</text>
+          <text x="570" y="220" text-anchor="middle">25 kW</text>
+        </g>
+        <line x1="330" y1="50" x2="330" y2="200" class="st-rule" stroke-dasharray="3 4"/>
+        <line x1="490" y1="50" x2="490" y2="200" class="st-rule" stroke-dasharray="3 4"/>
+        <!-- bars: 16px per kW -->
+        <text x="160" y="80" text-anchor="end" class="t-body s-ink">Typical rack</text>
+        <rect x="170" y="64" width="150" height="26" rx="3" class="s-l3"/>
+        <text x="328" y="82" class="t-body s-ink" dx="4">&lt; 10 kW</text>
+
+        <text x="160" y="130" text-anchor="end" class="t-body s-ink">Hyperscale</text>
+        <rect x="170" y="114" width="240" height="26" rx="3" class="s-blue"/>
+        <text x="418" y="132" class="t-body s-ink">≈ 15 kW</text>
+
+        <text x="160" y="180" text-anchor="end" class="t-body s-ink">High-density</text>
+        <rect x="170" y="164" width="400" height="26" rx="3" class="s-l1"/>
+        <text x="578" y="182" class="t-body s-ink">approaching 25 kW</text>
+      </svg>
+      <figcaption>Figures as stated in the Vertiv article. Higher density raises the value of per-rack and per-outlet visibility.</figcaption>
+    </figure>
+
+    <figure class="figure">
+      <svg viewBox="0 0 720 250" role="img" aria-label="Classification tree: PDU splits into basic and intelligent; intelligent splits into monitored and switched, each available with unit-level or outlet-level metering">
+        <g class="t-body">
+          <rect x="300" y="15" width="120" height="40" rx="6" class="s-paper st-ink" stroke-width="1.5"/>
+          <text x="360" y="40" text-anchor="middle" class="t-title s-ink">Rack PDU</text>
+
+          <path d="M360 55 V75 H170 V95 M360 75 H550 V95" class="st-muted" stroke-width="1.5" fill="none"/>
+
+          <rect x="95" y="95" width="150" height="46" rx="6" class="s-paper st-muted" stroke-width="1.5"/>
+          <text x="170" y="116" text-anchor="middle" class="t-title s-ink">Basic</text>
+          <text x="170" y="133" text-anchor="middle" class="t-small s-muted">distributes power only</text>
+
+          <rect x="465" y="95" width="170" height="46" rx="6" class="s-softblue st-blue" stroke-width="1.5"/>
+          <text x="550" y="116" text-anchor="middle" class="t-title s-ink">Intelligent</text>
+          <text x="550" y="133" text-anchor="middle" class="t-small s-muted">networked controller added</text>
+
+          <path d="M550 141 V160 H445 V180 M550 160 H655 V180" class="st-muted" stroke-width="1.5" fill="none"/>
+
+          <rect x="375" y="180" width="140" height="56" rx="6" class="s-panel st-blue" stroke-width="2"/>
+          <text x="445" y="202" text-anchor="middle" class="t-title s-ink">Monitored</text>
+          <text x="445" y="220" text-anchor="middle" class="t-small s-muted">see: unit or outlet level</text>
+
+          <rect x="585" y="180" width="130" height="56" rx="6" class="s-panel st-l1" stroke-width="2"/>
+          <text x="650" y="202" text-anchor="middle" class="t-title s-ink">Switched</text>
+          <text x="650" y="220" text-anchor="middle" class="t-small s-muted">see + control outlets</text>
+        </g>
+      </svg>
+      <figcaption>Both intelligent types can be ordered with metering for the whole unit or down to each individual outlet.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ========== 2. POWER CHAIN ========== -->
+  <section id="chain">
+    <h2>Where the intelligent PDU sits</h2>
+    <p class="prose">The PDU is the last step in the power chain before the IT equipment. That makes it the closest point of measurement to the actual load. The diagram shows two paths: power (solid) flowing down to the servers, and data (dashed) flowing out of the PDU to management systems.</p>
+
+    <figure class="figure">
+      <svg viewBox="0 0 900 430" role="img" aria-label="Architecture: utility, UPS and floor distribution feed two rack PDUs A and B inside a rack; PDUs send data over the management network to DCIM, SNMP manager, email and SMS; an out-of-band serial console path is a backup">
+        <!-- power chain column -->
+        <text x="20" y="28" class="t-title s-ink">Power path</text>
+        <g>
+          <rect x="20" y="45" width="140" height="44" rx="6" class="s-paper st-muted" stroke-width="1.5"/>
+          <text x="90" y="72" text-anchor="middle" class="t-body s-ink">Utility / generator</text>
+          <path d="M90 89 V115" class="st-l1 power"/>
+          <rect x="20" y="115" width="140" height="44" rx="6" class="s-paper st-muted" stroke-width="1.5"/>
+          <text x="90" y="142" text-anchor="middle" class="t-body s-ink">UPS</text>
+          <path d="M90 159 V185" class="st-l1 power"/>
+          <rect x="20" y="185" width="140" height="54" rx="6" class="s-paper st-muted" stroke-width="1.5"/>
+          <text x="90" y="208" text-anchor="middle" class="t-body s-ink">Floor PDU /</text>
+          <text x="90" y="225" text-anchor="middle" class="t-body s-ink">remote power panel</text>
+          <path d="M160 200 H225 V120 H262" class="st-l1 power"/>
+          <path d="M160 225 H240 V300 H262" class="st-l1 power"/>
+          <text x="198" y="115" class="t-small s-muted">Feed A</text>
+          <text x="198" y="318" class="t-small s-muted">Feed B</text>
+        </g>
+
+        <!-- rack -->
+        <rect x="262" y="45" width="260" height="360" rx="8" class="s-paper st-ink" stroke-width="2"/>
+        <text x="392" y="68" text-anchor="middle" class="t-title s-ink">Rack / cabinet</text>
+        <!-- PDU A & B -->
+        <rect x="276" y="80" width="30" height="310" rx="4" class="s-l2"/>
+        <rect x="478" y="80" width="30" height="310" rx="4" class="s-l2"/>
+        <text x="291" y="100" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">A</text>
+        <text x="493" y="100" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">B</text>
+        <path d="M262 120 H276" class="st-l1 power"/>
+        <path d="M262 300 H276" class="st-l1 power"/>
+        <!-- servers -->
+        <g id="servers"></g>
+        <!-- env sensor -->
+        <circle cx="392" cy="385" r="9" class="s-earth"/>
+        <text x="408" y="389" class="t-small s-ink">temp / humidity</text>
+        <path d="M383 385 H306" class="st-earth data"/>
+
+        <!-- data side -->
+        <text x="600" y="28" class="t-title s-ink">Data path</text>
+        <path d="M508 150 H600" class="st-blue data"/>
+        <rect x="600" y="125" width="130" height="50" rx="6" class="s-softblue st-blue" stroke-width="1.5"/>
+        <text x="665" y="147" text-anchor="middle" class="t-body s-ink">Management</text>
+        <text x="665" y="164" text-anchor="middle" class="t-body s-ink">network (IP)</text>
+
+        <path d="M730 150 H760 V70 H770 M760 150 H770 M760 150 V230 H770" class="st-blue data"/>
+        <rect x="770" y="48" width="120" height="44" rx="6" class="s-panel st-blue" stroke-width="1.5"/>
+        <text x="830" y="75" text-anchor="middle" class="t-body s-ink">DCIM software</text>
+        <rect x="770" y="128" width="120" height="44" rx="6" class="s-panel st-blue" stroke-width="1.5"/>
+        <text x="830" y="155" text-anchor="middle" class="t-body s-ink">SNMP manager</text>
+        <rect x="770" y="208" width="120" height="44" rx="6" class="s-panel st-blue" stroke-width="1.5"/>
+        <text x="830" y="227" text-anchor="middle" class="t-body s-ink">Email / SMS</text>
+        <text x="830" y="243" text-anchor="middle" class="t-small s-muted">alert recipients</text>
+
+        <!-- out of band -->
+        <path d="M508 330 H600" class="st-muted data"/>
+        <rect x="600" y="305" width="130" height="50" rx="6" class="s-paper st-muted" stroke-width="1.5"/>
+        <text x="665" y="327" text-anchor="middle" class="t-body s-ink">Serial console</text>
+        <text x="665" y="344" text-anchor="middle" class="t-body s-ink">or KVM switch</text>
+        <path d="M730 330 H830 V252" class="st-muted data"/>
+        <text x="740" y="372" class="t-small s-muted">Out-of-band backup route</text>
+        <text x="740" y="387" class="t-small s-muted">if the main network fails</text>
+      </svg>
+      <figcaption>Dual A/B PDUs fed from separate paths is a common redundancy pattern; each server's two power supplies plug into one PDU each.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ========== 3. INSIDE ========== -->
+  <section id="inside">
+    <h2>Inside an intelligent PDU</h2>
+    <p class="prose">Conceptually the unit has two layers. The <strong>power layer</strong> is the same as a basic PDU: inlet, breakers and outlets. The <strong>intelligence layer</strong> adds current and voltage sensing, optional per-outlet relays, and a controller that turns those readings into network data. On many modern units the controller is a hot-swappable module, so it can be upgraded or replaced without cutting power to servers.</p>
+
+    <figure class="figure">
+      <svg viewBox="0 0 900 400" role="img" aria-label="Internal block diagram: input cord to breakers to metering sensors to optional relays to outlets; sensors feed a hot-swappable controller with Ethernet, serial, sensor and daisy-chain ports">
+        <!-- layer bands -->
+        <rect x="10" y="20" width="880" height="150" rx="8" class="s-softwarn"/>
+        <text x="24" y="44" class="t-title s-l1">Power layer</text>
+        <rect x="10" y="190" width="880" height="195" rx="8" class="s-softblue"/>
+        <text x="24" y="214" class="t-title s-blue">Intelligence layer</text>
+
+        <!-- power blocks -->
+        <g class="t-body">
+          <rect x="30" y="70" width="120" height="70" rx="6" class="s-panel st-ink" stroke-width="1.5"/>
+          <text x="90" y="100" text-anchor="middle" class="s-ink">Input inlet</text>
+          <text x="90" y="118" text-anchor="middle" class="t-small s-muted">1φ or 3φ feed</text>
+
+          <path d="M150 105 H200" class="st-l1 power"/>
+          <rect x="200" y="70" width="130" height="70" rx="6" class="s-panel st-ink" stroke-width="1.5"/>
+          <text x="265" y="100" text-anchor="middle" class="s-ink">Circuit breakers</text>
+          <text x="265" y="118" text-anchor="middle" class="t-small s-muted">per branch / phase</text>
+
+          <path d="M330 105 H380" class="st-l1 power"/>
+          <rect x="380" y="70" width="140" height="70" rx="6" class="s-panel st-ink" stroke-width="1.5"/>
+          <text x="450" y="100" text-anchor="middle" class="s-ink">Metering sensors</text>
+          <text x="450" y="118" text-anchor="middle" class="t-small s-muted">V, A, kW, kWh, PF</text>
+
+          <path d="M520 105 H570" class="st-l1 power"/>
+          <rect x="570" y="70" width="140" height="70" rx="6" class="s-panel st-l1" stroke-width="2" stroke-dasharray="5 4"/>
+          <text x="640" y="100" text-anchor="middle" class="s-ink">Outlet relays</text>
+          <text x="640" y="118" text-anchor="middle" class="t-small s-muted">switched models only</text>
+
+          <path d="M710 105 H750" class="st-l1 power"/>
+          <rect x="750" y="60" width="120" height="90" rx="6" class="s-panel st-ink" stroke-width="1.5"/>
+          <text x="810" y="84" text-anchor="middle" class="s-ink">Outlets</text>
+          <g>
+            <rect x="770" y="96" width="22" height="16" rx="3" class="s-l1"/><rect x="798" y="96" width="22" height="16" rx="3" class="s-blue"/><rect x="826" y="96" width="22" height="16" rx="3" class="s-l1"/>
+            <rect x="770" y="118" width="22" height="16" rx="3" class="s-blue"/><rect x="798" y="118" width="22" height="16" rx="3" class="s-l1"/><rect x="826" y="118" width="22" height="16" rx="3" class="s-blue"/>
+          </g>
+          <text x="810" y="146" text-anchor="middle" class="t-small s-muted">C13 / C19</text>
+        </g>
+
+        <!-- controller -->
+        <path d="M450 140 V250" class="st-blue data"/>
+        <path d="M640 250 V140" class="st-blue data"/>
+        <text x="456" y="178" class="t-small s-blue">readings</text>
+        <text x="646" y="178" class="t-small s-blue">on / off / reboot</text>
+
+        <rect x="360" y="250" width="380" height="110" rx="8" class="s-panel st-blue" stroke-width="2"/>
+        <text x="550" y="276" text-anchor="middle" class="t-title s-ink">Controller / network module</text>
+        <text x="550" y="294" text-anchor="middle" class="t-small s-muted">hot-swappable, firmware, web UI, thresholds &amp; alarms</text>
+        <g class="t-small">
+          <rect x="375" y="310" width="80" height="34" rx="4" class="s-blue"/><text x="415" y="331" text-anchor="middle" fill="#fff">Ethernet</text>
+          <rect x="463" y="310" width="80" height="34" rx="4" class="s-l3"/><text x="503" y="331" text-anchor="middle" fill="#fff">Serial</text>
+          <rect x="551" y="310" width="80" height="34" rx="4" class="s-earth"/><text x="591" y="331" text-anchor="middle" fill="#fff">Sensors</text>
+          <rect x="639" y="310" width="88" height="34" rx="4" class="s-l1"/><text x="683" y="331" text-anchor="middle" fill="#fff">Daisy-chain</text>
+        </g>
+
+        <!-- external -->
+        <g class="t-small s-muted">
+          <text x="30" y="260">Leaves the unit as:</text>
+          <text x="30" y="282">• live dashboard (web / CLI)</text>
+          <text x="30" y="302">• SNMP traps, email, SMS</text>
+          <text x="30" y="322">• data for DCIM trends</text>
+          <text x="30" y="342">• commands in (switched)</text>
+        </g>
+        <path d="M200 300 H360" class="st-blue data"/>
+      </svg>
+      <figcaption>Dashed outline = present only on switched PDUs. Colour-coded outlets alternate between circuits to make load balancing easier.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ========== 4. TYPES ========== -->
+  <section id="types">
+    <h2>Monitored vs switched</h2>
+    <div class="two">
+      <div class="card monitored">
+        <span class="tag blue">Visibility</span>
+        <h3>Monitored PDU</h3>
+        <p>Reports power use locally on the display and remotely over the network, while distributing power exactly like a basic unit. Metering can cover the whole unit or each outlet, the latter showing consumption right down to the individual device. Readings support trend analysis, and alarms fire when user-set limits are crossed.</p>
+        <p class="muted" style="margin:0">Best for: sites focused on tracking and improving energy efficiency (PUE).</p>
+      </div>
+      <div class="card switched">
+        <span class="tag brown">Visibility + control</span>
+        <h3>Switched PDU</h3>
+        <p>Everything a monitored PDU does, plus the ability to turn each outlet on, off, or power-cycle it remotely. It can also cap what an outlet is allowed to draw to help avoid accidental overloads.</p>
+        <p class="muted" style="margin:0">Best for: remote or unstaffed sites, and large facilities (or networks of facilities) where rebooting equipment quickly without a site visit matters.</p>
+      </div>
+    </div>
+
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Capability</th><th>Basic</th><th>Monitored</th><th>Switched</th></tr></thead>
+        <tbody>
+          <tr><td>Reliable power distribution</td><td><span class="yes">Yes</span></td><td><span class="yes">Yes</span></td><td><span class="yes">Yes</span></td></tr>
+          <tr><td>Local display of load</td><td><span class="no">Some models</span></td><td><span class="yes">Yes</span></td><td><span class="yes">Yes</span></td></tr>
+          <tr><td>Remote monitoring over network</td><td><span class="no">No</span></td><td><span class="yes">Yes</span></td><td><span class="yes">Yes</span></td></tr>
+          <tr><td>Unit-level or outlet-level metering</td><td><span class="no">No</span></td><td><span class="yes">Either</span></td><td><span class="yes">Either</span></td></tr>
+          <tr><td>Threshold alarms (SNMP, email, SMS)</td><td><span class="no">No</span></td><td><span class="yes">Yes</span></td><td><span class="yes">Yes</span></td></tr>
+          <tr><td>Remote outlet on / off / reboot</td><td><span class="no">No</span></td><td><span class="no">No</span></td><td><span class="yes">Yes</span></td></tr>
+          <tr><td>Scheduled power cycling of idle kit</td><td><span class="no">No</span></td><td><span class="no">No</span></td><td><span class="yes">Yes</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:2rem">Try it: remote outlet control</h3>
+    <p class="prose">Click an outlet to power-cycle it, as an operator would from the PDU's web interface. Outlets alternate between two circuits (brown and blue edges).</p>
+    <div class="demo">
+      <div class="strip" id="strip" aria-label="Simulated switched PDU">
+        <div class="lcd" id="lcd">0.00 kW</div>
+      </div>
+      <div>
+        <div class="btnrow">
+          <button class="btn" id="allOn">Turn all on</button>
+          <button class="btn" id="idleOff">Power off idle outlets (5–6)</button>
+        </div>
+        <div class="log"><strong>Event log</strong><ol id="log" reversed></ol></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 5. FEATURES ========== -->
+  <section id="features">
+    <h2>Common features to look for</h2>
+
+    <div class="feature">
+      <div>
+        <h3>IP aggregation</h3>
+        <p>Every networked PDU normally needs its own IP address and switch port, both of which cost money. Aggregation lets several PDUs share one connection by daisy-chaining them. How many can share varies by manufacturer, from as few as 2 to as many as 50, and some can auto-configure the units further down the chain to save setup time.</p>
+      </div>
+      <figure class="figure narrow">
+        <svg viewBox="0 0 440 220" role="img" aria-label="Without aggregation, four PDUs use four switch ports and four IPs; with aggregation, four daisy-chained PDUs share one port and one IP">
+          <text x="10" y="20" class="t-title s-ink">Without</text>
+          <rect x="10" y="32" width="190" height="26" rx="4" class="s-softblue st-blue"/>
+          <text x="105" y="50" text-anchor="middle" class="t-small s-ink">Switch: 4 ports, 4 IPs</text>
+          <g class="st-blue data">
+            <path d="M35 58 V110"/><path d="M80 58 V110"/><path d="M125 58 V110"/><path d="M170 58 V110"/>
+          </g>
+          <g class="s-l2">
+            <rect x="25" y="110" width="20" height="90" rx="3"/><rect x="70" y="110" width="20" height="90" rx="3"/>
+            <rect x="115" y="110" width="20" height="90" rx="3"/><rect x="160" y="110" width="20" height="90" rx="3"/>
+          </g>
+
+          <text x="240" y="20" class="t-title s-ink">With aggregation</text>
+          <rect x="240" y="32" width="190" height="26" rx="4" class="s-softblue st-blue"/>
+          <text x="335" y="50" text-anchor="middle" class="t-small s-ink">Switch: 1 port, 1 IP</text>
+          <path d="M265 58 V110" class="st-blue data"/>
+          <g class="s-l2">
+            <rect x="255" y="110" width="20" height="90" rx="3"/><rect x="300" y="110" width="20" height="90" rx="3"/>
+            <rect x="345" y="110" width="20" height="90" rx="3"/><rect x="390" y="110" width="20" height="90" rx="3"/>
+          </g>
+          <path d="M275 150 H300 M320 150 H345 M365 150 H390" class="st-l1" stroke-width="3" fill="none"/>
+          <text x="335" y="140" text-anchor="middle" class="t-small s-l1">daisy-chain</text>
+        </svg>
+      </figure>
+    </div>
+
+    <div class="feature">
+      <div>
+        <h3>Environmental monitoring</h3>
+        <p>Heat and moisture harm IT equipment. Sensors plugged straight into the PDU track conditions inside the rack, so there's no need to buy and run a separate monitoring system.</p>
+      </div>
+      <figure class="figure narrow">
+        <svg viewBox="0 0 440 180" role="img" aria-label="Temperature and humidity sensors at the top, middle and bottom of a rack connect to the PDU sensor port">
+          <rect x="120" y="10" width="200" height="160" rx="6" class="s-paper st-ink" stroke-width="1.5"/>
+          <rect x="130" y="20" width="18" height="140" rx="3" class="s-l2"/>
+          <g class="s-l3"><rect x="160" y="28" width="130" height="14" rx="2"/><rect x="160" y="50" width="130" height="14" rx="2"/><rect x="160" y="72" width="130" height="14" rx="2"/><rect x="160" y="94" width="130" height="14" rx="2"/><rect x="160" y="116" width="130" height="14" rx="2"/><rect x="160" y="138" width="130" height="14" rx="2"/></g>
+          <g class="s-earth"><circle cx="305" cy="35" r="7"/><circle cx="305" cy="90" r="7"/><circle cx="305" cy="145" r="7"/></g>
+          <path d="M298 35 H148 M298 90 H148 M298 145 H148" class="st-earth data"/>
+          <g class="t-small s-ink">
+            <text x="330" y="39">Top: 31 °C</text><text x="330" y="94">Mid: 26 °C</text><text x="330" y="149">Base: 22 °C</text>
+          </g>
+          <text x="10" y="90" class="t-small s-muted">Hot air rises;</text>
+          <text x="10" y="106" class="t-small s-muted">top sensors see</text>
+          <text x="10" y="122" class="t-small s-muted">problems first</text>
+        </svg>
+      </figure>
+    </div>
+
+    <div class="feature">
+      <div>
+        <h3>Remote connectivity &amp; out-of-band access</h3>
+        <p>Operators reach the PDU over its network interface or a serial connection to watch consumption and set up alerts. For resilience, some PDUs integrate with out-of-band devices such as serial consoles or KVM switches, giving a second way in if the primary network goes down.</p>
+      </div>
+      <figure class="figure narrow">
+        <svg viewBox="0 0 440 180" role="img" aria-label="Operator reaches PDU via primary network; when that path fails, the serial console path still works">
+          <rect x="10" y="70" width="90" height="40" rx="6" class="s-panel st-ink" stroke-width="1.5"/>
+          <text x="55" y="95" text-anchor="middle" class="t-body s-ink">Operator</text>
+          <rect x="340" y="60" width="30" height="60" rx="4" class="s-l2"/>
+          <text x="355" y="140" text-anchor="middle" class="t-small s-ink">PDU</text>
+          <path d="M100 80 C170 20, 270 20, 340 75" class="st-blue" stroke-width="2.5" fill="none"/>
+          <text x="220" y="30" text-anchor="middle" class="t-small s-blue">Primary IP network</text>
+          <g class="st-crit" stroke-width="3"><path d="M212 36 L228 52 M228 36 L212 52"/></g>
+          <path d="M100 100 C170 160, 270 160, 340 105" class="st-earth" stroke-width="2.5" fill="none"/>
+          <rect x="180" y="132" width="90" height="26" rx="4" class="s-softgreen st-earth"/>
+          <text x="225" y="150" text-anchor="middle" class="t-small s-ink">Serial / KVM</text>
+          <text x="225" y="175" text-anchor="middle" class="t-small s-muted">still reachable</text>
+        </svg>
+      </figure>
+    </div>
+
+    <div class="feature">
+      <div>
+        <h3>DCIM integration</h3>
+        <p>Data centre infrastructure management (DCIM) software pulls PDU readings from across the whole facility into one view, with trend reports that help teams improve both efficiency and uptime.</p>
+      </div>
+      <figure class="figure narrow">
+        <svg viewBox="0 0 440 170" role="img" aria-label="Many rack PDUs feed a single DCIM dashboard showing facility-wide trends">
+          <g class="s-l2">
+            <rect x="15" y="15" width="16" height="50" rx="2"/><rect x="40" y="15" width="16" height="50" rx="2"/><rect x="65" y="15" width="16" height="50" rx="2"/>
+            <rect x="15" y="100" width="16" height="50" rx="2"/><rect x="40" y="100" width="16" height="50" rx="2"/><rect x="65" y="100" width="16" height="50" rx="2"/>
+          </g>
+          <path d="M90 40 H170 V85 M90 125 H170 V85 H220" class="st-blue data"/>
+          <rect x="220" y="25" width="205" height="125" rx="8" class="s-panel st-blue" stroke-width="2"/>
+          <text x="235" y="48" class="t-title s-ink">DCIM dashboard</text>
+          <polyline points="235,125 265,110 295,115 325,95 355,100 385,80 410,85" class="st-blue" stroke-width="2.5" fill="none"/>
+          <line x1="235" y1="135" x2="410" y2="135" class="st-rule"/>
+          <text x="235" y="66" class="t-small s-muted">Facility kW, 30 days</text>
+        </svg>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ========== 6. ALERTS ========== -->
+  <section id="alerts">
+    <h2>Alerts and thresholds</h2>
+    <p class="prose">An intelligent PDU warns you before an overload trips the breaker and drops everything on that circuit. You set a warning and a critical threshold; crossing either sends a notification in a standard format such as an SNMP trap, email or SMS. Drag the slider to change the load on a 32 A circuit.</p>
+
+    <div class="card">
+      <div class="slider-row">
+        <label for="load"><strong>Circuit load</strong></label>
+        <input type="range" id="load" min="0" max="34" step="0.5" value="18">
+        <span id="amps" style="min-width:4.5rem;font-weight:600">18.0 A</span>
+        <span id="state" class="status ok">Normal</span>
+      </div>
+      <svg viewBox="0 0 720 110" role="img" aria-label="Load meter with warning threshold at 80 percent and critical threshold at 90 percent of a 32 amp breaker">
+        <rect x="20" y="30" width="680" height="30" rx="4" class="s-paper st-rule"/>
+        <rect x="20" y="30" width="0" height="30" rx="4" class="s-earth" id="bar"/>
+        <!-- scale: 680px / 34A = 20px per A -->
+        <line x1="532" y1="18" x2="532" y2="72" class="st-warn" stroke-width="2.5"/>
+        <line x1="596" y1="18" x2="596" y2="72" class="st-crit" stroke-width="2.5"/>
+        <line x1="660" y1="18" x2="660" y2="72" class="st-ink" stroke-width="2.5" stroke-dasharray="4 3"/>
+        <text x="532" y="90" text-anchor="middle" class="t-small s-ink">Warning 25.6 A</text>
+        <text x="596" y="105" text-anchor="middle" class="t-small s-ink">Critical 28.8 A</text>
+        <text x="660" y="90" text-anchor="middle" class="t-small s-ink">Breaker 32 A</text>
+        <text x="20" y="90" class="t-small s-muted">0 A</text>
+      </svg>
+      <p id="msg" class="muted" style="margin:.5rem 0 0">No alerts. Load is within normal range.</p>
+    </div>
+    <p class="muted" style="font-size:.92rem;margin-top:.75rem">Threshold values here are illustrative (80% / 90% of rating), not taken from the article; operators choose their own.</p>
+  </section>
+
+  <!-- ========== 7. SELECTING ========== -->
+  <section id="selecting">
+    <h2>What to weigh when choosing one</h2>
+    <p class="prose">The article groups the buying criteria under three headings. Good metering lets you right-size the power infrastructure instead of oversizing it, which saves capital.</p>
+
+    <div class="pillars">
+      <div class="card">
+        <h3><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect width="18" height="18" rx="3" class="s-l1"/></svg>Reliability</h3>
+        <p>Smart features must never compromise the core job of delivering power.</p>
+        <ul>
+          <li><strong>Testing:</strong> choose makers that test every unit shipped and stress-test long-term reliability during development.</li>
+          <li><strong>High temperature rating:</strong> warmer data halls save cooling energy; rated maximums range from about 45 °C to 65 °C.</li>
+          <li><strong>Alternating outlets:</strong> colour-coded outlets that alternate circuits or phases make balancing load and tidying cables simpler.</li>
+          <li><strong>Locking outlets:</strong> prevent cords being knocked loose. IEC C13 and C19 are the global norms, rated up to 250 V.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect width="18" height="18" rx="3" class="s-blue"/></svg>Functionality</h3>
+        <p>Real-time metering, control and reporting.</p>
+        <ul>
+          <li>Measure each device's use to justify replacing old, inefficient hardware.</li>
+          <li>Schedule unused equipment to power down remotely.</li>
+          <li>Bill departments or tenants on actual consumption (charge-back).</li>
+          <li>Get warned before an overload trips a breaker.</li>
+          <li>Manage fleets from central software.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect width="18" height="18" rx="3" class="s-earth"/></svg>Adaptability</h3>
+        <p>Racks keep changing, usually toward more density.</p>
+        <ul>
+          <li>Prefer future-proof designs over oversizing, which wastes capital and energy.</li>
+          <li>A hot-swappable monitoring module can be upgraded to new technology without replacing the strip or cutting power to servers.</li>
+        </ul>
+      </div>
+    </div>
+
+    <figure class="figure">
+      <svg viewBox="0 0 720 200" role="img" aria-label="Alternating outlets: sequential outlets connect to circuit 1 and circuit 2 in turn so plugging servers top to bottom spreads load evenly">
+        <text x="20" y="26" class="t-title s-ink">Why alternating outlets help balance load</text>
+        <text x="20" y="60" class="t-body s-ink">Grouped</text>
+        <g>
+          <rect x="120" y="44" width="36" height="24" rx="3" class="s-l1"/><rect x="162" y="44" width="36" height="24" rx="3" class="s-l1"/><rect x="204" y="44" width="36" height="24" rx="3" class="s-l1"/>
+          <rect x="246" y="44" width="36" height="24" rx="3" class="s-blue"/><rect x="288" y="44" width="36" height="24" rx="3" class="s-blue"/><rect x="330" y="44" width="36" height="24" rx="3" class="s-blue"/>
+        </g>
+        <text x="385" y="61" class="t-small s-muted">Fill 3 servers from the top → all on circuit 1 (overload risk)</text>
+
+        <text x="20" y="130" class="t-body s-ink">Alternating</text>
+        <g>
+          <rect x="120" y="114" width="36" height="24" rx="3" class="s-l1"/><rect x="162" y="114" width="36" height="24" rx="3" class="s-blue"/><rect x="204" y="114" width="36" height="24" rx="3" class="s-l1"/>
+          <rect x="246" y="114" width="36" height="24" rx="3" class="s-blue"/><rect x="288" y="114" width="36" height="24" rx="3" class="s-l1"/><rect x="330" y="114" width="36" height="24" rx="3" class="s-blue"/>
+        </g>
+        <text x="385" y="131" class="t-small s-muted">Same 3 servers → split 2 : 1 across circuits automatically</text>
+
+        <g class="t-small s-ink">
+          <rect x="120" y="165" width="14" height="14" rx="2" class="s-l1"/><text x="140" y="177">Circuit / phase 1</text>
+          <rect x="260" y="165" width="14" height="14" rx="2" class="s-blue"/><text x="280" y="177">Circuit / phase 2</text>
+        </g>
+      </svg>
+    </figure>
+  </section>
+
+  <!-- ========== 8. SERVICES ========== -->
+  <section id="services">
+    <h2>PDU services across the lifecycle</h2>
+    <p class="prose">Manufacturers and their partners often offer services that take deployment and upkeep off the IT team's plate. The article describes these stages:</p>
+
+    <figure class="figure">
+      <svg viewBox="0 0 900 170" role="img" aria-label="Service lifecycle: assess power chain, pre-install in racks, on-site install and start-up, protection plan up to five years with 24x7 emergency response, removal and disposal of old units">
+        <g class="t-body">
+          <!-- connector -->
+          <path d="M60 60 H840" class="st-rule" stroke-width="4"/>
+          <g>
+            <circle cx="90" cy="60" r="22" class="s-blue"/><text x="90" y="66" text-anchor="middle" fill="#fff" font-weight="700">1</text>
+            <text x="90" y="108" text-anchor="middle" class="s-ink">Assess</text>
+            <text x="90" y="126" text-anchor="middle" class="t-small s-muted">review whole power</text>
+            <text x="90" y="141" text-anchor="middle" class="t-small s-muted">chain before ordering</text>
+          </g>
+          <g>
+            <circle cx="270" cy="60" r="22" class="s-blue"/><text x="270" y="66" text-anchor="middle" fill="#fff" font-weight="700">2</text>
+            <text x="270" y="108" text-anchor="middle" class="s-ink">Pre-install</text>
+            <text x="270" y="126" text-anchor="middle" class="t-small s-muted">PDUs fitted in racks</text>
+            <text x="270" y="141" text-anchor="middle" class="t-small s-muted">at the factory</text>
+          </g>
+          <g>
+            <circle cx="450" cy="60" r="22" class="s-blue"/><text x="450" y="66" text-anchor="middle" fill="#fff" font-weight="700">3</text>
+            <text x="450" y="108" text-anchor="middle" class="s-ink">Install &amp; start-up</text>
+            <text x="450" y="126" text-anchor="middle" class="t-small s-muted">done by OEM</text>
+            <text x="450" y="141" text-anchor="middle" class="t-small s-muted">technicians</text>
+          </g>
+          <g>
+            <circle cx="630" cy="60" r="22" class="s-blue"/><text x="630" y="66" text-anchor="middle" fill="#fff" font-weight="700">4</text>
+            <text x="630" y="108" text-anchor="middle" class="s-ink">Protect</text>
+            <text x="630" y="126" text-anchor="middle" class="t-small s-muted">plans up to 5 years,</text>
+            <text x="630" y="141" text-anchor="middle" class="t-small s-muted">24x7 on-site response</text>
+          </g>
+          <g>
+            <circle cx="810" cy="60" r="22" class="s-l3"/><text x="810" y="66" text-anchor="middle" fill="#fff" font-weight="700">5</text>
+            <text x="810" y="108" text-anchor="middle" class="s-ink">Retire</text>
+            <text x="810" y="126" text-anchor="middle" class="t-small s-muted">remove and dispose</text>
+            <text x="810" y="141" text-anchor="middle" class="t-small s-muted">of old units</text>
+          </g>
+        </g>
+      </svg>
+      <figcaption>Service histories and reports are also available on demand under some contracts.</figcaption>
+    </figure>
+
+    <div class="card" style="border-left:5px solid var(--neutral)">
+      <h3>In short</h3>
+      <p style="margin:0">An intelligent PDU gives the clearest view of IT power use inside the rack, plus the monitoring and control to act on it. Pick one that's reliable first, has the features your operations need, and can adapt as densities grow, and use the manufacturer's services to cut deployment time and cost.</p>
+    </div>
+  </section>
+
+  <p class="source">Based on "What is an Intelligent PDU?" by Vertiv: <a href="https://www.vertiv.com/en-cn/about/news-and-events/articles/educational-articles/what-is-an-intelligent-pdu/">vertiv.com</a>. Text is summarised and diagrams are original illustrations of the concepts described.</p>
+</div>
+
+<button class="btn theme-toggle" id="themeBtn" aria-label="Toggle light or dark theme">Theme</button>
+
+<script>
+(function(){
+  // Hero outlets
+  var g=document.getElementById('hero-outlets'),ns='http://www.w3.org/2000/svg';
+  for(var i=0;i<12;i++){
+    var y=95+i*25;
+    var r=document.createElementNS(ns,'rect');
+    r.setAttribute('x',68);r.setAttribute('y',y);r.setAttribute('width',34);r.setAttribute('height',18);r.setAttribute('rx',3);
+    r.setAttribute('class',i%2?'s-blue':'s-l1');g.appendChild(r);
+    var c=document.createElementNS(ns,'circle');
+    c.setAttribute('cx',60);c.setAttribute('cy',y+9);c.setAttribute('r',3);c.setAttribute('class','s-earth');g.appendChild(c);
+  }
+  // Servers in rack diagram
+  var s=document.getElementById('servers');
+  for(var j=0;j<9;j++){
+    var yy=110+j*28;
+    var b=document.createElementNS(ns,'rect');
+    b.setAttribute('x',322);b.setAttribute('y',yy);b.setAttribute('width',140);b.setAttribute('height',20);b.setAttribute('rx',3);b.setAttribute('class','s-l3');s.appendChild(b);
+    var la=document.createElementNS(ns,'path');la.setAttribute('d','M306 '+(yy+6)+' H322');la.setAttribute('class','st-l1');la.setAttribute('stroke-width','2');s.appendChild(la);
+    var lb=document.createElementNS(ns,'path');lb.setAttribute('d','M462 '+(yy+14)+' H478');lb.setAttribute('class','st-l1');lb.setAttribute('stroke-width','2');s.appendChild(lb);
+  }
+  var tl=document.createElementNS(ns,'text');tl.setAttribute('x',392);tl.setAttribute('y',124);tl.setAttribute('text-anchor','middle');tl.setAttribute('class','t-small');tl.setAttribute('fill','#fff');tl.textContent='Server (dual PSU)';s.appendChild(tl);
+
+  // Switched PDU demo
+  var loads=[0.42,0.38,0.55,0.61,0.12,0.09];
+  var names=['Web server','App server','Database','Storage','Test box','Spare switch'];
+  var state=[1,1,1,1,1,1];
+  var strip=document.getElementById('strip'),lcd=document.getElementById('lcd'),log=document.getElementById('log');
+  var btns=[];
+  function time(){var d=new Date();return d.toTimeString().slice(0,8);}
+  function addLog(t){var li=document.createElement('li');li.textContent=time()+'  '+t;log.insertBefore(li,log.firstChild);while(log.children.length>6)log.removeChild(log.lastChild);}
+  function render(){
+    var kw=0;
+    btns.forEach(function(b,i){
+      b.classList.toggle('off',state[i]===0);b.classList.toggle('booting',state[i]===2);
+      var st=state[i]===1?'on':state[i]===2?'rebooting':'off';
+      b.setAttribute('aria-label','Outlet '+(i+1)+', '+names[i]+', '+st+'. Activate to power-cycle.');
+      if(state[i]===1)kw+=loads[i];
+    });
+    lcd.textContent=kw.toFixed(2)+' kW';
+  }
+  names.forEach(function(n,i){
+    var b=document.createElement('button');
+    b.className='outlet-btn '+(i%2?'phaseB':'phaseA');
+    b.innerHTML='<span class="led"></span>'+(i+1)+' '+n.split(' ')[0];
+    b.addEventListener('click',function(){
+      if(state[i]===2)return;
+      if(state[i]===0){state[i]=1;addLog('Outlet '+(i+1)+' ('+n+') switched ON');render();return;}
+      state[i]=2;addLog('Outlet '+(i+1)+' ('+n+') power-cycle started');render();
+      setTimeout(function(){state[i]=1;addLog('Outlet '+(i+1)+' back on, drawing '+(loads[i]*1000).toFixed(0)+' W');render();},1600);
+    });
+    btns.push(b);strip.appendChild(b);
+  });
+  document.getElementById('allOn').addEventListener('click',function(){state=state.map(function(){return 1});addLog('All outlets switched ON');render();});
+  document.getElementById('idleOff').addEventListener('click',function(){state[4]=0;state[5]=0;addLog('Outlets 5–6 powered OFF by schedule, saving '+((loads[4]+loads[5])*1000).toFixed(0)+' W');render();});
+  addLog('PDU online, 6 outlets energised');render();
+
+  // Threshold demo
+  var load=document.getElementById('load'),amps=document.getElementById('amps'),stateEl=document.getElementById('state'),bar=document.getElementById('bar'),msg=document.getElementById('msg');
+  function upd(){
+    var a=parseFloat(load.value);amps.textContent=a.toFixed(1)+' A';
+    bar.setAttribute('width',Math.min(680,a*20));
+    var cls='ok',label='Normal',m='No alerts. Load is within normal range.',fill='s-earth';
+    if(a>=32){cls='crit';label='Breaker tripped';fill='s-crit';m='Breaker opened: every device on this circuit has lost power. This is what the earlier alerts were meant to prevent.';}
+    else if(a>=28.8){cls='crit';label='Critical';fill='s-crit';m='Critical alert sent (SNMP trap + email + SMS). Move or shed load now.';}
+    else if(a>=25.6){cls='warn';label='Warning';fill='s-warn';m='Warning alert sent. Plan to rebalance before adding equipment.';}
+    stateEl.className='status '+cls;stateEl.textContent=label;bar.setAttribute('class',fill);msg.textContent=m;
+  }
+  load.addEventListener('input',upd);upd();
+
+  // Theme toggle
+  var root=document.documentElement;
+  try{var saved=localStorage.getItem('pdu-theme');if(saved)root.setAttribute('data-theme',saved);}catch(e){}
+  document.getElementById('themeBtn').addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    var next=cur==='dark'?'light':'dark';root.setAttribute('data-theme',next);
+    try{localStorage.setItem('pdu-theme',next);}catch(e){}
+  });
+})();
+</script>
+</body>
+</html>

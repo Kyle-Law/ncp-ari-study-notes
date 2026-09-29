@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NFPA Codes & Standards List, Explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Literata:opsz,wght@7..72,400;7..72,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F4F6; --ink:#14213D; --slate:#5B6678; --rule:#CDD3DC;
+  --blue:#1F5FAD; --red:#C62828; --yellow:#F2B705; --white:#FFFFFF; --green:#2E7D5B;
+  --display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --body:"Literata",Georgia,"Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.65}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.prose{max-width:68ch}
+h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0 0 .5em}
+h1{font-size:clamp(2.2rem,5.5vw,4rem);font-weight:850;font-stretch:80%;letter-spacing:-.01em}
+h2{font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;font-stretch:85%}
+h3{font-size:1.15rem;font-weight:700}
+section{padding:64px 0;border-top:1px solid var(--rule)}
+.lede{font-size:1.2rem;color:var(--slate)}
+small,.note{font-size:.88rem;color:var(--slate)}
+
+/* hero */
+header{padding:56px 0 32px;background:var(--ink);color:var(--white)}
+header .lede{color:#C9D2E3}
+header a{color:#9EC3F5}
+.ruler-box{margin-top:36px;overflow-x:auto}
+.ruler{min-width:820px;display:block}
+.ruler text{font-family:var(--display)}
+.chip{cursor:pointer}
+.chip:hover rect,.chip:focus rect{stroke:var(--yellow);stroke-width:3}
+#rulerInfo{min-height:3.4em;margin-top:10px;color:#DDE4F0;font-size:1rem}
+#rulerInfo b{font-family:var(--display);color:var(--yellow);font-size:1.15rem}
+
+/* toc */
+nav.toc{position:sticky;top:0;z-index:5;background:var(--white);border-bottom:1px solid var(--rule)}
+nav.toc ul{list-style:none;margin:0 auto;padding:10px 24px;display:flex;gap:18px;overflow-x:auto;max-width:1080px;font-family:var(--display);font-size:.92rem;font-weight:600;white-space:nowrap}
+nav.toc a{text-decoration:none;color:var(--ink)}
+nav.toc a:hover{color:var(--blue)}
+
+/* url diagram */
+.url{font-family:var(--display);font-size:clamp(.8rem,1.8vw,1.05rem);background:var(--white);border:1px solid var(--rule);padding:18px;overflow-x:auto;white-space:nowrap;border-radius:4px}
+.seg{padding:3px 5px;border-radius:3px}
+.s-host{background:#E3E8F0}.s-path{background:#DCE8F7}.s-page{background:#FBEAC0}.s-sort{background:#F7D9D9}.s-dir{background:#D6EDE2}
+.legend-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:18px}
+.legend-grid div{padding:12px 14px;border-left:5px solid;background:var(--white)}
+
+/* anatomy */
+.anatomy{background:var(--white);border:1px solid var(--rule);padding:20px;overflow-x:auto;border-radius:4px}
+.anatomy svg{min-width:640px;display:block}
+
+/* doc types */
+.types{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0;border:1px solid var(--rule);background:var(--white)}
+.types div{padding:18px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.types h3 .v{display:inline-block;font-size:.8rem;padding:1px 7px;border-radius:10px;margin-left:6px;vertical-align:2px;color:var(--white)}
+
+/* chart */
+.chart-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:32px;align-items:start}
+@media (max-width:760px){.chart-row{grid-template-columns:1fr}}
+.bar{display:grid;grid-template-columns:190px 1fr 36px;align-items:center;gap:10px;margin:8px 0;font-family:var(--display);font-size:.92rem;cursor:pointer;background:none;border:0;width:100%;text-align:left;padding:2px 0;color:var(--ink)}
+.bar .track{height:22px;background:#E3E8F0;border-radius:2px;overflow:hidden}
+.bar .fill{height:100%;transition:width .6s ease}
+.bar[aria-pressed="true"] .lbl{text-decoration:underline;text-decoration-thickness:2px}
+@media (max-width:520px){.bar{grid-template-columns:120px 1fr 30px;font-size:.82rem}}
+
+/* flow */
+.flow{background:var(--white);border:1px solid var(--rule);padding:12px;overflow-x:auto;border-radius:4px}
+.flow svg{min-width:760px;display:block}
+.flow text{font-family:var(--display)}
+
+/* process */
+ol.process{list-style:none;padding:0;margin:24px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));counter-reset:s;gap:0}
+ol.process li{counter-increment:s;padding:16px 14px 18px;background:var(--white);border:1px solid var(--rule);margin:-1px 0 0 -1px;position:relative}
+ol.process li::before{content:counter(s);font-family:var(--display);font-weight:900;font-size:2rem;color:var(--blue);display:block;line-height:1}
+ol.process li b{font-family:var(--display);display:block;margin:6px 0 4px}
+ol.process li span{font-size:.9rem;color:var(--slate)}
+
+/* 704 */
+.diamond-row{display:grid;grid-template-columns:280px 1fr;gap:36px;align-items:center}
+@media (max-width:700px){.diamond-row{grid-template-columns:1fr}}
+.diamond text{font-family:var(--display);font-weight:900;pointer-events:none}
+.quad{cursor:pointer}
+.quad:hover,.quad:focus{filter:brightness(1.08);outline:none}
+.quad.active{stroke:var(--ink);stroke-width:5}
+#dInfo{background:var(--white);border:1px solid var(--rule);padding:18px 20px;border-radius:4px}
+#dInfo table{border-collapse:collapse;width:100%;font-size:.93rem}
+#dInfo td{padding:4px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
+#dInfo td:first-child{font-family:var(--display);font-weight:800;width:2.2em;text-align:center}
+
+/* explorer */
+.controls{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+.controls input,.controls select,.controls button{font:inherit;font-family:var(--display);font-size:.95rem;padding:8px 12px;border:1px solid var(--rule);background:var(--white);color:var(--ink);border-radius:3px}
+.controls input{flex:1 1 240px}
+.tbl-wrap{overflow-x:auto;background:var(--white);border:1px solid var(--rule)}
+table.codes{border-collapse:collapse;width:100%;min-width:560px}
+table.codes th{font-family:var(--display);text-align:left;font-size:.85rem;color:var(--slate);padding:10px 14px;border-bottom:2px solid var(--ink)}
+table.codes td{padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.codes td.num{font-family:var(--display);font-weight:800;white-space:nowrap}
+.tag{display:inline-block;font-family:var(--display);font-size:.78rem;padding:2px 8px;border-radius:10px;color:var(--white);white-space:nowrap}
+.pager{display:flex;align-items:center;gap:10px;margin-top:14px;font-family:var(--display);font-size:.95rem}
+.pager button{font:inherit;padding:6px 12px;border:1px solid var(--rule);background:var(--white);color:var(--ink);cursor:pointer;border-radius:3px}
+.pager button:disabled{opacity:.4;cursor:default}
+.empty{padding:24px;color:var(--slate)}
+
+footer{background:var(--ink);color:#C9D2E3;padding:40px 0;font-size:.92rem}
+footer a{color:#9EC3F5}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>NFPA's list of 300+ codes and standards, explained</h1>
+    <p class="lede prose">The page you linked is the National Fire Protection Association's master catalog: every code, standard, recommended practice and guide it publishes, shown <strong>page 1</strong>, <strong>sorted by code number</strong>, <strong>lowest first</strong>. Below is what that list is, how to read it, and how the documents fit together.</p>
+    <div class="ruler-box" aria-label="Number line of notable NFPA document numbers">
+      <svg class="ruler" id="ruler" viewBox="0 0 1000 170" role="img" aria-labelledby="rulerTitle"><title id="rulerTitle">Notable NFPA codes placed along a number line from 1 to 5000</title></svg>
+    </div>
+    <p id="rulerInfo">The catalog runs from NFPA 1 to NFPA 5000. Select any marker to see what it covers. Page 1 of the ascending sort starts at the left edge of this line.</p>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <ul>
+    <li><a href="#url">The link</a></li>
+    <li><a href="#anatomy">Reading a code name</a></li>
+    <li><a href="#types">Document types</a></li>
+    <li><a href="#map">Subject map</a></li>
+    <li><a href="#together">How they fit</a></li>
+    <li><a href="#process">Revision cycle</a></li>
+    <li><a href="#diamond">NFPA 704</a></li>
+    <li><a href="#explorer">Explorer</a></li>
+  </ul>
+</nav>
+
+<main>
+<section id="url">
+  <div class="wrap">
+    <h2>What the link itself says</h2>
+    <p class="prose">The URL is a filtered view of a searchable catalog. The part after the question mark only changes how the same list is displayed.</p>
+    <div class="url">
+      <span class="seg s-host">https://www.nfpa.org</span><span class="seg s-path">/for-professionals/codes-and-standards/list-of-codes-and-standards</span>?<span class="seg s-page">page=1</span>&amp;<span class="seg s-sort">sort=code</span>&amp;<span class="seg s-dir">dir=asc</span>
+    </div>
+    <div class="legend-grid">
+      <div style="border-color:#8A97AD"><h3>Site</h3>NFPA's official website, the publisher of the documents.</div>
+      <div style="border-color:var(--blue)"><h3>Catalog path</h3>The "List of Codes and Standards" page, where each document has its own entry to read, review or buy.</div>
+      <div style="border-color:var(--yellow)"><h3>page=1</h3>The first screen of results. Later pages continue the same ordering.</div>
+      <div style="border-color:var(--red)"><h3>sort=code</h3>Ordered by document number (1, 2, 4, 10, 11…) rather than by title or date.</div>
+      <div style="border-color:var(--green)"><h3>dir=asc</h3>Ascending, so the lowest numbers come first. <code>dir=desc</code> would start at the high end, near NFPA 5000.</div>
+    </div>
+    <p class="note prose" style="margin-top:18px">So page 1 of this view opens with the foundational low numbers: NFPA 1 (Fire Code), hydrogen, system testing, extinguishers, foam, CO₂, halon and the NFPA 13 sprinkler family. The <a href="#explorer">Explorer</a> below recreates that sort.</p>
+  </div>
+</section>
+
+<section id="anatomy">
+  <div class="wrap">
+    <h2>Reading a code designation</h2>
+    <p class="prose">Every entry in the list is identified the same way. Once you can read one, you can read all 300+.</p>
+    <div class="anatomy">
+      <svg viewBox="0 0 760 230" role="img" aria-label="NFPA 13R, 2025 edition, broken into its parts">
+        <text x="70" y="95" font-family="Archivo,Arial" font-weight="900" font-size="72" fill="#14213D">NFPA</text>
+        <text x="300" y="95" font-family="Archivo,Arial" font-weight="900" font-size="72" fill="#1F5FAD">13</text>
+        <text x="385" y="95" font-family="Archivo,Arial" font-weight="900" font-size="72" fill="#C62828">R</text>
+        <text x="470" y="95" font-family="Archivo,Arial" font-weight="700" font-size="44" fill="#2E7D5B">(2025)</text>
+        <g stroke="#5B6678" stroke-width="1.5" fill="none">
+          <path d="M140 110 V150"/><path d="M335 110 V150"/><path d="M408 110 V150"/><path d="M540 110 V150"/>
+        </g>
+        <g font-family="Archivo,Arial" font-size="15" fill="#14213D">
+          <text x="140" y="172" text-anchor="middle" font-weight="700">Publisher</text>
+          <text x="140" y="192" text-anchor="middle" fill="#5B6678">National Fire Protection</text>
+          <text x="140" y="210" text-anchor="middle" fill="#5B6678">Association</text>
+          <text x="335" y="172" text-anchor="middle" font-weight="700">Document number</text>
+          <text x="335" y="192" text-anchor="middle" fill="#5B6678">13 = sprinkler</text>
+          <text x="335" y="210" text-anchor="middle" fill="#5B6678">systems</text>
+          <text x="440" y="172" text-anchor="middle" font-weight="700">Suffix letter</text>
+          <text x="440" y="192" text-anchor="middle" fill="#5B6678">a related, narrower</text>
+          <text x="440" y="210" text-anchor="middle" fill="#5B6678">document (R = residential)</text>
+          <text x="590" y="172" text-anchor="middle" font-weight="700">Edition year</text>
+          <text x="590" y="192" text-anchor="middle" fill="#5B6678">which revision; laws adopt</text>
+          <text x="590" y="210" text-anchor="middle" fill="#5B6678">a specific edition</text>
+        </g>
+      </svg>
+    </div>
+    <p class="note prose" style="margin-top:14px">Suffixes group families together: 13, 13D and 13R are all sprinklers; 30, 30A and 30B are all flammable liquids; 70, 70B and 70E are all electrical. The edition year matters because a jurisdiction may legally enforce an older edition than the newest one in the catalog.</p>
+  </div>
+</section>
+
+<section id="types">
+  <div class="wrap">
+    <h2>Four kinds of documents in one list</h2>
+    <p class="prose">The list mixes documents with different levels of force. The word in the title tells you which kind you are looking at.</p>
+    <div class="types">
+      <div><h3>Code <span class="v" style="background:var(--red)">shall</span></h3>Broad, mandatory requirements written so a government can adopt them into law. Example: NFPA 1 Fire Code, NFPA 70 National Electrical Code.</div>
+      <div><h3>Standard <span class="v" style="background:var(--blue)">shall</span></h3>Mandatory requirements on a narrower subject, typically referenced by a code. Example: NFPA 13 on installing sprinklers.</div>
+      <div><h3>Recommended practice <span class="v" style="background:var(--green)">should</span></h3>Advice written in non-mandatory "should" language. Example: NFPA 70B was long a recommended practice before becoming a standard.</div>
+      <div><h3>Guide <span class="v" style="background:#8A97AD">informative</span></h3>Explanatory material with no mandatory force. Example: NFPA 921, the guide for fire and explosion investigations.</div>
+    </div>
+  </div>
+</section>
+
+<section id="map">
+  <div class="wrap">
+    <h2>What the catalog covers</h2>
+    <div class="chart-row">
+      <div>
+        <p class="prose">This chart groups the <span id="sampleCount"></span> widely used documents included in the Explorer below by subject. It is a representative sample, not a count of all 300+. Select a bar to filter the Explorer.</p>
+        <div id="bars" role="group" aria-label="Documents by subject"></div>
+      </div>
+      <div>
+        <h3>Number ranges, roughly</h3>
+        <p class="note">Numbers were assigned over more than a century, so ranges are tendencies rather than rules.</p>
+        <svg viewBox="0 0 320 330" role="img" aria-label="Typical subjects by number range" style="width:100%;max-width:360px">
+          <g font-family="Archivo,Arial" font-size="13">
+            <g id="ranges"></g>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="together">
+  <div class="wrap">
+    <h2>How the documents work together</h2>
+    <p class="prose">No single document covers a building. A fire code or building code sets the overall rules, then points to specialist standards for each system, which in turn point to their own inspection and maintenance standards. NFPA 1 alone references well over a hundred other NFPA documents.</p>
+    <div class="flow">
+      <svg viewBox="0 0 900 360" role="img" aria-label="Diagram showing NFPA 1 and NFPA 101 referencing system standards, which link to maintenance standards">
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#5B6678"/></marker></defs>
+        <g font-size="13" text-anchor="middle">
+          <text x="100" y="24" fill="#5B6678" font-weight="700">Umbrella codes</text>
+          <text x="430" y="24" fill="#5B6678" font-weight="700">Design &amp; installation</text>
+          <text x="760" y="24" fill="#5B6678" font-weight="700">Keep it working</text>
+        </g>
+        <g id="flowG"></g>
+      </svg>
+    </div>
+    <p class="note prose" style="margin-top:14px">Read left to right: the umbrella codes say <em>what</em> a building needs; the middle column says <em>how</em> to design and install it; the right column says how to inspect, test and maintain it for the life of the building.</p>
+  </div>
+</section>
+
+<section id="process">
+  <div class="wrap">
+    <h2>Why each code has an edition year</h2>
+    <p class="prose">Every document is owned by a technical committee and revised on a cycle of roughly three to five years through an open, consensus-based process. Around 10,000 volunteer committee members take part. Anyone can submit input.</p>
+    <ol class="process">
+      <li><b>Public input</b><span>Anyone proposes changes to the current edition.</span></li>
+      <li><b>First draft</b><span>The committee meets, acts on each input and ballots the result.</span></li>
+      <li><b>Public comment</b><span>The first draft is published and the public comments on it.</span></li>
+      <li><b>Second draft</b><span>The committee responds to comments and ballots again.</span></li>
+      <li><b>Technical meeting</b><span>Unresolved motions can be debated and voted on by NFPA members.</span></li>
+      <li><b>Standards Council</b><span>Issues the new edition, which then joins the catalog.</span></li>
+    </ol>
+  </div>
+</section>
+
+<section id="diamond">
+  <div class="wrap">
+    <h2>One document you have probably seen: NFPA 704</h2>
+    <div class="diamond-row">
+      <svg class="diamond" viewBox="0 0 260 260" role="img" aria-label="Interactive NFPA 704 hazard diamond">
+        <g transform="translate(130 130)">
+          <polygon class="quad" data-q="fire" tabindex="0" points="0,-120 60,-60 0,0 -60,-60" fill="#C62828"/>
+          <polygon class="quad" data-q="health" tabindex="0" points="-120,0 -60,-60 0,0 -60,60" fill="#1F5FAD"/>
+          <polygon class="quad" data-q="inst" tabindex="0" points="120,0 60,-60 0,0 60,60" fill="#F2B705"/>
+          <polygon class="quad" data-q="special" tabindex="0" points="0,120 60,60 0,0 -60,60" fill="#FFFFFF" stroke="#14213D" stroke-width="1"/>
+          <text x="0" y="-45" text-anchor="middle" font-size="40" fill="#fff">3</text>
+          <text x="-60" y="14" text-anchor="middle" font-size="40" fill="#fff">2</text>
+          <text x="60" y="14" text-anchor="middle" font-size="40" fill="#14213D">0</text>
+          <text x="0" y="76" text-anchor="middle" font-size="26" fill="#14213D">W</text>
+        </g>
+      </svg>
+      <div id="dInfo" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<section id="explorer">
+  <div class="wrap">
+    <h2>Explorer: a working copy of the sorted list</h2>
+    <p class="prose">This mirrors what the linked page does, with a curated set of commonly referenced documents. Titles are given for orientation; NFPA periodically renames, merges and renumbers documents, so check the official list for current titles and editions.</p>
+    <div class="controls">
+      <label class="sr" for="q" hidden>Search</label>
+      <input id="q" type="search" placeholder="Search by number or topic, e.g. 13 or electrical" aria-label="Search codes">
+      <select id="cat" aria-label="Filter by subject"><option value="">All subjects</option></select>
+      <button id="dirBtn" aria-label="Toggle sort direction">Code number: ascending</button>
+    </div>
+    <div class="tbl-wrap">
+      <table class="codes">
+        <thead><tr><th>Code</th><th>Title</th><th>Subject</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="pager"><button id="prev">Previous</button><span id="pinfo"></span><button id="next">Next</button></div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap prose">
+    <p>Source page: <a href="https://www.nfpa.org/for-professionals/codes-and-standards/list-of-codes-and-standards?page=1&amp;sort=code&amp;dir=asc">NFPA List of Codes and Standards</a>. NFPA offers free read-only online access to its documents, and a paid digital platform (NFPA LiNK) for full access. This page is an independent explainer, not an NFPA publication; always consult the official edition adopted by your authority having jurisdiction.</p>
+  </div>
+</footer>
+
+<script>
+const CATS = {
+  "Fire protection systems": "#1F5FAD",
+  "Buildings & life safety": "#14213D",
+  "Electrical & energy": "#B8860B",
+  "Hazardous materials": "#C62828",
+  "Industrial & special hazards": "#7A4E9E",
+  "Fire service & investigation": "#2E7D5B"
+};
+const CODES = [
+ ["1","Fire Code","Buildings & life safety"],
+ ["2","Hydrogen Technologies Code","Hazardous materials"],
+ ["4","Integrated Fire Protection and Life Safety System Testing","Fire protection systems"],
+ ["10","Portable Fire Extinguishers","Fire protection systems"],
+ ["11","Low-, Medium-, and High-Expansion Foam","Fire protection systems"],
+ ["12","Carbon Dioxide Extinguishing Systems","Fire protection systems"],
+ ["12A","Halon 1301 Fire Extinguishing Systems","Fire protection systems"],
+ ["13","Installation of Sprinkler Systems","Fire protection systems"],
+ ["13D","Sprinklers in One- and Two-Family Dwellings and Manufactured Homes","Fire protection systems"],
+ ["13R","Sprinklers in Low-Rise Residential Occupancies","Fire protection systems"],
+ ["14","Standpipe and Hose Systems","Fire protection systems"],
+ ["15","Water Spray Fixed Systems","Fire protection systems"],
+ ["17","Dry Chemical Extinguishing Systems","Fire protection systems"],
+ ["17A","Wet Chemical Extinguishing Systems","Fire protection systems"],
+ ["20","Stationary Pumps for Fire Protection","Fire protection systems"],
+ ["22","Water Tanks for Private Fire Protection","Fire protection systems"],
+ ["24","Private Fire Service Mains","Fire protection systems"],
+ ["25","Inspection, Testing, and Maintenance of Water-Based Systems","Fire protection systems"],
+ ["30","Flammable and Combustible Liquids Code","Hazardous materials"],
+ ["30A","Motor Fuel Dispensing Facilities and Repair Garages","Hazardous materials"],
+ ["30B","Manufacture and Storage of Aerosol Products","Hazardous materials"],
+ ["33","Spray Application Using Flammable or Combustible Materials","Industrial & special hazards"],
+ ["45","Fire Protection for Laboratories Using Chemicals","Industrial & special hazards"],
+ ["51B","Fire Prevention During Welding, Cutting, and Other Hot Work","Industrial & special hazards"],
+ ["54","National Fuel Gas Code","Hazardous materials"],
+ ["55","Compressed Gases and Cryogenic Fluids Code","Hazardous materials"],
+ ["58","Liquefied Petroleum Gas Code","Hazardous materials"],
+ ["59A","Liquefied Natural Gas (LNG)","Hazardous materials"],
+ ["70","National Electrical Code (NEC)","Electrical & energy"],
+ ["70B","Electrical Equipment Maintenance","Electrical & energy"],
+ ["70E","Electrical Safety in the Workplace","Electrical & energy"],
+ ["72","National Fire Alarm and Signaling Code","Fire protection systems"],
+ ["75","Fire Protection of Information Technology Equipment","Industrial & special hazards"],
+ ["76","Fire Protection of Telecommunications Facilities","Industrial & special hazards"],
+ ["80","Fire Doors and Other Opening Protectives","Buildings & life safety"],
+ ["85","Boiler and Combustion Systems Hazards Code","Industrial & special hazards"],
+ ["86","Ovens and Furnaces","Industrial & special hazards"],
+ ["90A","Air-Conditioning and Ventilating Systems","Buildings & life safety"],
+ ["92","Smoke Control Systems","Buildings & life safety"],
+ ["96","Ventilation and Fire Protection of Commercial Cooking","Industrial & special hazards"],
+ ["99","Health Care Facilities Code","Buildings & life safety"],
+ ["101","Life Safety Code","Buildings & life safety"],
+ ["110","Emergency and Standby Power Systems","Electrical & energy"],
+ ["111","Stored Electrical Energy Emergency and Standby Power","Electrical & energy"],
+ ["170","Fire Safety and Emergency Symbols","Buildings & life safety"],
+ ["220","Types of Building Construction","Buildings & life safety"],
+ ["221","Fire Walls and Fire Barrier Walls","Buildings & life safety"],
+ ["241","Safeguarding Construction, Alteration, and Demolition","Buildings & life safety"],
+ ["400","Hazardous Materials Code","Hazardous materials"],
+ ["495","Explosive Materials Code","Hazardous materials"],
+ ["502","Road Tunnels, Bridges, and Limited Access Highways","Industrial & special hazards"],
+ ["652","Fundamentals of Combustible Dust","Industrial & special hazards"],
+ ["704","Identification of the Hazards of Materials for Emergency Response","Hazardous materials"],
+ ["780","Installation of Lightning Protection Systems","Electrical & energy"],
+ ["855","Installation of Stationary Energy Storage Systems","Electrical & energy"],
+ ["921","Guide for Fire and Explosion Investigations","Fire service & investigation"],
+ ["1500","Fire Department Occupational Safety, Health, and Wellness","Fire service & investigation"],
+ ["2001","Clean Agent Fire Extinguishing Systems","Fire protection systems"],
+ ["5000","Building Construction and Safety Code","Buildings & life safety"]
+];
+const parse = c => { const m = c.match(/^(\d+)([A-Z]*)$/); return [parseInt(m[1]), m[2]]; };
+const cmp = (a,b) => { const [na,sa]=parse(a[0]),[nb,sb]=parse(b[0]); return na-nb || sa.localeCompare(sb); };
+
+/* ---------- ruler ---------- */
+(function(){
+  const svg = document.getElementById('ruler'), NS='http://www.w3.org/2000/svg';
+  const x = n => 40 + (Math.log10(n) / Math.log10(5000)) * 920;
+  const el = (t,a) => { const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e; };
+  svg.appendChild(el('line',{x1:40,y1:120,x2:960,y2:120,stroke:'#5B6678','stroke-width':2}));
+  [1,10,100,1000,5000].forEach(t=>{
+    svg.appendChild(el('line',{x1:x(t),y1:114,x2:x(t),y2:128,stroke:'#9AA6BA','stroke-width':2}));
+    const tx=el('text',{x:x(t),y:150,'text-anchor':'middle','font-size':13,fill:'#9AA6BA'}); tx.textContent=t; svg.appendChild(tx);
+  });
+  const pick = [["1",0],["10",1],["13",2],["25",0],["30",1],["70",2],["72",0],["101",1],["704",2],["855",0],["921",1],["1500",2],["2001",0],["5000",1]];
+  const info = document.getElementById('rulerInfo');
+  pick.forEach(([c,lvl])=>{
+    const d = CODES.find(r=>r[0]===c), n=parse(c)[0], cx=x(n), y=12+lvl*30;
+    svg.appendChild(el('line',{x1:cx,y1:y+24,x2:cx,y2:120,stroke:CATS[d[2]],'stroke-width':1.5,opacity:.8}));
+    svg.appendChild(el('circle',{cx,cy:120,r:4,fill:'#F2B705'}));
+    const g=el('g',{class:'chip',tabindex:0,role:'button','aria-label':'NFPA '+c+', '+d[1]});
+    const w = 18 + c.length*9;
+    g.appendChild(el('rect',{x:cx-w/2,y,width:w,height:24,rx:3,fill:CATS[d[2]]==='#14213D'?'#3A4F7A':CATS[d[2]]}));
+    const t=el('text',{x:cx,y:y+17,'text-anchor':'middle','font-size':13,'font-weight':800,fill:'#fff'}); t.textContent=c; g.appendChild(t);
+    const show=()=>{ info.innerHTML='<b>NFPA '+c+'</b> &nbsp;'+d[1]+' <span style="opacity:.75">('+d[2]+')</span>'; };
+    g.addEventListener('click',show); g.addEventListener('focus',show);
+    g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();show();}});
+    svg.appendChild(g);
+  });
+  const lg=el('text',{x:960,y:168,'text-anchor':'end','font-size':11,fill:'#9AA6BA'}); lg.textContent='log scale: low numbers are spread out so the crowded start is readable'; svg.appendChild(lg);
+})();
+
+/* ---------- bars ---------- */
+let activeCat = '';
+(function(){
+  document.getElementById('sampleCount').textContent = CODES.length;
+  const counts = {}; CODES.forEach(r=>counts[r[2]]=(counts[r[2]]||0)+1);
+  const max = Math.max(...Object.values(counts)), box=document.getElementById('bars');
+  const sel = document.getElementById('cat');
+  Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([c,n])=>{
+    const b=document.createElement('button'); b.className='bar'; b.setAttribute('aria-pressed','false');
+    b.innerHTML=`<span class="lbl">${c}</span><span class="track"><span class="fill" style="width:0;background:${CATS[c]}"></span></span><span>${n}</span>`;
+    b.onclick=()=>{ activeCat = activeCat===c?'':c; sel.value=activeCat; syncBars(); page=0; render(); if(activeCat) document.getElementById('explorer').scrollIntoView(); };
+    box.appendChild(b);
+    requestAnimationFrame(()=>setTimeout(()=>b.querySelector('.fill').style.width=(n/max*100)+'%',80));
+    const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o);
+  });
+})();
+function syncBars(){ document.querySelectorAll('.bar').forEach(b=>b.setAttribute('aria-pressed', b.querySelector('.lbl').textContent===activeCat)); }
+
+/* ---------- ranges ---------- */
+(function(){
+  const R=[["1–99","Suppression, alarms, fuels, electrical, core codes","#1F5FAD"],["100s","Life safety, buildings, emergency power","#14213D"],["200s","Construction types, walls, building work","#3A4F7A"],["300s–400s","Marine, aircraft, hazardous materials","#C62828"],["500s–600s","Transport, tunnels, industrial dust","#7A4E9E"],["700s–900s","Hazard ID, lightning, storage, investigation","#B8860B"],["1000s–1900s","Fire service qualifications and equipment","#2E7D5B"],["2000s–5000","Clean agents, special systems, building code","#5B6678"]];
+  const g=document.getElementById('ranges'), NS='http://www.w3.org/2000/svg';
+  R.forEach((r,i)=>{ const y=i*40+4;
+    const rc=document.createElementNS(NS,'rect'); rc.setAttribute('x',0); rc.setAttribute('y',y); rc.setAttribute('width',96); rc.setAttribute('height',32); rc.setAttribute('rx',3); rc.setAttribute('fill',r[2]); g.appendChild(rc);
+    const t=document.createElementNS(NS,'text'); t.setAttribute('x',48); t.setAttribute('y',y+21); t.setAttribute('text-anchor','middle'); t.setAttribute('fill','#fff'); t.setAttribute('font-weight','800'); t.textContent=r[0]; g.appendChild(t);
+    const d=document.createElementNS(NS,'text'); d.setAttribute('x',106); d.setAttribute('y',y+21); d.setAttribute('fill','#14213D'); d.setAttribute('font-size','12'); d.textContent=r[1]; g.appendChild(d);
+  });
+})();
+
+/* ---------- flow diagram ---------- */
+(function(){
+  const g=document.getElementById('flowG'), NS='http://www.w3.org/2000/svg';
+  const node=(x,y,w,label,sub,col)=>{
+    const r=document.createElementNS(NS,'rect'); Object.entries({x,y,width:w,height:46,rx:4,fill:col}).forEach(([k,v])=>r.setAttribute(k,v)); g.appendChild(r);
+    const t=document.createElementNS(NS,'text'); Object.entries({x:x+w/2,y:y+20,'text-anchor':'middle',fill:'#fff','font-weight':800,'font-size':15}).forEach(([k,v])=>t.setAttribute(k,v)); t.textContent=label; g.appendChild(t);
+    const s=document.createElementNS(NS,'text'); Object.entries({x:x+w/2,y:y+37,'text-anchor':'middle',fill:'#fff','font-size':11.5,opacity:.9}).forEach(([k,v])=>s.setAttribute(k,v)); s.textContent=sub; g.appendChild(s);
+    return {l:x,r:x+w,cy:y+23};
+  };
+  const arrow=(a,b)=>{ const p=document.createElementNS(NS,'path'); const mx=(a.r+b.l)/2; p.setAttribute('d',`M${a.r} ${a.cy} C${mx} ${a.cy} ${mx} ${b.cy} ${b.l-2} ${b.cy}`); p.setAttribute('fill','none'); p.setAttribute('stroke','#5B6678'); p.setAttribute('stroke-width',1.4); p.setAttribute('marker-end','url(#ah)'); g.insertBefore(p,g.firstChild); };
+  const u1=node(10,90,180,'NFPA 1','Fire Code','#14213D');
+  const u2=node(10,220,180,'NFPA 101','Life Safety Code','#14213D');
+  const mids=[["NFPA 13","Sprinklers","#1F5FAD"],["NFPA 72","Fire alarms","#1F5FAD"],["NFPA 10","Extinguishers","#1F5FAD"],["NFPA 70","Electrical wiring","#B8860B"],["NFPA 80","Fire doors","#3A4F7A"]].map((m,i)=>node(340,40+i*62,180,m[0],m[1],m[2]));
+  const rights=[["NFPA 25","Water system ITM","#2E7D5B"],["NFPA 72","Alarm testing chapters","#2E7D5B"],["NFPA 10","Monthly checks","#2E7D5B"],["NFPA 70B","Electrical maintenance","#2E7D5B"],["NFPA 80","Annual door inspection","#2E7D5B"]].map((m,i)=>node(670,40+i*62,200,m[0],m[1],m[2]));
+  mids.forEach((m,i)=>{ arrow(u1,m); if(i!==0 && i!==2) arrow(u2,m); arrow(m,rights[i]); });
+})();
+
+/* ---------- 704 ---------- */
+(function(){
+  const D={
+    fire:{t:"Flammability (red, top)",c:"#C62828",r:["4 — ignites readily at normal temperatures","3 — ignites under almost all ambient conditions","2 — ignites with moderate heating","1 — must be preheated to ignite","0 — will not burn"]},
+    health:{t:"Health (blue, left)",c:"#1F5FAD",r:["4 — very short exposure could be fatal","3 — short exposure could cause serious injury","2 — could cause temporary incapacitation","1 — could cause irritation","0 — no hazard beyond ordinary material"]},
+    inst:{t:"Instability (yellow, right)",c:"#B8860B",r:["4 — may detonate at normal conditions","3 — may detonate with a strong ignition source or heat","2 — violent chemical change at high temperature","1 — normally stable, unstable when heated","0 — normally stable, even in fire"]},
+    special:{t:"Special hazards (white, bottom)",c:"#14213D",r:["W — reacts with water; do not use water","OX — oxidizer","SA — simple asphyxiant gas"]}
+  };
+  const box=document.getElementById('dInfo');
+  const show=k=>{ const d=D[k];
+    document.querySelectorAll('.quad').forEach(q=>q.classList.toggle('active',q.dataset.q===k));
+    box.innerHTML=`<h3 style="color:${d.c}">${d.t}</h3><table>${d.r.map(x=>{const [a,b]=x.split(' — ');return `<tr><td>${a}</td><td>${b}</td></tr>`}).join('')}</table><p class="note" style="margin:10px 0 0">The diamond on the left is an example sign: health 2, flammability 3, instability 0, water-reactive. NFPA 704 is the standard behind the colored diamond on tanks, labs and warehouse doors, so first responders can read the hazard at a glance.</p>`;
+  };
+  document.querySelectorAll('.quad').forEach(q=>{ q.addEventListener('click',()=>show(q.dataset.q)); q.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();show(q.dataset.q);}}); });
+  box.insertAdjacentHTML('beforeend','');
+  show('fire');
+})();
+
+/* ---------- explorer ---------- */
+let page=0, asc=true; const PER=12;
+const q=document.getElementById('q'), sel=document.getElementById('cat'), dirBtn=document.getElementById('dirBtn');
+function render(){
+  const term=q.value.trim().toLowerCase();
+  let list=CODES.filter(r=>(!activeCat||r[2]===activeCat) && (!term || ('nfpa '+r[0]+' '+r[1]+' '+r[2]).toLowerCase().includes(term)));
+  list.sort(cmp); if(!asc) list.reverse();
+  const pages=Math.max(1,Math.ceil(list.length/PER)); page=Math.min(page,pages-1);
+  const slice=list.slice(page*PER,page*PER+PER);
+  document.getElementById('rows').innerHTML = slice.length ? slice.map(r=>`<tr><td class="num">NFPA ${r[0]}</td><td>${r[1]}</td><td><span class="tag" style="background:${CATS[r[2]]}">${r[2]}</span></td></tr>`).join('') : `<tr><td colspan="3" class="empty">No documents match "${q.value}". Try a number like 72, or a word like gas.</td></tr>`;
+  document.getElementById('pinfo').textContent=`page=${page+1} of ${pages} · sort=code · dir=${asc?'asc':'desc'}`;
+  document.getElementById('prev').disabled=page===0; document.getElementById('next').disabled=page>=pages-1;
+}
+q.oninput=()=>{page=0;render();};
+sel.onchange=()=>{activeCat=sel.value;page=0;syncBars();render();};
+dirBtn.onclick=()=>{asc=!asc;dirBtn.textContent='Code number: '+(asc?'ascending':'descending');page=0;render();};
+document.getElementById('prev').onclick=()=>{page--;render();};
+document.getElementById('next').onclick=()=>{page++;render();};
+render();
+</script>
+</body>
+</html>

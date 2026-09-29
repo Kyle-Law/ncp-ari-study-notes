@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liquid to the chip: a beginner's guide to direct-to-chip cooling</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2F4F3; --panel:#FFFFFF; --ink:#18222D; --muted:#566270; --line:#C9D1D6;
+    --power:#D08A00; --power-soft:#FBEFD2;
+    --cool:#1C74B8; --cool-soft:#DCEBF6;
+    --heat:#C23B22; --heat-soft:#F7DDD7;
+    --ok:#2E7D4F; --ok-soft:#DCEFE3;
+    --copper:#B8743F;
+    --body:"Barlow","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+    --label:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.6}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+  .prose{max-width:720px}
+  h1,h2,h3{line-height:1.15;margin:0}
+  h1{font-size:clamp(2.4rem,6vw,4.2rem);font-weight:700;letter-spacing:-.01em}
+  h2{font-size:clamp(1.6rem,3.2vw,2.2rem);font-weight:700;margin-bottom:.5em}
+  h3{font-size:1.2rem;font-weight:600;margin:1.4em 0 .4em}
+  p{margin:0 0 1em}
+  a{color:var(--cool)}
+  :focus-visible{outline:3px solid var(--cool);outline-offset:2px}
+
+  header{padding:64px 0 40px;border-bottom:1px solid var(--line)}
+  .back{font-size:.95rem;display:inline-flex;gap:18px;flex-wrap:wrap;margin-bottom:20px}
+  .lede{font-size:1.25rem;color:var(--muted);max-width:680px;margin-top:18px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:30px}
+  .stats div{background:var(--panel);border-radius:6px;padding:14px 18px;border-left:5px solid var(--copper)}
+  .stats b{display:block;font-family:var(--label);font-size:1.7rem;line-height:1.1}
+  .stats span{font-size:.93rem;color:var(--muted)}
+  nav.toc{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:28px;font-size:.95rem}
+  nav.toc a{color:var(--ink);text-decoration:none;border-bottom:2px solid var(--line)}
+  nav.toc a:hover{border-color:var(--ink)}
+
+  section{padding:60px 0;border-bottom:1px solid var(--line)}
+  figure{margin:24px 0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px}
+  figcaption{font-size:.92rem;color:var(--muted);margin-top:12px}
+  .diagram{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .diagram svg{display:block;width:100%;height:auto}
+  svg text{font-family:var(--label)}
+  .flow{stroke-dasharray:10 8;animation:flow 1.2s linear infinite}
+  @keyframes flow{to{stroke-dashoffset:-18}}
+
+  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:8px}
+  .facts div{background:var(--panel);border-radius:6px;padding:14px 16px;border-top:4px solid var(--line);font-size:.97rem}
+  .facts .c{border-color:var(--cool)} .facts .h{border-color:var(--heat)} .facts .k{border-color:var(--copper)} .facts .g{border-color:var(--ok)}
+  .facts strong{display:block;margin-bottom:2px}
+
+  .formula{background:var(--ink);color:#fff;border-radius:8px;padding:18px 22px;font-size:1.15rem;margin:20px 0;max-width:720px}
+  .formula b{color:#9FD0F5}
+  .formula small{display:block;color:#C6CED6;font-size:.9rem;margin-top:6px}
+
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:20px 0}
+  ol.steps li{counter-increment:s;position:relative;padding:0 0 18px 48px}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;background:var(--copper);color:#fff;font-family:var(--label);font-weight:600;display:grid;place-items:center}
+  ol.steps.red li::before{background:var(--heat)}
+  ol.steps strong{display:block}
+
+  /* calculator */
+  .calc{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:28px;margin-top:24px}
+  @media (max-width:760px){.calc{grid-template-columns:1fr}}
+  .inputs{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px}
+  .field{margin-bottom:18px}
+  .field label{display:flex;justify-content:space-between;font-weight:600;font-size:.95rem;margin-bottom:6px}
+  .field label output{font-family:var(--label);font-size:1.05rem}
+  .field input[type=range]{width:100%;accent-color:var(--ink)}
+  .field select{width:100%;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:#fff}
+  .field small{display:block;color:var(--muted);font-size:.85rem;margin-top:4px;line-height:1.4}
+  .results{display:flex;flex-direction:column;gap:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px 20px}
+  .card h3{margin:0 0 6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .big{font-family:var(--label);font-size:2rem;font-weight:600;line-height:1.1}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .row2 span{display:block;font-size:.88rem;color:var(--muted)}
+  .meter{position:relative;height:22px;background:#E8ECEE;border-radius:4px;margin:12px 0 26px}
+  .meter .fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;transition:width .3s}
+  .mark{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+  .mark span{position:absolute;top:28px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:var(--label);font-size:.82rem;color:var(--muted)}
+  .badge{display:inline-block;font-family:var(--label);font-weight:600;font-size:.95rem;padding:2px 10px;border-radius:4px}
+  .badge.good{background:var(--ok-soft);color:var(--ok)}
+  .badge.warn{background:var(--power-soft);color:#7A5200}
+  .badge.bad{background:var(--heat-soft);color:var(--heat)}
+  .card p{font-size:.97rem;margin:.3em 0}
+  .verdict{background:var(--ink);color:#fff;border-radius:8px;padding:18px 20px;font-size:1.05rem}
+  .verdict strong{color:#FFD27A}
+
+  table{border-collapse:collapse;width:100%;font-size:.97rem}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-weight:600;background:#E7EBED}
+  .tablewrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;margin-top:16px}
+  dl.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0 32px;margin:20px 0 0}
+  dl.gloss div{padding:12px 0;border-bottom:1px solid var(--line)}
+  dl.gloss dt{font-weight:700}
+  dl.gloss dd{margin:2px 0 0;color:var(--muted)}
+  footer{padding:40px 0 64px;color:var(--muted);font-size:.92rem}
+  @media (prefers-reduced-motion:reduce){.flow{animation:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="back">
+      <a href="datacenter-power-cooling-guide.html">Part 1: Power in, heat out</a>
+      <a href="datacenter-cooling-no-raised-floor.html">Part 2: No raised floor</a>
+    </div>
+    <h1>Liquid to the chip</h1>
+    <p class="lede">Direct-to-chip cooling pipes liquid straight onto the hottest parts of a server, the processors. Here's how it works from the chip all the way to the outdoors, and how you'd check it has enough capacity.</p>
+    <div class="stats">
+      <div><b>~3,500×</b><span>more heat a liter of water carries than a liter of air</span></div>
+      <div><b>700–1,000+ W</b><span>heat from a single modern AI accelerator chip</span></div>
+      <div><b>40–130+ kW</b><span>per rack in AI clusters, far beyond what air handles well</span></div>
+    </div>
+    <nav class="toc" aria-label="Sections">
+      <a href="#why">Why liquid</a>
+      <a href="#plate">The cold plate</a>
+      <a href="#loops">The two loops</a>
+      <a href="#cdu">Inside the CDU</a>
+      <a href="#math">The one formula</a>
+      <a href="#calc">Calculator</a>
+      <a href="#verify">How to verify</a>
+      <a href="#glossary">Glossary</a>
+    </nav>
+  </div>
+</header>
+
+<!-- WHY -->
+<section id="why">
+  <div class="wrap">
+    <div class="prose">
+      <h2>Why bring liquid to the chip?</h2>
+      <p>Air cooling works by blowing lots of air across heatsinks. As chips got hotter, you'd need so much air, so fast, that fans become loud, power-hungry, and still can't keep up. Beyond roughly 30–40 kW per rack, air starts to struggle.</p>
+      <p>Liquid solves this because it's so much better at carrying heat. A thin tube of liquid can carry away as much heat as a huge stream of air. So instead of cooling the whole room and hoping the air reaches the chip, you cool <em>the chip itself</em>.</p>
+    </div>
+    <div class="facts">
+      <div class="g"><strong>Benefits</strong>Handles very high rack power, fewer and slower fans, less energy for cooling, and warmer water can be used, so chillers run less.</div>
+      <div class="h"><strong>Trade-offs</strong>Plumbing inside the white space, leak risk to manage, more parts to maintain, and new skills for the operations team.</div>
+      <div class="k"><strong>Important to know</strong>It's almost always hybrid. Liquid takes most of the heat (often 70–85%), but memory, power supplies and disks still warm the air.</div>
+    </div>
+  </div>
+</section>
+
+<!-- COLD PLATE -->
+<section id="plate">
+  <div class="wrap">
+    <div class="prose">
+      <h2>The cold plate: where it happens</h2>
+      <p>A <strong>cold plate</strong> is a block of copper that sits directly on top of the chip, replacing the usual air heatsink. Inside are dozens of tiny channels. Cool liquid flows in, picks up the heat through the copper, and flows out warmer.</p>
+    </div>
+    <figure>
+      <div class="diagram">
+        <svg viewBox="0 0 960 360" style="min-width:720px" role="img" aria-labelledby="tPlate">
+          <title id="tPlate">Cross-section of a cold plate sitting on a chip: heat moves up from the chip through a thin paste layer into the copper plate, where liquid flowing through tiny channels carries it away</title>
+          <defs>
+            <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1C74B8"/></marker>
+            <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C23B22"/></marker>
+          </defs>
+          <!-- board -->
+          <rect x="120" y="290" width="720" height="22" fill="#6E9C7C"/>
+          <text x="850" y="306" font-size="15" fill="#566270">Server board</text>
+          <!-- package + die -->
+          <rect x="330" y="252" width="300" height="38" fill="#4A5561"/>
+          <rect x="400" y="236" width="160" height="16" fill="#2B333C"/>
+          <!-- TIM -->
+          <rect x="330" y="228" width="300" height="8" fill="#E9B949"/>
+          <!-- cold plate -->
+          <rect x="300" y="140" width="360" height="88" rx="4" fill="#B8743F"/>
+          <rect x="330" y="162" width="300" height="52" fill="#DCEBF6"/>
+          <g fill="#B8743F">
+            <rect x="345" y="162" width="6" height="52"/><rect x="365" y="162" width="6" height="52"/><rect x="385" y="162" width="6" height="52"/><rect x="405" y="162" width="6" height="52"/><rect x="425" y="162" width="6" height="52"/><rect x="445" y="162" width="6" height="52"/><rect x="465" y="162" width="6" height="52"/><rect x="485" y="162" width="6" height="52"/><rect x="505" y="162" width="6" height="52"/><rect x="525" y="162" width="6" height="52"/><rect x="545" y="162" width="6" height="52"/><rect x="565" y="162" width="6" height="52"/><rect x="585" y="162" width="6" height="52"/><rect x="605" y="162" width="6" height="52"/>
+          </g>
+          <!-- pipes -->
+          <path class="flow" d="M100 175 H326" stroke="#1C74B8" stroke-width="10" fill="none"/>
+          <path class="flow" d="M634 200 H860" stroke="#C23B22" stroke-width="10" fill="none"/>
+          <path d="M100 150 H200" stroke="#1C74B8" stroke-width="3" marker-end="url(#aB)"/>
+          <path d="M760 228 H860" stroke="#C23B22" stroke-width="3" marker-end="url(#aR)"/>
+          <text x="100" y="138" font-size="17" font-weight="600" fill="#11507F">Cool liquid in</text>
+          <text x="100" y="206" font-size="15" fill="#566270">e.g. 30 °C</text>
+          <text x="760" y="186" font-size="17" font-weight="600" fill="#8A2615">Warm liquid out</text>
+          <text x="760" y="252" font-size="15" fill="#566270">e.g. 40 °C</text>
+          <!-- heat waves -->
+          <g stroke="#C23B22" stroke-width="2.5" fill="none">
+            <path d="M440 234 q6 -8 0 -16 q-6 -8 0 -16"/><path d="M480 234 q6 -8 0 -16 q-6 -8 0 -16"/><path d="M520 234 q6 -8 0 -16 q-6 -8 0 -16"/>
+          </g>
+          <!-- labels -->
+          <g stroke="#566270" stroke-width="1" fill="none">
+            <path d="M630 186 H700 V110"/><path d="M630 232 H700 V270"/><path d="M480 244 L380 330"/>
+          </g>
+          <text x="300" y="130" font-size="16" font-weight="600" fill="#7A4A22">Copper cold plate</text>
+          <text x="700" y="100" text-anchor="middle" font-size="15" fill="#18222D">Tiny channels (fins) give liquid lots of surface to grab heat</text>
+          <text x="708" y="285" font-size="15" fill="#18222D">Thermal paste fills tiny air gaps</text>
+          <text x="300" y="345" font-size="15" fill="#18222D">Chip (the hottest part, 700 W or more)</text>
+        </svg>
+      </div>
+      <figcaption>Heat flows up from the chip, through a thin layer of thermal paste, into the copper, and into the liquid.</figcaption>
+    </figure>
+    <div class="prose">
+      <p>Two variations you'll hear about:</p>
+      <p><strong>Single-phase</strong> (most common): the liquid stays liquid. It's usually water mixed with propylene glycol and corrosion inhibitors, often called <strong>PG25</strong> (25% glycol). <strong>Two-phase</strong>: a special fluid boils inside the cold plate, absorbing heat as it turns to vapor. It's very effective but less common and more complex.</p>
+    </div>
+  </div>
+</section>
+
+<!-- LOOPS -->
+<section id="loops">
+  <div class="wrap">
+    <div class="prose">
+      <h2>The two loops: server side and building side</h2>
+      <p>The liquid in the servers never mixes with the building's water. They're kept in two separate loops, joined only through a heat exchanger inside the <strong>CDU</strong> (coolant distribution unit). This keeps the server loop small, clean and tightly controlled.</p>
+    </div>
+    <figure>
+      <div class="diagram">
+        <svg viewBox="0 0 1000 440" style="min-width:780px" role="img" aria-labelledby="tLoops">
+          <title id="tLoops">Two cooling loops: the technology loop carries coolant between the rack's cold plates and the CDU; the facility loop carries water between the CDU and the chiller, dry cooler or cooling tower, which releases heat outdoors</title>
+          <defs>
+            <marker id="lB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1C74B8"/></marker>
+            <marker id="lR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C23B22"/></marker>
+          </defs>
+          <!-- zones -->
+          <rect x="10" y="40" width="410" height="380" rx="8" fill="#DCEBF6" opacity=".45"/>
+          <rect x="420" y="40" width="570" height="380" rx="8" fill="#E7EBED" opacity=".7"/>
+          <text x="24" y="66" font-size="17" font-weight="600" fill="#11507F">Technology cooling loop</text>
+          <text x="24" y="86" font-size="14" fill="#566270">clean coolant, inside the data hall</text>
+          <text x="600" y="66" font-size="17" font-weight="600" fill="#18222D">Facility water loop</text>
+          <text x="600" y="86" font-size="14" fill="#566270">building's water, in the plant room and outdoors</text>
+
+          <!-- rack -->
+          <rect x="40" y="110" width="170" height="280" rx="4" fill="#fff" stroke="#18222D" stroke-width="2"/>
+          <g fill="#E7EBED" stroke="#18222D" stroke-width="1">
+            <rect x="50" y="125" width="120" height="50"/><rect x="50" y="185" width="120" height="50"/><rect x="50" y="245" width="120" height="50"/><rect x="50" y="305" width="120" height="50"/>
+          </g>
+          <g fill="#B8743F">
+            <rect x="70" y="140" width="22" height="20"/><rect x="118" y="140" width="22" height="20"/>
+            <rect x="70" y="200" width="22" height="20"/><rect x="118" y="200" width="22" height="20"/>
+            <rect x="70" y="260" width="22" height="20"/><rect x="118" y="260" width="22" height="20"/>
+            <rect x="70" y="320" width="22" height="20"/><rect x="118" y="320" width="22" height="20"/>
+          </g>
+          <line x1="185" y1="120" x2="185" y2="380" stroke="#1C74B8" stroke-width="5"/>
+          <line x1="198" y1="120" x2="198" y2="380" stroke="#C23B22" stroke-width="5"/>
+          <g stroke-width="2"><line x1="170" y1="146" x2="185" y2="146" stroke="#1C74B8"/><line x1="170" y1="206" x2="185" y2="206" stroke="#1C74B8"/><line x1="170" y1="266" x2="185" y2="266" stroke="#1C74B8"/><line x1="170" y1="326" x2="185" y2="326" stroke="#1C74B8"/>
+          <line x1="170" y1="156" x2="198" y2="156" stroke="#C23B22"/><line x1="170" y1="216" x2="198" y2="216" stroke="#C23B22"/><line x1="170" y1="276" x2="198" y2="276" stroke="#C23B22"/><line x1="170" y1="336" x2="198" y2="336" stroke="#C23B22"/></g>
+          <text x="125" y="410" text-anchor="middle" font-size="15" fill="#18222D">Rack: cold plates + manifold</text>
+          <!-- air leftover -->
+          <g stroke="#C23B22" stroke-width="2.5" fill="none" opacity=".8">
+            <path d="M90 108 q5 -5 0 -10 q-5 -5 0 -10"/><path d="M130 108 q5 -5 0 -10 q-5 -5 0 -10"/>
+          </g>
+          
+          <!-- CDU -->
+          <rect x="310" y="150" width="220" height="200" rx="6" fill="#fff" stroke="#18222D" stroke-width="2.5"/>
+          <text x="420" y="176" text-anchor="middle" font-size="19" font-weight="700" fill="#18222D">CDU</text>
+          <rect x="395" y="190" width="50" height="120" fill="#FBEFD2" stroke="#18222D" stroke-width="1.5"/>
+          <path d="M405 200 L435 215 L405 230 L435 245 L405 260 L435 275 L405 290 L435 300" stroke="#B8743F" stroke-width="2" fill="none"/>
+          <text x="420" y="330" text-anchor="middle" font-size="13" fill="#566270">heat exchanger</text>
+          <circle cx="345" cy="280" r="16" fill="#fff" stroke="#18222D" stroke-width="2"/><text x="345" y="285" text-anchor="middle" font-size="14" font-weight="600">P</text>
+          <circle cx="345" cy="225" r="16" fill="#fff" stroke="#18222D" stroke-width="2"/><text x="345" y="230" text-anchor="middle" font-size="14" font-weight="600">P</text>
+          <text x="345" y="200" text-anchor="middle" font-size="12" fill="#566270">pumps</text>
+
+          <!-- TCS pipes -->
+          <path class="flow" d="M310 290 H250 V370 H185" stroke="#1C74B8" stroke-width="5" fill="none"/>
+          <path class="flow" d="M198 130 H250 V210 H310" stroke="#C23B22" stroke-width="5" fill="none" marker-end="url(#lR)"/>
+          <text x="232" y="392" font-size="14" font-weight="600" fill="#11507F">30 °C</text>
+          <text x="210" y="122" font-size="14" font-weight="600" fill="#8A2615">40 °C</text>
+
+          <!-- facility box -->
+          <rect x="740" y="160" width="200" height="130" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+          <text x="840" y="200" text-anchor="middle" font-size="17" font-weight="600" fill="#18222D">Chiller, dry cooler</text>
+          <text x="840" y="222" text-anchor="middle" font-size="17" font-weight="600" fill="#18222D">or cooling tower</text>
+          <text x="840" y="250" text-anchor="middle" font-size="14" fill="#566270">dumps heat outdoors</text>
+          <g stroke="#C23B22" stroke-width="3" fill="none">
+            <path d="M800 150 q8 -10 0 -20 q-8 -10 0 -20"/><path d="M840 150 q8 -10 0 -20 q-8 -10 0 -20"/><path d="M880 150 q8 -10 0 -20 q-8 -10 0 -20"/>
+          </g>
+          <!-- FWS pipes -->
+          <path class="flow" d="M530 215 H736" stroke="#C23B22" stroke-width="5" fill="none" marker-end="url(#lR)"/>
+          <path class="flow" d="M740 275 H534" stroke="#1C74B8" stroke-width="5" fill="none" marker-end="url(#lB)"/>
+          <text x="600" y="206" font-size="14" font-weight="600" fill="#8A2615">35 °C back</text>
+          <text x="600" y="298" font-size="14" font-weight="600" fill="#11507F">25 °C supply</text>
+
+          <text x="560" y="370" font-size="15" fill="#18222D">Example temperatures only. Many systems</text>
+          <text x="560" y="390" font-size="15" fill="#18222D">run warmer, which lets chillers rest.</text>
+                  </svg>
+      </div>
+      <figcaption>The CDU is the handover point. Heat crosses from one loop to the other through its heat exchanger, but the liquids never touch. The small red waves on the rack are the leftover heat that still goes into the room air.</figcaption>
+    </figure>
+    <div class="prose">
+      <p>Notice the example temperatures. The server loop's supply (30 °C) is a few degrees warmer than the facility water (25 °C). That small gap is called the <strong>approach temperature</strong>, and every heat exchanger needs some. It also means the facility water must be colder than the coolant you want at the servers.</p>
+      <p>Chips are happy with surprisingly warm coolant, often 30–45 °C. That's warmer than the outdoor air in many places for much of the year, so heat can often be dumped with dry coolers or cooling towers alone, without running chillers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CDU -->
+<section id="cdu">
+  <div class="wrap">
+    <div class="prose">
+      <h2>Inside the CDU</h2>
+      <p>The CDU is the heart of the system. Think of it as the pump room for the servers' private water supply.</p>
+    </div>
+    <div class="facts">
+      <div class="k"><strong>Heat exchanger</strong>Passes heat from the server loop to the facility loop without the liquids mixing.</div>
+      <div class="c"><strong>Pumps (usually two or more)</strong>Keep coolant moving to every cold plate. A spare pump takes over if one fails.</div>
+      <div class="c"><strong>Filters</strong>Catch tiny particles that could clog the fine channels in cold plates.</div>
+      <div class="c"><strong>Reservoir and sensors</strong>Hold spare coolant and measure temperature, pressure, flow and leaks.</div>
+    </div>
+    <div class="prose" style="margin-top:22px">
+      <p>CDUs come in two main sizes: <strong>in-rack</strong> (small, serving one rack) and <strong>in-row or floor-standing</strong> (large, serving many racks through pipes). Some sites without facility water use a <strong>liquid-to-air CDU</strong>, which dumps the heat into the room air via a radiator. That's convenient but just moves the heat back to the room cooling.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MATH -->
+<section id="math">
+  <div class="wrap">
+    <div class="prose">
+      <h2>The one formula you need</h2>
+      <p>Everything about liquid capacity comes down to how much liquid flows and how much it warms up.</p>
+    </div>
+    <div class="formula">
+      Heat removed (kW) = <b>flow</b> (liters per second) × <b>4.19</b> × <b>temperature rise</b> (°C)
+      <small>4.19 is the energy needed to warm one liter of water by 1 °C. For PG25 coolant, use about 4.0.</small>
+    </div>
+    <div class="prose">
+      <p><strong>Example:</strong> a 100 kW rack where liquid captures 80%, so 80 kW goes to the coolant. The coolant warms by 10 °C (30 → 40 °C).</p>
+      <p>Flow needed = 80 ÷ (4.19 × 10) ≈ 1.9 liters per second, which is about <strong>115 liters per minute</strong> for one rack.</p>
+      <p>A handy rule of thumb: with a 10 °C rise, you need roughly <strong>1.5 liters per minute for every kW</strong> going into the liquid. Halve the temperature rise and you need double the flow.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CALCULATOR -->
+<section id="calc">
+  <div class="wrap">
+    <div class="prose">
+      <h2>Try it: size the liquid loop</h2>
+      <p>Change the rack power, number of racks, and CDU setup to see flow needs, CDU loading, and how much heat is left for the room air.</p>
+    </div>
+    <div class="calc">
+      <div class="inputs">
+        <div class="field">
+          <label for="rk">Power per rack <output id="rkO"></output></label>
+          <input type="range" id="rk" min="20" max="150" step="5" value="100">
+        </div>
+        <div class="field">
+          <label for="n">Number of racks <output id="nO"></output></label>
+          <input type="range" id="n" min="1" max="40" step="1" value="8">
+        </div>
+        <div class="field">
+          <label for="cap">Heat captured by liquid <output id="capO"></output></label>
+          <input type="range" id="cap" min="50" max="95" step="5" value="80">
+          <small>The rest goes into the room air.</small>
+        </div>
+        <div class="field">
+          <label for="fluid">Coolant</label>
+          <select id="fluid"><option value="4.19">Treated water</option><option value="4.0">PG25 (water + 25% glycol)</option></select>
+        </div>
+        <div class="field">
+          <label for="dt">Coolant temperature rise <output id="dtO"></output></label>
+          <input type="range" id="dt" min="4" max="15" step="1" value="10">
+          <small>Difference between coolant going in and coming out.</small>
+        </div>
+        <div class="field">
+          <label for="cduCap">CDU capacity (each) <output id="cduO"></output></label>
+          <input type="range" id="cduCap" min="100" max="2500" step="50" value="400">
+        </div>
+        <div class="field">
+          <label for="cn">Number of CDUs <output id="cnO"></output></label>
+          <input type="range" id="cn" min="1" max="8" step="1" value="3">
+        </div>
+      </div>
+      <div class="results" aria-live="polite">
+        <div class="card">
+          <h3>Coolant flow needed</h3>
+          <div class="row2">
+            <div><span>Per rack</span><div class="big" id="fr"></div></div>
+            <div><span>All racks</span><div class="big" id="ft"></div></div>
+          </div>
+          <p id="fText"></p>
+        </div>
+        <div class="card">
+          <h3>CDU capacity <span class="badge" id="cBadge"></span></h3>
+          <div class="meter"><div class="fill" id="cFill"></div><div class="mark" id="mN1"><span>one CDU down</span></div><div class="mark" id="mAll" style="background:var(--muted)"><span>all CDUs</span></div></div>
+          <p id="cText"></p>
+        </div>
+        <div class="card">
+          <h3>Leftover heat to room air</h3>
+          <div class="big" id="air"></div>
+          <p id="aText"></p>
+        </div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VERIFY -->
+<section id="verify">
+  <div class="wrap">
+    <div class="prose">
+      <h2>How to verify direct-to-chip capacity</h2>
+      <p>Same three ideas as always: find the limit, measure the real load, and keep a margin with a backup. Here's what that means for liquid.</p>
+      <ol class="steps">
+        <li><strong>CDU capacity at your temperatures.</strong>A CDU's rated kW depends on the facility water temperature and approach. Check its rating at <em>your</em> conditions, not the brochure's best case.</li>
+        <li><strong>Flow to every rack.</strong>Use the formula above to work out the flow each rack needs, then confirm the CDU pumps and pipes can deliver it. Racks furthest from the CDU get the least pressure.</li>
+        <li><strong>Temperatures.</strong>Track coolant supply and return temperature, the temperature rise at each rack, and chip temperatures reported by the servers themselves.</li>
+        <li><strong>Pressure.</strong>Monitor pressure difference across the rack. A slow rise often means filters or cold plates are clogging.</li>
+        <li><strong>Redundancy.</strong>Spare pumps in each CDU, at least one spare CDU (N+1), and spare capacity in the facility water plant.</li>
+        <li><strong>Leftover air heat.</strong>Add up the heat that still goes to air, and check the room cooling can handle it.</li>
+        <li><strong>Leaks and water quality.</strong>Leak sensors under manifolds and CDUs, regular coolant sampling, and filter changes.</li>
+      </ol>
+
+      <h3>Why pumps must never stop</h3>
+      <p>Cold plates hold very little liquid, so there's almost no buffer. If the flow stops, this is roughly what happens:</p>
+      <ol class="steps red">
+        <li><strong>Pumps stop</strong>Flow to the cold plates drops to zero.</li>
+        <li><strong>Seconds later, chip temperatures shoot up</strong>A 1,000 W chip heats very fast with no liquid moving.</li>
+        <li><strong>Chips slow down or shut off</strong>They throttle to protect themselves, and jobs fail.</li>
+      </ol>
+      <p>That's why CDU pumps are normally on <strong>UPS power</strong>, just like the servers, and have spares that start automatically.</p>
+    </div>
+
+    <h3>Commissioning checklist (when a new system is installed)</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Check</th><th>What it means</th></tr></thead>
+        <tbody>
+          <tr><td>Pressure test</td><td>Pressurize the pipes with no servers attached and confirm nothing leaks.</td></tr>
+          <tr><td>Flush and fill</td><td>Rinse out debris from installation, then fill with the correct treated coolant.</td></tr>
+          <tr><td>Flow balancing</td><td>Confirm every rack gets its design flow, including the furthest one.</td></tr>
+          <tr><td>Load bank test</td><td>Use heater loads that mimic servers to prove the CDU and plant remove the full design heat.</td></tr>
+          <tr><td>Failover test</td><td>Switch off a pump, then a whole CDU, and confirm flow and temperatures hold.</td></tr>
+          <tr><td>Alarm test</td><td>Trigger leak, high-temperature and low-flow alarms to prove they reach the operations team.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- GLOSSARY -->
+<section id="glossary">
+  <div class="wrap">
+    <h2>Glossary</h2>
+    <dl class="gloss">
+      <div><dt>Cold plate</dt><dd>Copper block with tiny channels that sits on a chip and passes its heat into liquid.</dd></div>
+      <div><dt>CDU</dt><dd>Coolant distribution unit. Pumps, filters and a heat exchanger connecting the server loop to the building loop.</dd></div>
+      <div><dt>TCS</dt><dd>Technology cooling system. The server-side loop between cold plates and the CDU.</dd></div>
+      <div><dt>FWS</dt><dd>Facility water system. The building-side loop between the CDU and the chillers or cooling towers.</dd></div>
+      <div><dt>Manifold</dt><dd>The pair of vertical pipes in a rack (supply and return) that feed each server.</dd></div>
+      <div><dt>Quick disconnect</dt><dd>A drip-free connector that lets a server be unplugged from the liquid loop for maintenance.</dd></div>
+      <div><dt>Thermal paste (TIM)</dt><dd>Thermal interface material. A thin layer that fills tiny gaps between chip and cold plate.</dd></div>
+      <div><dt>Approach temperature</dt><dd>How much warmer the output of a heat exchanger is than the water cooling it.</dd></div>
+      <div><dt>PG25</dt><dd>Coolant made of water with 25% propylene glycol, plus inhibitors against corrosion and growth.</dd></div>
+      <div><dt>Capture ratio</dt><dd>Share of a server's heat taken by the liquid. The rest goes to room air.</dd></div>
+      <div><dt>Single-phase / two-phase</dt><dd>Whether the coolant stays liquid, or boils into vapor inside the cold plate.</dd></div>
+      <div><dt>ASHRAE W-classes</dt><dd>Industry classes (W17, W27, W32, W40, W45…) naming the maximum facility water supply temperature in °C.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap prose">
+    <p>Numbers are simplified for learning. Real designs follow the server maker's coolant, flow and temperature requirements and a mechanical engineer's review. For deeper reading, look at ASHRAE's guidance on liquid cooling and the Open Compute Project's advanced cooling documents.</p>
+    <p><a href="datacenter-power-cooling-guide.html">Part 1: Power in, heat out</a> · <a href="datacenter-cooling-no-raised-floor.html">Part 2: No raised floor</a></p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const f=(n,d=0)=>n.toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d});
+  function badge(el,l,t){el.className='badge '+l;el.textContent=t;}
+  function calc(){
+    const rk=+$('rk').value, n=+$('n').value, cap=+$('cap').value/100, cp=+$('fluid').value;
+    const dt=+$('dt').value, cdu=+$('cduCap').value, cn=+$('cn').value;
+    $('rkO').textContent=rk+' kW'; $('nO').textContent=n; $('capO').textContent=Math.round(cap*100)+'%';
+    $('dtO').textContent=dt+' °C'; $('cduO').textContent=cdu+' kW'; $('cnO').textContent=cn;
+
+    const liqRack=rk*cap, liqAll=liqRack*n;
+    const lpmRack=liqRack/(cp*dt)*60, lpmAll=lpmRack*n;
+    $('fr').textContent=f(lpmRack)+' L/min';
+    $('ft').textContent=f(lpmAll)+' L/min';
+    $('fText').innerHTML='Each rack sends '+f(liqRack)+' kW into the coolant. At a '+dt+' °C rise, that needs '+f(lpmRack)+' liters per minute. Total liquid heat: <strong>'+f(liqAll)+' kW</strong>.';
+
+    const all=cdu*cn, n1=cdu*(cn-1);
+    const scale=Math.max(all,liqAll)*1.1;
+    $('cFill').style.width=Math.min(liqAll/scale*100,100)+'%';
+    $('cFill').style.background= liqAll>n1 ? 'var(--heat)' : 'var(--copper)';
+    $('mAll').style.left=(all/scale*100)+'%';
+    $('mN1').style.left=(n1/scale*100)+'%';
+    $('mN1').style.display= cn>1 ? 'block':'none';
+    if(cn===1){ badge($('cBadge'), liqAll<=all*0.9?'warn':'bad', liqAll<=all?'No spare CDU':'Not enough'); }
+    else if(liqAll<=n1*0.85) badge($('cBadge'),'good','Comfortable');
+    else if(liqAll<=n1) badge($('cBadge'),'warn','Getting close');
+    else if(liqAll<=all) badge($('cBadge'),'bad','No spare CDU');
+    else badge($('cBadge'),'bad','Not enough');
+    $('cText').innerHTML = cn>1
+      ? 'You have '+f(all)+' kW with every CDU running, and <strong>'+f(n1)+' kW</strong> if one fails. The liquid load is '+f(liqAll)+' kW.'
+      : 'One CDU gives '+f(all)+' kW, but if it fails, cooling for every rack stops. Most designs have at least one spare.';
+
+    const air=(rk-liqRack)*n;
+    $('air').textContent=f(air)+' kW  ≈ '+f(air/3.517)+' tons';
+    $('aText').textContent='This heat still goes into the room and must be handled by air cooling (CRAH, in-row coolers or rear doors).';
+
+    const head = (cn>1?n1:0) - liqAll;
+    const extraRacks = Math.floor(head/liqRack);
+    $('verdict').innerHTML = cn===1
+      ? 'With a single CDU there is <strong>no backup</strong>. Add a second CDU so a failure doesn\u2019t stop every rack.'
+      : head>=0
+        ? 'With one CDU failed, there\u2019s still room for about <strong>'+f(head)+' kW</strong> more liquid heat, or roughly <strong>'+extraRacks+' more rack'+(extraRacks===1?'':'s')+'</strong> like these. Don\u2019t forget to check the room air cooling can handle the '+f(air)+' kW of leftover air heat.'
+        : 'If one CDU fails, the liquid loop is short by about <strong>'+f(-head)+' kW</strong>. Add a CDU, use larger CDUs, or reduce the load.';
+  }
+  ['rk','n','cap','fluid','dt','cduCap','cn'].forEach(id=>$(id).addEventListener('input',calc));
+  calc();
+})();
+</script>
+</body>
+</html>

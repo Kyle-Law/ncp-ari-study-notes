@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grounding a Server Rack, Explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF1EE; --panel:#FFFFFF; --ink:#1B2225; --muted:#56626A; --line:#C9D0CC;
+  --copper:#B26A34; --copper-lt:#D89A63; --earth:#2F8F4E; --stripe:#E0BE2E;
+  --danger:#C23B2A; --rack:#39434A; --unit:#56626A; --soil:#D9D2C3; --soil-dk:#B9AE97;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--paper:#151A1C;--panel:#1E2528;--ink:#E6EBE8;--muted:#9AA6A1;--line:#34403F;
+  --rack:#5B6870;--unit:#7B8A91;--soil:#3A352C;--soil-dk:#4E4739;}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.62}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.05;margin:0 0 .4em}
+h1{font-size:clamp(2.6rem,6vw,4.4rem);letter-spacing:-.01em}
+h2{font-size:clamp(1.9rem,3.6vw,2.6rem);margin-top:0}
+h3{font-size:1.35rem;font-weight:600}
+p{margin:0 0 1em;max-width:66ch}
+a{color:var(--copper)}
+section{padding:64px 0;border-top:1px solid var(--line)}
+.lede{font-size:1.2rem;color:var(--muted);max-width:56ch}
+
+/* conductor stripe, the page's one signature element */
+.stripe{height:10px;background:repeating-linear-gradient(135deg,var(--earth) 0 14px,var(--stripe) 14px 28px)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1fr 1.1fr;gap:40px;align-items:center;padding:56px 0 64px}
+.toggle{display:inline-flex;border:2px solid var(--ink);border-radius:999px;overflow:hidden;margin:8px 0 14px}
+.toggle button{font:600 1.05rem var(--display);padding:8px 18px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.toggle button:focus-visible,.hot:focus-visible,input:focus-visible{outline:3px solid var(--copper);outline-offset:2px}
+.caption{font-size:1rem;color:var(--muted);min-height:4.8em}
+.caption strong{color:var(--ink)}
+figure{margin:0}
+svg{width:100%;height:auto;display:block}
+
+/* svg classes */
+.s-rack{fill:var(--rack)}
+.s-unit{fill:var(--unit)}
+.s-led{fill:#7ED08F}
+.s-ink{stroke:var(--ink);fill:none;stroke-width:3;stroke-linecap:round}
+.s-head{fill:var(--panel);stroke:var(--ink);stroke-width:3}
+.s-floor{stroke:var(--ink);stroke-width:2}
+.s-soil{fill:var(--soil)}
+.s-copper{fill:var(--copper)}
+.s-copper-line{stroke:var(--copper);stroke-width:4;fill:none;stroke-linecap:round}
+.s-green{stroke:var(--earth);stroke-width:7;fill:none}
+.s-yellow{stroke:var(--stripe);stroke-width:7;fill:none;stroke-dasharray:9 9}
+.s-earth{stroke:var(--ink);stroke-width:3;stroke-linecap:round}
+.s-spark{fill:var(--stripe);stroke:var(--danger);stroke-width:1.5}
+.s-label{font:600 14px var(--display);fill:var(--muted)}
+.s-label-ink{font:600 15px var(--display);fill:var(--ink)}
+.s-wall{fill:none;stroke:var(--line);stroke-width:3}
+.s-room{fill:var(--panel)}
+.flow{fill:none;stroke:var(--danger);stroke-width:5;stroke-linecap:round;stroke-dasharray:1 13;animation:flow .7s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-14}}
+@media (prefers-reduced-motion:reduce){.flow{animation:none;stroke-dasharray:none;opacity:.55}}
+.person.shocked .s-ink,.person.shocked .s-head{stroke:var(--danger)}
+.hidden{display:none}
+
+/* two-up */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:22px}
+.card p{font-size:1rem}
+
+/* demo */
+.demo{display:grid;grid-template-columns:1.3fr 1fr;gap:32px;align-items:start}
+.controls label{display:block;font:600 1.1rem var(--display);margin:14px 0 4px}
+.controls input[type=range]{width:100%;accent-color:var(--copper)}
+.readout{font:700 2.8rem var(--display);line-height:1}
+.readout small{font-size:1rem;color:var(--muted);font-weight:500}
+.check{display:flex;gap:10px;align-items:center;font:600 1.1rem var(--display);cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--earth)}
+
+/* building map */
+.map{display:grid;grid-template-columns:1.5fr 1fr;gap:28px;align-items:start}
+.hot{cursor:pointer;outline:none}
+.hot .hit{fill:transparent}
+.hot:hover .hit,.hot.active .hit{fill:rgba(178,106,52,.14);stroke:var(--copper);stroke-width:2;stroke-dasharray:4 4}
+#info{position:sticky;top:20px}
+#info .tag{font:600 1rem var(--display);color:var(--copper)}
+.hint{font-size:.95rem;color:var(--muted)}
+
+/* steps */
+ol.steps{list-style:none;padding:0;margin:0;counter-reset:s}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:56px 1fr;gap:16px;padding:18px 0;border-bottom:1px solid var(--line)}
+ol.steps li::before{content:counter(s);font:700 2.4rem var(--display);color:var(--copper);line-height:1}
+ol.steps h3{margin-bottom:.2em}
+ol.steps p{margin:0;font-size:1rem}
+
+/* mistakes */
+.mistakes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px}
+.mistakes .card svg{max-width:220px;margin:0 auto 12px}
+
+/* checklist */
+.list{list-style:none;padding:0;margin:0}
+.list li{padding:10px 0;border-bottom:1px solid var(--line)}
+.bar{height:12px;background:var(--line);border-radius:6px;overflow:hidden;margin:10px 0 18px}
+.bar span{display:block;height:100%;width:0;background:repeating-linear-gradient(135deg,var(--earth) 0 10px,var(--stripe) 10px 20px);transition:width .3s}
+footer{padding:40px 0 60px;font-size:.95rem;color:var(--muted);border-top:1px solid var(--line)}
+
+@media (max-width:820px){
+  .hero,.two,.demo,.map{grid-template-columns:1fr}
+  #info{position:static}
+  body{font-size:17px}
+}
+</style>
+</head>
+<body>
+<div class="stripe" aria-hidden="true"></div>
+
+<header class="wrap hero">
+  <div>
+    <h1>Grounding a server rack, explained</h1>
+    <p class="lede">When something inside a rack fails, electricity looks for the easiest way to earth. Grounding decides what that path is: a copper conductor, or whoever happens to be touching the rack.</p>
+    <div class="toggle" role="group" aria-label="Rack state">
+      <button id="btnG" aria-pressed="true">Grounded</button>
+      <button id="btnU" aria-pressed="false">Not grounded</button>
+    </div>
+    <p class="caption" id="heroCap"></p>
+  </div>
+  <figure>
+    <svg viewBox="0 0 560 420" role="img" aria-labelledby="heroTitle">
+      <title id="heroTitle">A server rack with an internal fault, showing where the fault current flows</title>
+      <defs>
+        <pattern id="soil" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="14" height="14" class="s-soil"/><line x1="0" y1="0" x2="0" y2="14" stroke="var(--soil-dk)" stroke-width="3"/>
+        </pattern>
+      </defs>
+      <rect x="0" y="340" width="560" height="80" fill="url(#soil)"/>
+      <line x1="0" y1="340" x2="560" y2="340" class="s-floor"/>
+      <!-- rack -->
+      <rect x="60" y="36" width="150" height="304" rx="3" class="s-rack"/>
+      <g id="units"></g>
+      <polygon class="s-spark" points="104,86 94,104 104,104 96,122 118,98 107,98 114,86"/>
+      <text x="60" y="26" class="s-label">Server rack</text>
+      <text x="124" y="96" class="s-label-ink" fill="#fff" style="fill:#fff">fault</text>
+      <!-- ground stud -->
+      <circle cx="205" cy="318" r="6" class="s-copper"/>
+      <!-- grounding conductor -->
+      <g id="gc">
+        <path d="M210 318 H360" class="s-green"/><path d="M210 318 H360" class="s-yellow"/>
+        <text x="228" y="306" class="s-label">grounding conductor</text>
+      </g>
+      <g id="gcCut" class="hidden">
+        <path d="M210 318 H250" class="s-green"/><path d="M210 318 H250" class="s-yellow"/>
+        <path d="M320 318 H360" class="s-green"/><path d="M320 318 H360" class="s-yellow"/>
+        <text x="252" y="306" class="s-label" style="fill:var(--danger)">missing / broken</text>
+      </g>
+      <!-- busbar -->
+      <rect x="360" y="309" width="120" height="18" rx="2" class="s-copper"/>
+      <g fill="var(--paper)"><circle cx="378" cy="318" r="3"/><circle cx="398" cy="318" r="3"/><circle cx="440" cy="318" r="3"/><circle cx="460" cy="318" r="3"/></g>
+      <text x="360" y="298" class="s-label">ground busbar</text>
+      <line x1="420" y1="327" x2="420" y2="390" class="s-copper-line"/>
+      <line x1="400" y1="392" x2="440" y2="392" class="s-earth"/><line x1="408" y1="401" x2="432" y2="401" class="s-earth"/><line x1="415" y1="410" x2="425" y2="410" class="s-earth"/>
+      <text x="448" y="400" class="s-label-ink">earth</text>
+      <!-- person -->
+      <g class="person" id="person">
+        <circle cx="285" cy="186" r="14" class="s-head"/>
+        <path d="M285 200 V265 M285 214 L212 204 M285 214 L306 246 M285 265 L270 338 M285 265 L300 338" class="s-ink"/>
+      </g>
+      <!-- current paths -->
+      <path id="pathG" class="flow" d="M112 104 H208 V318 H420 V392"/>
+      <path id="pathU" class="flow hidden" d="M112 104 H208 V204 L285 214 V265 L270 338 V395"/>
+    </svg>
+  </figure>
+</header>
+
+<main>
+<section>
+  <div class="wrap">
+    <h2>Two jobs: bonding and grounding</h2>
+    <p>People use "grounding" for both, but a proper rack installation does two separate things. First, every metal part is tied together so nothing can sit at a different voltage from its neighbour. Then that whole connected system gets one low-resistance route to earth.</p>
+    <div class="two">
+      <div class="card">
+        <svg viewBox="0 0 320 190" role="img" aria-label="Two racks and an overhead cable tray tied together with copper jumpers">
+          <rect x="30" y="20" width="260" height="14" rx="2" fill="none" stroke="var(--unit)" stroke-width="3"/>
+          <text x="34" y="14" class="s-label">cable tray</text>
+          <rect x="60" y="56" width="70" height="120" rx="2" class="s-rack"/><rect x="190" y="56" width="70" height="120" rx="2" class="s-rack"/>
+          <path d="M95 34 V56 M225 34 V56 M130 150 H190" class="s-copper-line"/>
+          <g class="s-copper"><circle cx="95" cy="34" r="5"/><circle cx="95" cy="56" r="5"/><circle cx="225" cy="34" r="5"/><circle cx="225" cy="56" r="5"/><circle cx="130" cy="150" r="5"/><circle cx="190" cy="150" r="5"/></g>
+          <text x="136" y="140" class="s-label">jumper</text>
+        </svg>
+        <h3>Bonding</h3>
+        <p>Racks, doors, side panels, cable trays and ladder racks are connected to each other with jumpers and conductive hardware. Everything ends up at the same electrical potential, so no current has a reason to flow between them.</p>
+      </div>
+      <div class="card">
+        <svg viewBox="0 0 320 190" role="img" aria-label="Bonded racks connected by one conductor down to earth">
+          <rect x="60" y="30" width="70" height="120" rx="2" class="s-rack"/><rect x="190" y="30" width="70" height="120" rx="2" class="s-rack"/>
+          <path d="M130 124 H190" class="s-copper-line"/>
+          <path d="M160 124 V168" class="s-green"/><path d="M160 124 V168" class="s-yellow"/>
+          <line x1="140" y1="170" x2="180" y2="170" class="s-earth"/><line x1="148" y1="178" x2="172" y2="178" class="s-earth"/><line x1="155" y1="186" x2="165" y2="186" class="s-earth"/>
+          <text x="192" y="178" class="s-label-ink">earth</text>
+        </svg>
+        <h3>Grounding</h3>
+        <p>The bonded system is then connected to the building's grounding network and ultimately to earth. Surges, static and fault current now have a planned exit that bypasses both people and equipment.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Why equal potential matters</h2>
+    <p>Current only flows when there is a voltage difference. Two unbonded racks can drift apart in potential, and anything that connects them, such as a copper data cable's shield or a technician's two hands, becomes the path. Try it below.</p>
+    <div class="demo">
+      <figure class="card">
+        <svg viewBox="0 0 420 250" role="img" aria-label="Two racks joined by a data cable, showing current flowing through the cable when their voltages differ">
+          <rect x="0" y="210" width="420" height="40" fill="url(#soil)"/>
+          <line x1="0" y1="210" x2="420" y2="210" class="s-floor"/>
+          <rect x="50" y="60" width="90" height="150" rx="2" class="s-rack"/>
+          <rect x="280" y="60" width="90" height="150" rx="2" class="s-rack"/>
+          <text x="58" y="50" class="s-label-ink">Rack A <tspan id="vA">0 V</tspan></text>
+          <text x="288" y="50" class="s-label-ink">Rack B <tspan id="vB">0 V</tspan></text>
+          <path id="cable" d="M140 90 C 200 20, 220 20, 280 90" fill="none" stroke="var(--unit)" stroke-width="6"/>
+          <path id="cableFlow" class="flow" d="M140 90 C 200 20, 220 20, 280 90"/>
+          <text x="165" y="22" class="s-label">data cable</text>
+          <g id="bondLink">
+            <path d="M140 196 H280" class="s-green"/><path d="M140 196 H280" class="s-yellow"/>
+            <text x="164" y="186" class="s-label">bonding conductor</text>
+          </g>
+        </svg>
+      </figure>
+      <div class="controls">
+        <label class="check"><input type="checkbox" id="bonded" checked> Racks bonded together</label>
+        <label for="drift">Voltage drift between the racks if they were not bonded</label>
+        <input type="range" id="drift" min="0" max="40" value="15">
+        <p class="readout" id="dv">0 V <small>difference</small></p>
+        <p class="hint" id="demoCap"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>The path from rack to earth</h2>
+    <p>In a data centre the route to earth is a hierarchy of conductors and busbars, laid out in standards such as TIA-607 (bonding and grounding for telecom) and the grounding section of TIA-942. Select any part of the building to see its role.</p>
+    <div class="map">
+      <figure class="card">
+        <svg viewBox="0 0 640 430" role="img" aria-label="Cross-section of a building showing the grounding hierarchy from racks to earth electrode">
+          <rect x="0" y="350" width="640" height="80" fill="url(#soil)"/>
+          <line x1="0" y1="350" x2="640" y2="350" class="s-floor"/>
+          <rect x="20" y="20" width="600" height="330" class="s-room"/>
+          <rect x="20" y="20" width="600" height="330" class="s-wall"/>
+          <line x1="20" y1="195" x2="620" y2="195" class="s-wall"/>
+          <text x="32" y="44" class="s-label">Telecom / server room</text>
+          <text x="32" y="220" class="s-label">Main electrical &amp; entrance room</text>
+
+          <!-- electrode -->
+          <g class="hot" tabindex="0" role="button" data-k="electrode">
+            <rect class="hit" x="52" y="330" width="46" height="96" rx="4"/>
+            <line x1="75" y1="330" x2="75" y2="418" stroke="var(--copper)" stroke-width="6"/>
+          </g>
+          <!-- service panel -->
+          <g class="hot" tabindex="0" role="button" data-k="panel">
+            <rect class="hit" x="40" y="236" width="70" height="98" rx="4"/>
+            <rect x="48" y="244" width="54" height="82" rx="3" fill="var(--unit)"/>
+            <path d="M62 262 l8 -8 l-4 12 l8 -2 l-10 14" stroke="var(--stripe)" stroke-width="3" fill="none"/>
+          </g>
+          <!-- BCT -->
+          <g class="hot" tabindex="0" role="button" data-k="bct">
+            <rect class="hit" x="102" y="276" width="80" height="24" rx="4"/>
+            <path d="M102 288 H178" class="s-green"/><path d="M102 288 H178" class="s-yellow"/>
+          </g>
+          <!-- PBB -->
+          <g class="hot" tabindex="0" role="button" data-k="pbb">
+            <rect class="hit" x="172" y="270" width="112" height="36" rx="4"/>
+            <rect x="178" y="280" width="100" height="16" rx="2" class="s-copper"/>
+            <text x="190" y="322" class="s-label-ink">PBB / TMGB</text>
+          </g>
+          <!-- TBB -->
+          <g class="hot" tabindex="0" role="button" data-k="tbb">
+            <rect class="hit" x="236" y="170" width="28" height="112" rx="4"/>
+            <path d="M250 280 V172" class="s-green"/><path d="M250 280 V172" class="s-yellow"/>
+            <text x="268" y="240" class="s-label">TBB</text>
+          </g>
+          <!-- SBB -->
+          <g class="hot" tabindex="0" role="button" data-k="sbb">
+            <rect class="hit" x="196" y="148" width="104" height="36" rx="4"/>
+            <rect x="202" y="158" width="92" height="16" rx="2" class="s-copper"/>
+            <text x="206" y="146" class="s-label-ink">SBB / TGB</text>
+          </g>
+          <!-- TEBC along the row -->
+          <g class="hot" tabindex="0" role="button" data-k="tebc">
+            <rect class="hit" x="292" y="168" width="290" height="22" rx="4"/>
+            <path d="M294 180 H576" class="s-green"/><path d="M294 180 H576" class="s-yellow"/>
+          </g>
+          <!-- racks -->
+          <g class="hot" tabindex="0" role="button" data-k="rack">
+            <rect class="hit" x="330" y="54" width="220" height="102" rx="4"/>
+            <rect x="340" y="62" width="54" height="92" rx="2" class="s-rack"/>
+            <rect x="412" y="62" width="54" height="92" rx="2" class="s-rack"/>
+            <rect x="484" y="62" width="54" height="92" rx="2" class="s-rack"/>
+            <rect x="386" y="68" width="4" height="80" class="s-copper"/>
+            <rect x="458" y="68" width="4" height="80" class="s-copper"/>
+            <rect x="530" y="68" width="4" height="80" class="s-copper"/>
+          </g>
+          <!-- RBCs -->
+          <g class="hot" tabindex="0" role="button" data-k="rbc">
+            <rect class="hit" x="356" y="152" width="170" height="20" rx="4"/>
+            <path d="M367 154 V178 M439 154 V178 M511 154 V178" class="s-copper-line"/>
+            <g class="s-copper"><circle cx="367" cy="180" r="4"/><circle cx="439" cy="180" r="4"/><circle cx="511" cy="180" r="4"/></g>
+          </g>
+          <!-- ladder rack -->
+          <g class="hot" tabindex="0" role="button" data-k="ladder">
+            <rect class="hit" x="330" y="30" width="270" height="28" rx="4"/>
+            <rect x="336" y="38" width="250" height="10" fill="none" stroke="var(--unit)" stroke-width="3"/>
+            <path d="M586 48 V180" class="s-copper-line"/>
+          </g>
+        </svg>
+      </figure>
+      <div id="info" class="card" aria-live="polite">
+        <p class="tag" id="infoTag">Start here</p>
+        <h3 id="infoTitle">Follow the copper</h3>
+        <p id="infoBody">Each highlighted part is one link in the chain. Fault current from a rack travels down through the row conductor, the room busbar, the backbone and the main busbar before reaching the earth electrode outside the building.</p>
+        <p class="hint">Names in brackets are the older TIA-607 terms you will still see on drawings.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Should every rack be grounded?</h2>
+    <p>The article's answer is that it depends on two things: what the manufacturers of your IT equipment recommend, and how much downtime your facility can tolerate. A single rack in a small office may rely on the equipment's own power-cord ground. A data centre chasing high availability almost always bonds and grounds every rack, because surges, static discharge and noise are among the quieter causes of outages and hardware damage.</p>
+    <p>For the installation itself, it suggests bringing in contractors who supply a complete network grounding system, and following the grounding guidance in TIA-942 so that electrical continuity runs across every rack and cabinet.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>How a rack gets grounded, in order</h2>
+    <ol class="steps">
+      <li><div><h3>Check the requirements</h3><p>Read the equipment manufacturers' grounding instructions, your uptime targets, and the standards that apply: TIA-607 and TIA-942 for telecom spaces, plus your local electrical code.</p></div></li>
+      <li><div><h3>Bring in a qualified contractor</h3><p>Grounding ties into the building's electrical system, so a licensed electrician or grounding specialist should design and install it.</p></div></li>
+      <li><div><h3>Install the room busbar</h3><p>Mount a grounding busbar in the server room and connect it back to the building's main grounding point. It becomes the central spot every rack connects to.</p></div></li>
+      <li><div><h3>Bond the rack's own parts</h3><p>Rails, frame, doors and side panels need metal-to-metal contact. Use paint-piercing washers or bonding jumpers, because paint and powder coat are insulators. Many modern cabinets arrive pre-bonded.</p></div></li>
+      <li><div><h3>Connect each rack to the busbar</h3><p>Run a green or green/yellow bonding conductor from the rack's ground lug or stud to the busbar or row conductor, using listed compression lugs.</p></div></li>
+      <li><div><h3>Bond everything else metal</h3><p>Ladder racks, cable trays, enclosures and power strips join the same system so nothing is left floating at a different potential.</p></div></li>
+      <li><div><h3>Ground before you cable</h3><p>Install grounding before other cabling fills the rack. It is far easier to reach studs and route conductors in an empty rack.</p></div></li>
+      <li><div><h3>Test and keep testing</h3><p>Verify continuity and resistance after installation, then recheck periodically. Connections loosen and corrode, especially after moves and adds.</p></div></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Common mistakes</h2>
+    <div class="mistakes">
+      <div class="card">
+        <svg viewBox="0 0 220 110" aria-hidden="true">
+          <rect x="20" y="40" width="180" height="30" rx="3" fill="var(--unit)"/>
+          <rect x="20" y="40" width="180" height="8" fill="var(--rack)"/>
+          <circle cx="110" cy="55" r="12" class="s-copper"/>
+          <path d="M96 30 l28 50 M124 30 l-28 50" stroke="var(--danger)" stroke-width="4"/>
+        </svg>
+        <h3>Bolting onto paint</h3>
+        <p>A lug on a painted surface can look secure yet carry almost nothing. Scrape to bare metal or use paint-piercing hardware.</p>
+      </div>
+      <div class="card">
+        <svg viewBox="0 0 220 110" aria-hidden="true">
+          <rect x="10" y="20" width="40" height="70" class="s-rack"/><rect x="90" y="20" width="40" height="70" class="s-rack"/><rect x="170" y="20" width="40" height="70" class="s-rack"/>
+          <path d="M50 80 H90 M130 80 H170" class="s-copper-line"/>
+          <path d="M152 70 l16 20 M168 70 l-16 20" stroke="var(--danger)" stroke-width="4"/>
+        </svg>
+        <h3>Daisy-chaining racks</h3>
+        <p>If each rack's ground passes through the previous rack, removing one breaks the path for everything after it. Tap each rack to a common conductor instead.</p>
+      </div>
+      <div class="card">
+        <svg viewBox="0 0 220 110" aria-hidden="true">
+          <path d="M20 55 H80 C 110 55, 110 15, 140 15 C 170 15, 170 95, 140 95 C 120 95, 120 55, 150 55 H200" class="s-green"/>
+          <path d="M20 55 H80 C 110 55, 110 15, 140 15 C 170 15, 170 95, 140 95 C 120 95, 120 55, 150 55 H200" class="s-yellow"/>
+        </svg>
+        <h3>Coils and sharp bends</h3>
+        <p>Extra slack coiled up or tight bends add impedance to fast surges. Keep grounding runs short, direct and gently curved.</p>
+      </div>
+      <div class="card">
+        <svg viewBox="0 0 220 110" aria-hidden="true">
+          <rect x="30" y="20" width="60" height="80" class="s-rack"/>
+          <path d="M90 60 C 130 60, 130 90, 180 90" stroke="var(--ink)" stroke-width="5" fill="none"/>
+          <rect x="176" y="80" width="26" height="20" rx="3" fill="var(--unit)"/>
+          <text x="110" y="40" class="s-label">power cord only</text>
+        </svg>
+        <h3>Relying on the power cord</h3>
+        <p>A cord's earth pin protects that one device. The rack frame, trays and doors still need their own bonded path.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Quick checklist</h2>
+    <p>Tick off what your installation already has.</p>
+    <div class="bar"><span id="prog"></span></div>
+    <ul class="list" id="checklist">
+      <li><label class="check"><input type="checkbox"> Manufacturer grounding guidance reviewed</label></li>
+      <li><label class="check"><input type="checkbox"> Grounding busbar installed in the room</label></li>
+      <li><label class="check"><input type="checkbox"> Busbar tied back to the building's main ground</label></li>
+      <li><label class="check"><input type="checkbox"> Rack doors, panels and rails bonded to the frame</label></li>
+      <li><label class="check"><input type="checkbox"> Each rack individually connected, not daisy-chained</label></li>
+      <li><label class="check"><input type="checkbox"> Cable trays and ladder racks bonded</label></li>
+      <li><label class="check"><input type="checkbox"> Continuity tested and recorded</label></li>
+    </ul>
+    <p class="hint" id="progText">0 of 7 done</p>
+  </div>
+</section>
+</main>
+
+<footer class="wrap">
+  <p>Based on RackSolutions' article "How To Properly Ground Your Server Rack", with background from TIA-607 and TIA-942 terminology. This is an educational summary: grounding work should be designed and installed by a licensed electrician to your local electrical code.</p>
+  <p><a href="https://www.racksolutions.com/news/blog/how-to-properly-ground-your-server-rack/">Read the original article</a></p>
+</footer>
+<div class="stripe" aria-hidden="true"></div>
+
+<script>
+// rack units in hero
+(function(){
+  const g=document.getElementById('units');let h='';
+  for(let i=0;i<8;i++){const y=50+i*34;h+=`<rect x="72" y="${y}" width="126" height="26" rx="2" class="s-unit"/><circle cx="186" cy="${y+13}" r="3" class="s-led"/>`;}
+  g.innerHTML=h;
+})();
+
+// hero toggle
+const caps={
+  g:'<strong>Grounded.</strong> Fault current jumps to the rack frame, runs down to the ground stud, along the conductor to the busbar and into earth. The circuit breaker trips, and the person touching the rack feels nothing.',
+  u:'<strong>Not grounded.</strong> The frame is now live. With no copper path to earth, the current takes the next available route: through the technician\'s arm, body and feet to the floor.'
+};
+function setHero(grounded){
+  document.getElementById('btnG').setAttribute('aria-pressed',grounded);
+  document.getElementById('btnU').setAttribute('aria-pressed',!grounded);
+  document.getElementById('gc').classList.toggle('hidden',!grounded);
+  document.getElementById('gcCut').classList.toggle('hidden',grounded);
+  document.getElementById('pathG').classList.toggle('hidden',!grounded);
+  document.getElementById('pathU').classList.toggle('hidden',grounded);
+  document.getElementById('person').classList.toggle('shocked',!grounded);
+  document.getElementById('heroCap').innerHTML=grounded?caps.g:caps.u;
+}
+document.getElementById('btnG').onclick=()=>setHero(true);
+document.getElementById('btnU').onclick=()=>setHero(false);
+setHero(true);
+
+// potential demo
+const bonded=document.getElementById('bonded'),drift=document.getElementById('drift');
+function demo(){
+  const b=bonded.checked,d=+drift.value,dv=b?0:d;
+  document.getElementById('vA').textContent='0 V';
+  document.getElementById('vB').textContent=dv+' V';
+  document.getElementById('dv').innerHTML=dv+' V <small>difference</small>';
+  document.getElementById('bondLink').style.display=b?'':'none';
+  const f=document.getElementById('cableFlow');
+  f.style.display=dv>0?'':'none';
+  f.style.animationDuration=(dv>0?Math.max(.15,1.6-dv/28):1)+'s';
+  f.style.strokeWidth=3+dv/6;
+  document.getElementById('demoCap').textContent=b
+    ?'Bonded: both racks sit at the same potential, so no current flows through the data cable no matter how the building\'s voltages wander.'
+    :(dv===0?'No drift right now, but nothing is holding the racks together. Move the slider.'
+      :'Unbonded: a '+dv+' V difference pushes current through the cable shield. That shows up as noise, data errors, damaged ports, or a shock for anyone touching both racks.');
+}
+bonded.onchange=demo;drift.oninput=demo;demo();
+
+// building map
+const info={
+  electrode:['Grounding electrode','Earth electrode','Copper rods or a buried ring outside the building. This is where current finally leaves into the soil. Everything upstream exists to reach this point with as little resistance as possible.'],
+  panel:['Electrical service','Main power entrance','The building\'s main electrical panel and its grounding electrode conductor. The telecom grounding system is tied to this same ground, so power and data share one reference.'],
+  bct:['BCT','Bonding conductor for telecom','A heavy conductor linking the electrical service ground to the main telecom busbar. It keeps the power ground and telecom ground at the same potential.'],
+  pbb:['PBB (TMGB)','Primary bonding busbar','The main copper busbar for the whole telecom grounding system, usually in the entrance or main equipment room. Every other telecom busbar traces back here.'],
+  tbb:['TBB','Telecom bonding backbone','The conductor that runs up through the building from the primary busbar to the busbar on each floor or in each telecom room.'],
+  sbb:['SBB (TGB)','Secondary bonding busbar','The busbar in the server or telecom room. Racks, cabinets and trays in the room connect to this. It is the "ground busbar" most rack guides refer to.'],
+  tebc:['TEBC','Equipment bonding conductor','A conductor run along a row of racks, often overhead or under the floor. Each rack taps into it, so racks never depend on their neighbours for ground.'],
+  rbc:['RBC','Rack bonding conductor','The short conductor from a rack\'s ground lug or stud to the row conductor or busbar, fixed with a listed compression lug.'],
+  rack:['Rack ground bar','Inside the rack','A copper strip or stud on the rack frame. Equipment chassis, PDUs and bonded doors and panels connect here, giving every device in the rack one common reference point.'],
+  ladder:['Ladder rack / cable tray','Pathway bonding','Overhead metal pathways are bonded into the system too. Left floating, they can pick up a different potential and pass it onto cables or people.']
+};
+document.querySelectorAll('.hot').forEach(el=>{
+  const go=()=>{
+    document.querySelectorAll('.hot').forEach(x=>x.classList.remove('active'));
+    el.classList.add('active');
+    const [t,tag,b]=info[el.dataset.k];
+    document.getElementById('infoTitle').textContent=t;
+    document.getElementById('infoTag').textContent=tag;
+    document.getElementById('infoBody').textContent=b;
+  };
+  el.addEventListener('click',go);
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+});
+
+// checklist
+const boxes=[...document.querySelectorAll('#checklist input')];
+function prog(){
+  const n=boxes.filter(b=>b.checked).length;
+  document.getElementById('prog').style.width=(n/boxes.length*100)+'%';
+  document.getElementById('progText').textContent=n+' of '+boxes.length+' done';
+}
+boxes.forEach(b=>b.onchange=prog);
+</script>
+</body>
+</html>

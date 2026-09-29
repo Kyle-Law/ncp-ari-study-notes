@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Power in, heat out: a beginner's guide to data center capacity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2F4F3;
+    --panel:#FFFFFF;
+    --ink:#18222D;
+    --muted:#566270;
+    --line:#C9D1D6;
+    --power:#D08A00;
+    --power-soft:#FBEFD2;
+    --cool:#1C74B8;
+    --cool-soft:#DCEBF6;
+    --heat:#C23B22;
+    --heat-soft:#F7DDD7;
+    --ok:#2E7D4F;
+    --ok-soft:#DCEFE3;
+    --body:"Barlow", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    --label:"Barlow Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.6}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+  .prose{max-width:720px}
+  h1,h2,h3{line-height:1.15;margin:0}
+  h1{font-size:clamp(2.4rem,6vw,4.2rem);font-weight:700;letter-spacing:-.01em}
+  h2{font-size:clamp(1.7rem,3.4vw,2.3rem);font-weight:700;margin-bottom:.6em}
+  h3{font-size:1.2rem;font-weight:600;margin:1.6em 0 .4em}
+  p{margin:0 0 1em}
+  a{color:var(--cool)}
+  :focus-visible{outline:3px solid var(--cool);outline-offset:2px}
+
+  /* Hero */
+  header{padding:64px 0 40px;border-bottom:1px solid var(--line)}
+  .lede{font-size:1.25rem;color:var(--muted);max-width:640px;margin-top:18px}
+  .equation{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:32px;font-family:var(--label);font-size:1.35rem;font-weight:600}
+  .chip{padding:8px 16px;border-radius:6px}
+  .chip.p{background:var(--power-soft);color:#7A5200}
+  .chip.h{background:var(--heat-soft);color:#8A2615}
+  .chip.c{background:var(--cool-soft);color:#11507F}
+  .eq-sign{color:var(--muted)}
+  nav.toc{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:32px;font-size:.95rem}
+  nav.toc a{color:var(--ink);text-decoration:none;border-bottom:2px solid var(--line)}
+  nav.toc a:hover{border-color:var(--ink)}
+
+  section{padding:64px 0;border-bottom:1px solid var(--line)}
+  .step-num{font-family:var(--label);font-size:1.1rem;color:var(--muted);display:block;margin-bottom:6px}
+
+  /* Analogy */
+  .pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-top:24px}
+  .pair > div{background:var(--panel);border-left:5px solid;padding:18px 20px;border-radius:0 6px 6px 0}
+  .pair .pw{border-color:var(--power)}
+  .pair .cl{border-color:var(--cool)}
+  .pair strong{display:block;margin-bottom:4px}
+
+  /* Diagrams */
+  figure{margin:28px 0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px}
+  figcaption{font-size:.92rem;color:var(--muted);margin-top:12px}
+  .diagram{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .diagram svg{display:block;width:100%;height:auto}
+  svg text{font-family:var(--label)}
+  .flow{stroke-dasharray:10 8;animation:flow 1.2s linear infinite}
+  @keyframes flow{to{stroke-dashoffset:-18}}
+  .node{cursor:pointer}
+  .node rect{transition:fill .15s}
+  .node:hover rect,.node.active rect{fill:var(--power-soft)}
+  .node:focus{outline:none}
+  .node:focus-visible rect{stroke:var(--cool);stroke-width:3}
+  .info{margin-top:16px;padding:16px 18px;background:var(--power-soft);border-radius:6px;min-height:110px}
+  .info h4{margin:0 0 4px;font-size:1.1rem}
+  .info p{margin:0 0 .4em;font-size:.98rem}
+  .info .check{font-size:.95rem;color:#5F4200}
+  .hint{font-size:.9rem;color:var(--muted);margin:10px 0 0}
+
+  .failed rect{fill:#E6E8EA!important;stroke:#9AA3AB!important}
+  .failed text{fill:#8A939B}
+  .failed path{stroke:#B7BEC4!important;animation:none!important}
+  button.toggle{font:inherit;font-size:.95rem;font-weight:600;background:var(--ink);color:#fff;border:0;border-radius:6px;padding:10px 18px;cursor:pointer;margin-top:14px}
+  button.toggle[aria-pressed="true"]{background:var(--heat)}
+  .status{font-size:.98rem;margin-top:10px}
+
+  /* Steps */
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:20px 0}
+  ol.steps li{counter-increment:s;position:relative;padding:0 0 18px 48px}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;font-family:var(--label);font-weight:600;display:grid;place-items:center}
+  ol.steps.c li::before{background:var(--cool)}
+  ol.steps strong{display:block}
+
+  .callout{background:var(--heat-soft);border-radius:6px;padding:16px 20px;margin:24px 0}
+  .callout.ok{background:var(--ok-soft)}
+
+  .twin{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+  .twin figure{margin:0}
+
+  /* Calculator */
+  .calc{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:28px;margin-top:24px}
+  @media (max-width:760px){.calc{grid-template-columns:1fr}}
+  .inputs{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px}
+  .field{margin-bottom:18px}
+  .field label{display:flex;justify-content:space-between;font-weight:600;font-size:.95rem;margin-bottom:6px}
+  .field label output{font-family:var(--label);font-size:1.05rem}
+  .field input[type=range]{width:100%;accent-color:var(--ink)}
+  .field select,.field input[type=number]{width:100%;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:#fff}
+  .field small{display:block;color:var(--muted);font-size:.85rem;margin-top:4px;line-height:1.4}
+  .results{display:flex;flex-direction:column;gap:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px 20px}
+  .card h3{margin:0 0 6px;display:flex;align-items:center;gap:10px}
+  .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+  .meter{position:relative;height:22px;background:#E8ECEE;border-radius:4px;margin:12px 0 26px}
+  .meter .fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;transition:width .3s}
+  .mark{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+  .mark span{position:absolute;top:28px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:var(--label);font-size:.82rem;color:var(--muted)}
+  .badge{display:inline-block;font-family:var(--label);font-weight:600;font-size:.95rem;padding:2px 10px;border-radius:4px}
+  .badge.good{background:var(--ok-soft);color:var(--ok)}
+  .badge.warn{background:var(--power-soft);color:#7A5200}
+  .badge.bad{background:var(--heat-soft);color:var(--heat)}
+  .card p{font-size:.97rem;margin:.3em 0}
+  .verdict{background:var(--ink);color:#fff;border-radius:8px;padding:18px 20px;font-size:1.05rem}
+  .verdict strong{color:#FFD27A}
+
+  /* Example */
+  table{border-collapse:collapse;width:100%;font-size:.98rem}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-weight:600;background:#E7EBED}
+  .tablewrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+
+  /* Glossary */
+  dl.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0 32px;margin:20px 0 0}
+  dl.gloss div{padding:12px 0;border-bottom:1px solid var(--line)}
+  dl.gloss dt{font-weight:700}
+  dl.gloss dd{margin:2px 0 0;color:var(--muted)}
+
+  footer{padding:40px 0 64px;color:var(--muted);font-size:.92rem}
+
+  @media (prefers-reduced-motion:reduce){
+    .flow{animation:none}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>Power in, heat out</h1>
+    <p class="lede">A beginner's guide to checking whether a data center has enough electricity and enough cooling for its computers, with diagrams you can click and a calculator to try.</p>
+    <div class="equation" aria-label="1 kilowatt of electricity in equals 1 kilowatt of heat out, which cooling must remove">
+      <span class="chip p">1 kW of electricity in</span>
+      <span class="eq-sign">=</span>
+      <span class="chip h">≈ 1 kW of heat out</span>
+      <span class="eq-sign">→</span>
+      <span class="chip c">cooling must remove it</span>
+    </div>
+    <nav class="toc" aria-label="Sections">
+      <a href="#idea">The big idea</a>
+      <a href="#power">1. Power</a>
+      <a href="#cooling">2. Cooling</a>
+      <a href="#try">3. Try the calculator</a>
+      <a href="#example">Worked example</a>
+      <a href="#glossary">Glossary</a>
+    </nav>
+  </div>
+</header>
+
+<!-- BIG IDEA -->
+<section id="idea">
+  <div class="wrap">
+    <div class="prose">
+      <h2>The big idea</h2>
+      <p>A data center is a building full of servers. Every server needs two things to survive: <strong>electricity</strong> to run, and <strong>cooling</strong> to carry away the heat it produces.</p>
+      <p>Almost every watt a server uses turns into heat. So power and cooling are two sides of the same coin. Verifying capacity means answering one question: <em>can this building safely supply the power and remove the heat for all its equipment, including what we want to add next?</em></p>
+    </div>
+    <div class="pair">
+      <div class="pw"><strong>Power problem, kitchen version</strong>Microwave, kettle and toaster all at once, and the breaker trips. The wiring had a limit, and you went past it.</div>
+      <div class="cl"><strong>Cooling problem, kitchen version</strong>Hours of cooking in a small kitchen with no fan, and it becomes unbearably hot. The heat had nowhere to go.</div>
+    </div>
+  </div>
+</section>
+
+<!-- POWER -->
+<section id="power">
+  <div class="wrap">
+    <div class="prose">
+      <span class="step-num">Part 1</span>
+      <h2>Power: follow the chain</h2>
+      <p>Electricity doesn't go straight from the wall into a server. It passes through a chain of equipment, and every link has its own limit. Like any chain, <strong>the weakest link sets the real limit.</strong></p>
+    </div>
+
+    <figure>
+      <div class="diagram">
+        <svg viewBox="0 0 1000 320" style="min-width:760px" role="img" aria-labelledby="pcTitle">
+          <title id="pcTitle">Power chain: utility grid, switchgear, UPS, PDU, rack PDU, servers, with a generator and batteries as backups</title>
+          <defs>
+            <marker id="arP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D08A00"/></marker>
+          </defs>
+          <!-- lines -->
+          <g stroke="#D08A00" stroke-width="4" fill="none">
+            <path class="flow" d="M140 90 H172" marker-end="url(#arP)"/>
+            <path class="flow" d="M305 90 H337" marker-end="url(#arP)"/>
+            <path class="flow" d="M470 90 H502" marker-end="url(#arP)"/>
+            <path class="flow" d="M635 90 H667" marker-end="url(#arP)"/>
+            <path class="flow" d="M800 90 H832" marker-end="url(#arP)"/>
+            <path class="flow" d="M240 220 V134" marker-end="url(#arP)" stroke-opacity=".55"/>
+            <path class="flow" d="M405 220 V134" marker-end="url(#arP)" stroke-opacity=".55"/>
+          </g>
+
+          <g class="node" data-k="utility" tabindex="0" role="button" aria-label="Utility grid">
+            <rect x="10" y="50" width="130" height="80" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <text x="75" y="85" text-anchor="middle" font-size="19" font-weight="600" fill="#18222D">Utility grid</text>
+            <text x="75" y="108" text-anchor="middle" font-size="15" fill="#566270">power company</text>
+          </g>
+          <g class="node" data-k="switch" tabindex="0" role="button" aria-label="Switchgear and ATS">
+            <rect x="175" y="50" width="130" height="80" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <text x="240" y="85" text-anchor="middle" font-size="19" font-weight="600" fill="#18222D">Switchgear</text>
+            <text x="240" y="108" text-anchor="middle" font-size="15" fill="#566270">main switches + ATS</text>
+          </g>
+          <g class="node" data-k="ups" tabindex="0" role="button" aria-label="UPS">
+            <rect x="340" y="50" width="130" height="80" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <text x="405" y="85" text-anchor="middle" font-size="19" font-weight="600" fill="#18222D">UPS</text>
+            <text x="405" y="108" text-anchor="middle" font-size="15" fill="#566270">no-break power</text>
+          </g>
+          <g class="node" data-k="pdu" tabindex="0" role="button" aria-label="PDU">
+            <rect x="505" y="50" width="130" height="80" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <text x="570" y="85" text-anchor="middle" font-size="19" font-weight="600" fill="#18222D">PDU</text>
+            <text x="570" y="108" text-anchor="middle" font-size="15" fill="#566270">room distribution</text>
+          </g>
+          <g class="node" data-k="rpdu" tabindex="0" role="button" aria-label="Rack PDU">
+            <rect x="670" y="50" width="130" height="80" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <text x="735" y="85" text-anchor="middle" font-size="19" font-weight="600" fill="#18222D">Rack PDU</text>
+            <text x="735" y="108" text-anchor="middle" font-size="15" fill="#566270">power strip in rack</text>
+          </g>
+          <g class="node" data-k="servers" tabindex="0" role="button" aria-label="Servers">
+            <rect x="835" y="30" width="155" height="120" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <g stroke="#18222D" stroke-width="1.5" fill="#E7EBED">
+              <rect x="855" y="44" width="115" height="12" rx="2"/>
+              <rect x="855" y="60" width="115" height="12" rx="2"/>
+              <rect x="855" y="76" width="115" height="12" rx="2"/>
+            </g>
+            <text x="912" y="115" text-anchor="middle" font-size="19" font-weight="600" fill="#18222D">Servers</text>
+            <text x="912" y="137" text-anchor="middle" font-size="15" fill="#566270">the IT load</text>
+          </g>
+          <g class="node" data-k="gen" tabindex="0" role="button" aria-label="Generator">
+            <rect x="175" y="220" width="130" height="70" rx="6" fill="#fff" stroke="#18222D" stroke-width="2" stroke-dasharray="6 4"/>
+            <text x="240" y="250" text-anchor="middle" font-size="19" font-weight="600" fill="#18222D">Generator</text>
+            <text x="240" y="272" text-anchor="middle" font-size="15" fill="#566270">long outages</text>
+          </g>
+          <g class="node" data-k="battery" tabindex="0" role="button" aria-label="Batteries">
+            <rect x="340" y="220" width="130" height="70" rx="6" fill="#fff" stroke="#18222D" stroke-width="2" stroke-dasharray="6 4"/>
+            <text x="405" y="250" text-anchor="middle" font-size="19" font-weight="600" fill="#18222D">Batteries</text>
+            <text x="405" y="272" text-anchor="middle" font-size="15" fill="#566270">minutes of runtime</text>
+          </g>
+          <text x="505" y="255" font-size="16" fill="#566270">Dashed boxes are backups.</text>
+          <text x="505" y="277" font-size="16" fill="#566270">They only matter when the grid fails.</text>
+        </svg>
+      </div>
+      <div class="info" id="info" aria-live="polite">
+        <h4>Click any box in the chain</h4>
+        <p>Each piece of equipment explains what it does and what you'd check on it.</p>
+      </div>
+      <figcaption>The power chain, simplified. Real sites often have two of everything (see "two paths" below).</figcaption>
+    </figure>
+
+    <div class="prose">
+      <h3>How to check power, in three steps</h3>
+      <ol class="steps">
+        <li><strong>Find the limit.</strong>Read the rating on each piece of equipment, for example "this UPS handles 500 kW" or "this breaker is 30 amps."</li>
+        <li><strong>Measure what you actually use.</strong>Read the live numbers on the UPS screen, PDU display or monitoring software. Use the highest reading over several weeks, not just today's.</li>
+        <li><strong>Keep a safety margin.</strong>Never plan to run at 100%. A common rule is to stay under 80% of a breaker's rating.</li>
+      </ol>
+
+      <h3>Two paths: why "2N" means each side stays under half</h3>
+      <p>Important data centers feed each rack from two completely separate power paths, A and B, like a plane with two engines. If one path fails, the other must carry everything alone. Press the button to see what happens.</p>
+    </div>
+
+    <figure>
+      <div class="diagram">
+        <svg viewBox="0 0 700 270" style="min-width:560px" role="img" aria-labelledby="t2n">
+          <title id="t2n">Two independent power paths, A and B, both feeding one server rack</title>
+          <defs>
+            <marker id="arP2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D08A00"/></marker>
+          </defs>
+          <g id="pathA">
+            <rect x="20" y="20" width="120" height="60" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <text x="80" y="56" text-anchor="middle" font-size="18" font-weight="600" fill="#18222D">UPS A</text>
+            <rect x="200" y="20" width="120" height="60" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <text x="260" y="56" text-anchor="middle" font-size="18" font-weight="600" fill="#18222D">PDU A</text>
+            <path class="flow" d="M140 50 H197" stroke="#D08A00" stroke-width="4" fill="none" marker-end="url(#arP2)"/>
+            <path class="flow" d="M320 50 H420 V105 H517" stroke="#D08A00" stroke-width="4" fill="none" marker-end="url(#arP2)"/>
+          </g>
+          <g id="pathB">
+            <rect x="20" y="160" width="120" height="60" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <text x="80" y="196" text-anchor="middle" font-size="18" font-weight="600" fill="#18222D">UPS B</text>
+            <rect x="200" y="160" width="120" height="60" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <text x="260" y="196" text-anchor="middle" font-size="18" font-weight="600" fill="#18222D">PDU B</text>
+            <path class="flow" d="M140 190 H197" stroke="#D08A00" stroke-width="4" fill="none" marker-end="url(#arP2)"/>
+            <path class="flow" d="M320 190 H420 V145 H517" stroke="#D08A00" stroke-width="4" fill="none" marker-end="url(#arP2)"/>
+          </g>
+          <rect x="520" y="60" width="130" height="130" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+          <g stroke="#18222D" stroke-width="1.5" fill="#E7EBED">
+            <rect x="535" y="75" width="100" height="12" rx="2"/><rect x="535" y="92" width="100" height="12" rx="2"/><rect x="535" y="109" width="100" height="12" rx="2"/>
+          </g>
+          <text x="585" y="150" text-anchor="middle" font-size="18" font-weight="600" fill="#18222D">Server rack</text>
+          <text x="585" y="172" text-anchor="middle" font-size="15" fill="#566270">80 kW total</text>
+          <!-- meters -->
+          <rect x="20" y="92" width="300" height="12" rx="3" fill="#E8ECEE"/>
+          <rect id="mA" x="20" y="92" width="120" height="12" rx="3" fill="#D08A00"/>
+          <text id="tA" x="20" y="124" font-size="15" fill="#18222D">UPS A (100 kW): 40% loaded</text>
+          <rect x="20" y="232" width="300" height="12" rx="3" fill="#E8ECEE"/>
+          <rect id="mB" x="20" y="232" width="120" height="12" rx="3" fill="#D08A00"/>
+          <text id="tB" x="20" y="264" font-size="15" fill="#18222D">UPS B (100 kW): 40% loaded</text>
+        </svg>
+      </div>
+      <button class="toggle" id="failBtn" aria-pressed="false">Fail path A</button>
+      <p class="status" id="failStatus">Normal: the 80 kW load is shared, so each 100 kW UPS carries 40 kW (40%).</p>
+    </figure>
+  </div>
+</section>
+
+<!-- COOLING -->
+<section id="cooling">
+  <div class="wrap">
+    <div class="prose">
+      <span class="step-num">Part 2</span>
+      <h2>Cooling: follow the air</h2>
+      <p>If servers use 100 kW of electricity, about 100 kW of heat must be removed. Cooling is often measured in <strong>tons</strong>, and one ton removes about <strong>3.5 kW</strong> of heat. So 100 kW of servers needs roughly 28–30 tons of cooling, plus a little extra.</p>
+      <p>Here is how air typically moves through a room with a raised floor:</p>
+    </div>
+
+    <figure>
+      <div class="diagram">
+        <svg viewBox="0 0 1000 420" style="min-width:760px" role="img" aria-labelledby="tAir">
+          <title id="tAir">Room cross-section: cooling unit blows cold air under a raised floor, up through a perforated tile into the cold aisle, through the servers, out into hot aisles, and back along the ceiling to the cooling unit</title>
+          <defs>
+            <marker id="arC" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1C74B8"/></marker>
+            <marker id="arH" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C23B22"/></marker>
+            <pattern id="perf" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#fff"/><circle cx="4" cy="4" r="1.8" fill="#1C74B8"/></pattern>
+          </defs>
+
+          <!-- structure -->
+          <line x1="0" y1="36" x2="1000" y2="36" stroke="#18222D" stroke-width="3"/>
+          <text x="880" y="28" font-size="15" fill="#566270">Ceiling</text>
+          <rect x="0" y="320" width="1000" height="8" fill="#9AA3AB"/>
+          <rect x="450" y="320" width="100" height="8" fill="url(#perf)" stroke="#1C74B8"/>
+          <rect x="0" y="328" width="1000" height="56" fill="#DCEBF6" opacity=".55"/>
+          <rect x="0" y="384" width="1000" height="10" fill="#18222D"/>
+          <text x="600" y="362" font-size="16" fill="#11507F">Raised floor: cold air travels underneath</text>
+          <text x="470" y="412" font-size="15" fill="#566270" text-anchor="middle">Perforated tile lets cold air up</text>
+          <line x1="500" y1="398" x2="500" y2="332" stroke="#566270" stroke-width="1" stroke-dasharray="3 3"/>
+
+          <!-- CRAH -->
+          <rect x="30" y="110" width="120" height="210" rx="6" fill="#fff" stroke="#18222D" stroke-width="2"/>
+          <text x="90" y="200" text-anchor="middle" font-size="19" font-weight="600" fill="#18222D">CRAH</text>
+          <text x="90" y="222" text-anchor="middle" font-size="15" fill="#566270">cooling unit</text>
+          <g stroke="#18222D" stroke-width="1.5"><line x1="50" y1="125" x2="130" y2="125"/><line x1="50" y1="135" x2="130" y2="135"/><line x1="50" y1="145" x2="130" y2="145"/></g>
+
+          <!-- racks -->
+          <g>
+            <rect x="360" y="150" width="70" height="170" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <g stroke="#18222D" stroke-width="1" fill="#E7EBED">
+              <rect x="366" y="160" width="58" height="18"/><rect x="366" y="184" width="58" height="18"/><rect x="366" y="208" width="58" height="18"/><rect x="366" y="232" width="58" height="18"/><rect x="366" y="256" width="58" height="18"/><rect x="366" y="280" width="58" height="18"/>
+            </g>
+            <text x="395" y="142" text-anchor="middle" font-size="15" fill="#18222D">Rack</text>
+          </g>
+          <g>
+            <rect x="570" y="150" width="70" height="170" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <g stroke="#18222D" stroke-width="1" fill="#E7EBED">
+              <rect x="576" y="160" width="58" height="18"/><rect x="576" y="184" width="58" height="18"/><rect x="576" y="208" width="58" height="18"/><rect x="576" y="232" width="58" height="18"/><rect x="576" y="256" width="58" height="18"/><rect x="576" y="280" width="58" height="18"/>
+            </g>
+            <text x="605" y="142" text-anchor="middle" font-size="15" fill="#18222D">Rack</text>
+          </g>
+
+          <!-- aisle labels -->
+          <rect x="435" y="90" width="130" height="30" rx="4" fill="#DCEBF6"/>
+          <text x="500" y="111" text-anchor="middle" font-size="17" font-weight="600" fill="#11507F">Cold aisle</text>
+          <rect x="240" y="90" width="110" height="30" rx="4" fill="#F7DDD7"/>
+          <text x="295" y="111" text-anchor="middle" font-size="17" font-weight="600" fill="#8A2615">Hot aisle</text>
+          <rect x="650" y="90" width="110" height="30" rx="4" fill="#F7DDD7"/>
+          <text x="705" y="111" text-anchor="middle" font-size="17" font-weight="600" fill="#8A2615">Hot aisle</text>
+
+          <!-- cold flow -->
+          <g stroke="#1C74B8" stroke-width="4" fill="none">
+            <path class="flow" d="M150 300 V350 H480"/>
+            <path class="flow" d="M480 350 V240" marker-end="url(#arC)"/>
+            <path class="flow" d="M520 350 V240" marker-end="url(#arC)"/>
+            <path class="flow" d="M480 210 H436" marker-end="url(#arC)"/>
+            <path class="flow" d="M480 270 H436" marker-end="url(#arC)"/>
+            <path class="flow" d="M520 210 H564" marker-end="url(#arC)"/>
+            <path class="flow" d="M520 270 H564" marker-end="url(#arC)"/>
+          </g>
+          <!-- hot flow -->
+          <g stroke="#C23B22" stroke-width="4" fill="none">
+            <path class="flow" d="M360 210 H300"/>
+            <path class="flow" d="M360 270 H300 V70"/>
+            <path class="flow" d="M640 210 H710"/>
+            <path class="flow" d="M640 270 H710 V70"/>
+            <path class="flow" d="M800 64 H90 V104" marker-end="url(#arH)"/>
+          </g>
+          <text x="440" y="58" font-size="16" fill="#8A2615">Hot air rises and returns to the cooling unit</text>
+
+          <!-- temps -->
+          <text x="500" y="162" text-anchor="middle" font-size="15" font-weight="600" fill="#11507F">18–27 °C</text>
+          <text x="500" y="180" text-anchor="middle" font-size="13" fill="#566270">measure here</text>
+          <text x="820" y="200" font-size="15" font-weight="600" fill="#8A2615">Often 35–45 °C</text>
+          <text x="820" y="220" font-size="14" fill="#566270">behind the servers</text>
+        </svg>
+      </div>
+      <figcaption>Server fronts face the cold aisle and pull cold air in. Their backs face the hot aisles and push hot air out. Keeping the two separated is the whole game.</figcaption>
+    </figure>
+
+    <div class="prose">
+      <h3>How to check cooling, in three steps</h3>
+      <ol class="steps c">
+        <li><strong>Find the limit.</strong>Add up how much the cooling units can remove (in tons or kW).</li>
+        <li><strong>Measure temperatures where it counts.</strong>The key reading is the air entering the <em>front</em> of the servers. The industry-recommended range (from ASHRAE) is about 18–27 °C. Check low, middle and high on each rack, because the top is usually warmest.</li>
+        <li><strong>Plan for one unit breaking.</strong>If one cooling unit fails, the others should still keep everything within range. This is called "N+1": what you Need, plus 1 spare.</li>
+      </ol>
+
+      <h3>A common beginner surprise: total cooling isn't enough</h3>
+      <p>A room can have plenty of cooling on paper and still overheat some racks, because the cold air never reaches them. The most common cause is a gap in the rack where hot air sneaks back around to the front.</p>
+    </div>
+
+    <div class="twin">
+      <figure>
+        <div class="diagram">
+          <svg viewBox="0 0 440 260" role="img" aria-labelledby="tGap">
+            <title id="tGap">Rack with an empty slot: hot air loops back through the gap to the front of the servers</title>
+            <defs>
+              <marker id="arC3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1C74B8"/></marker>
+              <marker id="arH3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C23B22"/></marker>
+            </defs>
+            <text x="60" y="22" font-size="15" fill="#11507F" text-anchor="middle">front (cold)</text>
+            <text x="380" y="22" font-size="15" fill="#8A2615" text-anchor="middle">back (hot)</text>
+            <rect x="170" y="30" width="100" height="200" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <g fill="#E7EBED" stroke="#18222D" stroke-width="1">
+              <rect x="176" y="40" width="88" height="28"/><rect x="176" y="72" width="88" height="28"/>
+              <rect x="176" y="146" width="88" height="28"/><rect x="176" y="178" width="88" height="28"/>
+            </g>
+            <text x="220" y="139" text-anchor="middle" font-size="13" fill="#566270">empty slot</text>
+            <g stroke="#1C74B8" stroke-width="3.5" fill="none">
+              <path d="M40 54 H168" marker-end="url(#arC3)"/><path d="M40 86 H168" marker-end="url(#arC3)"/><path d="M40 192 H168" marker-end="url(#arC3)"/>
+            </g>
+            <g stroke="#C23B22" stroke-width="3.5" fill="none">
+              <path d="M272 54 H400" marker-end="url(#arH3)"/><path d="M272 86 H400" marker-end="url(#arH3)"/><path d="M272 192 H400" marker-end="url(#arH3)"/>
+              <path class="flow" d="M340 175 C 320 120, 300 118, 220 118 C 130 118, 120 140, 120 160 L 168 160" marker-end="url(#arH3)"/>
+            </g>
+            <text x="220" y="252" text-anchor="middle" font-size="15" font-weight="600" fill="#C23B22">Hot air recirculates: servers overheat</text>
+          </svg>
+        </div>
+        <figcaption>Without a blanking panel.</figcaption>
+      </figure>
+      <figure>
+        <div class="diagram">
+          <svg viewBox="0 0 440 260" role="img" aria-labelledby="tSeal">
+            <title id="tSeal">Rack with the empty slot covered by a blanking panel: cold air in front, hot air out the back, no mixing</title>
+            <defs>
+              <marker id="arC4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1C74B8"/></marker>
+              <marker id="arH4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C23B22"/></marker>
+            </defs>
+            <text x="60" y="22" font-size="15" fill="#11507F" text-anchor="middle">front (cold)</text>
+            <text x="380" y="22" font-size="15" fill="#8A2615" text-anchor="middle">back (hot)</text>
+            <rect x="170" y="30" width="100" height="200" fill="#fff" stroke="#18222D" stroke-width="2"/>
+            <g fill="#E7EBED" stroke="#18222D" stroke-width="1">
+              <rect x="176" y="40" width="88" height="28"/><rect x="176" y="72" width="88" height="28"/>
+              <rect x="176" y="146" width="88" height="28"/><rect x="176" y="178" width="88" height="28"/>
+            </g>
+            <rect x="166" y="106" width="10" height="36" fill="#18222D"/>
+            <text x="150" y="129" text-anchor="end" font-size="13" fill="#18222D">blanking panel</text>
+            <g stroke="#1C74B8" stroke-width="3.5" fill="none">
+              <path d="M40 54 H168" marker-end="url(#arC4)"/><path d="M40 86 H168" marker-end="url(#arC4)"/><path d="M40 160 H168" marker-end="url(#arC4)"/><path d="M40 192 H168" marker-end="url(#arC4)"/>
+            </g>
+            <g stroke="#C23B22" stroke-width="3.5" fill="none">
+              <path d="M272 54 H400" marker-end="url(#arH4)"/><path d="M272 86 H400" marker-end="url(#arH4)"/><path d="M272 160 H400" marker-end="url(#arH4)"/><path d="M272 192 H400" marker-end="url(#arH4)"/>
+            </g>
+            <text x="220" y="252" text-anchor="middle" font-size="15" font-weight="600" fill="#2E7D4F">Air stays separated: servers stay cool</text>
+          </svg>
+        </div>
+        <figcaption>With a blanking panel. A cheap plastic plate fixes it.</figcaption>
+      </figure>
+    </div>
+
+    <div class="prose" style="margin-top:24px">
+      <p>Other common fixes follow the same idea: keep hot and cold air apart. That includes the hot aisle / cold aisle layout shown above, sealing cable holes in the floor, and <strong>containment</strong>, which means doors or roof panels that close off an aisle entirely.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CALCULATOR -->
+<section id="try">
+  <div class="wrap">
+    <div class="prose">
+      <span class="step-num">Part 3</span>
+      <h2>Try it: is this room OK?</h2>
+      <p>Move the sliders and watch both checks update. The starting values match the worked example below. Try pushing the load up and see which one runs out first.</p>
+    </div>
+
+    <div class="calc">
+      <div class="inputs">
+        <div class="field">
+          <label for="load">IT load (servers) <output id="loadOut">40 kW</output></label>
+          <input type="range" id="load" min="5" max="200" step="1" value="40">
+          <small>Measured power used by all the servers.</small>
+        </div>
+        <div class="field">
+          <label for="ups">UPS size <output id="upsOut">100 kW</output></label>
+          <input type="range" id="ups" min="20" max="300" step="10" value="100">
+          <small>Rating of one UPS.</small>
+        </div>
+        <div class="field">
+          <label for="mode">Power design</label>
+          <select id="mode">
+            <option value="N">Single path (N)</option>
+            <option value="2N">Two paths (2N)</option>
+          </select>
+          <small>With 2N there are two UPS units of this size, one per path.</small>
+        </div>
+        <div class="field">
+          <label for="units">Cooling units <output id="unitsOut">3</output></label>
+          <input type="range" id="units" min="2" max="10" step="1" value="3">
+        </div>
+        <div class="field">
+          <label for="tons">Tons per cooling unit <output id="tonsOut">5 tons</output></label>
+          <input type="range" id="tons" min="2" max="40" step="1" value="5">
+          <small>1 ton ≈ 3.5 kW of heat removed.</small>
+        </div>
+        <div class="field">
+          <label for="extra">Extra heat (lights, UPS losses, people) <output id="extraOut">5%</output></label>
+          <input type="range" id="extra" min="0" max="25" step="1" value="5">
+        </div>
+      </div>
+
+      <div class="results" aria-live="polite">
+        <div class="card">
+          <h3><span class="dot" style="background:var(--power)"></span>Power <span class="badge" id="pBadge"></span></h3>
+          <div class="meter"><div class="fill" id="pFill" style="background:var(--power)"></div><div class="mark" style="left:80%"><span>80% safe limit</span></div></div>
+          <p id="pText"></p>
+        </div>
+        <div class="card">
+          <h3><span class="dot" style="background:var(--cool)"></span>Cooling <span class="badge" id="cBadge"></span></h3>
+          <div class="meter"><div class="fill" id="cFill" style="background:var(--cool)"></div><div class="mark" id="mN1"><span>one unit broken</span></div><div class="mark" id="mAll" style="background:var(--muted)"><span>all units running</span></div></div>
+          <p id="cText"></p>
+        </div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXAMPLE -->
+<section id="example">
+  <div class="wrap">
+    <div class="prose">
+      <h2>Worked example</h2>
+      <p>A small server room has servers using 40 kW, one 100 kW UPS, and three cooling units of 5 tons each (about 17.5 kW each).</p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Check</th><th>Calculation</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>Power</td><td>40 kW ÷ 100 kW = 40% used</td><td><span class="badge good">Comfortable</span> Plenty of room to grow.</td></tr>
+          <tr><td>Heat to remove</td><td>40 kW ÷ 3.5 ≈ 11.4 tons, plus a little extra ≈ 12 tons</td><td>Needs about 12 tons</td></tr>
+          <tr><td>Cooling, all units running</td><td>3 × 5 = 15 tons</td><td><span class="badge good">Enough</span></td></tr>
+          <tr><td>Cooling, one unit broken</td><td>2 × 5 = 10 tons</td><td><span class="badge bad">Not enough</span> Short by about 2 tons.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">
+      <strong>The lesson:</strong> the room looks fine on paper, but cooling is the real risk. If one unit breaks on a busy day, the servers overheat. Finding hidden problems like this is exactly what verification is for.
+    </div>
+  </div>
+</section>
+
+<!-- GLOSSARY -->
+<section id="glossary">
+  <div class="wrap">
+    <h2>Glossary</h2>
+    <dl class="gloss">
+      <div><dt>kW (kilowatt)</dt><dd>Amount of electrical power, or of heat.</dd></div>
+      <div><dt>UPS</dt><dd>Uninterruptible power supply. Batteries that keep servers running for the seconds or minutes until the generator starts.</dd></div>
+      <div><dt>ATS</dt><dd>Automatic transfer switch. Flips from grid power to the generator when the grid fails.</dd></div>
+      <div><dt>PDU</dt><dd>Power distribution unit. Splits power out to many racks. A rack PDU is the power strip inside one rack.</dd></div>
+      <div><dt>Ton (of cooling)</dt><dd>About 3.5 kW of heat removed.</dd></div>
+      <div><dt>CRAC / CRAH</dt><dd>The data center's air conditioners. CRAC has its own compressor. CRAH uses chilled water from a central plant.</dd></div>
+      <div><dt>N+1</dt><dd>What you need, plus one spare unit.</dd></div>
+      <div><dt>2N</dt><dd>Two complete, independent systems. Either one can carry the full load alone.</dd></div>
+      <div><dt>Hot aisle / cold aisle</dt><dd>Rack layout where fronts face fronts and backs face backs, so hot and cold air stay apart.</dd></div>
+      <div><dt>Blanking panel</dt><dd>A cover for empty rack slots that stops hot air from looping back to the front.</dd></div>
+      <div><dt>Containment</dt><dd>Doors or roof panels that fully enclose a hot or cold aisle.</dd></div>
+      <div><dt>PUE</dt><dd>Power usage effectiveness: total building power ÷ IT power. Closer to 1.0 means less energy wasted on cooling and losses.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap prose">
+    <p><strong>Where to learn more:</strong> the Uptime Institute (known for Tier I–IV data center ratings), the ASHRAE thermal guidelines for data processing environments, and Schneider Electric's free data center white papers, which include many beginner-friendly guides on power and cooling.</p>
+    <p>Numbers in this guide are simplified for learning. Real sites use detailed measurements, engineering reviews and local electrical codes.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  // Power chain info
+  const info = {
+    utility:{t:"Utility grid",d:"Electricity from the power company arrives at the building, usually at high voltage.",c:"Check: the contracted capacity with the utility, and whether you have one feed or two."},
+    switch:{t:"Switchgear and ATS",d:"Large switches and breakers that control the building's incoming power. The ATS (automatic transfer switch) flips to the generator if the grid fails.",c:"Check: breaker ratings, and that the ATS transfer has been tested."},
+    ups:{t:"UPS (uninterruptible power supply)",d:"Keeps power flowing with zero interruption during a blackout, using batteries, until the generator takes over.",c:"Check: rated kW vs. measured load on its screen. Stay well under the rating, and under 50% per side in a 2N design."},
+    pdu:{t:"PDU (power distribution unit)",d:"Takes the UPS output and splits it into many circuits that run to the racks.",c:"Check: load per circuit breaker, and that the three electrical phases are roughly balanced."},
+    rpdu:{t:"Rack PDU",d:"A smart power strip inside each rack that the servers plug into. Many show live amps.",c:"Check: its amp reading vs. the circuit limit. Example: a 30 A circuit should stay under 24 A (80%)."},
+    servers:{t:"Servers (the IT load)",d:"The equipment doing the actual work. Everything upstream exists to keep these running.",c:"Check: real measured power. A server's label rating is often far higher than what it actually draws."},
+    gen:{t:"Generator",d:"Usually diesel. Starts within seconds of an outage and powers the building for hours or days.",c:"Check: that it can carry IT load plus cooling, fuel runtime, and regular load-bank tests."},
+    battery:{t:"Batteries",d:"Store energy inside the UPS system. They only need to last until the generator is up.",c:"Check: runtime at the current load (often 5–15 minutes), and battery health tests."}
+  };
+  const box = document.getElementById('info');
+  const nodes = document.querySelectorAll('.node');
+  function show(k, el){
+    const i = info[k];
+    nodes.forEach(n=>n.classList.remove('active'));
+    el.classList.add('active');
+    box.innerHTML = '<h4>'+i.t+'</h4><p>'+i.d+'</p><p class="check">'+i.c+'</p>';
+  }
+  nodes.forEach(n=>{
+    n.addEventListener('click',()=>show(n.dataset.k,n));
+    n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();show(n.dataset.k,n);}});
+  });
+
+  // 2N toggle
+  const btn = document.getElementById('failBtn');
+  const pathA = document.getElementById('pathA');
+  btn.addEventListener('click',()=>{
+    const failed = btn.getAttribute('aria-pressed')!=='true';
+    btn.setAttribute('aria-pressed',failed);
+    pathA.classList.toggle('failed',failed);
+    document.getElementById('mA').setAttribute('width', failed?0:120);
+    document.getElementById('mB').setAttribute('width', failed?240:120);
+    document.getElementById('tA').textContent = failed?'UPS A (100 kW): failed, 0%':'UPS A (100 kW): 40% loaded';
+    document.getElementById('tB').textContent = failed?'UPS B (100 kW): 80% loaded':'UPS B (100 kW): 40% loaded';
+    btn.textContent = failed?'Restore path A':'Fail path A';
+    document.getElementById('failStatus').textContent = failed
+      ? 'Path A is down, but the rack keeps running. UPS B now carries all 80 kW (80%). If each side had been above 50% before, B would now be overloaded.'
+      : 'Normal: the 80 kW load is shared, so each 100 kW UPS carries 40 kW (40%).';
+  });
+
+  // Calculator
+  const $ = id=>document.getElementById(id);
+  const TON = 3.517;
+  function badge(el, level, text){el.className='badge '+level;el.textContent=text;}
+  function fmt(n,d=0){return n.toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d});}
+  function calc(){
+    const load=+$('load').value, cap=+$('ups').value, mode=$('mode').value;
+    const units=+$('units').value, tons=+$('tons').value, extra=+$('extra').value/100;
+    $('loadOut').textContent=load+' kW'; $('upsOut').textContent=cap+' kW';
+    $('unitsOut').textContent=units; $('tonsOut').textContent=tons+' tons'; $('extraOut').textContent=Math.round(extra*100)+'%';
+
+    // Power
+    const worst = load/cap*100;
+    const normal = mode==='2N' ? worst/2 : worst;
+    $('pFill').style.width = Math.min(worst,100)+'%';
+    $('pFill').style.background = worst>80?'var(--heat)':'var(--power)';
+    if(worst<=60) badge($('pBadge'),'good','Comfortable');
+    else if(worst<=80) badge($('pBadge'),'warn','Getting close');
+    else badge($('pBadge'),'bad','Over safe limit');
+    const pHead = cap*0.8 - load;
+    $('pText').innerHTML = mode==='2N'
+      ? 'Normally each UPS carries '+fmt(normal)+'%. If one path fails, the other carries <strong>'+fmt(worst)+'%</strong> (the bar shows this worst case).'
+      : 'The UPS is <strong>'+fmt(worst)+'%</strong> loaded. With a single path there is no backup UPS if it fails.';
+
+    // Cooling
+    const heat = load*(1+extra), need = heat/TON, all = units*tons, n1 = (units-1)*tons;
+    const scale = Math.max(all, need)*1.1;
+    $('cFill').style.width = Math.min(need/scale*100,100)+'%';
+    $('cFill').style.background = need>n1?'var(--heat)':'var(--cool)';
+    $('mN1').style.left = (n1/scale*100)+'%';
+    $('mAll').style.left = (all/scale*100)+'%';
+    if(need<=n1*0.85) badge($('cBadge'),'good','Comfortable');
+    else if(need<=n1) badge($('cBadge'),'warn','Getting close');
+    else if(need<=all) badge($('cBadge'),'bad','No spare unit');
+    else badge($('cBadge'),'bad','Not enough');
+    const cHead = n1*TON/(1+extra) - load;
+    $('cText').innerHTML = 'Heat to remove: '+fmt(heat,1)+' kW ≈ <strong>'+fmt(need,1)+' tons</strong>. You have '+all+' tons with all units running, and '+n1+' tons if one breaks.';
+
+    // Verdict
+    const limit = pHead < cHead ? 'power' : 'cooling';
+    const head = Math.min(pHead, cHead);
+    $('verdict').innerHTML = head >= 0
+      ? 'You could add about <strong>'+fmt(head)+' kW</strong> more servers before hitting a limit. The first thing to run out would be <strong>'+limit+'</strong>.'
+      : 'This room is already over its safe limit by about <strong>'+fmt(-head)+' kW</strong>. The biggest problem is <strong>'+limit+'</strong>.';
+  }
+  ['load','ups','mode','units','tons','extra'].forEach(id=>$(id).addEventListener('input',calc));
+  calc();
+})();
+</script>
+</body>
+</html>
