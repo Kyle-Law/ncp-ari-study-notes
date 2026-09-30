@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>200G Transceivers: QSFP-DD vs OSFP, explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF1F3; --surface:#F9FBFC; --ink:#16202B; --muted:#56636E; --line:#C3CCD3;
+  --dd:#117A7A; --dd-soft:#D3ECEA; --os:#B0601A; --os-soft:#F4E2D0; --grid:#DCE2E6;
+  --sans:"Barlow","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --cond:"Barlow Condensed","Arial Narrow","Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#11181E; --surface:#18222A; --ink:#E3E9ED; --muted:#96A3AD; --line:#2E3B45;
+    --dd:#43B9B3; --dd-soft:#16393A; --os:#E39A4C; --os-soft:#3E2A18; --grid:#23303A;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:18px;line-height:1.6}
+.wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+.prose{max-width:700px}
+h1,h2,h3{font-weight:700;line-height:1.15;margin:0}
+h1{font-size:clamp(2.1rem,5vw,3.4rem);letter-spacing:-.01em;max-width:16ch}
+h2{font-size:1.75rem;margin-bottom:.6rem}
+h3{font-size:1.15rem;margin-bottom:.3rem}
+p{margin:.6rem 0}
+.muted{color:var(--muted)}
+section{padding:56px 0;border-top:1px solid var(--line)}
+header{padding:56px 0 32px}
+.lede{font-size:1.2rem;max-width:640px;color:var(--muted);margin-top:1rem}
+.dd{color:var(--dd)} .os{color:var(--os)}
+figure{margin:28px 0 0;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:20px}
+figcaption{font-size:.9rem;color:var(--muted);margin-top:10px}
+svg{display:block;width:100%;height:auto}
+svg text{font-family:var(--cond);fill:var(--ink)}
+.scroll{overflow-x:auto}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:760px){.two{grid-template-columns:1fr} body{font-size:17px}}
+table{border-collapse:collapse;width:100%;font-size:.98rem;min-width:560px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600}
+thead th{border-bottom:2px solid var(--ink)}
+td.win{font-weight:600}
+.key{display:inline-flex;align-items:center;gap:6px;margin-right:18px;font-size:.95rem}
+.sw{width:14px;height:14px;border-radius:2px;display:inline-block}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+button{font:inherit;font-size:.95rem;cursor:pointer;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:7px 14px;border-radius:4px}
+button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible{outline:3px solid var(--dd);outline-offset:2px}
+.q{padding:14px 0;border-bottom:1px solid var(--line)}
+.q:last-of-type{border-bottom:0}
+.q p{margin:0 0 8px}
+.q .opts{display:flex;gap:8px}
+#verdict{margin-top:18px;padding:18px;border-radius:6px;border:2px solid var(--line);min-height:84px}
+#verdict.dd-win{border-color:var(--dd);background:var(--dd-soft)}
+#verdict.os-win{border-color:var(--os);background:var(--os-soft)}
+.note{font-size:.92rem;color:var(--muted);border-left:3px solid var(--line);padding-left:14px;margin-top:20px}
+footer{padding:40px 0 64px;border-top:1px solid var(--line);font-size:.92rem;color:var(--muted)}
+a{color:var(--dd)}
+@media (prefers-reduced-motion:no-preference){
+  .draw rect.mod{animation:grow .9s ease-out both}
+  .draw rect.mod.b{animation-delay:.15s}
+  @keyframes grow{from{transform:scaleX(.2);opacity:0}to{transform:none;opacity:1}}
+}
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <h1>200G transceivers: QSFP-DD or OSFP?</h1>
+  <p class="lede">A visual walkthrough of the Fibrecross article on choosing a 200G optical module for high-density data centers — what the two form factors are, how they differ, and which one fits which network.</p>
+
+  <figure class="draw">
+    <div class="scroll">
+    <svg viewBox="0 0 900 330" role="img" aria-label="To-scale top view: QSFP-DD is 18.35 mm wide and 89.4 mm long; OSFP is 22.58 mm wide and 107.8 mm long">
+      <!-- scale 6 px per mm, origin x=150 -->
+      <g>
+        <text x="20" y="72" font-size="22" style="fill:var(--dd)" font-weight="600">QSFP-DD</text>
+        <rect class="mod" style="transform-origin:150px 60px;fill:var(--dd-soft);stroke:var(--dd)" x="150" y="32" width="536" height="110" rx="6" stroke-width="2"/>
+        <rect x="150" y="45" width="26" height="84" style="fill:var(--dd)" opacity=".5"/>
+        <text x="190" y="93" font-size="15" class="muted">Card edge: 2 rows of contacts (76 pins)</text>
+        <rect x="686" y="70" width="40" height="34" rx="3" fill="none" style="stroke:var(--dd)" stroke-width="2"/>
+        <text x="732" y="92" font-size="14">pull tab</text>
+        <line x1="150" y1="20" x2="686" y2="20" style="stroke:var(--muted)"/><line x1="150" y1="14" x2="150" y2="26" style="stroke:var(--muted)"/><line x1="686" y1="14" x2="686" y2="26" style="stroke:var(--muted)"/>
+        <text x="418" y="14" font-size="15" text-anchor="middle">89.4 mm</text>
+        <line x1="130" y1="32" x2="130" y2="142" style="stroke:var(--muted)"/>
+        <text x="124" y="92" font-size="15" text-anchor="end">18.35</text>
+      </g>
+      <g>
+        <text x="20" y="235" font-size="22" style="fill:var(--os)" font-weight="600">OSFP</text>
+        <rect class="mod b" style="transform-origin:150px 230px;fill:var(--os-soft);stroke:var(--os)" x="150" y="172" width="647" height="135" rx="6" stroke-width="2"/>
+        <g style="stroke:var(--os)" opacity=".45">
+          <line x1="260" y1="182" x2="760" y2="182"/><line x1="260" y1="196" x2="760" y2="196"/><line x1="260" y1="210" x2="760" y2="210"/>
+          <line x1="260" y1="268" x2="760" y2="268"/><line x1="260" y1="282" x2="760" y2="282"/><line x1="260" y1="296" x2="760" y2="296"/>
+        </g>
+        <rect x="150" y="186" width="26" height="107" style="fill:var(--os)" opacity=".5"/>
+        <text x="270" y="244" font-size="15">Integrated heat-sink fins on top</text>
+        <line x1="150" y1="322" x2="797" y2="322" style="stroke:var(--muted)"/><line x1="150" y1="316" x2="150" y2="328" style="stroke:var(--muted)"/><line x1="797" y1="316" x2="797" y2="328" style="stroke:var(--muted)"/>
+        <text x="473" y="318" font-size="15" text-anchor="middle">107.8 mm</text>
+        <line x1="130" y1="172" x2="130" y2="307" style="stroke:var(--muted)"/>
+        <text x="124" y="244" font-size="15" text-anchor="end">22.58</text>
+      </g>
+    </svg>
+    </div>
+    <figcaption>Drawn to scale (top view). Heights: QSFP-DD 8.5 mm, OSFP 13 mm. Both carry 8 electrical lanes; OSFP trades size for heat-handling room. Dimensions from the published MSA specs.</figcaption>
+  </figure>
+</header>
+
+<section class="wrap">
+  <div class="prose">
+    <h2>What a 200G optical transceiver does</h2>
+    <p>A transceiver is the pluggable module that sits in a switch port and turns the switch's electrical signals into light on fiber (or drives a copper cable), and back again. The article defines a 200G module as one that sends and receives 200 gigabits per second over fiber or copper, and names QSFP-DD and OSFP as the two main shapes it comes in.</p>
+  </div>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 900 190" role="img" aria-label="Signal path from switch chip through module to fiber">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" style="fill:var(--muted)"/></marker></defs>
+      <rect x="10" y="50" width="150" height="90" rx="4" fill="none" style="stroke:var(--ink)" stroke-width="2"/>
+      <text x="85" y="92" font-size="18" text-anchor="middle" font-weight="600">Switch ASIC</text>
+      <text x="85" y="114" font-size="14" text-anchor="middle" class="muted">electrical data</text>
+      <g style="stroke:var(--muted)" stroke-width="2">
+        <line x1="160" y1="70" x2="250" y2="70"/><line x1="160" y1="85" x2="250" y2="85"/><line x1="160" y1="100" x2="250" y2="100"/><line x1="160" y1="115" x2="250" y2="115"/>
+      </g>
+      <text x="205" y="45" font-size="14" text-anchor="middle">host lanes</text>
+      <rect x="250" y="30" width="420" height="130" rx="6" style="fill:var(--dd-soft);stroke:var(--dd)" stroke-width="2"/>
+      <text x="460" y="22" font-size="15" text-anchor="middle">Pluggable module (QSFP-DD or OSFP)</text>
+      <rect x="275" y="60" width="110" height="70" rx="4" style="fill:var(--surface);stroke:var(--ink)"/>
+      <text x="330" y="92" font-size="16" text-anchor="middle">1  DSP</text>
+      <text x="330" y="112" font-size="13" text-anchor="middle" class="muted">retime, PAM4</text>
+      <line x1="385" y1="95" x2="420" y2="95" style="stroke:var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+      <rect x="422" y="60" width="110" height="70" rx="4" style="fill:var(--surface);stroke:var(--ink)"/>
+      <text x="477" y="92" font-size="16" text-anchor="middle">2  Laser</text>
+      <text x="477" y="112" font-size="13" text-anchor="middle" class="muted">driver + TX</text>
+      <line x1="532" y1="95" x2="567" y2="95" style="stroke:var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+      <rect x="569" y="60" width="80" height="70" rx="4" style="fill:var(--surface);stroke:var(--ink)"/>
+      <text x="609" y="92" font-size="16" text-anchor="middle">3  Optics</text>
+      <text x="609" y="112" font-size="13" text-anchor="middle" class="muted">MPO / LC</text>
+      <path d="M670 85 C730 85 740 60 890 60" fill="none" style="stroke:var(--dd)" stroke-width="3"/>
+      <path d="M670 105 C730 105 740 130 890 130" fill="none" style="stroke:var(--dd)" stroke-width="3" stroke-dasharray="6 5"/>
+      <text x="800" y="52" font-size="14">light out (TX)</text>
+      <text x="800" y="150" font-size="14">light in (RX)</text>
+    </svg>
+    </div>
+    <figcaption>Simplified path through a transceiver. The receive side runs the same steps in reverse (photodiode, then DSP).</figcaption>
+  </figure>
+</section>
+
+<section class="wrap">
+  <div class="prose">
+    <h2>How you get to 200 gigabits</h2>
+    <p>Bandwidth comes from lanes × speed per lane. Faster lanes increasingly rely on PAM4 signaling, which the article notes is used by many newer 200G and 400G modules. PAM4 uses four signal levels instead of two, so every symbol carries two bits instead of one.</p>
+  </div>
+
+  <figure>
+    <div class="tabs" role="group" aria-label="Lane configuration">
+      <button aria-pressed="true" data-cfg="q56">QSFP56 · 4 × 50G</button>
+      <button aria-pressed="false" data-cfg="dd">QSFP-DD · 8 × 25G</button>
+      <button aria-pressed="false" data-cfg="osfp">OSFP · 8 lanes</button>
+    </div>
+    <svg id="lanes" viewBox="0 0 900 250" role="img" aria-label="Lane diagram"></svg>
+    <figcaption id="laneCap"></figcaption>
+  </figure>
+
+  <figure>
+    <div class="two">
+      <div><h3>NRZ: 2 levels, 1 bit per symbol</h3><svg id="nrz" viewBox="0 0 420 170" aria-label="NRZ waveform"></svg></div>
+      <div><h3>PAM4: 4 levels, 2 bits per symbol</h3><svg id="pam4" viewBox="0 0 420 170" aria-label="PAM4 waveform"></svg></div>
+    </div>
+    <figcaption>Same symbol rate, same eight time slots: NRZ moves 8 bits, PAM4 moves 16. The cost is tighter spacing between levels, which is why PAM4 modules need a DSP and draw more power.</figcaption>
+  </figure>
+</section>
+
+<section class="wrap">
+  <div class="prose">
+    <h2>Head to head</h2>
+    <p>The article's core comparison comes down to three things: backward compatibility, heat, and density. QSFP-DD was built to fit the same footprint as QSFP+ and QSFP28, so it accepts older modules. OSFP is bigger, which gives it more room to shed heat; the article notes QSFP-DD usually draws slightly less power because of its tighter thermal limits.</p>
+  </div>
+
+  <figure>
+    <div class="scroll">
+    <table>
+      <thead><tr><th></th><th class="dd">QSFP-DD</th><th class="os">OSFP</th></tr></thead>
+      <tbody>
+        <tr><th>Full name</th><td>Quad Small Form-factor Pluggable, Double Density</td><td>Octal Small Form-factor Pluggable</td></tr>
+        <tr><th>Electrical lanes</th><td>8 (a second row of contacts on the QSFP card edge)</td><td>8</td></tr>
+        <tr><th>Size</th><td class="win">Smaller: 18.35 × 8.5 × 89.4 mm</td><td>Larger: 22.58 × 13 × 107.8 mm</td></tr>
+        <tr><th>Plugs in older QSFP+ / QSFP28 optics</th><td class="win">Yes, natively</td><td>Only with an adapter</td></tr>
+        <tr><th>Heat handling</th><td>Tighter thermal budget</td><td class="win">More headroom, built-in heat sink</td></tr>
+        <tr><th>Power draw</th><td class="win">Generally slightly lower</td><td>Generally slightly higher</td></tr>
+        <tr><th>Ports on a 1U switch</th><td class="win">Typically 36</td><td>Typically 32</td></tr>
+        <tr><th>Path to 800G / 1.6T</th><td>Yes, but thermally harder</td><td class="win">Designed with it in mind</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <figcaption>Bold marks the side with the advantage for each row.</figcaption>
+  </figure>
+
+  <div class="two">
+    <figure>
+      <h3>Relative thermal headroom</h3>
+      <svg viewBox="0 0 420 170" role="img" aria-label="OSFP has roughly 30 percent more heat dissipation headroom">
+        <text x="0" y="40" font-size="16">QSFP-DD</text>
+        <rect x="90" y="24" width="230" height="26" rx="3" style="fill:var(--dd)"/>
+        <text x="328" y="43" font-size="15">baseline</text>
+        <text x="0" y="100" font-size="16">OSFP</text>
+        <rect x="90" y="84" width="299" height="26" rx="3" style="fill:var(--os)"/>
+        <text x="330" y="140" font-size="15" text-anchor="end">≈ 30% more</text>
+        <line x1="320" y1="120" x2="389" y2="120" style="stroke:var(--muted)"/>
+      </svg>
+      <figcaption>Fibrecross's companion 800G guide puts OSFP's heat-dissipation advantage at up to about 30%. Illustrative, not a measured spec.</figcaption>
+    </figure>
+    <figure>
+      <h3>Ports on one 1U faceplate</h3>
+      <svg id="face" viewBox="0 0 420 170" role="img" aria-label="36 QSFP-DD ports versus 32 OSFP ports in 1U"></svg>
+      <figcaption>Common 1U layouts: 36 QSFP-DD vs 32 OSFP. At 200G per port that's 7.2 Tb/s vs 6.4 Tb/s.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="prose">
+    <h2>Why move to 200G at all</h2>
+    <p>The article's main performance point: one 200G port replaces two 100G links. Fewer links means fewer cables, fewer ports used, and simpler cable management for the same bandwidth.</p>
+  </div>
+  <figure>
+    <div class="scroll">
+    <svg id="halve" viewBox="0 0 900 230" role="img" aria-label="800 gigabits of uplink needs 8 links at 100G or 4 at 200G"></svg>
+    </div>
+    <figcaption>Same 800 Gb/s between a leaf and a spine switch: half the cables and half the ports at 200G.</figcaption>
+  </figure>
+</section>
+
+<section class="wrap">
+  <div class="prose">
+    <h2>Connection options and reach</h2>
+    <p>The article lists several ways to connect at 200G, each offered in both OSFP and QSFP-DD versions depending on the switch. It describes AOCs (active optical cables) as plug-and-play, pre-terminated, and suited to links up to about 100 m. Copper DACs cover the shortest in-rack hops, while pluggable optics cover everything longer.</p>
+  </div>
+  <figure>
+    <div class="scroll">
+    <svg id="reach" viewBox="0 0 900 330" role="img" aria-label="Reach of 200G connection types on a log scale"></svg>
+    </div>
+    <figcaption>Log scale. Typical reaches for common 200G variants; exact figures vary by vendor and fiber grade (OM3/OM4 for multimode, SMF for single-mode).</figcaption>
+  </figure>
+</section>
+
+<section class="wrap">
+  <div class="prose">
+    <h2>Which should you pick?</h2>
+    <p>Answer three questions. The logic follows the article's conclusion: match the form factor to your thermal, density, and compatibility needs.</p>
+  </div>
+  <figure>
+    <div class="q"><p>Is your network already built on QSFP+ or QSFP28 gear you want to keep using?</p>
+      <div class="opts" data-q="compat"><button data-v="1">Yes</button><button data-v="0">No</button></div></div>
+    <div class="q"><p>Do you expect to move to 800G / 1.6T or run high-power optics (AI/HPC clusters, long-reach) soon?</p>
+      <div class="opts" data-q="future"><button data-v="1">Yes</button><button data-v="0">No</button></div></div>
+    <div class="q"><p>Is packing the most ports into each rack unit, at the lowest power, your top priority?</p>
+      <div class="opts" data-q="density"><button data-v="1">Yes</button><button data-v="0">No</button></div></div>
+    <div id="verdict" aria-live="polite"><span class="muted">Your recommendation appears here once you answer.</span></div>
+  </figure>
+
+  <div class="prose">
+    <h2 style="margin-top:48px">The takeaway</h2>
+    <p><strong class="dd">QSFP-DD</strong> is the pragmatic upgrade: it slots into the QSFP world you likely already run, packs more ports per switch, and uses a little less power. <strong class="os">OSFP</strong> is the forward-looking bet: bigger and hungrier, but with the cooling headroom that 800G and beyond will demand. Both deliver the same 200G per port and are available as DACs, AOCs, and optical modules, so the switch you buy usually settles the question.</p>
+    <p class="note">How this was built: the original page blocks automated readers, so this explainer is based on the article's published excerpts (definition, form-factor differences, power, benefits, AOC reach, conclusion) plus standard MSA dimensions and typical industry reach and port-count figures, which are marked as typical where they appear.</p>
+  </div>
+</section>
+
+<footer class="wrap">
+  Source: Fibrecross, “200G Optical Transceiver: QSFP-DD vs OSFP for High-Density Data Centers” (July 2025).<br>
+  <a href="https://fibrecross.com/200g-optical-transceiver-qsfp%E2%80%91dd-vs-osfp-for-high%E2%80%91density-data-centers/">Read the original article</a>
+</footer>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+
+/* Lanes */
+const cfgs={
+  q56:{n:4,rate:"50G PAM4",color:"var(--muted)",name:"QSFP56",cap:"QSFP56: the classic 200G module. Four lanes at 50G each using PAM4. It fits a QSFP-DD port, which is part of QSFP-DD's backward-compatibility appeal."},
+  dd:{n:8,rate:"25G NRZ",color:"var(--dd)",name:"QSFP-DD",cap:"200G QSFP-DD (sometimes called QSFP28-DD): eight lanes at 25G each using simple NRZ signaling, the same lane speed as 100G QSFP28. The second row of contacts is what doubles the lane count."},
+  osfp:{n:8,rate:"25G NRZ",color:"var(--os)",name:"OSFP",cap:"OSFP also has eight lanes. At 200G each lane runs lightly loaded, and the same cage scales to 8 × 100G (800G) and 8 × 200G (1.6T) later, which is its main selling point."}
+};
+function drawLanes(key){
+  const s=document.getElementById("lanes");s.innerHTML="";const c=cfgs[key];
+  el("rect",{x:10,y:20,width:130,height:210,rx:4,fill:"none",style:"stroke:var(--ink)","stroke-width":2},s);
+  el("text",{x:75,y:130,"font-size":17,"text-anchor":"middle","font-weight":600},s,"Switch");
+  el("rect",{x:640,y:20,width:170,height:210,rx:6,style:`fill:var(--surface);stroke:${c.color}`,"stroke-width":2},s);
+  el("text",{x:725,y:125,"font-size":19,"text-anchor":"middle","font-weight":600,style:`fill:${c.color}`},s,c.name);
+  el("text",{x:725,y:148,"font-size":15,"text-anchor":"middle"},s,"= 200 Gb/s");
+  const gap=200/8;
+  for(let i=0;i<8;i++){
+    const y=32+i*gap+gap/2-6, used=i<c.n;
+    el("line",{x1:140,y1:y,x2:640,y2:y,style:`stroke:${used?c.color:"var(--grid)"}`,"stroke-width":used?4:2,"stroke-dasharray":used?"":"4 6"},s);
+    el("text",{x:390,y:y-5,"font-size":14,"text-anchor":"middle",style:used?"":"fill:var(--muted)"},s,used?`lane ${i+1}: ${c.rate}`:"unused");
+  }
+  document.getElementById("laneCap").textContent=c.cap;
+}
+document.querySelectorAll("[data-cfg]").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("[data-cfg]").forEach(x=>x.setAttribute("aria-pressed",x===b));drawLanes(b.dataset.cfg);}));
+drawLanes("q56");
+
+/* Waveforms */
+function wave(id,levels,nLevels,labels,color){
+  const s=document.getElementById(id),x0=40,w=45,top=20,h=110;
+  const yOf=l=>top+h-(l/(nLevels-1))*h;
+  for(let l=0;l<nLevels;l++){el("line",{x1:x0,y1:yOf(l),x2:x0+w*8,y2:yOf(l),style:"stroke:var(--grid)"},s);
+    el("text",{x:x0-8,y:yOf(l)+5,"font-size":13,"text-anchor":"end"},s,labels[l]);}
+  let d="";levels.forEach((l,i)=>{const y=yOf(l);d+=(i?`L${x0+i*w},${y}`:`M${x0},${y}`)+`L${x0+(i+1)*w},${y}`;});
+  el("path",{d,fill:"none",style:`stroke:${color}`,"stroke-width":3,"stroke-linejoin":"round"},s);
+  levels.forEach((l,i)=>el("text",{x:x0+i*w+w/2,y:top+h+28,"font-size":13,"text-anchor":"middle"},s,labels[l]));
+}
+wave("nrz",[1,0,1,1,0,0,1,0],2,["0","1"],"var(--muted)");
+wave("pam4",[3,0,2,1,3,1,0,2],4,["00","01","11","10"],"var(--dd)");
+
+/* Faceplate */
+(function(){const s=document.getElementById("face");
+  function plate(y,n,pw,color,label){
+    el("text",{x:0,y:y-8,"font-size":15,style:`fill:${color}`,"font-weight":600},s,label);
+    el("rect",{x:0,y:y,width:420,height:52,rx:3,fill:"none",style:"stroke:var(--line)"},s);
+    const per=n/2,gap=(420-per*pw)/(per+1);
+    for(let r=0;r<2;r++)for(let i=0;i<per;i++)
+      el("rect",{x:gap+i*(pw+gap),y:y+6+r*22,width:pw,height:17,rx:1.5,style:`fill:${color}`},s);
+  }
+  plate(24,36,17.5,"var(--dd)","QSFP-DD · 36 ports");
+  plate(108,32,21.5,"var(--os)","OSFP · 32 ports");
+})();
+
+/* Halving links */
+(function(){const s=document.getElementById("halve");
+  function panel(x,n,color,title){
+    el("text",{x:x+200,y:20,"font-size":17,"text-anchor":"middle","font-weight":600},s,title);
+    el("rect",{x:x,y:40,width:400,height:34,rx:4,fill:"none",style:"stroke:var(--ink)"},s);
+    el("text",{x:x+200,y:62,"font-size":14,"text-anchor":"middle"},s,"Spine switch");
+    el("rect",{x:x,y:176,width:400,height:34,rx:4,fill:"none",style:"stroke:var(--ink)"},s);
+    el("text",{x:x+200,y:198,"font-size":14,"text-anchor":"middle"},s,"Leaf switch");
+    const gap=400/(n+1);
+    for(let i=1;i<=n;i++){const cx=x+i*gap;
+      el("line",{x1:cx,y1:74,x2:cx,y2:176,style:`stroke:${color}`,"stroke-width":n>4?3:6},s);}
+  }
+  panel(20,8,"var(--muted)","8 × 100G links");
+  panel(480,4,"var(--dd)","4 × 200G links");
+})();
+
+/* Reach chart */
+(function(){const s=document.getElementById("reach");
+  const rows=[["Passive DAC (copper)",3,"in-rack"],["AOC",100,"row / nearby rack"],["SR4 · multimode fiber",100,"within a hall"],["DR4 · single-mode",500,"across a building"],["FR4 · single-mode",2000,"campus"],["LR4 · single-mode",10000,"between buildings"]];
+  const x0=220,x1=870,lg=v=>Math.log10(v),X=v=>x0+(lg(v)-0)/(4-0)*(x1-x0);
+  [1,10,100,1000,10000].forEach(v=>{el("line",{x1:X(v),y1:10,x2:X(v),y2:290,style:"stroke:var(--grid)"},s);
+    el("text",{x:X(v),y:314,"font-size":14,"text-anchor":"middle"},s,v>=1000?(v/1000)+" km":v+" m");});
+  rows.forEach((r,i)=>{const y=22+i*45;
+    el("text",{x:x0-12,y:y+19,"font-size":15,"text-anchor":"end"},s,r[0]);
+    const col=i<2?"var(--os)":"var(--dd)";
+    el("rect",{x:x0,y:y,width:X(r[1])-x0,height:26,rx:3,style:`fill:${col}`,opacity:.85},s);
+    const lx=X(r[1])+8,inside=lx>790;
+    el("text",{x:inside?X(r[1])-8:lx,y:y+18,"font-size":14,"text-anchor":inside?"end":"start",style:inside?"fill:var(--bg)":""},s,(r[1]>=1000?r[1]/1000+" km":r[1]+" m")+" · "+r[2]);
+  });
+})();
+
+/* Decision helper */
+const ans={};
+document.querySelectorAll(".opts").forEach(g=>g.querySelectorAll("button").forEach(b=>{
+  b.setAttribute("aria-pressed","false");
+  b.addEventListener("click",()=>{g.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));ans[g.dataset.q]=+b.dataset.v;verdict();});
+}));
+function verdict(){
+  const v=document.getElementById("verdict");
+  if(Object.keys(ans).length<3){v.className="";v.innerHTML='<span class="muted">Answer all three to see a recommendation.</span>';return;}
+  const dd=ans.compat*2+ans.density*1.5, os=ans.future*2+(ans.compat?0:0.5);
+  v.className=dd>=os?"dd-win":"os-win";
+  v.innerHTML=dd>=os
+    ?'<h3 class="dd">Lean toward QSFP-DD</h3><p>You keep your QSFP investment, get the most ports per rack unit, and save a little power. Good fit for enterprise and cloud-edge upgrades from 100G.</p>'
+    :'<h3 class="os">Lean toward OSFP</h3><p>You are buying for growth. The extra cooling headroom and clear path to 800G and 1.6T matter more than squeezing in a few more ports. Good fit for hyperscale, AI and HPC fabrics.</p>';
+}
+</script>
+</body>
+</html>

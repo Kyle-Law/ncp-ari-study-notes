@@ -78,3 +78,66 @@ https://cdn10.servertech.com/assets/documents/documents/823/original/Alternating
 - [How AI changes data center design (Schneider WP110)](1.O1/ai-datacenter-explainer.html)
 - [Liquid cooling architectures for AI data centers](1.O1/liquid-cooling-explainer.html)
 - [Regulation (EU) 2019/424: servers and data storage](1.O1/eu-2019-424-servers-storage-explained.html)
+
+
+
+## High-Density Cabling Installation for AI Clusters - 30%
+This section details the practical deployment of high-density cables. It covers distinguishing between NVIDIA and other cables, understanding transceiver form factors (OSFP/QSFP) and fiber types (MMF/SMF), deploying InfiniBand copper and MPO/APC fiber optic cables, implementing the 50/50 left-right routing strategy, and applying professional cable management practices, including cleaning connectors.
+
+### Potential Exam Topics:
+- **T1** Describe the difference between NVIDIA cables vs. others.
+- **T2** Describe the different transceiver form factors (OSFP vs. QSFP).
+- **T3** Describe the difference between MMF and SMF.
+- **T4** Describe the transceiver requirements across the various SMF distances.
+- **T5** Deploy InfiniBand NDR/XDR copper cables.
+- **T6** Install MPO/APC fiber optic cables.
+- **T7** Implement 50/50 left-right cable routing strategy.
+- **T8** Bundle and dress cables professionally (hook and loop fasteners, soft ties, color coding).
+- **T9** Install fiber optic transceivers and clean connectors.
+
+### Suggested Readings and Recommended Training for High-Density Cabling Installation
+
+**SR1** Cable Validation Tool (CVT) Fundamentals: free self-paced course
+
+**SR2** Choosing Between OSFP and QSFP-DD: Key Considerations for 800G Optical Transceivers
+- [OSFP vs QSFP-DD for 800G, explained](2.SR2/osfp-vs-qsfpdd-explained.html)
+
+**SR3** Cable Management Best Practices—NVIDIA DGX SuperPOD™
+- [Cable management best practices, explained](2.SR3/cable-management-best-practices.html)
+
+**SR4** Deploying the Bundles—NVIDIA DGX SuperPOD: Cabling Data Centers Design Guide
+- [Deploying the bundles, explained](2.SR4/deploying-the-bundles-explained.html)
+
+**SR5** Maintaining NDR Connectors and Cables—NVIDIA DGX SuperPOD
+- [Keeping NDR optics clean](2.SR5/ndr-connector-maintenance-explained.html)
+
+**SR6** Connectors and Cages
+- [Connectors and cages, explained (NVIDIA LinkX)](2.SR6/nvidia-connectors-and-cages.html)
+
+**SR7** Validated and Supported Cables and Switches—NVIDIA Docs
+- [ConnectX-7 validated cables & switches, explained](2.SR7/connectx7-cables-explained.html)
+
+**SR8** NVIDIA Q32xx and Q34xx XDR 800 Gb/s InfiniBand Switch Systems User Manual
+- [Reading the LEDs on Q32xx / Q34xx XDR switches](2.SR8/nvidia-xdr-switch-led-guide.html)
+
+**SR9** How to Understand OSFP vs. QSFP-DD Form Factors—BYXGD
+- [OSFP vs QSFP-DD, explained visually](2.SR9/osfp-vs-qsfp-dd-explained.html)
+
+**SR10** 200G Optical Transceiver: QSFP‑DD vs. OSFP for Data Centers
+- [200G transceivers: QSFP-DD vs OSFP, explained](2.SR10/200g-qsfp-dd-vs-osfp-explained.html)
+
+**SR11** Single Mode vs. Multimode Fiber: A Complete Comparison Guide
+
+**SR12** Single-Mode vs. Multimode Fiber: A Comprehensive Guide
+
+**SR13** 2 Big Mistakes to Avoid During Fiber Cable Installation
+
+**SR14** Single-Mode vs. Multimode Fiber—DCD
+
+**SR15** Cleaning and Inspecting MPO/MTP Connectors | Fluke Networks
+
+**SR16** The Fiber Optic Association, Inc.
+
+**SR17** Installing an OSFP Transceiver
+
+**SR18** Clean & Inspect: What IEC 61300-3-35 Means to You | MicroCare

@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connectors and Cages, explained — NVIDIA LinkX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ECEFEE; --panel:#F8F9F8; --ink:#192024; --muted:#56636A; --line:#C6CDD0;
+  --metal:#A3AEB4; --metal-d:#77838A; --gold:#C99A2E;
+  --lane:#2B6CD9; --lane2:#7A4FD6;
+  --ok:#23905A; --warn:#C07E0C; --adapt:#2B6CD9; --no:#C4423A; --unk:#8C979C;
+  --sans:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --cond:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#12181B; --panel:#1A2226; --ink:#E2E8EA; --muted:#94A1A7; --line:#2F3B41;
+    --metal:#5E6B72; --metal-d:#8795A0; --gold:#D8AE4A;
+    --lane:#5B92F0; --lane2:#A17EF0;
+    --ok:#3DBB7A; --warn:#E3A33A; --adapt:#5B92F0; --no:#E5675D; --unk:#6E7A80;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+main{max-width:1040px;margin:0 auto;padding:48px 24px 80px}
+h1,h2,h3{font-family:var(--cond);font-weight:600;line-height:1.05;margin:0}
+h1{font-size:clamp(44px,7vw,84px);letter-spacing:-.01em}
+h2{font-size:clamp(30px,4vw,42px);margin-bottom:12px}
+h3{font-size:24px;margin-bottom:6px}
+p{margin:0 0 14px;max-width:68ch}
+.lede{font-size:20px;color:var(--muted);max-width:60ch;margin-top:18px}
+section{padding:56px 0;border-top:1px solid var(--line)}
+section:first-of-type{border-top:0}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:20px;margin:22px 0;overflow-x:auto}
+.fig svg{display:block;width:100%;height:auto;min-width:560px}
+.cap{font-size:14px;color:var(--muted);margin-top:10px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+code,.pn{font-family:var(--cond);font-weight:600;letter-spacing:.01em}
+a{color:var(--lane)}
+button{font:inherit}
+:focus-visible{outline:2px solid var(--lane);outline-offset:2px}
+
+/* SVG helpers */
+.s-ink{fill:var(--ink)} .s-muted{fill:var(--muted)}
+.s-metal{fill:var(--metal)} .s-metald{fill:var(--metal-d)}
+.s-line{stroke:var(--line)} .s-inkline{stroke:var(--ink)}
+.t{font-family:var(--cond);font-size:15px;fill:var(--ink)}
+.tb{font-family:var(--cond);font-size:20px;font-weight:600;fill:var(--ink)}
+.ts{font-family:var(--sans);font-size:12.5px;fill:var(--muted)}
+
+/* name anatomy */
+.anat{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 2px;font-family:var(--cond);font-weight:700;font-size:clamp(48px,9vw,110px);line-height:1;margin:40px 0 8px}
+.anat span{padding:0 4px;border-bottom:4px solid transparent;cursor:default}
+.anat .q{color:var(--lane);border-color:var(--lane)}
+.anat .o{color:var(--lane2);border-color:var(--lane2)}
+.anat .sfp{border-color:var(--ink)}
+.anat .x{color:var(--muted);font-weight:500;font-size:.5em;align-self:center;padding:0 10px}
+.anatkey{display:flex;flex-wrap:wrap;gap:10px 32px;font-size:15px;color:var(--muted)}
+.anatkey b{color:var(--ink);font-family:var(--cond);font-size:18px}
+
+/* toggle */
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:14px}
+.seg button{background:transparent;color:var(--ink);border:0;padding:8px 16px;cursor:pointer;font-family:var(--cond);font-size:17px;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.pin{transition:fill .35s}
+.paddle{transition:transform .5s cubic-bezier(.3,.8,.3,1)}
+@media (prefers-reduced-motion:reduce){.paddle,.pin{transition:none}}
+
+/* speeds */
+.speeds{display:grid;grid-template-columns:minmax(150px,210px) 1fr auto;gap:10px 16px;align-items:center}
+.speeds .nm{font-family:var(--cond);font-weight:600;font-size:18px;line-height:1.1}
+.speeds .nm small{display:block;font-family:var(--sans);font-weight:400;font-size:12.5px;color:var(--muted)}
+.lanes{display:flex;gap:3px;flex-wrap:nowrap;min-height:22px;align-items:center}
+.ln{height:20px;border-radius:2px;background:var(--lane)}
+.ln.pam{background:var(--lane2)}
+.tot{font-family:var(--cond);font-weight:700;font-size:20px;text-align:right;white-space:nowrap}
+.legend{display:flex;gap:22px;flex-wrap:wrap;font-size:14px;color:var(--muted);margin-bottom:18px}
+.legend i{display:inline-block;width:18px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+
+/* matrix */
+.mx{border-collapse:separate;border-spacing:3px;width:100%;min-width:760px}
+.mx th{font-family:var(--cond);font-weight:600;font-size:15px;line-height:1.1;text-align:left;vertical-align:bottom;padding:4px}
+.mx thead th{height:120px;vertical-align:bottom}
+.mx thead th span{display:inline-block;transform:rotate(-40deg);transform-origin:left bottom;white-space:nowrap;margin-left:18px}
+.mx tbody th{font-size:16px;padding-right:10px;min-width:190px}
+.mx tbody th small{display:block;font-family:var(--sans);font-weight:400;font-size:12px;color:var(--muted)}
+.mx td{padding:0}
+.cell{width:100%;height:44px;border:0;border-radius:4px;cursor:pointer;color:#fff;font-family:var(--cond);font-weight:700;font-size:18px}
+.cell.Y{background:var(--ok)} .cell.B{background:var(--warn)} .cell.A{background:var(--adapt)}
+.cell.N{background:transparent;color:var(--no);box-shadow:inset 0 0 0 1.5px var(--line)}
+.cell.U{background:transparent;color:var(--unk);box-shadow:inset 0 0 0 1.5px dashed var(--line);border:1.5px dashed var(--line)}
+.cell[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:1px}
+.verdict{margin-top:16px;padding:16px 18px;border-left:5px solid var(--line);background:var(--bg);border-radius:0 6px 6px 0;min-height:88px}
+.verdict h3{font-size:22px}
+.verdict p{margin:4px 0 0;font-size:16px}
+.mkey{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;color:var(--muted);margin-bottom:10px}
+.mkey i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:6px}
+
+.rules{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.rules li{padding:14px 16px;background:var(--panel);border:1px solid var(--line);border-radius:6px;display:grid;grid-template-columns:28px 1fr;gap:10px}
+.rules .ic{font-family:var(--cond);font-weight:700;font-size:22px;line-height:1.1}
+.rules .yes{color:var(--ok)} .rules .nope{color:var(--no)}
+footer{font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:24px}
+</style>
+</head>
+<body>
+<main>
+
+<!-- HERO -->
+<section>
+  <h1>Connectors and cages</h1>
+  <p class="lede">A plain-language walkthrough of NVIDIA's LinkX page on the metal ends of cables and transceivers (the <em>plugs</em>) and the sockets on switches, adapters and DPUs that they slide into (the <em>cages</em>) — and which ones fit which.</p>
+
+  <div class="anat" aria-label="Form-factor name anatomy">
+    <span class="sfp">SFP</span><span class="x">→</span>
+    <span class="q">Q</span><span class="sfp">SFP</span><span class="x">→</span>
+    <span class="q">Q</span><span class="sfp">SFP</span><span class="q">-DD</span><span class="x">·</span>
+    <span class="o">O</span><span class="sfp">SFP</span>
+  </div>
+  <div class="anatkey">
+    <div><b>SFP</b> small form-factor pluggable, 1 lane</div>
+    <div><b style="color:var(--lane)">Q</b> quad, 4 lanes</div>
+    <div><b style="color:var(--lane)">QSFP-DD</b> quad double-density, 8 lanes</div>
+    <div><b style="color:var(--lane2)">OSFP</b> octal, 8 lanes</div>
+  </div>
+  <p style="margin-top:18px">Everything on the page builds from that one family name. "SFP" is the base; the letter in front says how many electrical channels (lanes) the connector carries. The number after (28, 56, 112) hints at the per-lane signalling speed.</p>
+</section>
+
+<!-- LANES FIGURE -->
+<section>
+  <h2>What "lanes" look like at the connector face</h2>
+  <p>Each lane is an independent high-speed electrical channel. More lanes in the same kind of shell means more bandwidth per port. This is why an OSFP or QSFP-DD can carry twice what a QSFP carries at the same per-lane speed.</p>
+  <div class="fig">
+    <svg viewBox="0 0 900 250" role="img" aria-label="Front views of SFP with 1 lane, QSFP with 4 lanes, QSFP-DD with 8 lanes in two rows, and OSFP with 8 lanes">
+      <!-- SFP -->
+      <g transform="translate(40,40)">
+        <rect width="90" height="120" rx="6" class="s-metal"/>
+        <rect x="15" y="18" width="60" height="84" rx="3" fill="var(--panel)"/>
+        <rect x="38" y="30" width="14" height="60" rx="2" fill="var(--lane)"/>
+        <text x="45" y="150" text-anchor="middle" class="tb">SFP</text>
+        <text x="45" y="170" text-anchor="middle" class="ts">1 lane</text>
+      </g>
+      <!-- QSFP -->
+      <g transform="translate(200,40)">
+        <rect width="150" height="120" rx="6" class="s-metal"/>
+        <rect x="14" y="18" width="122" height="84" rx="3" fill="var(--panel)"/>
+        <g fill="var(--lane)">
+          <rect x="28" y="30" width="16" height="60" rx="2"/><rect x="56" y="30" width="16" height="60" rx="2"/>
+          <rect x="84" y="30" width="16" height="60" rx="2"/><rect x="112" y="30" width="16" height="60" rx="2" transform="translate(-6,0)"/>
+        </g>
+        <text x="75" y="150" text-anchor="middle" class="tb">QSFP (+ / 28 / 56 / 112)</text>
+        <text x="75" y="170" text-anchor="middle" class="ts">4 lanes</text>
+      </g>
+      <!-- QSFP-DD -->
+      <g transform="translate(420,40)">
+        <rect width="150" height="120" rx="6" class="s-metal"/>
+        <rect x="14" y="14" width="122" height="92" rx="3" fill="var(--panel)"/>
+        <g fill="var(--lane)">
+          <rect x="24" y="22" width="16" height="34" rx="2"/><rect x="52" y="22" width="16" height="34" rx="2"/>
+          <rect x="80" y="22" width="16" height="34" rx="2"/><rect x="108" y="22" width="16" height="34" rx="2"/>
+        </g>
+        <g fill="var(--lane2)">
+          <rect x="24" y="64" width="16" height="34" rx="2"/><rect x="52" y="64" width="16" height="34" rx="2"/>
+          <rect x="80" y="64" width="16" height="34" rx="2"/><rect x="108" y="64" width="16" height="34" rx="2"/>
+        </g>
+        <text x="75" y="150" text-anchor="middle" class="tb">QSFP-DD</text>
+        <text x="75" y="170" text-anchor="middle" class="ts">8 lanes: same width as QSFP,</text>
+        <text x="75" y="186" text-anchor="middle" class="ts">second row added</text>
+      </g>
+      <!-- OSFP -->
+      <g transform="translate(640,32)">
+        <rect width="220" height="136" rx="6" class="s-metal"/>
+        <rect x="14" y="18" width="192" height="100" rx="3" fill="var(--panel)"/>
+        <g fill="var(--lane2)">
+          <rect x="26" y="32" width="14" height="72" rx="2"/><rect x="48" y="32" width="14" height="72" rx="2"/>
+          <rect x="70" y="32" width="14" height="72" rx="2"/><rect x="92" y="32" width="14" height="72" rx="2"/>
+          <rect x="114" y="32" width="14" height="72" rx="2"/><rect x="136" y="32" width="14" height="72" rx="2"/>
+          <rect x="158" y="32" width="14" height="72" rx="2"/><rect x="180" y="32" width="14" height="72" rx="2"/>
+        </g>
+        <text x="110" y="158" text-anchor="middle" class="tb">OSFP</text>
+        <text x="110" y="178" text-anchor="middle" class="ts">8 lanes in a larger shell with more room for cooling</text>
+      </g>
+    </svg>
+    <div class="cap">Schematic, not to scale. Lane counts are what matters; real connectors carry these lanes as gold pads on a small circuit board ("paddle card").</div>
+  </div>
+</section>
+
+<!-- PLUG vs CAGE -->
+<section>
+  <h2>Plug and cage: the two halves</h2>
+  <p>A <b>plug</b> is the end of a copper cable, active optical cable, or transceiver. A <b>cage</b> is the metal receptacle on the equipment's faceplate with an electrical connector at the back. The plug's paddle card slides into that connector. Whether something "fits" depends on the cage's shape, its connector, and how it removes heat.</p>
+  <div class="fig">
+    <svg viewBox="0 0 900 230" role="img" aria-label="A plug on the end of a cable sliding into a cage mounted on a circuit board behind a faceplate">
+      <!-- board -->
+      <rect x="470" y="170" width="400" height="14" fill="var(--ok)" opacity=".55"/>
+      <text x="860" y="205" text-anchor="end" class="ts">Switch / adapter circuit board</text>
+      <!-- faceplate -->
+      <rect x="460" y="30" width="10" height="160" class="s-metald"/>
+      <text x="465" y="22" text-anchor="middle" class="ts">faceplate</text>
+      <!-- cage -->
+      <rect x="470" y="70" width="300" height="100" rx="2" fill="none" stroke="var(--metal-d)" stroke-width="3"/>
+      <rect x="760" y="92" width="44" height="56" rx="3" class="s-ink"/>
+      <text x="782" y="84" text-anchor="middle" class="ts">connector</text>
+      <text x="610" y="62" text-anchor="middle" class="t">Cage</text>
+      <!-- plug -->
+      <g class="plugmove">
+        <path d="M40 112 H150" stroke="var(--ink)" stroke-width="10" stroke-linecap="round"/>
+        <rect x="150" y="80" width="260" height="84" rx="6" class="s-metal"/>
+        <rect x="410" y="110" width="46" height="24" rx="2" fill="var(--gold)"/>
+        <text x="280" y="128" text-anchor="middle" class="t">Plug (cable end / transceiver)</text>
+        <text x="433" y="152" text-anchor="middle" class="ts">paddle card</text>
+      </g>
+      <path d="M420 60 l30 0 m-8 -6 l8 6 l-8 6" stroke="var(--muted)" stroke-width="2" fill="none"/>
+    </svg>
+  </div>
+</section>
+
+<!-- OSFP VERSIONS -->
+<section>
+  <h2>The three OSFP versions</h2>
+  <p>NVIDIA's 100G-PAM4 line (NDR InfiniBand, 400/800G Ethernet) is built on three connector and cage types: <b>twin-port OSFP</b>, <b>single-port OSFP</b>, and <b>QSFP-DD</b>. OSFP itself comes in three physical variants, and the difference that matters is <em>where the heat sink lives</em>.</p>
+  <div class="fig">
+    <svg viewBox="0 0 900 360" role="img" aria-label="Side profiles of three OSFP plugs: twin-port finned-top, twin-port flat-top under a riding heat sink, and single-port flat-top under a riding heat sink">
+      <!-- 1 finned -->
+      <g transform="translate(30,40)">
+        <text x="120" y="0" text-anchor="middle" class="tb">Twin-port, finned top</text>
+        <text x="120" y="20" text-anchor="middle" class="ts">"IHS" – integrated heat sink</text>
+        <g transform="translate(0,90)">
+          <rect x="10" y="40" width="220" height="44" rx="4" class="s-metal"/>
+          <g class="s-metald">
+            <rect x="22" y="0" width="7" height="40"/><rect x="38" y="0" width="7" height="40"/><rect x="54" y="0" width="7" height="40"/>
+            <rect x="70" y="0" width="7" height="40"/><rect x="86" y="0" width="7" height="40"/><rect x="102" y="0" width="7" height="40"/>
+            <rect x="118" y="0" width="7" height="40"/><rect x="134" y="0" width="7" height="40"/><rect x="150" y="0" width="7" height="40"/>
+            <rect x="166" y="0" width="7" height="40"/><rect x="182" y="0" width="7" height="40"/><rect x="198" y="0" width="7" height="40"/>
+          </g>
+          <rect x="230" y="56" width="22" height="14" fill="var(--gold)"/>
+        </g>
+        <!-- end view two ports -->
+        <g transform="translate(60,210)">
+          <rect width="120" height="56" rx="4" class="s-metal"/>
+          <rect x="12" y="14" width="42" height="28" rx="3" fill="var(--panel)" stroke="var(--lane2)" stroke-width="2"/>
+          <rect x="66" y="14" width="42" height="28" rx="3" fill="var(--panel)" stroke="var(--lane2)" stroke-width="2"/>
+          <text x="60" y="76" text-anchor="middle" class="ts">end view: two ports (2×400G)</text>
+        </g>
+        <text x="120" y="310" text-anchor="middle" class="t">Goes in switches</text>
+      </g>
+      <!-- 2 twin flat -->
+      <g transform="translate(330,40)">
+        <text x="120" y="0" text-anchor="middle" class="tb">Twin-port, flat top</text>
+        <text x="120" y="20" text-anchor="middle" class="ts">"RHS" – riding heat sink</text>
+        <g transform="translate(0,90)">
+          <rect x="4" y="-2" width="232" height="38" rx="3" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="6 5"/>
+          <text x="120" y="22" text-anchor="middle" class="ts">heat sink belongs to the cage</text>
+          <rect x="10" y="40" width="220" height="44" rx="4" class="s-metal"/>
+          <rect x="230" y="56" width="22" height="14" fill="var(--gold)"/>
+        </g>
+        <g transform="translate(60,210)">
+          <rect width="120" height="56" rx="4" class="s-metal"/>
+          <rect x="12" y="14" width="42" height="28" rx="3" fill="var(--panel)" stroke="var(--lane2)" stroke-width="2"/>
+          <rect x="66" y="14" width="42" height="28" rx="3" fill="var(--panel)" stroke="var(--lane2)" stroke-width="2"/>
+          <text x="60" y="76" text-anchor="middle" class="ts">end view: two ports</text>
+        </g>
+        <text x="120" y="310" text-anchor="middle" class="t">Cages with built-in heat sinks (e.g. DGX)</text>
+      </g>
+      <!-- 3 single flat -->
+      <g transform="translate(630,40)">
+        <text x="120" y="0" text-anchor="middle" class="tb">Single-port, flat top</text>
+        <text x="120" y="20" text-anchor="middle" class="ts">"RHS" – riding heat sink</text>
+        <g transform="translate(0,90)">
+          <rect x="4" y="-2" width="232" height="38" rx="3" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="6 5"/>
+          <text x="120" y="22" text-anchor="middle" class="ts">heat sink belongs to the cage</text>
+          <rect x="10" y="40" width="220" height="44" rx="4" class="s-metal"/>
+          <rect x="230" y="56" width="22" height="14" fill="var(--gold)"/>
+        </g>
+        <g transform="translate(60,210)">
+          <rect width="120" height="56" rx="4" class="s-metal"/>
+          <rect x="36" y="14" width="48" height="28" rx="3" fill="var(--panel)" stroke="var(--lane)" stroke-width="2"/>
+          <text x="60" y="76" text-anchor="middle" class="ts">end view: one port (400G)</text>
+        </g>
+        <text x="120" y="310" text-anchor="middle" class="t">ConnectX-7 (OSFP) adapters</text>
+      </g>
+    </svg>
+    <div class="cap">"Twin-port" means one plug carries two independent 400G links (two optical connectors on the end). Newer NVIDIA docs call the finned version IHS and the flat version RHS.</div>
+  </div>
+  <div class="two">
+    <div>
+      <h3>Why the fins matter</h3>
+      <p>Switch cages are open on top, so the plug has to bring its own cooling — hence the finned top. Adapter cards and some systems put a heat sink on the cage itself that "rides" on the plug, so the plug must be flat to make contact.</p>
+    </div>
+    <div>
+      <h3>Cables use the same ends</h3>
+      <p>The finned 800G twin-port OSFP end is also used to build passive copper cables, active copper cables and active optical cables, with twin-port OSFP, OSFP, QSFP112 or QSFP56 on the other end.</p>
+    </div>
+  </div>
+</section>
+
+<!-- QSFP BACKWARD COMPAT -->
+<section>
+  <h2>How QSFP stays backwards compatible</h2>
+  <p>The QSFP family evolved over several generations but kept the same outer shape. A QSFP-DD cage adds a <em>second row</em> of contacts behind the first. An older 4-lane plug only has pads for the first row, so it engages those 4 lanes and simply leaves the back row unused.</p>
+  <div class="fig">
+    <div class="seg" role="group" aria-label="Choose plug">
+      <button type="button" data-plug="dd" aria-pressed="true">QSFP-DD plug</button>
+      <button type="button" data-plug="q" aria-pressed="false">QSFP56 / QSFP28 / QSFP+ plug</button>
+    </div>
+    <svg viewBox="0 0 900 250" role="img" aria-label="Top-down view of a QSFP-DD cage connector with two contact rows and a paddle card inserted">
+      <!-- cage connector -->
+      <rect x="520" y="40" width="330" height="170" rx="6" fill="none" stroke="var(--metal-d)" stroke-width="3"/>
+      <text x="685" y="30" text-anchor="middle" class="t">QSFP-DD cage connector (8 lanes)</text>
+      <text x="600" y="232" text-anchor="middle" class="ts">row 1: lanes 1–4</text>
+      <text x="760" y="232" text-anchor="middle" class="ts">row 2: lanes 5–8</text>
+      <g id="row1">
+        <rect class="pin" x="590" y="62" width="20" height="26" rx="2"/>
+        <rect class="pin" x="590" y="98" width="20" height="26" rx="2"/>
+        <rect class="pin" x="590" y="134" width="20" height="26" rx="2"/>
+        <rect class="pin" x="590" y="170" width="20" height="26" rx="2"/>
+      </g>
+      <g id="row2">
+        <rect class="pin" x="750" y="62" width="20" height="26" rx="2"/>
+        <rect class="pin" x="750" y="98" width="20" height="26" rx="2"/>
+        <rect class="pin" x="750" y="134" width="20" height="26" rx="2"/>
+        <rect class="pin" x="750" y="170" width="20" height="26" rx="2"/>
+      </g>
+      <!-- paddle -->
+      <g class="paddle" id="paddle">
+        <rect x="60" y="56" width="340" height="146" rx="6" class="s-metal"/>
+        <text x="200" y="132" text-anchor="middle" class="tb" id="plugname">QSFP-DD plug</text>
+        <rect id="card" x="400" y="56" width="390" height="146" rx="3" fill="var(--ok)" opacity=".35"/>
+        <g fill="var(--gold)" id="pads1">
+          <rect x="578" y="66" width="44" height="18" rx="2"/><rect x="578" y="102" width="44" height="18" rx="2"/>
+          <rect x="578" y="138" width="44" height="18" rx="2"/><rect x="578" y="174" width="44" height="18" rx="2"/>
+        </g>
+        <g fill="var(--gold)" id="pads2">
+          <rect x="738" y="66" width="44" height="18" rx="2"/><rect x="738" y="102" width="44" height="18" rx="2"/>
+          <rect x="738" y="138" width="44" height="18" rx="2"/><rect x="738" y="174" width="44" height="18" rx="2"/>
+        </g>
+      </g>
+    </svg>
+    <div class="cap" id="ddcap">All 8 lanes connect: 8 × 50G-PAM4 = 400GbE.</div>
+  </div>
+  <ul class="rules">
+    <li><span class="ic yes">✓</span><span>QSFP-DD switch cages accept QSFP112, QSFP56 and QSFP28 devices, running them with 50G-PAM4 or 25G-NRZ signalling.</span></li>
+    <li><span class="ic yes">✓</span><span>QSFP112 cages (adapters and DPUs) accept QSFP56, QSFP28 and QSFP+ cables and transceivers.</span></li>
+    <li><span class="ic yes">✓</span><span>QSFP56 cages (switches and adapters) accept QSFP28 and QSFP+ cables and transceivers.</span></li>
+    <li><span class="ic nope">✕</span><span>QSFP-DD is not used for InfiniBand, and not for 100G-PAM4 Ethernet. It is a switch-only cage — ConnectX-6/7/8 adapters and BlueField-2/3 DPUs are never built with QSFP-DD.</span></li>
+  </ul>
+</section>
+
+<!-- SPEEDS -->
+<section>
+  <h2>Lanes × lane speed = port speed</h2>
+  <p>The connector decides how many lanes there are; the modulation decides how fast each lane runs. Each block below is one lane, drawn to scale by its speed.</p>
+  <div class="legend">
+    <span><i style="background:var(--lane)"></i>NRZ signalling (older, 1 bit per symbol)</span>
+    <span><i style="background:var(--lane2)"></i>PAM4 signalling (2 bits per symbol)</span>
+  </div>
+  <div class="fig"><div class="speeds" id="speeds"></div>
+  <div class="cap">OSFP rows for 200G-PAM4 (XDR) come from NVIDIA's related XDR product pages rather than this page, and are included to show where the same cages are heading.</div></div>
+</section>
+
+<!-- MATRIX -->
+<section>
+  <h2>Will it fit? Cage-by-plug checker</h2>
+  <p>Rows are the cages you have on your equipment; columns are the plug on the cable or transceiver you're holding. Click any cell for the reasoning.</p>
+  <div class="mkey">
+    <span><i style="background:var(--ok)"></i>Fits, full speed</span>
+    <span><i style="background:var(--warn)"></i>Fits, runs as older/4-lane device</span>
+    <span><i style="background:var(--adapt)"></i>Fits with a QSA adapter</span>
+    <span><i style="box-shadow:inset 0 0 0 1.5px var(--no)"></i>Does not fit / not supported</span>
+    <span><i style="border:1.5px dashed var(--unk)"></i>Not covered by the page</span>
+  </div>
+  <div class="fig" style="padding-top:8px">
+    <table class="mx" id="mx"></table>
+    <div class="verdict" id="verdict" aria-live="polite">
+      <h3>Pick a cell</h3>
+      <p>For example, try the QSFP-DD cage row with a QSFP56 plug.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ADAPTERS -->
+<section>
+  <h2>Adapters: what exists and what doesn't</h2>
+  <div class="fig">
+    <svg viewBox="0 0 900 200" role="img" aria-label="An SFP plug inside a QSA adapter shell, inserted into a QSFP cage, using one of four lanes">
+      <rect x="470" y="40" width="360" height="120" rx="4" fill="none" stroke="var(--metal-d)" stroke-width="3"/>
+      <text x="650" y="30" text-anchor="middle" class="t">QSFP cage (4 lanes)</text>
+      <g transform="translate(790,52)">
+        <rect y="0" width="18" height="20" rx="2" fill="var(--lane)"/>
+        <rect y="28" width="18" height="20" rx="2" class="s-metal"/>
+        <rect y="56" width="18" height="20" rx="2" class="s-metal"/>
+        <rect y="84" width="18" height="20" rx="2" class="s-metal"/>
+      </g>
+      <rect x="250" y="50" width="520" height="100" rx="6" fill="var(--lane)" opacity=".18" stroke="var(--lane)" stroke-width="2"/>
+      <text x="700" y="140" text-anchor="middle" class="ts">QSA+ / QSA28 shell</text>
+      <rect x="120" y="72" width="300" height="56" rx="4" class="s-metal"/>
+      <path d="M40 100 H120" stroke="var(--ink)" stroke-width="8" stroke-linecap="round"/>
+      <text x="270" y="106" text-anchor="middle" class="t">SFP+ / SFP28 plug</text>
+      <text x="835" y="186" text-anchor="end" class="ts">only lane 1 is passed through</text>
+    </svg>
+  </div>
+  <ul class="rules">
+    <li><span class="ic yes">✓</span><span><b>QSA+ and QSA28</b> let a single-lane SFP+ or SFP28 device sit in a QSFP cage, passing through one channel.</span></li>
+    <li><span class="ic nope">✕</span><span>There is <b>no QSFP-to-OSFP adapter</b>. QSFP112 devices cannot be put into twin-port OSFP cages, and twin-port or single-port OSFP cages are not compatible with the QSFP line at all.</span></li>
+  </ul>
+</section>
+
+<!-- WHERE -->
+<section>
+  <h2>Where you'll find each cage</h2>
+  <div class="fig">
+    <svg viewBox="0 0 900 300" role="img" aria-label="Map of cage types to equipment: switches use twin-port OSFP or QSFP-DD; adapters and DPUs use single-port OSFP, QSFP112, or QSFP56">
+      <g font-family="var(--cond)">
+        <rect x="20" y="20" width="400" height="260" rx="6" fill="none" stroke="var(--line)" stroke-width="2"/>
+        <text x="40" y="52" class="tb">Switches</text>
+        <rect x="40" y="72" width="360" height="80" rx="4" fill="var(--lane2)" opacity=".16"/>
+        <text x="56" y="102" class="tb" style="font-size:18px">Twin-port OSFP (finned)</text>
+        <text x="56" y="126" class="ts">NDR/XDR InfiniBand and Spectrum-4 Ethernet switches;</text>
+        <text x="56" y="142" class="ts">doubles the number of 400G ports per faceplate</text>
+        <rect x="40" y="170" width="360" height="90" rx="4" fill="var(--lane)" opacity=".16"/>
+        <text x="56" y="200" class="tb" style="font-size:18px">QSFP-DD</text>
+        <text x="56" y="224" class="ts">Ethernet-only, 8 × 50G-PAM4 = 400GbE switches;</text>
+        <text x="56" y="240" class="ts">accepts older 4-lane QSFP devices</text>
+
+        <rect x="480" y="20" width="400" height="260" rx="6" fill="none" stroke="var(--line)" stroke-width="2"/>
+        <text x="500" y="52" class="tb">Adapters and DPUs</text>
+        <rect x="500" y="72" width="360" height="60" rx="4" fill="var(--lane2)" opacity=".16"/>
+        <text x="516" y="98" class="tb" style="font-size:18px">Single-port OSFP (flat top)</text>
+        <text x="516" y="120" class="ts">ConnectX-7 OSFP version, ConnectX-8</text>
+        <rect x="500" y="142" width="360" height="60" rx="4" fill="var(--lane)" opacity=".16"/>
+        <text x="516" y="168" class="tb" style="font-size:18px">QSFP112</text>
+        <text x="516" y="190" class="ts">ConnectX-7 QSFP112 version, BlueField-3</text>
+        <rect x="500" y="212" width="360" height="52" rx="4" fill="var(--lane)" opacity=".10"/>
+        <text x="516" y="236" class="tb" style="font-size:18px">QSFP56</text>
+        <text x="516" y="256" class="ts">earlier generation (e.g. ConnectX-6, BlueField-2)</text>
+      </g>
+    </svg>
+    <div class="cap">ConnectX-7 ships in both OSFP and QSFP112 versions, so check which cage your card has before ordering cables.</div>
+  </div>
+</section>
+
+<section>
+  <h2>The short version</h2>
+  <ul class="rules">
+    <li><span class="ic yes">1</span><span>The prefix tells you lane count: SFP 1, QSFP 4, QSFP-DD and OSFP 8.</span></li>
+    <li><span class="ic yes">2</span><span>The QSFP family is backwards compatible: newer QSFP cages accept older QSFP plugs, which use only the first 4 lanes.</span></li>
+    <li><span class="ic yes">3</span><span>OSFP and QSFP are separate worlds; no adapter bridges them.</span></li>
+    <li><span class="ic yes">4</span><span>Within OSFP, match the top: finned plugs for open switch cages, flat plugs for cages with their own heat sink; twin-port for twin-port cages, single-port for adapters.</span></li>
+    <li><span class="ic yes">5</span><span>QSFP-DD is Ethernet-switch only. InfiniBand and NVIDIA adapters don't use it.</span></li>
+  </ul>
+</section>
+
+<footer>
+  Explainer based on NVIDIA's LinkX documentation page <a href="https://docs.nvidia.com/networking/display/cableovpub/connectors+and+cages">"Connectors and Cages"</a> (part of the LinkX Cables and Transceivers Guide to Key Technologies), with context from related LinkX 100G-PAM4 and XDR pages. Drawings are schematic and not to scale. Always confirm part compatibility against the specific product datasheet.
+</footer>
+</main>
+
+<script>
+/* QSFP-DD toggle */
+(function(){
+  const btns=document.querySelectorAll('.seg button');
+  const r1=document.querySelectorAll('#row1 .pin'), r2=document.querySelectorAll('#row2 .pin');
+  const pads2=document.getElementById('pads2'), card=document.getElementById('card');
+  const name=document.getElementById('plugname'), cap=document.getElementById('ddcap');
+  function set(mode){
+    btns.forEach(b=>b.setAttribute('aria-pressed', b.dataset.plug===mode));
+    const dd=mode==='dd';
+    r1.forEach(p=>p.style.fill='var(--ok)');
+    r2.forEach(p=>p.style.fill=dd?'var(--ok)':'var(--line)');
+    pads2.style.opacity=dd?1:0;
+    card.setAttribute('width', dd?390:230);
+    name.textContent=dd?'QSFP-DD plug':'QSFP56 / 28 / + plug';
+    cap.textContent=dd?'All 8 lanes connect: 8 × 50G-PAM4 = 400GbE.'
+      :'Only row 1 connects: the plug runs as a 4-lane device (e.g. QSFP56 = 4 × 50G-PAM4 = 200G). Row 2 stays idle.';
+  }
+  btns.forEach(b=>b.addEventListener('click',()=>set(b.dataset.plug)));
+  set('dd');
+})();
+
+/* Speeds */
+(function(){
+  const rows=[
+    ['SFP+','1 lane · 10G NRZ',1,10,0,'10G'],
+    ['SFP28','1 lane · 25G NRZ',1,25,0,'25G'],
+    ['QSFP+','4 lanes · 10G NRZ',4,10,0,'40G'],
+    ['QSFP28','4 lanes · 25G NRZ',4,25,0,'100G'],
+    ['QSFP56','4 lanes · 50G PAM4 (HDR)',4,50,1,'200G'],
+    ['QSFP-DD','8 lanes · 50G PAM4, Ethernet only',8,50,1,'400GbE'],
+    ['QSFP112','4 lanes · 100G PAM4 (NDR)',4,100,1,'400G'],
+    ['OSFP single-port','4 lanes · 100G PAM4 (NDR)',4,100,1,'400G'],
+    ['OSFP twin-port','8 lanes · 100G PAM4 (NDR)',8,100,1,'2×400G'],
+    ['OSFP single-port','4 lanes · 200G PAM4 (XDR)',4,200,1,'800G'],
+    ['OSFP twin-port','8 lanes · 200G PAM4 (XDR)',8,200,1,'2×800G'],
+  ];
+  const el=document.getElementById('speeds');
+  rows.forEach(([n,s,l,r,pam,t])=>{
+    const a=document.createElement('div');a.className='nm';a.innerHTML=n+'<small>'+s+'</small>';
+    const b=document.createElement('div');b.className='lanes';
+    for(let i=0;i<l;i++){const x=document.createElement('span');x.className='ln'+(pam?' pam':'');x.style.width=(r/200*56)+'px';if(l===8&&i===4)x.style.marginLeft='8px';b.appendChild(x);}
+    const c=document.createElement('div');c.className='tot';c.textContent=t;
+    el.append(a,b,c);
+  });
+})();
+
+/* Matrix */
+(function(){
+  const plugs=['Twin OSFP, finned','Twin OSFP, flat','Single OSFP, flat','QSFP-DD','QSFP112','QSFP56','QSFP28','QSFP+','SFP28 / SFP+'];
+  const cages=[
+    {n:'Twin-port OSFP',w:'InfiniBand & Spectrum-4 switches',r:'YNNNNNNNN'},
+    {n:'Twin-port OSFP + riding heat sink',w:'e.g. DGX H100 system cages',r:'NYNNNNNNN'},
+    {n:'Single-port OSFP',w:'ConnectX-7 (OSFP), ConnectX-8',r:'NNYNNNNNN'},
+    {n:'QSFP-DD',w:'Ethernet switches only',r:'NNNYBBBBU'},
+    {n:'QSFP112',w:'ConnectX-7 (QSFP112), BlueField-3',r:'NNNNYBBBA'},
+    {n:'QSFP56',w:'HDR / 200G switches & adapters',r:'NNNNUYBBA'},
+  ];
+  const sym={Y:'✓',B:'4-lane',A:'QSA',N:'✕',U:'?'};
+  const col={Y:'var(--ok)',B:'var(--warn)',A:'var(--adapt)',N:'var(--no)',U:'var(--unk)'};
+  function why(ci,pi,s){
+    const c=cages[ci].n, p=plugs[pi];
+    const osfpCage=ci<=2, qsfpPlug=pi>=3&&pi<=7, osfpPlug=pi<=2;
+    if(s==='Y') return ['Native fit','This is the plug the '+c+' cage is designed for, so every lane runs at full speed.'];
+    if(s==='B'){
+      if(ci===3) return ['Fits as a 4-lane device','QSFP-DD cages are backwards compatible with 4-lane QSFP devices. The '+p+' plug engages only the first row of contacts'+(pi===4?' and runs with 50G-PAM4 signalling rather than its native 100G-PAM4.':', so it runs at its own (lower) native speed.')];
+      return ['Fits at the older speed','The QSFP family is backwards compatible: a newer '+c+' cage accepts an older '+p+' plug, which runs at the older plug\'s speed.'];
+    }
+    if(s==='A') return ['Fits with a QSA adapter','NVIDIA\'s QSA+ (for SFP+) and QSA28 (for SFP28) adapters let an SFP device sit in a QSFP cage. Only one of the four lanes is passed through.'];
+    if(s==='U') return ['Not covered by this page','The Connectors and Cages page doesn\'t state this combination. Check the specific switch or adapter datasheet before relying on it.'];
+    // N
+    if(osfpCage && qsfpPlug) return ['Does not fit','OSFP cages are not compatible with the QSFP line, and NVIDIA offers no QSFP-to-OSFP adapter.'+(pi===4?' The page specifically says QSFP112 cannot go into twin-port OSFP switch cages or single-port OSFP ConnectX-7 adapters.':'')];
+    if(osfpCage && pi===8) return ['Does not fit','There is no adapter to put SFP devices into OSFP cages; QSA adapters are for QSFP cages only.'];
+    if(!osfpCage && osfpPlug) return ['Does not fit','OSFP plugs are a different, larger shell than the QSFP family, so they can\'t enter a '+c+' cage.'];
+    if(ci===0 && pi===1) return ['Not supported','A flat-top plug has no fins of its own. Twin-port switch cages are open on top and expect the finned version to carry its own cooling.'];
+    if(ci===0 && pi===2) return ['Not supported','Single-port 400G OSFP devices cannot be used in twin-port OSFP switch cages — they are for adapters and DPUs only.'];
+    if(ci===1 && pi===0) return ['Does not fit','This cage has its own riding heat sink on top, so it needs a flat-top plug; the fins of the switch version get in the way.'];
+    if(ci===1 && pi===2) return ['Not supported','Twin-port cages are paired with twin-port plugs; single-port OSFP is used in adapter cages.'];
+    if(ci===2 && (pi===0||pi===1)) return ['Not supported','Adapter OSFP cages take the single-port, flat-top plug. Twin-port plugs belong in twin-port cages.'];
+    if(pi===3) return ['Does not fit','QSFP-DD is a switch-only, Ethernet-only form factor. Adapters and DPUs (and '+c+' cages) are not built to take 8-lane QSFP-DD plugs.'];
+    if(ci===4 && pi===8) return ['Needs an adapter',''];
+    return ['Does not fit','These two parts are from different connector families.'];
+  }
+  const t=document.getElementById('mx');
+  let h='<thead><tr><th></th>'+plugs.map(p=>'<th scope="col"><span>'+p+'</span></th>').join('')+'</tr></thead><tbody>';
+  cages.forEach((c,ci)=>{
+    h+='<tr><th scope="row">'+c.n+' cage<small>'+c.w+'</small></th>';
+    [...c.r].forEach((s,pi)=>{h+='<td><button type="button" class="cell '+s+'" data-c="'+ci+'" data-p="'+pi+'" aria-pressed="false" aria-label="'+c.n+' cage with '+plugs[pi]+' plug">'+sym[s]+'</button></td>';});
+    h+='</tr>';
+  });
+  t.innerHTML=h+'</tbody>';
+  const v=document.getElementById('verdict');
+  t.addEventListener('click',e=>{
+    const b=e.target.closest('.cell'); if(!b) return;
+    t.querySelectorAll('.cell').forEach(x=>x.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true');
+    const ci=+b.dataset.c, pi=+b.dataset.p, s=cages[ci].r[pi];
+    const [title,body]=why(ci,pi,s);
+    v.style.borderLeftColor=col[s];
+    v.innerHTML='<h3 style="color:'+col[s]+'">'+title+'</h3><p><b>'+plugs[pi]+'</b> plug → <b>'+cages[ci].n+'</b> cage. '+body+'</p>';
+  });
+})();
+</script>
+</body>
+</html>

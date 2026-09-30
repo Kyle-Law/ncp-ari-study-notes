@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keeping NDR optics clean — an explainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,500..800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF0F1; --ink:#1B2830; --muted:#5A6A73; --rule:#C9D1D5;
+  --field:#0D171C; --clad:#6F7F86; --core:#F4E6A8; --dirt:#B8412E; --ok:#2E7D5B; --blue:#2A62C9;
+  --panel:#FFFFFF;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{--paper:#141C21;--ink:#E3E9EC;--muted:#9AAAB2;--rule:#2C3A42;--panel:#1B252B;--blue:#7FA7F0;--ok:#5FBF93;--dirt:#E0694F}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:1.075rem;line-height:1.65}
+main{max-width:1080px;margin:0 auto;padding:3rem 1.5rem 5rem}
+h1,h2,h3{font-family:var(--display);line-height:1.1;letter-spacing:-0.01em;margin:0}
+h1{font-size:clamp(2.6rem,7vw,5.2rem);font-stretch:78%;font-weight:800}
+h2{font-size:clamp(1.6rem,3.2vw,2.3rem);font-stretch:85%;font-weight:700;margin-bottom:.8rem}
+h3{font-size:1.15rem;font-weight:700;margin-bottom:.3rem}
+p{margin:0 0 1rem;max-width:68ch}
+a{color:var(--blue)}
+.lede{font-size:1.25rem;color:var(--muted);max-width:52ch;margin-top:1rem}
+section{padding:3.5rem 0;border-top:1px solid var(--rule)}
+.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:3rem;align-items:center;padding-bottom:3.5rem}
+@media (max-width:860px){.hero{grid-template-columns:1fr}}
+.src{font-family:var(--display);font-size:.9rem;color:var(--muted);margin-top:1.4rem}
+
+/* Scope simulator */
+.scope{background:var(--panel);border:1px solid var(--rule);border-radius:18px;padding:1.4rem}
+.scope svg{display:block;width:100%;max-width:360px;margin:0 auto}
+.readout{display:flex;justify-content:space-between;gap:1rem;font-family:var(--display);font-size:.95rem;margin:1rem 0 .8rem;flex-wrap:wrap}
+.status{font-weight:700}
+.status.ok{color:var(--ok)} .status.bad{color:var(--dirt)} .status.warn{color:#B77B12}
+.meter{height:8px;background:var(--rule);border-radius:4px;overflow:hidden;margin-bottom:1rem}
+.meter i{display:block;height:100%;width:100%;background:var(--ok);transition:width .4s,background .4s}
+.btns{display:flex;gap:.6rem;flex-wrap:wrap}
+button{font-family:var(--display);font-size:.95rem;font-weight:600;border-radius:8px;padding:.6rem 1rem;cursor:pointer;border:1.5px solid var(--ink);background:transparent;color:var(--ink)}
+button.primary{background:var(--ink);color:var(--paper)}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.hint{font-size:.9rem;color:var(--muted);margin:.8rem 0 0}
+
+.fig{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:1.5rem;margin:1.5rem 0;overflow-x:auto}
+.fig svg{display:block;width:100%;height:auto;min-width:560px}
+.cap{font-family:var(--display);font-size:.9rem;color:var(--muted);margin-top:.8rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+.rule-box{border-left:5px solid var(--dirt);padding:.4rem 0 .4rem 1.2rem;margin:1.5rem 0;font-size:1.2rem;max-width:60ch}
+ol.steps{padding-left:1.4rem;max-width:66ch}
+ol.steps li{margin-bottom:.5rem}
+svg text{font-family:var(--display)}
+.sv-ink{fill:var(--ink)} .sv-muted{fill:var(--muted)} .sv-stroke{stroke:var(--ink)}
+table{border-collapse:collapse;width:100%;font-size:.98rem}
+th,td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--display);font-weight:700}
+</style>
+</head>
+<body>
+<main>
+
+<!-- HERO -->
+<div class="hero">
+  <div>
+    <h1>A 9-micron window</h1>
+    <p class="lede">NVIDIA's guide to maintaining NDR InfiniBand cables boils down to one rule: clean the fiber connector and the transceiver port every single time you plug in. This page explains why, with pictures.</p>
+    <p>NDR (400 Gb/s InfiniBand) leans much more heavily on optical links than earlier generations. Light travels through a glass core only about 9 micrometres wide — a fraction of the width of a human hair — so a speck of dust can block it.</p>
+    <p class="src">Source: <a href="https://docs.nvidia.com/dgx-superpod/design-guide-cabling-data-centers/latest/ndr-maintenance.html">NVIDIA DGX SuperPOD Cabling Design Guide — Maintaining NDR Connectors and Cables</a> (last updated Nov 19, 2025)</p>
+  </div>
+
+  <div class="scope" aria-label="Fiber inspection scope simulator">
+    <h3>Try it: a fiber inspection scope</h3>
+    <p class="hint" style="margin-top:0">This is what one fiber end-face looks like under a microscope. Plug it in a few times without cleaning and watch the core.</p>
+    <svg id="scope" viewBox="0 0 360 360" role="img" aria-labelledby="scopeTitle">
+      <title id="scopeTitle">Microscope view of a single-mode fiber end-face</title>
+      <defs>
+        <radialGradient id="coreGlow"><stop offset="0" stop-color="#FFF8D6"/><stop offset=".6" stop-color="#F4E6A8"/><stop offset="1" stop-color="#F4E6A8" stop-opacity="0"/></radialGradient>
+        <radialGradient id="cladGrad"><stop offset="0" stop-color="#8FA0A7"/><stop offset="1" stop-color="#5B6A70"/></radialGradient>
+        <clipPath id="fieldClip"><circle cx="180" cy="180" r="170"/></clipPath>
+      </defs>
+      <circle cx="180" cy="180" r="175" fill="#0D171C" stroke="#33434B" stroke-width="6"/>
+      <g clip-path="url(#fieldClip)">
+        <!-- ferrule -->
+        <circle cx="180" cy="180" r="170" fill="#1E2A30"/>
+        <!-- cladding 125 µm at 1.28 px/µm → r 80 -->
+        <circle cx="180" cy="180" r="80" fill="url(#cladGrad)"/>
+        <!-- core 9 µm → r ≈ 5.8 -->
+        <circle id="glow" cx="180" cy="180" r="16" fill="url(#coreGlow)"/>
+        <circle cx="180" cy="180" r="5.8" fill="#FFF8D6"/>
+        <g id="dust"></g>
+        <!-- reticle -->
+        <g stroke="#9FB3BC" stroke-opacity=".35" stroke-width="1" fill="none">
+          <line x1="180" y1="10" x2="180" y2="350"/><line x1="10" y1="180" x2="350" y2="180"/>
+          <circle cx="180" cy="180" r="32" stroke-dasharray="3 4"/>
+        </g>
+      </g>
+      <text x="180" y="340" text-anchor="middle" fill="#9FB3BC" font-size="11">core 9 µm · cladding 125 µm</text>
+    </svg>
+    <div class="readout">
+      <span>Insertions since cleaning: <b id="count">0</b></span>
+      <span id="status" class="status ok">Core clear</span>
+    </div>
+    <div class="meter" aria-hidden="true"><i id="bar"></i></div>
+    <div class="btns">
+      <button id="plug" class="primary">Plug in without cleaning</button>
+      <button id="clean">Clean with MPO cleaner</button>
+    </div>
+    <p class="hint">Simulation for illustration; the green bar is a rough sense of how much light gets through, not a measured value.</p>
+  </div>
+</div>
+
+<!-- WHAT THE PAGE SAYS -->
+<section>
+  <h2>What the page says, in plain terms</h2>
+  <div class="two">
+    <div>
+      <p>Every optical cable and transceiver ships with dust caps over the connector faces. Those caps protect the glass until installation, but once they come off, the faces are exposed.</p>
+      <p>Before inserting a cable, you clean two things: the MPO connector on the cable and the receptacle inside the transceiver. You do this on every insertion, not just the first one. If a cable gets pulled out by accident, it gets cleaned again before it goes back in.</p>
+    </div>
+    <div>
+      <p>Skipping this step can degrade the optical signal enough to lose data. The guide shows microscope photos of a connector that picked up dirt after a single uncleaned insertion, and had its core fully covered after the second.</p>
+      <p>It closes by contrasting a grimy MPO connector face with a clean one, and points to a dedicated MPO fiber cleaner (a click-style pen cleaner) as the tool for the job.</p>
+    </div>
+  </div>
+  <div class="rule-box">The rule: <b>cleaned, then plugged — every time</b>, on both the cable end and the port.</div>
+</section>
+
+<!-- SCALE -->
+<section>
+  <h2>Why 9 µm is so unforgiving</h2>
+  <p>The glass fiber has two parts: a core that carries the light and a cladding around it that keeps the light in. In single-mode fiber the core is about 9 µm across. Common dust particles are in the same size range or larger, so one particle landing in the centre can block most of the light.</p>
+  <div class="fig">
+    <svg viewBox="0 0 900 300" role="img" aria-label="Size comparison drawn to scale">
+      <!-- scale: 2 px per µm; baseline y=250 -->
+      <line x1="30" y1="250" x2="870" y2="250" class="sv-stroke" stroke-opacity=".25"/>
+      <!-- core 9 -->
+      <circle cx="90" cy="241" r="9" fill="#F4E6A8" stroke="#B89A2E"/>
+      <text x="90" y="278" text-anchor="middle" class="sv-ink" font-size="14" font-weight="700">SMF core</text>
+      <text x="90" y="295" text-anchor="middle" class="sv-muted" font-size="12">~9 µm</text>
+      <!-- dust 10 -->
+      <circle cx="190" cy="240" r="10" fill="#B8412E"/>
+      <text x="190" y="278" text-anchor="middle" class="sv-ink" font-size="14" font-weight="700">Dust speck</text>
+      <text x="190" y="295" text-anchor="middle" class="sv-muted" font-size="12">~10 µm (often 1–100)</text>
+      <!-- MMF core 50 -->
+      <circle cx="330" cy="200" r="50" fill="#F4E6A8" fill-opacity=".6" stroke="#B89A2E"/>
+      <text x="330" y="278" text-anchor="middle" class="sv-ink" font-size="14" font-weight="700">Multimode core</text>
+      <text x="330" y="295" text-anchor="middle" class="sv-muted" font-size="12">50 µm, for comparison</text>
+      <!-- hair 80 -->
+      <circle cx="510" cy="170" r="80" fill="none" stroke="#7A5A3A" stroke-width="3"/>
+      <text x="510" y="278" text-anchor="middle" class="sv-ink" font-size="14" font-weight="700">Human hair</text>
+      <text x="510" y="295" text-anchor="middle" class="sv-muted" font-size="12">~80 µm</text>
+      <!-- cladding 125 -->
+      <circle cx="745" cy="125" r="125" fill="#8FA0A7" fill-opacity=".35" stroke="#5B6A70"/>
+      <circle cx="745" cy="125" r="9" fill="#F4E6A8" stroke="#B89A2E"/>
+      <text x="745" y="278" text-anchor="middle" class="sv-ink" font-size="14" font-weight="700">Cladding with core</text>
+      <text x="745" y="295" text-anchor="middle" class="sv-muted" font-size="12">125 µm outer</text>
+    </svg>
+    <p class="cap">All circles drawn to the same scale (2 px per µm). Sizes other than the 9 µm core are typical industry values added for context, not taken from the NVIDIA page.</p>
+  </div>
+</section>
+
+<!-- MPO ANATOMY -->
+<section>
+  <h2>Where the cleaning happens: the MPO connector</h2>
+  <p>NDR optical cables end in MPO connectors — a rectangular ferrule holding a row of fibers side by side, lined up by two guide pins. The cable's MPO plugs into a receptacle in the OSFP or QSFP112 transceiver. Dirt on either face ends up sandwiched between them, so both sides need cleaning.</p>
+  <div class="fig">
+    <svg viewBox="0 0 900 330" role="img" aria-label="MPO connector face and mating diagram">
+      <!-- Cable connector face -->
+      <text x="40" y="30" class="sv-ink" font-size="15" font-weight="700">Cable MPO end-face (looking straight at it)</text>
+      <rect x="40" y="50" width="400" height="130" rx="14" fill="#2A3840"/>
+      <rect x="70" y="80" width="340" height="70" rx="8" fill="#4B5A61"/>
+      <!-- guide pin holes -->
+      <circle cx="95" cy="115" r="12" fill="#11191D"/><circle cx="385" cy="115" r="12" fill="#11191D"/>
+      <g id="fibers"></g>
+      <text x="95" y="205" text-anchor="middle" class="sv-muted" font-size="12">guide hole</text>
+      <text x="385" y="205" text-anchor="middle" class="sv-muted" font-size="12">guide hole</text>
+      <text x="240" y="205" text-anchor="middle" class="sv-ink" font-size="13">12 fiber positions</text>
+      <g font-size="12">
+        <rect x="120" y="225" width="14" height="14" fill="#F4E6A8"/><text x="140" y="237" class="sv-ink">fibers in use (NDR typically lights 8: 4 transmit, 4 receive)</text>
+        <rect x="120" y="248" width="14" height="14" fill="#6A787E"/><text x="140" y="260" class="sv-ink">unused positions — still collect dust</text>
+      </g>
+
+      <!-- Mating side view -->
+      <text x="500" y="30" class="sv-ink" font-size="15" font-weight="700">Mating (side view)</text>
+      <!-- cable -->
+      <rect x="500" y="100" width="120" height="40" rx="6" fill="#2A62C9" fill-opacity=".85"/>
+      <text x="560" y="125" text-anchor="middle" fill="#fff" font-size="13">fiber cable</text>
+      <rect x="620" y="90" width="60" height="60" rx="4" fill="#2A3840"/>
+      <text x="650" y="170" text-anchor="middle" class="sv-muted" font-size="12">MPO plug</text>
+      <!-- gap with dust -->
+      <circle cx="692" cy="112" r="4" fill="#B8412E"/><circle cx="697" cy="128" r="3" fill="#B8412E"/>
+      <text x="695" y="70" text-anchor="middle" fill="#B8412E" font-size="12" font-weight="700">dirt gets trapped here</text>
+      <line x1="695" y1="76" x2="695" y2="100" stroke="#B8412E" stroke-width="1.5"/>
+      <!-- transceiver -->
+      <rect x="710" y="70" width="170" height="100" rx="8" fill="none" class="sv-stroke" stroke-width="2"/>
+      <rect x="710" y="90" width="30" height="60" fill="#4B5A61"/>
+      <text x="725" y="190" text-anchor="middle" class="sv-muted" font-size="12">receptacle</text>
+      <text x="810" y="125" text-anchor="middle" class="sv-ink" font-size="13">transceiver</text>
+      <text x="810" y="142" text-anchor="middle" class="sv-muted" font-size="12">(OSFP / QSFP112)</text>
+      <!-- cleaning targets -->
+      <g font-size="13" font-weight="700" fill="#2E7D5B">
+        <text x="650" y="240" text-anchor="middle">Clean #1</text>
+        <text x="650" y="258" text-anchor="middle" font-weight="400" class="sv-muted">cable end-face</text>
+        <text x="740" y="240" text-anchor="middle">Clean #2</text>
+        <text x="740" y="258" text-anchor="middle" font-weight="400" class="sv-muted">port receptacle</text>
+      </g>
+      <line x1="650" y1="226" x2="650" y2="152" stroke="#2E7D5B" stroke-dasharray="4 3"/>
+      <line x1="740" y1="226" x2="728" y2="152" stroke="#2E7D5B" stroke-dasharray="4 3"/>
+    </svg>
+    <p class="cap">Simplified drawing. The fiber count and transceiver form factors are general NDR context rather than details from this specific page.</p>
+  </div>
+</section>
+
+<!-- PROCEDURE -->
+<section>
+  <h2>The procedure, as a loop</h2>
+  <p>The important part isn't the individual steps — it's that the loop restarts whenever a connector comes out, planned or not.</p>
+  <div class="fig">
+    <svg viewBox="0 0 900 260" role="img" aria-label="Cleaning workflow diagram">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="currentColor"/></marker></defs>
+      <g style="color:var(--ink)" font-size="14">
+        <g>
+          <rect x="20" y="60" width="140" height="70" rx="10" fill="none" class="sv-stroke" stroke-width="2"/>
+          <text x="90" y="92" text-anchor="middle" class="sv-ink" font-weight="700">1. Remove</text>
+          <text x="90" y="112" text-anchor="middle" class="sv-muted" font-size="12">dust caps</text>
+        </g>
+        <g>
+          <rect x="195" y="60" width="150" height="70" rx="10" fill="#2E7D5B" fill-opacity=".15" stroke="#2E7D5B" stroke-width="2"/>
+          <text x="270" y="92" text-anchor="middle" class="sv-ink" font-weight="700">2. Clean plug</text>
+          <text x="270" y="112" text-anchor="middle" class="sv-muted" font-size="12">MPO cleaner on cable</text>
+        </g>
+        <g>
+          <rect x="380" y="60" width="150" height="70" rx="10" fill="#2E7D5B" fill-opacity=".15" stroke="#2E7D5B" stroke-width="2"/>
+          <text x="455" y="92" text-anchor="middle" class="sv-ink" font-weight="700">3. Clean port</text>
+          <text x="455" y="112" text-anchor="middle" class="sv-muted" font-size="12">transceiver receptacle</text>
+        </g>
+        <g>
+          <rect x="565" y="60" width="140" height="70" rx="10" fill="none" class="sv-stroke" stroke-width="2"/>
+          <text x="635" y="92" text-anchor="middle" class="sv-ink" font-weight="700">4. Insert</text>
+          <text x="635" y="112" text-anchor="middle" class="sv-muted" font-size="12">immediately</text>
+        </g>
+        <g>
+          <rect x="740" y="60" width="140" height="70" rx="10" fill="#2A62C9" fill-opacity=".12" stroke="#2A62C9" stroke-width="2"/>
+          <text x="810" y="92" text-anchor="middle" class="sv-ink" font-weight="700">Link up</text>
+          <text x="810" y="112" text-anchor="middle" class="sv-muted" font-size="12">clean signal path</text>
+        </g>
+        <line x1="160" y1="95" x2="192" y2="95" stroke="currentColor" stroke-width="2" marker-end="url(#ar)"/>
+        <line x1="345" y1="95" x2="377" y2="95" stroke="currentColor" stroke-width="2" marker-end="url(#ar)"/>
+        <line x1="530" y1="95" x2="562" y2="95" stroke="currentColor" stroke-width="2" marker-end="url(#ar)"/>
+        <line x1="705" y1="95" x2="737" y2="95" stroke="currentColor" stroke-width="2" marker-end="url(#ar)"/>
+        <!-- loop back -->
+        <path d="M810,130 L810,200 L270,200 L270,134" fill="none" stroke="#B8412E" stroke-width="2" stroke-dasharray="6 4" style="color:#B8412E" marker-end="url(#ar)"/>
+        <text x="540" y="225" text-anchor="middle" fill="#B8412E" font-weight="700">Cable unplugged — even by accident? Start cleaning again.</text>
+      </g>
+    </svg>
+  </div>
+  <p>A practical habit many teams add (not stated on this page, but standard fiber practice): inspect with a fiber scope after cleaning, and put dust caps back on anything left unplugged.</p>
+</section>
+
+<!-- CONTAMINATION -->
+<section>
+  <h2>How fast it goes wrong</h2>
+  <p>NVIDIA's Figure 24 shows the same connector under a microscope after successive insertions without cleaning. The drawings below recreate the idea: the bright spot in the middle is the core, and by the second insertion it's buried.</p>
+  <div class="fig">
+    <svg viewBox="0 0 900 290" role="img" aria-label="Three stages of contamination">
+      <g id="stages"></g>
+    </svg>
+    <p class="cap">Illustration of the progression described on the page. See NVIDIA's original <a href="https://docs.nvidia.com/dgx-superpod/design-guide-cabling-data-centers/latest/ndr-maintenance.html">Figures 24 and 25</a> for the real microscope photos.</p>
+  </div>
+</section>
+
+<!-- COULD vs SHOULD -->
+<section>
+  <h2>Could look vs should look</h2>
+  <p>The page's last figure compares a dirty MPO face with a clean one. At the scale of the whole connector, the difference is the entire row of fiber positions: smudges, particles and film across them versus uniform, bright, unobstructed ends.</p>
+  <div class="fig">
+    <svg viewBox="0 0 900 220" role="img" aria-label="Dirty versus clean MPO connector face">
+      <g id="compare"></g>
+    </svg>
+  </div>
+</section>
+
+<!-- WHY -->
+<section>
+  <h2>What dirt actually does to the link</h2>
+  <table>
+    <tr><th>What happens</th><th>Effect on the link</th></tr>
+    <tr><td>Particle covers part of the core</td><td>Less light reaches the far side (higher insertion loss), so the receiver sees a weaker signal.</td></tr>
+    <tr><td>Dirt keeps the two faces from touching</td><td>An air gap reflects light back toward the transmitter and adds more loss.</td></tr>
+    <tr><td>Particle gets pressed between faces</td><td>Can scratch or pit the glass permanently; cleaning no longer fixes it.</td></tr>
+    <tr><td>Signal degrades enough</td><td>Bit errors rise, the link retrains or drops — the page's warning about data loss.</td></tr>
+  </table>
+  <p class="cap" style="margin-top:1rem">The mechanisms in this table are general fiber-optic background; the NVIDIA page itself states only that signal degradation and data loss can result.</p>
+</section>
+
+<section>
+  <h2>In one paragraph</h2>
+  <p>NDR InfiniBand relies heavily on optical cables with MPO connectors. The light-carrying core of each fiber is about 9 µm wide, so even tiny dust particles can block it. Take the dust caps off, clean the cable's MPO end-face and the transceiver's receptacle with a proper MPO cleaner, then plug in — and repeat that cleaning every time a cable is reconnected, including after an accidental unplug. Otherwise you risk a degraded signal and lost data.</p>
+</section>
+
+</main>
+
+<script>
+(function(){
+  const NS="http://www.w3.org/2000/svg";
+  const mk=(tag,attrs)=>{const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;};
+
+  /* ---------- Scope simulator ---------- */
+  const dust=document.getElementById('dust'), countEl=document.getElementById('count'),
+        statusEl=document.getElementById('status'), bar=document.getElementById('bar'), glow=document.getElementById('glow');
+  const C=180, PX=1.28, CORE_R=4.5*PX;
+  let n=0, particles=[];
+  function blob(x,y,r,color){
+    const g=mk('g',{});
+    const pts=[];const k=7+Math.floor(Math.random()*4);
+    for(let i=0;i<k;i++){const a=i/k*Math.PI*2, rr=r*(0.7+Math.random()*0.5);pts.push([x+Math.cos(a)*rr,y+Math.sin(a)*rr]);}
+    g.appendChild(mk('polygon',{points:pts.map(p=>p.join(',')).join(' '),fill:color,opacity:.92}));
+    return g;
+  }
+  function coverage(){
+    // sample points in the core, count how many are under a particle
+    let hit=0,tot=0;
+    for(let dx=-CORE_R;dx<=CORE_R;dx+=1)for(let dy=-CORE_R;dy<=CORE_R;dy+=1){
+      if(dx*dx+dy*dy>CORE_R*CORE_R)continue;tot++;
+      if(particles.some(p=>(C+dx-p.x)**2+(C+dy-p.y)**2<p.r*p.r))hit++;
+    }
+    return tot?hit/tot:0;
+  }
+  function update(){
+    countEl.textContent=n;
+    const cov=coverage(), light=Math.max(0,1-cov);
+    bar.style.width=(light*100)+'%';
+    bar.style.background= light>.85?'var(--ok)': light>.4?'#D39A1E':'var(--dirt)';
+    glow.setAttribute('opacity',light);
+    statusEl.className='status '+(cov<.15?(particles.length?'warn':'ok'):cov<.6?'warn':'bad');
+    statusEl.textContent= !particles.length?'Core clear':
+      cov<.15?'Debris on cladding — core still open': cov<.6?'Core partly blocked':'Core covered — expect signal loss';
+  }
+  document.getElementById('plug').onclick=()=>{
+    n++;
+    const add=[];
+    const count=6+Math.floor(Math.random()*6);
+    for(let i=0;i<count;i++){
+      const a=Math.random()*Math.PI*2, d=30+Math.random()*120, r=(2+Math.random()*8)*PX;
+      add.push({x:C+Math.cos(a)*d,y:C+Math.sin(a)*d,r});
+    }
+    // matches the guide's example: some dirt near the core on insertion 1, core covered by insertion 2
+    if(n===1)add.push({x:C+10,y:C-7,r:6*PX});
+    if(n>=2)add.push({x:C+(Math.random()*4-2),y:C+(Math.random()*4-2),r:(7+Math.random()*3)*PX});
+    add.forEach(p=>{particles.push(p);dust.appendChild(blob(p.x,p.y,p.r,Math.random()<.5?'#3B2A22':'#6A4A33'));});
+    update();
+  };
+  document.getElementById('clean').onclick=()=>{particles=[];n=0;dust.innerHTML='';update();};
+  update();
+
+  /* ---------- MPO fiber row ---------- */
+  const fibers=document.getElementById('fibers');
+  for(let i=0;i<12;i++){
+    const x=128+i*20.5, used=(i<4||i>7);
+    fibers.appendChild(mk('circle',{cx:x,cy:115,r:6,fill:used?'#F4E6A8':'#6A787E',stroke:'#1E2A30'}));
+  }
+
+  /* ---------- Contamination stages ---------- */
+  const stages=document.getElementById('stages');
+  const labels=[['Before','cleaned end-face, core bright'],['After 1st insertion','particles scattered on cladding'],['After 2nd insertion','core covered']];
+  const seeds=[[],
+    [[-40,-25,7],[35,30,5],[-20,40,4],[45,-35,6],[14,-10,5]],
+    [[-40,-25,7],[35,30,5],[-20,40,4],[45,-35,6],[14,-10,5],[2,1,13],[-55,10,6],[25,-50,5],[-15,-55,4],[50,15,8]]];
+  labels.forEach((lab,i)=>{
+    const cx=150+i*300, cy=120;
+    const g=mk('g',{});
+    g.appendChild(mk('circle',{cx,cy,r:100,fill:'#1E2A30'}));
+    g.appendChild(mk('circle',{cx,cy,r:75,fill:'#7F9097'}));
+    if(i<2){g.appendChild(mk('circle',{cx,cy,r:18,fill:'#F4E6A8',opacity:.5}));g.appendChild(mk('circle',{cx,cy,r:7,fill:'#FFF8D6'}));}
+    else{g.appendChild(mk('circle',{cx,cy,r:7,fill:'#FFF8D6',opacity:.15}));}
+    seeds[i].forEach(([dx,dy,r])=>g.appendChild(blob(cx+dx,cy+dy,r,'#3B2A22')));
+    const t1=mk('text',{x:cx,y:250,'text-anchor':'middle','font-size':15,'font-weight':700,class:'sv-ink'});t1.textContent=lab[0];
+    const t2=mk('text',{x:cx,y:270,'text-anchor':'middle','font-size':12,class:'sv-muted'});t2.textContent=lab[1];
+    g.appendChild(t1);g.appendChild(t2);
+    if(i<2){g.appendChild(mk('path',{d:`M${cx+115},120 l40,0`,stroke:'currentColor','stroke-width':2,class:'sv-stroke'}));}
+    stages.appendChild(g);
+  });
+
+  /* ---------- Could vs should ---------- */
+  const cmp=document.getElementById('compare');
+  [['Could look (dirty)',true],['Should look (clean)',false]].forEach(([lab,dirty],i)=>{
+    const x0=30+i*440;
+    cmp.appendChild(mk('rect',{x:x0,y:20,width:400,height:130,rx:14,fill:'#2A3840'}));
+    cmp.appendChild(mk('rect',{x:x0+30,y:50,width:340,height:70,rx:8,fill:'#4B5A61'}));
+    cmp.appendChild(mk('circle',{cx:x0+55,cy:85,r:12,fill:'#11191D'}));
+    cmp.appendChild(mk('circle',{cx:x0+345,cy:85,r:12,fill:'#11191D'}));
+    for(let f=0;f<12;f++){
+      const fx=x0+88+f*20.5;
+      cmp.appendChild(mk('circle',{cx:fx,cy:85,r:6,fill:dirty&&(f%3!==1)?'#8E8062':'#F4E6A8'}));
+    }
+    if(dirty){
+      cmp.appendChild(mk('ellipse',{cx:x0+180,cy:80,rx:90,ry:22,fill:'#6A4A33',opacity:.45}));
+      [[120,70,6],[160,95,4],[230,78,7],[290,92,5],[205,66,3],[260,60,4],[140,100,3]].forEach(([dx,dy,r])=>cmp.appendChild(blob(x0+dx,dy+0,r,'#3B2A22')));
+      cmp.appendChild(mk('path',{d:`M${x0+100},108 q60,-20 120,5 t110,-10`,stroke:'#C9B79A','stroke-width':2,fill:'none',opacity:.7}));
+    }
+    const t=mk('text',{x:x0+200,y:185,'text-anchor':'middle','font-size':16,'font-weight':700,fill:dirty?'#B8412E':'#2E7D5B'});t.textContent=lab;cmp.appendChild(t);
+    const t2=mk('text',{x:x0+200,y:205,'text-anchor':'middle','font-size':12,class:'sv-muted'});
+    t2.textContent=dirty?'film, particles, fiber lint across the ends':'uniform, bright, nothing on the fiber ends';cmp.appendChild(t2);
+  });
+})();
+</script>
+</body>
+</html>

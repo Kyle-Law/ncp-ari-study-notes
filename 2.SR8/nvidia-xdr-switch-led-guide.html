@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reading the LEDs on NVIDIA Q32xx / Q34xx XDR InfiniBand Switches</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF1F4; --surface:#FFFFFF; --ink:#1C2430; --muted:#5B6675; --rule:#CDD3DA;
+  --chassis:#2E3642; --chassis-edge:#48525F; --cage:#1B2129; --silk:#9AA6B4;
+  --green:#2FD06B; --amber:#FF9F1A; --blue:#3D8BFF; --off:#3A4350; --danger:#C2410C;
+  --display:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#141A21;--surface:#1C232C;--ink:#E4E9EF;--muted:#98A3B1;--rule:#2F3943;--chassis:#262E38;--chassis-edge:#3C4653;--off:#39424E;--danger:#FB923C}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 var(--body)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:var(--display);line-height:1.15;margin:0}
+h1{font-size:clamp(2rem,4.6vw,3.1rem);font-weight:700;letter-spacing:-.01em;max-width:18ch}
+h2{font-size:1.9rem;font-weight:600;margin-bottom:.4rem}
+h3{font-size:1.25rem;font-weight:600;margin:1.6rem 0 .6rem}
+p{max-width:70ch;margin:.5rem 0}
+.lede{color:var(--muted);font-size:1.12rem}
+a{color:inherit}
+code,pre{font-family:var(--mono);font-size:.88rem}
+
+/* hero */
+header{padding:48px 0 28px}
+.source{font-size:.9rem;color:var(--muted);margin-top:14px}
+.rack{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:18px;margin-top:28px}
+.rack svg{width:100%;height:auto;display:block}
+.rack-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:14px}
+.phase{font-family:var(--display);font-size:1.1rem;font-weight:600;min-height:1.4em}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button{font:600 .95rem var(--body);background:var(--ink);color:var(--bg);border:0;border-radius:6px;padding:9px 14px;cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+button:focus-visible,a:focus-visible,input:focus-visible,.hot:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.hint{font-size:.9rem;color:var(--muted)}
+
+/* SVG LEDs */
+.s-led{fill:var(--off);transition:fill .15s}
+.s-led.g{fill:var(--green);filter:drop-shadow(0 0 4px var(--green))}
+.s-led.a{fill:var(--amber);filter:drop-shadow(0 0 4px var(--amber))}
+.s-led.b{fill:var(--blue);filter:drop-shadow(0 0 5px var(--blue))}
+.s-led.blink{animation:sblink var(--p,1s) steps(1,end) infinite}
+@keyframes sblink{50%{fill:var(--off);filter:none}}
+.hot{cursor:pointer}
+.hot:hover .ring{stroke:var(--silk)}
+
+/* HTML LEDs */
+.led{--c:var(--off);display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--c);vertical-align:-2px;box-shadow:inset 0 -2px 3px rgba(0,0,0,.3)}
+.led.g{--c:var(--green)} .led.a{--c:var(--amber)} .led.b{--c:var(--blue)}
+.led:not(.o){box-shadow:0 0 8px 1px color-mix(in srgb,var(--c) 70%,transparent),inset 0 -2px 3px rgba(0,0,0,.2)}
+.led.blink{animation:blink var(--p,1s) steps(1,end) infinite}
+@keyframes blink{50%{background:var(--off);box-shadow:inset 0 -2px 3px rgba(0,0,0,.3)}}
+
+nav.toc{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--rule)}
+nav.toc ul{list-style:none;display:flex;gap:4px 18px;flex-wrap:wrap;margin:0;padding:10px 0}
+nav.toc a{text-decoration:none;font-weight:500;font-size:.95rem;color:var(--muted)}
+nav.toc a:hover{color:var(--ink)}
+
+section{padding:44px 0 16px;border-top:1px solid var(--rule)}
+section:first-of-type{border-top:0}
+
+/* legend of the 4 status LEDs */
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:8px;overflow:hidden;margin-top:18px}
+.legend div{background:var(--surface);padding:16px}
+.legend strong{display:block;font-family:var(--display);font-size:1.15rem;margin:8px 0 2px}
+.legend small{color:var(--muted);display:block}
+.legend .normal{margin-top:10px;font-size:.92rem}
+
+/* state tables */
+.tbl{overflow-x:auto;margin:10px 0 6px}
+table{border-collapse:collapse;width:100%;min-width:560px;background:var(--surface);border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--display);font-weight:600;font-size:1rem;color:var(--muted);background:color-mix(in srgb,var(--rule) 30%,var(--surface))}
+tr:last-child td{border-bottom:0}
+td:first-child{white-space:nowrap;font-weight:600}
+td:first-child .led{margin-right:10px}
+.ok{color:var(--muted)}
+
+.callout{border-left:4px solid var(--amber);background:var(--surface);padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;max-width:78ch}
+.callout.danger{border-color:var(--danger)}
+.callout b{font-family:var(--display);font-size:1.05rem}
+
+/* boot timeline */
+.timeline{display:grid;grid-template-columns:1fr;gap:0;margin:18px 0;background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:18px}
+.tl-bar{display:flex;height:34px;border-radius:6px;overflow:hidden;font:600 .85rem var(--display)}
+.tl-bar span{display:flex;align-items:center;padding:0 10px;color:#10151b}
+.tl-scale{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-top:6px}
+
+/* port state machine */
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:18px 0}
+.node{flex:1 1 170px;background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:14px}
+.node .led{margin-bottom:8px}
+.node b{display:block;font-family:var(--display);font-size:1.1rem}
+.node small{color:var(--muted)}
+.arrow{display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--muted);font-size:.8rem;text-align:center;max-width:110px}
+.arrow::after{content:"";display:block;width:0;height:0;border:7px solid transparent;border-left-color:var(--muted);margin-left:4px}
+@media (max-width:760px){.arrow{flex-basis:100%;max-width:none}.arrow::after{border:7px solid transparent;border-top-color:var(--muted);margin:6px 0 0 6px}}
+
+/* bandwidth sim */
+.sim{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:22px;margin:18px 0}
+.big-led{width:64px;height:64px}
+.sim input{width:100%;accent-color:var(--green)}
+.readout{font-family:var(--display);font-size:1.5rem;font-weight:600}
+.bands{display:grid;grid-template-columns:repeat(5,1fr);font-size:.8rem;color:var(--muted);margin-top:6px}
+.bands span{border-left:1px solid var(--rule);padding-left:6px}
+.bands span.on{color:var(--ink);font-weight:600}
+
+/* terminal */
+.term{background:#0F141A;color:#D5DEE8;border-radius:8px;padding:16px 18px;overflow-x:auto;margin:10px 0;line-height:1.6}
+.term .p{color:#7FD99A}
+.term .c{color:#7F8C9B}
+.uid-demo{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:14px 0}
+
+.psu{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+footer{padding:40px 0 60px;color:var(--muted);font-size:.9rem}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <h1>What the lights on an XDR InfiniBand switch are telling you</h1>
+  <p class="lede">A visual walkthrough of the LED notifications for NVIDIA Q3200, Q3400, Q3401 and Q3450 800&nbsp;Gb/s switch systems: what each color and blink pattern means, and what to do about it.</p>
+  <p class="source">Explains: <a href="https://networking-docs.nvidia.com/xdrswitcheshw/led-notifications" target="_blank" rel="noopener">LED Notifications, NVIDIA Q32xx and Q34xx XDR Switch Systems User Manual</a> (page last updated August 21, 2026).</p>
+
+  <div class="rack" aria-label="Illustrative switch front panel">
+    <svg id="panel" viewBox="0 0 1000 170" role="img" aria-label="Illustrative 1U switch panel with port LEDs and four status LEDs">
+      <rect x="6" y="14" width="988" height="142" rx="7" fill="var(--chassis)" stroke="var(--chassis-edge)" stroke-width="2"/>
+      <g id="ports"></g>
+      <line x1="850" y1="26" x2="850" y2="144" stroke="var(--chassis-edge)"/>
+      <!-- status cluster -->
+      <g class="hot" tabindex="0" data-go="#system" role="link" aria-label="System status LED">
+        <circle class="ring" cx="885" cy="52" r="11" fill="none" stroke="transparent" stroke-width="2"/>
+        <circle id="st-sys" class="s-led" cx="885" cy="52" r="6"/>
+        <text x="885" y="80" fill="var(--silk)" font-size="11" text-anchor="middle" font-family="Barlow,sans-serif">SYS</text>
+      </g>
+      <g class="hot" tabindex="0" data-go="#fans" role="link" aria-label="Fan status LED">
+        <circle class="ring" cx="945" cy="52" r="11" fill="none" stroke="transparent" stroke-width="2"/>
+        <circle id="st-fan" class="s-led" cx="945" cy="52" r="6"/>
+        <text x="945" y="80" fill="var(--silk)" font-size="11" text-anchor="middle" font-family="Barlow,sans-serif">FAN</text>
+      </g>
+      <g class="hot" tabindex="0" data-go="#power" role="link" aria-label="Power supply LED">
+        <circle class="ring" cx="885" cy="108" r="11" fill="none" stroke="transparent" stroke-width="2"/>
+        <circle id="st-psu" class="s-led" cx="885" cy="108" r="6"/>
+        <text x="885" y="136" fill="var(--silk)" font-size="11" text-anchor="middle" font-family="Barlow,sans-serif">PSU</text>
+      </g>
+      <g class="hot" tabindex="0" data-go="#uid" role="link" aria-label="Unit identifier LED">
+        <circle class="ring" cx="945" cy="108" r="11" fill="none" stroke="transparent" stroke-width="2"/>
+        <circle id="st-uid" class="s-led" cx="945" cy="108" r="6"/>
+        <text x="945" y="136" fill="var(--silk)" font-size="11" text-anchor="middle" font-family="Barlow,sans-serif">UID</text>
+      </g>
+    </svg>
+    <div class="rack-bar">
+      <div class="phase" id="phase" aria-live="polite">Powered off</div>
+      <div class="btns">
+        <button id="boot">Power on</button>
+        <button id="uidBtn" class="ghost">Turn on UID</button>
+        <button id="faultBtn" class="ghost">Simulate fan fault</button>
+      </div>
+    </div>
+    <p class="hint">Illustrative panel, not to scale. Real LED shapes and order vary by model. Click a status LED to jump to its section.</p>
+  </div>
+</header>
+
+<nav class="toc"><div class="wrap"><ul>
+  <li><a href="#overview">Overview</a></li><li><a href="#system">System</a></li><li><a href="#fans">Fans</a></li>
+  <li><a href="#power">Power</a></li><li><a href="#uid">UID</a></li><li><a href="#ports">Ports</a></li><li><a href="#blink">Blink rate</a></li>
+</ul></div></nav>
+
+<main class="wrap">
+
+<section id="overview">
+  <h2>Four status LEDs, one rule of thumb</h2>
+  <p>The LEDs are the switch's first line of hardware event notification and troubleshooting. Across every indicator the language is consistent: <span class="led g"></span> green means healthy, <span class="led a"></span> amber means something needs attention, and blue is only ever the locator light you turn on yourself.</p>
+  <div class="legend">
+    <div><span class="led g"></span><strong>System status</strong><small>Overall health of the switch.</small><div class="normal">Normal: green, flashing green while booting</div></div>
+    <div><span class="led g"></span><strong>Power supply / DC busbar</strong><small>Health of the PSUs or DC busbar feed.</small><div class="normal">Normal: green</div></div>
+    <div><span class="led g"></span><strong>Fan status</strong><small>Health of the fan modules.</small><div class="normal">Normal: green</div></div>
+    <div><span class="led o"></span><strong>Unit identifier (UID)</strong><small>Lit only on command from the CLI.</small><div class="normal">Normal: off, blue while identifying</div></div>
+  </div>
+</section>
+
+<section id="system">
+  <h2>System status LED</h2>
+  <p>Located on the front panel. Booting can take up to five minutes, so a flashing green light right after power-on is expected.</p>
+  <div class="timeline" aria-label="Boot timeline">
+    <div class="tl-bar">
+      <span style="flex:5;background:repeating-linear-gradient(90deg,var(--green) 0 14px,color-mix(in srgb,var(--green) 35%,var(--surface)) 14px 28px)">Flashing green: booting (managed systems)</span>
+      <span style="flex:2;background:var(--green)">Solid green</span>
+    </div>
+    <div class="tl-scale"><span>Power on</span><span>up to 5 min</span><span>Running</span></div>
+    <p class="hint" style="margin-top:12px">Still amber once the five-minute mark passes? That is not a slow boot. Unplug the system and contact NVIDIA.</p>
+  </div>
+  <div class="tbl"><table>
+    <tr><th>LED</th><th>Meaning</th><th>What to do</th></tr>
+    <tr><td><span class="led g"></span>Solid green</td><td>System is up and running normally.</td><td class="ok">Nothing</td></tr>
+    <tr><td><span class="led g blink"></span>Flashing green</td><td>System is booting (managed systems only).</td><td>Wait up to five minutes for boot to finish.</td></tr>
+    <tr><td><span class="led a"></span>Solid amber</td><td>Major error, such as corrupted firmware or overheating.</td><td>If still amber five minutes after start-up, unplug the system and call your NVIDIA representative.</td></tr>
+  </table></div>
+</section>
+
+<section id="fans">
+  <h2>Fan status LEDs</h2>
+  <p>Fans are reported twice. The single front LED summarizes all fans; on the rear, each fan module has its own LED, which is how you find the one that failed.</p>
+  <svg viewBox="0 0 640 150" style="width:100%;max-width:640px;display:block;margin:16px 0" role="img" aria-label="Front fan LED is amber because rear fan 3 is amber">
+    <text x="0" y="16" fill="var(--muted)" font-size="13" font-family="Barlow,sans-serif">Front summary</text>
+    <rect x="0" y="28" width="120" height="70" rx="6" fill="var(--chassis)"/>
+    <circle cx="60" cy="63" r="9" class="s-led a"/>
+    <text x="170" y="16" fill="var(--muted)" font-size="13" font-family="Barlow,sans-serif">Rear, one LED per fan module</text>
+    <g font-family="Barlow,sans-serif" font-size="12" fill="var(--silk)" text-anchor="middle">
+      <rect x="170" y="28" width="470" height="70" rx="6" fill="var(--chassis)"/>
+      <g><circle cx="225" cy="50" r="18" fill="none" stroke="var(--chassis-edge)" stroke-width="3"/><circle cx="225" cy="84" r="5" class="s-led g"/></g>
+      <g><circle cx="315" cy="50" r="18" fill="none" stroke="var(--chassis-edge)" stroke-width="3"/><circle cx="315" cy="84" r="5" class="s-led g"/></g>
+      <g><circle cx="405" cy="50" r="18" fill="none" stroke="var(--amber)" stroke-width="3"/><circle cx="405" cy="84" r="5" class="s-led a"/></g>
+      <g><circle cx="495" cy="50" r="18" fill="none" stroke="var(--chassis-edge)" stroke-width="3"/><circle cx="495" cy="84" r="5" class="s-led g"/></g>
+      <g><circle cx="585" cy="50" r="18" fill="none" stroke="var(--chassis-edge)" stroke-width="3"/><circle cx="585" cy="84" r="5" class="s-led g"/></g>
+    </g>
+    <path d="M120 63 C 250 140, 360 140, 400 96" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <text x="250" y="140" fill="var(--ink)" font-size="13" font-family="Barlow,sans-serif">One bad fan turns the front LED amber; the rear points to fan 3.</text>
+  </svg>
+  <h3>Front LED (all fans)</h3>
+  <div class="tbl"><table>
+    <tr><th>LED</th><th>Meaning</th><th>What to do</th></tr>
+    <tr><td><span class="led g"></span>Solid green</td><td>All fans are running.</td><td class="ok">Nothing</td></tr>
+    <tr><td><span class="led a"></span>Solid amber</td><td>One or more fans are not operating properly.</td><td>Replace the faulty FRU(s).</td></tr>
+  </table></div>
+  <h3>Rear LEDs (one per fan)</h3>
+  <div class="tbl"><table>
+    <tr><th>LED</th><th>Meaning</th><th>What to do</th></tr>
+    <tr><td><span class="led g"></span>Solid green</td><td>This fan unit is operating.</td><td class="ok">Nothing</td></tr>
+    <tr><td><span class="led a"></span>Solid amber</td><td>This fan unit is missing or faulty.</td><td>Replace that fan unit.</td></tr>
+  </table></div>
+  <div class="callout danger"><b>Risk of electric shock.</b> With a fan module removed, power pins are exposed inside the empty cavity. Keep tools and fingers out of it.</div>
+</section>
+
+<section id="power">
+  <h2>Power supply and DC busbar LEDs</h2>
+  <p>The switch has redundant power inlets and cannot run on a single connected supply. As with fans, there is a front summary LED plus one two-color LED on each rear PSU. DC busbar models (Q3401-RD, Q3450-LD) have no rear PSU LEDs.</p>
+  <div class="psu">
+    <div>
+      <h3>Front LED (summary)</h3>
+      <div class="tbl"><table style="min-width:0">
+        <tr><th>LED</th><th>Meaning and action</th></tr>
+        <tr><td><span class="led g"></span>Solid green</td><td>All plugged-in supplies are running normally.</td></tr>
+        <tr><td><span class="led a"></span>Solid amber</td><td>One or both supplies are down, unpowered, or unplugged. Check the power cord is plugged in and live; if it persists, replace the FRU.</td></tr>
+      </table></div>
+    </div>
+    <div>
+      <h3>Rear LED (per PSU, AC models)</h3>
+      <div class="tbl"><table style="min-width:0">
+        <tr><th>LED</th><th>Meaning and action</th></tr>
+        <tr><td><span class="led g"></span>Solid green</td><td>PSU connected and running normally.</td></tr>
+        <tr><td><span class="led g blink" style="--p:1s"></span>Green, 1&nbsp;Hz</td><td>AC present but only standby (12VSB) on, PSU off or in Smart-on state. Call NVIDIA.</td></tr>
+        <tr><td><span class="led a"></span>Amber</td><td>AC cord unplugged or AC lost on this PSU while the other still has power: plug it back in. Or PSU failure, including out-of-range voltage: check voltage, then call NVIDIA.</td></tr>
+        <tr><td><span class="led a blink"></span>Flashing amber</td><td>Warning, but still running: high temperature, power or current, or a slow fan. Call NVIDIA.</td></tr>
+        <tr><td><span class="led o"></span>Off</td><td>No AC power to any supply. Call NVIDIA.</td></tr>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<section id="uid">
+  <h2>Unit identifier (UID) LED</h2>
+  <p>In a cluster of identical switches, the UID LED is how you find the one you are logged into. You turn it blue from the CLI, walk the aisle, then turn it off again.</p>
+  <div class="uid-demo">
+    <span class="led o big-led" id="uidBig" style="width:40px;height:40px"></span>
+    <button id="uidBtn2" class="ghost">Run “led MGMT uid on”</button>
+  </div>
+<pre class="term"><span class="c"># turn the locator light on</span>
+<span class="p">switch (config) #</span> led MGMT uid on
+
+<span class="c"># check it</span>
+<span class="p">switch (config) #</span> show leds
+Module   LED    Status
+--------------------------------
+MGMT     UID    Blue
+
+<span class="c"># turn it off when you're done</span>
+<span class="p">switch (config) #</span> led MGMT uid off</pre>
+</section>
+
+<section id="ports">
+  <h2>Port LEDs (InfiniBand mode)</h2>
+  <p>Each data port has an LED that tracks the link as it comes up. Physical connection comes first (amber), then the Subnet Manager (SM) brings up the logical link (green), and traffic makes it blink.</p>
+  <div class="flow" aria-label="Port link bring-up sequence">
+    <div class="node"><span class="led o"></span><b>Off</b><small>Link down. Check the cable.</small></div>
+    <div class="arrow">cable plugged into a live port</div>
+    <div class="node"><span class="led a"></span><b>Solid amber</b><small>Physical link up. Wait for the logical link; make sure the SM is running.</small></div>
+    <div class="arrow">SM brings up logical link</div>
+    <div class="node"><span class="led g"></span><b>Solid green</b><small>Link up, no traffic.</small></div>
+    <div class="arrow">data flows</div>
+    <div class="node"><span class="led g blink"></span><b>Flashing green</b><small>Link up with traffic.</small></div>
+  </div>
+  <div class="callout"><b><span class="led a blink"></span>&nbsp; Flashing amber</b> means a problem with the link. Start by checking that the SM is up.</div>
+  <p>These systems also have one extra OSFP port for Fabric Network Management (FNM), with its own dedicated LED. Its position differs between the Q3200-RA, Q3400-RA/Q3401-RD and Q3450-LD; see the photos in the original manual.</p>
+</section>
+
+<section id="blink">
+  <h2>How fast it blinks is how busy it is</h2>
+  <p>A flashing green port LED also encodes bandwidth: the busier the link, the faster it blinks. Drag the slider to see each rate.</p>
+  <div class="sim">
+    <span class="led g big-led" id="bwLed"></span>
+    <div>
+      <div class="readout" id="bwRead">0% bandwidth, constantly on</div>
+      <input type="range" id="bw" min="0" max="100" value="0" aria-label="Link bandwidth percentage">
+      <div class="bands" id="bands"><span>0%<br>solid</span><span>0–25%<br>0.5 Hz</span><span>25–50%<br>1 Hz</span><span>50–75%<br>2 Hz</span><span>75–100%<br>4 Hz</span></div>
+    </div>
+  </div>
+  <div class="tbl"><table>
+    <tr><th>Bandwidth</th><th>Frequency</th><th>On / off timing</th></tr>
+    <tr><td>0%</td><td>Constantly on</td><td class="ok">No blinking</td></tr>
+    <tr><td>0–25%</td><td>0.5 Hz</td><td>1 s on, 1 s off</td></tr>
+    <tr><td>25–50%</td><td>1 Hz</td><td>0.5 s on, 0.5 s off</td></tr>
+    <tr><td>50–75%</td><td>2 Hz</td><td>0.25 s on, 0.25 s off</td></tr>
+    <tr><td>75–100%</td><td>4 Hz</td><td>0.125 s on, 0.125 s off</td></tr>
+  </table></div>
+</section>
+
+</main>
+<footer class="wrap">Summary of NVIDIA's documentation for quick reference. Always follow the official manual and your NVIDIA representative's guidance for hardware servicing.</footer>
+
+<script>
+(function(){
+  // build port cages
+  const g=document.getElementById('ports'), NS='http://www.w3.org/2000/svg', ports=[];
+  for(let r=0;r<2;r++)for(let i=0;i<16;i++){
+    const x=30+i*51, y=r?88:40;
+    const cage=document.createElementNS(NS,'rect');
+    Object.entries({x,y,width:44,height:32,rx:3,fill:'var(--cage)',stroke:'var(--chassis-edge)'}).forEach(([k,v])=>cage.setAttribute(k,v));
+    const led=document.createElementNS(NS,'rect');
+    Object.entries({x:x+15,y:r?124:30,width:14,height:5,rx:1.5}).forEach(([k,v])=>led.setAttribute(k,v));
+    led.setAttribute('class','s-led');
+    g.append(cage,led); ports.push(led);
+  }
+  const $=id=>document.getElementById(id);
+  const sys=$('st-sys'),fan=$('st-fan'),psu=$('st-psu'),uid=$('st-uid'),phase=$('phase');
+  const set=(el,cls,p)=>{el.setAttribute('class','s-led '+cls);el.style.setProperty('--p',p||'1s');};
+  const rates=['2s','1s','0.5s','0.25s'];
+  const cabled=ports.map((_,i)=>![5,12,21,30].includes(i));
+  let timers=[];
+  const later=(ms,fn)=>timers.push(setTimeout(fn,ms));
+
+  function boot(){
+    timers.forEach(clearTimeout);timers=[];
+    [sys,fan,psu].forEach(e=>set(e,''));ports.forEach(p=>set(p,''));
+    $('faultBtn').textContent='Simulate fan fault';
+    phase.textContent='Powering on…';
+    later(400,()=>{set(sys,'g blink','1s');set(fan,'g');set(psu,'g');phase.textContent='Booting: system LED flashes green (can take up to 5 min)';});
+    later(3200,()=>{ports.forEach((p,i)=>cabled[i]&&set(p,'a'));phase.textContent='Cables detected: ports amber (physical link up)';});
+    later(5600,()=>{set(sys,'g');ports.forEach((p,i)=>cabled[i]&&set(p,'g'));phase.textContent='SM up: ports green (logical link up)';});
+    later(7600,()=>{ports.forEach((p,i)=>{if(cabled[i]&&i%3!==0)set(p,'g blink',rates[i%4]);});phase.textContent='Running: blinking ports carry traffic, faster = busier. Dark ports have no cable.';});
+    $('boot').textContent='Replay power-on';
+  }
+  $('boot').onclick=boot;
+
+  let uidOn=false;
+  function toggleUid(){
+    uidOn=!uidOn;
+    set(uid,uidOn?'b':'');
+    $('uidBig').className='led big-led '+(uidOn?'b':'o');
+    $('uidBtn').textContent=uidOn?'Turn off UID':'Turn on UID';
+    $('uidBtn2').textContent=uidOn?'Run “led MGMT uid off”':'Run “led MGMT uid on”';
+  }
+  $('uidBtn').onclick=toggleUid;$('uidBtn2').onclick=toggleUid;
+
+  $('faultBtn').onclick=function(){
+    const faulty=fan.classList.contains('a');
+    if(faulty){set(fan,sys.classList.contains('g')?'g':'');this.textContent='Simulate fan fault';phase.textContent='Fan replaced: fan LED back to green';}
+    else{set(fan,'a');this.textContent='Replace fan';phase.textContent='Fan LED amber: check the rear LEDs to find the failed fan module';}
+  };
+
+  document.querySelectorAll('.hot').forEach(h=>{
+    const go=()=>document.querySelector(h.dataset.go).scrollIntoView();
+    h.addEventListener('click',go);
+    h.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+
+  // bandwidth simulator
+  const bw=$('bw'),bwLed=$('bwLed'),bands=[...$('bands').children];
+  function upd(){
+    const v=+bw.value; let idx,hz,txt;
+    if(v===0){idx=0;txt='constantly on';}
+    else if(v<25){idx=1;hz=0.5;} else if(v<50){idx=2;hz=1;} else if(v<75){idx=3;hz=2;} else {idx=4;hz=4;}
+    if(hz){bwLed.classList.add('blink');bwLed.style.setProperty('--p',(1/hz)+'s');txt=hz+' Hz ('+(0.5/hz)+' s on, '+(0.5/hz)+' s off)';}
+    else bwLed.classList.remove('blink');
+    $('bwRead').textContent=v+'% bandwidth, '+txt;
+    bands.forEach((b,i)=>b.classList.toggle('on',i===idx));
+  }
+  bw.oninput=upd;upd();
+})();
+</script>
+</body>
+</html>

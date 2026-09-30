@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deploying the Bundles, explained — DGX SuperPOD cabling</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9ECEA; --panel:#F6F7F5; --ink:#1B2630; --muted:#56626B; --line:#C3CBC8;
+  --left:#11808A; --right:#6B4FA0; --signal:#C99700; --stop:#B8322A; --ok:#2E7D4F;
+  --rack:#3A4650; --sw:#D4DAD7;
+  --body:"Barlow", "Segoe UI", system-ui, sans-serif;
+  --cond:"Barlow Condensed", "Arial Narrow", "Segoe UI", sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141A1F; --panel:#1C242A; --ink:#E3E9E7; --muted:#9BA7AE; --line:#33414A;
+    --left:#3FB7C0; --right:#A88DDB; --signal:#EFC23A; --stop:#E4665F; --ok:#5BC08A;
+    --rack:#8C9AA4; --sw:#2A353D;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141A1F; --panel:#1C242A; --ink:#E3E9E7; --muted:#9BA7AE; --line:#33414A;
+  --left:#3FB7C0; --right:#A88DDB; --signal:#EFC23A; --stop:#E4665F; --ok:#5BC08A;
+  --rack:#8C9AA4; --sw:#2A353D;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:var(--cond);font-weight:600;line-height:1.08;margin:0}
+h1{font-size:clamp(2.6rem,6vw,4.4rem);letter-spacing:-.01em}
+h2{font-size:clamp(1.8rem,3.4vw,2.5rem);margin-bottom:.5rem}
+h3{font-size:1.35rem;margin-bottom:.35rem}
+p{margin:.5rem 0 1rem;max-width:68ch}
+a{color:var(--left)}
+:focus-visible{outline:3px solid var(--signal);outline-offset:2px}
+svg{max-width:100%;height:auto;display:block}
+.muted{color:var(--muted)}
+
+/* hero */
+header.hero{padding:48px 0 32px;border-bottom:1px solid var(--line)}
+.hero-grid{display:grid;grid-template-columns:1fr minmax(300px,420px);gap:40px;align-items:start}
+.source{font-size:.9rem;color:var(--muted)}
+.lede{font-size:1.2rem;max-width:40ch}
+.feed-ctrl{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 10px}
+.feed-ctrl button,.tog button{font:600 1rem var(--cond);padding:8px 14px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);border-radius:3px;cursor:pointer}
+.feed-ctrl button[aria-pressed="true"],.tog button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.replay{font:500 .95rem var(--body);background:none;border:none;color:var(--left);text-decoration:underline;cursor:pointer;padding:4px 0}
+.rack-card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px}
+.legend{display:flex;gap:16px;font-size:.88rem;color:var(--muted);flex-wrap:wrap;margin-top:8px}
+.sw-l,.sw-r{display:inline-block;width:18px;height:4px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.sw-l{background:var(--left)} .sw-r{background:var(--right)}
+.order-note{min-height:3.2em;font-size:.98rem}
+
+/* sections */
+section{padding:56px 0;border-bottom:1px solid var(--line)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px}
+.fig figcaption{font-size:.9rem;color:var(--muted);margin-top:8px}
+figure{margin:0}
+.rule{border-left:4px solid var(--stop);padding:10px 16px;background:var(--panel);margin:14px 0;max-width:68ch}
+.rule strong{color:var(--stop)}
+.hint{border-left:4px solid var(--signal);padding:10px 16px;background:var(--panel);margin:14px 0;max-width:68ch}
+
+/* phase strip */
+.phases{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:22px;border:1.5px solid var(--ink);border-radius:4px;overflow:hidden}
+.phase{padding:16px 18px;border-right:1.5px solid var(--ink)}
+.phase:last-child{border-right:none}
+.phase .n{font:700 2.2rem var(--cond);color:var(--muted)}
+.phase p{margin:.2rem 0 0;font-size:.95rem}
+
+/* stepper */
+.stepper{display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:28px;margin-top:20px}
+.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+.steps li{margin:0}
+.steps button{counter-increment:s;display:flex;gap:12px;width:100%;text-align:left;padding:10px 12px;border:none;border-left:3px solid transparent;background:none;color:var(--ink);font:500 1rem var(--body);cursor:pointer;border-radius:0 4px 4px 0}
+.steps button::before{content:counter(s);font:700 1.2rem var(--cond);color:var(--muted);min-width:1.1em}
+.steps button[aria-current="true"]{border-left-color:var(--left);background:var(--panel)}
+.steps button[aria-current="true"]::before{color:var(--left)}
+.step-detail{min-height:4.5em}
+.hl{transition:opacity .35s}
+.dim .hl{opacity:.18}
+.dim .hl.on{opacity:1}
+
+/* ordered text procedures */
+ol.proc{padding-left:1.4em;max-width:68ch}
+ol.proc li{margin-bottom:.6rem}
+ol.proc li::marker{font:700 1.1rem var(--cond);color:var(--left)}
+
+/* numbers */
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1.5px solid var(--ink);margin-top:18px}
+.num{padding:16px 16px 4px 0}
+.num b{display:block;font:700 2.6rem var(--cond);line-height:1}
+.num span{font-size:.93rem;color:var(--muted)}
+
+footer{padding:36px 0 56px;font-size:.9rem;color:var(--muted)}
+.tog{display:flex;gap:6px;margin-bottom:10px}
+.scroll-x{overflow-x:auto}
+
+@media (max-width:860px){
+  .hero-grid,.two,.stepper{grid-template-columns:1fr}
+  .phases{grid-template-columns:1fr}
+  .phase{border-right:none;border-bottom:1.5px solid var(--ink)}
+  .phase:last-child{border-bottom:none}
+  .nums{grid-template-columns:repeat(2,1fr)}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="source">NVIDIA DGX SuperPOD Cabling Data Centers Design Guide, Cable Deployment Methodology</p>
+      <h1>Deploying the bundles</h1>
+      <p class="lede">How pre-labelled cable bundles get from the staging area into the racks, in what order, and how they are plugged in and dressed so the rack stays cool and serviceable.</p>
+      <p>Every bundle enters a network rack one of three ways. The feed direction decides which switch gets its bundle first: you always start with the switch nearest to where the cables come in. Pick a feed to see the run order on the rack.</p>
+      <div class="feed-ctrl" role="group" aria-label="Feed type">
+        <button data-feed="top" aria-pressed="true">Top feed</button>
+        <button data-feed="bottom" aria-pressed="false">Bottom feed</button>
+        <button data-feed="split" aria-pressed="false">Top/bottom feed</button>
+      </div>
+      <p class="order-note" id="orderNote"></p>
+      <button class="replay" id="replay">Replay the run order</button>
+    </div>
+    <div class="rack-card">
+      <svg id="rack" viewBox="0 0 360 560" role="img" aria-label="Side view of a network rack showing cable bundles entering and reaching each switch in run order"></svg>
+      <div class="legend"><span><i class="sw-l"></i>Left half of each switch's cables</span><span><i class="sw-r"></i>Right half</span></div>
+    </div>
+  </div>
+</header>
+
+<main>
+<section>
+  <div class="wrap">
+    <h2>The whole job, in three phases</h2>
+    <p>By the time this page applies, the room has been assessed, the cable trays surveyed, and every cable labelled and bundled. What is left happens in this order.</p>
+    <div class="phases">
+      <div class="phase"><div class="n">1</div><h3>Inter-rack bundles</h3><p>Long bundles that run through overhead or underfloor trays between racks. Laid in place, ends tied off, not plugged in.</p></div>
+      <div class="phase"><div class="n">2</div><h3>Intra-rack cables</h3><p>Short cables inside a rack, usually not pre-bundled. Plugged at one end and routed to the other.</p></div>
+      <div class="phase"><div class="n">3</div><h3>Connect and dress</h3><p>Seat connectors one U at a time and shape the cables as you go. Never as two separate passes.</p></div>
+    </div>
+    <div class="hint">The bundle serial numbers (BSN) usually reflect deployment order, but not always. Check the cable deployment documentation for the actual sequence before you start.</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap two">
+    <div>
+      <h2>Plug in from the bottom up</h2>
+      <p>Whichever way the cables enter the rack, connectors are seated starting with the lowest switch and working upward.</p>
+      <p>The reason is simple access. Cables already plugged into a higher switch hang down in front of the ports below, so every bundle after the first has to be fed in behind them. Starting low keeps the working area clear, since the finished cables are always beneath your hands rather than in front of them.</p>
+      <div class="hint">Run order (previous section) and plug order are separate things. A top-fed rack runs bundles to the top switch first, yet the connectors still go in from the bottom switch upward.</div>
+    </div>
+    <figure class="fig">
+      <svg viewBox="0 0 520 290" role="img" aria-label="Comparison: plugging top-down leaves cables hanging over lower ports; plugging bottom-up leaves the working area clear">
+        <defs>
+          <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="var(--stop)" stroke-width="1.5" opacity=".5"/></pattern>
+        </defs>
+        <g font-family="Barlow, sans-serif" font-size="14" fill="var(--ink)">
+          <text x="130" y="22" text-anchor="middle" font-weight="600">Top to bottom</text>
+          <text x="390" y="22" text-anchor="middle" font-weight="600">Bottom to top</text>
+        </g>
+        <!-- left stack -->
+        <g>
+          <rect x="40" y="40" width="180" height="220" fill="none" stroke="var(--rack)" stroke-width="2"/>
+          <g fill="var(--sw)" stroke="var(--rack)">
+            <rect x="52" y="55" width="156" height="34"/><rect x="52" y="105" width="156" height="34"/>
+            <rect x="52" y="155" width="156" height="34"/><rect x="52" y="205" width="156" height="34"/>
+          </g>
+          <!-- top two cabled, cables drooping over lower -->
+          <g fill="none" stroke="var(--left)" stroke-width="2.2">
+            <path d="M70 80 C70 150 60 185 44 230"/><path d="M85 80 C85 160 65 195 46 238"/><path d="M100 80 C100 170 72 205 48 246"/><path d="M115 80 C115 175 80 212 50 252"/>
+            <path d="M70 130 C70 180 60 205 44 240"/><path d="M85 130 C85 190 66 212 46 248"/><path d="M100 130 C100 195 72 220 48 254"/>
+          </g>
+          <rect x="52" y="155" width="156" height="84" fill="url(#hatch)"/>
+          <text x="130" y="280" text-anchor="middle" font-size="13" fill="var(--stop)" font-family="Barlow, sans-serif">Lower ports buried behind cables</text>
+        </g>
+        <!-- right stack -->
+        <g>
+          <rect x="300" y="40" width="180" height="220" fill="none" stroke="var(--rack)" stroke-width="2"/>
+          <g fill="var(--sw)" stroke="var(--rack)">
+            <rect x="312" y="55" width="156" height="34"/><rect x="312" y="105" width="156" height="34"/>
+            <rect x="312" y="155" width="156" height="34"/><rect x="312" y="205" width="156" height="34"/>
+          </g>
+          <g fill="none" stroke="var(--left)" stroke-width="2.2">
+            <path d="M330 230 C330 250 318 252 304 252"/><path d="M345 230 C345 254 320 256 304 256"/><path d="M360 230 C360 258 322 259 304 259"/>
+            <path d="M330 180 C330 200 318 202 304 202"/><path d="M345 180 C345 204 320 206 304 206"/><path d="M360 180 C360 208 322 209 304 209"/>
+          </g>
+          <g fill="var(--ok)"><circle cx="440" cy="72" r="4"/><circle cx="440" cy="122" r="4"/></g>
+          <path d="M455 150 v-80" stroke="var(--ok)" stroke-width="2" marker-end="url(#arrOk)"/>
+          <defs><marker id="arrOk" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8z" fill="var(--ok)"/></marker></defs>
+          <text x="390" y="280" text-anchor="middle" font-size="13" fill="var(--ok)" font-family="Barlow, sans-serif">Next ports up are open and reachable</text>
+        </g>
+      </svg>
+      <figcaption>Front view of four switches, halfway through plugging.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="wrap two">
+    <div>
+      <h2>Split every switch's cables 50/50</h2>
+      <p>Cables bound for the same switch at the same U are divided in half. One half travels up or down the left vertical cable manager and lands on the left half of the ports; the other half does the same on the right.</p>
+      <p>This balances the sheer volume of InfiniBand cable across both sides of the rack, and it means no cable ever crosses the rack's centre line. With the middle kept clear, any switch or line card can be slid in or out without unplugging its neighbours.</p>
+      <div class="rule"><strong>Never route cables through the middle of the rack.</strong> It blocks airflow and makes the equipment behind the cables impossible to service without disconnecting them.</div>
+    </div>
+    <figure class="fig">
+      <div class="tog" role="group" aria-label="Routing example">
+        <button data-route="good" aria-pressed="true">Split 50/50</button>
+        <button data-route="bad" aria-pressed="false">All from one side</button>
+      </div>
+      <svg id="topview" viewBox="0 0 420 330" role="img" aria-label="Top view of a switch with cables arriving from left and right cable managers"></svg>
+      <figcaption id="topCap">Top view, connector side at the bottom. Cable counts per side are shown under each manager.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Installing the inter-rack bundles</h2>
+    <p>Move the prepared bundles from staging to the space right in front of the core switch or network rack. Then lay each one into the trays, end to end. Neither end is plugged in during this phase. Select a step to see where it happens.</p>
+    <div class="stepper">
+      <ol class="steps" id="steps">
+        <li><button aria-current="true" data-s="1">Seat the first stretch</button></li>
+        <li><button aria-current="false" data-s="2">Fish and tie the near end</button></li>
+        <li><button aria-current="false" data-s="3">Lay the run</button></li>
+        <li><button aria-current="false" data-s="4">Deal with slack</button></li>
+        <li><button aria-current="false" data-s="5">Fish and tie the far end</button></li>
+        <li><button aria-current="false" data-s="6">Repeat</button></li>
+      </ol>
+      <div>
+        <div class="fig scroll-x">
+          <svg id="route" class="dim" viewBox="0 0 720 320" role="img" aria-label="Side elevation of a bundle running from a core rack through an overhead tray to a top-of-rack switch rack"></svg>
+        </div>
+        <p class="step-detail" id="stepText" aria-live="polite"></p>
+      </div>
+    </div>
+    <div class="two" style="margin-top:20px">
+      <div class="hint"><b>Support the bundle while you work.</b> Temporary wraps, straps, or any other support that stops it kinking or stretching. Where an obstruction stops you dropping it straight into the tray, coil the whole bundle and unroll it into place.</div>
+      <div class="hint"><b>Keep slack at the top-of-rack end.</b> Core and aggregation switches already have huge numbers of cables converging on them; extra loops there choke the tray.</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap two">
+    <div>
+      <h2>Installing the intra-rack cables</h2>
+      <p>Inside a rack, cables are normally not pre-bundled, and rack cable managers vary so much that the installer decides whether to start at the switch or at the node.</p>
+      <p>Plug the connector into its source port, then fish the cable to its destination port. Contain any slack in the rack's cable management, keeping within the bend-radius limits, and repeat for the rest.</p>
+      <p>Three things matter throughout: never exceed the specified bend radius, support the cables properly so they last, and once a cable leaves its bundle, give it a path that keeps other equipment, airflow and service access clear.</p>
+    </div>
+    <figure class="fig">
+      <svg viewBox="0 0 640 250" role="img" aria-label="Correcting connector orientation: twist the cable gradually starting at least 75 centimetres from the connector, not right at it">
+        <g font-family="Barlow, sans-serif" font-size="14" fill="var(--ink)">
+          <text x="20" y="24" font-weight="600" fill="var(--stop)">Twist at the connector</text>
+          <text x="20" y="148" font-weight="600" fill="var(--ok)">Twist spread out, at least 75 cm away</text>
+        </g>
+        <!-- bad -->
+        <rect x="20" y="46" width="60" height="30" rx="3" fill="var(--rack)"/>
+        <path d="M80 61 C92 45 100 77 112 61 S130 45 140 61 H620" fill="none" stroke="var(--stop)" stroke-width="7" stroke-linecap="round"/>
+        <circle cx="110" cy="61" r="26" fill="none" stroke="var(--stop)" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <text x="150" y="98" font-family="Barlow, sans-serif" font-size="13" fill="var(--muted)">Sharp twist stresses the connector and conductors</text>
+        <!-- good -->
+        <rect x="20" y="170" width="60" height="30" rx="3" fill="var(--rack)"/>
+        <path id="goodC" d="M80 185 H360 C390 170 420 200 450 185 S510 170 540 185 S590 200 620 185" fill="none" stroke="var(--ok)" stroke-width="7" stroke-linecap="round"/>
+        <g stroke="var(--ink)" stroke-width="1.3">
+          <line x1="80" y1="218" x2="360" y2="218"/><line x1="80" y1="212" x2="80" y2="224"/><line x1="360" y1="212" x2="360" y2="224"/>
+        </g>
+        <text x="220" y="240" text-anchor="middle" font-family="Barlow, sans-serif" font-size="14" fill="var(--ink)">≥ 75 cm, keep straight</text>
+        <text x="490" y="240" text-anchor="middle" font-family="Barlow, sans-serif" font-size="14" fill="var(--ink)">gradual reorientation</text>
+      </svg>
+      <figcaption>If a connector needs turning to fit the port, start the rotation well down the cable.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Connecting and dressing, together</h2>
+    <p>Plugging everything in first and tidying afterwards produces tangles that get worse with every cable added. The guide treats connecting and dressing as one interleaved task: connect a U, dress it, move up.</p>
+    <div class="two">
+      <div>
+        <h3>Connecting</h3>
+        <ol class="proc">
+          <li>Pick one side of the rack, left or right, and finish it first. Strip off any plastic wrap left from installation and any protective caps still on the connectors.</li>
+          <li>For cables entering from the top, start with the bundles whose destinations are at the top.</li>
+          <li>Read the label, then fully seat each connector in its port. You may need to unplug and re-plug a few neighbours to undo tangles, or twists from cables trying to spring back to their coiled shape. Cables to the outermost ports are shorter runs than those to the middle ports, so tuck the difference into the in-rack manager.</li>
+          <li>Work one U at a time, alternating between connecting ports and dressing cables.</li>
+        </ol>
+      </div>
+      <div>
+        <h3>Dressing</h3>
+        <ol class="proc">
+          <li>With one side of a U connected, start near the middle and gently guide the cables into shape. Respect bend radius, never pull, and keep the cables in the same horizontal plane as the U they plug into.</li>
+          <li>Wrap with hook-and-loop at intermediate points and inside the cable manager. Keep these early wraps loose, since they will likely need adjusting.</li>
+          <li>At the last cable, add extra wraps wherever there is slack, a loop or a bend.</li>
+          <li>When everything looks right, tighten each wrap to just snug and close up the cable management.</li>
+        </ol>
+      </div>
+    </div>
+    <figure class="fig" style="margin-top:18px">
+      <svg viewBox="0 0 700 230" role="img" aria-label="Cable supported at least every 60 centimetres with hook-and-loop straps; straps snug, not tight enough to deform the jacket">
+        <g font-family="Barlow, sans-serif" font-size="14" fill="var(--ink)">
+          <text x="20" y="26" font-weight="600">Support spacing</text>
+          <text x="20" y="150" font-weight="600">Strap tension</text>
+        </g>
+        <line x1="30" y1="70" x2="670" y2="70" stroke="var(--left)" stroke-width="10" stroke-linecap="round"/>
+        <g fill="var(--signal)">
+          <rect x="60" y="56" width="16" height="28" rx="3"/><rect x="250" y="56" width="16" height="28" rx="3"/>
+          <rect x="440" y="56" width="16" height="28" rx="3"/><rect x="630" y="56" width="16" height="28" rx="3"/>
+        </g>
+        <g stroke="var(--ink)" stroke-width="1.3">
+          <line x1="68" y1="104" x2="258" y2="104"/><line x1="68" y1="98" x2="68" y2="110"/><line x1="258" y1="98" x2="258" y2="110"/>
+        </g>
+        <text x="163" y="124" text-anchor="middle" font-family="Barlow, sans-serif" font-size="14" fill="var(--ink)">60 cm (2 ft) or less</text>
+        <!-- snug -->
+        <line x1="40" y1="190" x2="300" y2="190" stroke="var(--left)" stroke-width="12" stroke-linecap="round"/>
+        <rect x="160" y="178" width="18" height="24" rx="3" fill="var(--signal)"/>
+        <text x="170" y="222" text-anchor="middle" font-family="Barlow, sans-serif" font-size="14" fill="var(--ok)">Snug: stops movement</text>
+        <!-- tight -->
+        <path d="M400 184 H510 Q520 188 522 190 Q520 192 510 196 H400 Z" fill="none"/>
+        <path d="M390 190 H500" stroke="var(--left)" stroke-width="12" stroke-linecap="round"/>
+        <path d="M540 190 H650" stroke="var(--left)" stroke-width="12" stroke-linecap="round"/>
+        <path d="M500 184 Q520 189 540 184 L540 196 Q520 191 500 196 Z" fill="var(--left)"/>
+        <rect x="512" y="182" width="16" height="16" rx="2" fill="var(--stop)"/>
+        <text x="520" y="222" text-anchor="middle" font-family="Barlow, sans-serif" font-size="14" fill="var(--stop)">Too tight: jacket deformed</text>
+      </svg>
+      <figcaption>Strain relief: every cable is supported at regular intervals, and straps only hold it still.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Numbers to remember</h2>
+    <div class="nums">
+      <div class="num"><b>~8 ft</b><span>of bundle laid in the tray first, plus the free length needed to reach the target U</span></div>
+      <div class="num"><b>50/50</b><span>split of a switch's cables between left and right managers</span></div>
+      <div class="num"><b>60 cm</b><span>maximum distance between cable supports (2 ft)</span></div>
+      <div class="num"><b>75 cm</b><span>minimum distance from the connector before starting any twist</span></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>An illustrated explanation of <a href="https://docs.nvidia.com/dgx-superpod/design-guide-cabling-data-centers/latest/deploying-bundles.html">Deploying the Bundles</a> from NVIDIA's DGX SuperPOD Cabling Data Centers Design Guide (page last updated Nov 19, 2025). Diagrams are schematic redrawings for explanation, not reproductions of the guide's figures. Always follow the official document and your site's deployment plan.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const NS = "http://www.w3.org/2000/svg";
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+
+  /* ---------- Rack side view ---------- */
+  const rack = document.getElementById("rack");
+  const N = 6, swY = i => 78 + i * 68, swH = 36;
+  const notes = {
+    top: "Top feed: cables drop in from the overhead tray, so the first bundle run goes to the topmost switch and each next bundle goes one switch lower.",
+    bottom: "Bottom feed: cables rise from under the floor, so the first bundle run goes to the bottommost switch and each next bundle goes one switch higher.",
+    split: "Top/bottom feed: the rack is treated as two halves. The upper half is fed from above starting at the top switch; the lower half from below starting at the bottom switch."
+  };
+  function drawRack(feed){
+    rack.innerHTML = "";
+    const g = el("g", {"font-family":"Barlow, sans-serif"}, rack);
+    // managers
+    el("rect", {x:72,y:40,width:26,height:480,fill:"none",stroke:"var(--line)","stroke-dasharray":"4 4"}, g);
+    el("rect", {x:262,y:40,width:26,height:480,fill:"none",stroke:"var(--line)","stroke-dasharray":"4 4"}, g);
+    // rack frame
+    el("rect", {x:100,y:40,width:160,height:480,fill:"none",stroke:"var(--rack)","stroke-width":3}, g);
+    // entry arrows
+    const showTop = feed !== "bottom", showBot = feed !== "top";
+    if (showTop){ const t = el("text",{x:180,y:22,"text-anchor":"middle","font-size":13,fill:"var(--muted)"},g); t.textContent = "from overhead tray"; }
+    if (showBot){ const t = el("text",{x:180,y:548,"text-anchor":"middle","font-size":13,fill:"var(--muted)"},g); t.textContent = "from raised floor"; }
+    // mid divider for split
+    if (feed === "split"){
+      const y = (swY(2)+swH + swY(3))/2;
+      el("line",{x1:96,y1:y,x2:264,y2:y,stroke:"var(--signal)","stroke-width":2,"stroke-dasharray":"6 4"},g);
+    }
+    // order
+    const plan = [];
+    for (let i=0;i<N;i++){
+      let src, k, label;
+      if (feed==="top"){ src="top"; k=i; label = String(i+1); }
+      else if (feed==="bottom"){ src="bot"; k=N-1-i; label = String(N-i); }
+      else { if (i<3){ src="top"; k=i; label="T"+(i+1);} else { src="bot"; k=N-1-i; label="B"+(N-i);} }
+      plan.push({i,src,k,label});
+    }
+    // switches
+    for (let i=0;i<N;i++){
+      el("rect",{x:108,y:swY(i),width:144,height:swH,fill:"var(--sw)",stroke:"var(--rack)","stroke-width":1.2,rx:2},g);
+      for (let p=0;p<12;p++) el("rect",{x:116+p*11.3,y:swY(i)+swH-10,width:7,height:5,fill:"var(--rack)",opacity:.6},g);
+      const t = el("text",{x:180,y:swY(i)+16,"text-anchor":"middle","font-size":12,fill:"var(--muted)"},g); t.textContent = "Switch "+(i+1);
+      el("line",{x1:180,y1:swY(i)+20,x2:180,y2:swY(i)+swH,stroke:"var(--rack)","stroke-width":1,"stroke-dasharray":"2 2",opacity:.6},g);
+    }
+    // cables
+    const cg = el("g",{fill:"none","stroke-width":3,"stroke-linecap":"round"},rack);
+    const seq = plan.slice().sort((a,b)=> (a.src===b.src? a.k-b.k : (a.src==="top"?-1:1)));
+    const paths = [];
+    plan.forEach(p=>{
+      const yc = swY(p.i) + swH - 8;
+      const lx = 92 - p.k*3.2, rx = 268 + p.k*3.2;
+      const yStart = p.src==="top" ? 30 : 530;
+      const d = s => s==="L"
+        ? `M${lx} ${yStart} V${p.src==="top"? yc-12 : yc+12} Q${lx} ${yc} ${lx+12} ${yc} H176`
+        : `M${rx} ${yStart} V${p.src==="top"? yc-12 : yc+12} Q${rx} ${yc} ${rx-12} ${yc} H184`;
+      const a = el("path",{d:d("L"),stroke:"var(--left)"},cg);
+      const b = el("path",{d:d("R"),stroke:"var(--right)"},cg);
+      // badge
+      const bx = 326, by = swY(p.i)+swH/2;
+      const bg = el("g",{},rack);
+      el("circle",{cx:bx,cy:by,r:14,fill:"var(--ink)"},bg);
+      const bt = el("text",{x:bx,y:by+5,"text-anchor":"middle","font-size":13,"font-weight":600,fill:"var(--bg)","font-family":"Barlow Condensed, sans-serif"},bg); bt.textContent = p.label;
+      paths.push({a,b,badge:bg,order:seq.indexOf(p), group:p.src});
+    });
+    // animate: when split, both halves progress in parallel
+    paths.forEach(p=>{
+      const step = feed==="split" ? p.order % 3 : p.order;
+      [p.a,p.b].forEach(path=>{
+        const L = path.getTotalLength();
+        path.style.strokeDasharray = L; path.style.strokeDashoffset = reduce ? 0 : L;
+        if (!reduce){ path.style.transition = `stroke-dashoffset .6s ease ${step*0.45}s`; requestAnimationFrame(()=>requestAnimationFrame(()=>{ path.style.strokeDashoffset = 0; })); }
+      });
+      p.badge.style.opacity = reduce ? 1 : 0;
+      if (!reduce){ p.badge.style.transition = `opacity .3s ease ${step*0.45+0.4}s`; requestAnimationFrame(()=>requestAnimationFrame(()=>{ p.badge.style.opacity = 1; })); }
+    });
+    document.getElementById("orderNote").textContent = notes[feed];
+  }
+  let feed = "top";
+  document.querySelectorAll(".feed-ctrl button").forEach(b=>b.addEventListener("click",()=>{
+    feed = b.dataset.feed;
+    document.querySelectorAll(".feed-ctrl button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    drawRack(feed);
+  }));
+  document.getElementById("replay").addEventListener("click",()=>drawRack(feed));
+  drawRack(feed);
+
+  /* ---------- Top view 50/50 ---------- */
+  const tv = document.getElementById("topview");
+  function drawTop(mode){
+    tv.innerHTML = "";
+    const g = el("g",{"font-family":"Barlow, sans-serif","font-size":13},tv);
+    el("rect",{x:90,y:40,width:240,height:220,fill:"none",stroke:"var(--rack)","stroke-width":2.5},g);
+    el("rect",{x:108,y:70,width:204,height:180,fill:"var(--sw)",stroke:"var(--rack)"},g);
+    let t = el("text",{x:210,y:150,"text-anchor":"middle",fill:"var(--muted)"},g); t.textContent="switch / line card";
+    // managers
+    el("rect",{x:62,y:210,width:24,height:50,fill:"none",stroke:"var(--ink)","stroke-width":1.5},g);
+    el("rect",{x:334,y:210,width:24,height:50,fill:"none",stroke:"var(--ink)","stroke-width":1.5},g);
+    // midline
+    el("line",{x1:210,y1:40,x2:210,y2:320,stroke:"var(--signal)","stroke-width":2,"stroke-dasharray":"6 4"},g);
+    t = el("text",{x:214,y:36,fill:"var(--muted)"},g); t.textContent="rack centre line";
+    const ports = []; for (let j=0;j<16;j++) ports.push(120 + j*12);
+    ports.forEach(x=>el("rect",{x:x-3,y:250,width:6,height:6,fill:"var(--rack)"},g));
+    const cg = el("g",{fill:"none","stroke-width":2.2},tv);
+    let L=0,R=0;
+    ports.forEach((x,j)=>{
+      let fromLeft = mode==="good" ? j<8 : true;
+      const col = mode==="good" ? (fromLeft?"var(--left)":"var(--right)") : (j<8?"var(--left)":"var(--stop)");
+      const mx = fromLeft ? 74 : 346; if (fromLeft) L++; else R++;
+      const dip = 268 + (fromLeft ? (x-120)/190*42 : (300-x)/190*42);
+      el("path",{d:`M${mx} 235 C${mx} ${dip+10} ${x} ${dip} ${x} 256`,stroke:col},cg);
+    });
+    t = el("text",{x:74,y:314,"text-anchor":"middle","font-size":15,"font-weight":600,fill:"var(--ink)"},g); t.textContent = L;
+    t = el("text",{x:346,y:314,"text-anchor":"middle","font-size":15,"font-weight":600,fill:"var(--ink)"},g); t.textContent = R;
+    if (mode==="bad"){
+      el("rect",{x:150,y:262,width:120,height:48,fill:"var(--stop)",opacity:.1},g);
+      t = el("text",{x:210,y:314,"text-anchor":"middle",fill:"var(--stop)","font-weight":600},g); t.textContent="cables cross the centre";
+    }
+    document.getElementById("topCap").textContent = mode==="good"
+      ? "Top view, connector side at the bottom. Eight cables per side, none crossing the centre line."
+      : "Same switch with every cable from the left manager: one side overloaded and half the cables sweep across the front of the rack.";
+  }
+  document.querySelectorAll(".tog button").forEach(b=>b.addEventListener("click",()=>{
+    document.querySelectorAll(".tog button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    drawTop(b.dataset.route);
+  }));
+  drawTop("good");
+
+  /* ---------- Inter-rack route stepper ---------- */
+  const rt = document.getElementById("route");
+  rt.innerHTML = `
+  <g font-family="Barlow, sans-serif" font-size="13" fill="var(--muted)">
+    <text x="90" y="312" text-anchor="middle">Core / network rack</text>
+    <text x="630" y="312" text-anchor="middle">Top-of-rack switch rack</text>
+    <text x="360" y="30" text-anchor="middle">Overhead cable tray</text>
+  </g>
+  <rect x="40" y="110" width="100" height="185" fill="none" stroke="var(--rack)" stroke-width="2.5"/>
+  <rect x="50" y="130" width="80" height="26" fill="var(--sw)" stroke="var(--rack)"/>
+  <rect x="580" y="110" width="100" height="185" fill="none" stroke="var(--rack)" stroke-width="2.5"/>
+  <rect x="590" y="128" width="80" height="22" fill="var(--sw)" stroke="var(--rack)"/>
+  <path d="M30 60 H300 Q330 60 330 90 V96 H390 V90 Q390 60 420 60 H700" fill="none" stroke="var(--line)" stroke-width="14"/>
+  <rect x="345" y="40" width="30" height="36" fill="var(--rack)" opacity=".5"/>
+  <text x="360" y="118" text-anchor="middle" font-family="Barlow, sans-serif" font-size="12" fill="var(--muted)">obstruction / support</text>
+
+  <g class="hl" data-k="1">
+    <path d="M90 60 H200" stroke="var(--left)" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <text x="145" y="48" text-anchor="middle" font-family="Barlow, sans-serif" font-size="13" fill="var(--ink)">first ~8 ft</text>
+  </g>
+  <g class="hl" data-k="2">
+    <path d="M90 60 V100 Q90 112 90 143" stroke="var(--left)" stroke-width="5" fill="none"/>
+    <circle cx="90" cy="143" r="4" fill="var(--left)"/>
+    <rect x="82" y="92" width="16" height="10" fill="var(--signal)"/>
+    <text x="150" y="182" font-family="Barlow, sans-serif" font-size="12" fill="var(--ink)">reaches switch midpoint, tied, not plugged</text>
+  </g>
+  <g class="hl" data-k="3">
+    <path d="M200 60 H300 Q325 60 325 85 V90 Q325 101 340 101 H380 Q395 101 395 90 V85 Q395 60 420 60 H520" stroke="var(--left)" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <text x="360" y="140" text-anchor="middle" font-family="Barlow, sans-serif" font-size="12" fill="var(--ink)">widest possible radius at every turn</text>
+  </g>
+  <g class="hl" data-k="4">
+    <path d="M520 60 C540 60 560 34 540 30 C510 26 510 60 540 60 C570 60 590 34 570 30 C540 26 540 60 580 60 H630" stroke="var(--left)" stroke-width="6" fill="none"/>
+    <text x="555" y="14" text-anchor="middle" font-family="Barlow, sans-serif" font-size="12" fill="var(--ink)">large doubled-back loops</text>
+  </g>
+  <g class="hl" data-k="5">
+    <path d="M630 60 V139" stroke="var(--left)" stroke-width="5" fill="none"/>
+    <circle cx="630" cy="139" r="4" fill="var(--left)"/>
+    <rect x="622" y="86" width="16" height="10" fill="var(--signal)"/>
+  </g>
+  <g class="hl" data-k="6" opacity=".9">
+    <path d="M96 66 H300 Q331 66 331 92 V95 M389 95 V92 Q389 66 420 66 H636 V200" stroke="var(--right)" stroke-width="3" fill="none" stroke-dasharray="6 5"/>
+    <path d="M84 66 V200" stroke="var(--right)" stroke-width="3" fill="none" stroke-dasharray="6 5"/>
+    <text x="644" y="224" font-family="Barlow, sans-serif" font-size="12" fill="var(--ink)">next bundle</text>
+  </g>`;
+  const stepText = {
+    1: "Lay roughly the first eight feet of the bundle into the tray near the core rack, give or take the loose length needed to reach the U it is going to.",
+    2: "Fish the loose cables through the designated openings until the connectors reach the midpoint of the switch or line card. Don't plug anything in. Tie that end in place with hook-and-loop.",
+    3: "Work along the bundle, setting it into the tray and easing it around supports and obstructions. At corners, take the widest radius you can.",
+    4: "At the destination rack, check how much bundle is left. Ideally the tray was sized to hold slack; manage it as big loops with a gentle bend radius that fold back on themselves.",
+    5: "Treat the far end like the first: fish the cables through to the switch midpoint, don't connect, and tie off with hook-and-loop.",
+    6: "Repeat for every remaining inter-rack bundle, then move on to connecting and dressing before starting the intra-rack cables."
+  };
+  function setStep(s){
+    rt.querySelectorAll(".hl").forEach(h=>{ const k = +h.dataset.k; h.classList.toggle("on", s===6 ? true : k<=s); });
+    document.querySelectorAll("#steps button").forEach(b=>b.setAttribute("aria-current", +b.dataset.s===s));
+    document.getElementById("stepText").textContent = stepText[s];
+  }
+  document.querySelectorAll("#steps button").forEach(b=>b.addEventListener("click",()=>setStep(+b.dataset.s)));
+  setStep(1);
+})();
+</script>
+</body>
+</html>
