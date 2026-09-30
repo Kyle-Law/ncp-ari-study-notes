@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clean &amp; Inspect — IEC 61300-3-35 explained visually</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF2F5; --panel:#FFFFFF; --ink:#14233B; --muted:#56657A; --rule:#CCD5DF;
+  --fiber:#1B8FB0; --glow:#7FD3EA; --pass:#2E7D4F; --fail:#B8392A; --warn:#C98A12;
+  --scope:#0F1B2D; --scopeRing:#2B3E58;
+  --display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#101A28; --panel:#172438; --ink:#E4ECF4; --muted:#9AAABD; --rule:#2C3C54;
+    --fiber:#4DB8D6; --pass:#5DBB83; --fail:#E26A58; --warn:#E3AE45; --scope:#070E18; --scopeRing:#2B3E58;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#101A28; --panel:#172438; --ink:#E4ECF4; --muted:#9AAABD; --rule:#2C3C54;
+  --fiber:#4DB8D6; --pass:#5DBB83; --fail:#E26A58; --warn:#E3AE45; --scope:#070E18;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 1.06rem/1.65 var(--body)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 1.25rem}
+h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0 0 .6rem}
+h1{font-size:clamp(2.2rem,5.5vw,3.8rem);font-stretch:78%;font-weight:800;letter-spacing:-.01em}
+h2{font-size:clamp(1.6rem,3.2vw,2.2rem);font-stretch:85%;font-weight:750;margin-top:0}
+h3{font-size:1.15rem;font-weight:700}
+p{max-width:68ch;margin:0 0 1rem}
+a{color:var(--fiber)}
+section{padding:3.2rem 0;border-top:1px solid var(--rule)}
+.lede{font-size:1.18rem;color:var(--muted)}
+.src{font-family:var(--display);font-size:.9rem;color:var(--muted)}
+figure{margin:1.5rem 0}
+figcaption{font-family:var(--display);font-size:.88rem;color:var(--muted);margin-top:.5rem;max-width:70ch}
+.scroll{overflow-x:auto}
+svg{max-width:100%;height:auto;display:block}
+.note{border-left:3px solid var(--warn);padding:.4rem .9rem;background:color-mix(in srgb,var(--warn) 8%,transparent);font-size:.95rem}
+
+/* hero */
+header{padding:2.5rem 0 3rem}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:2.5rem;align-items:center}
+@media (max-width:820px){.hero{grid-template-columns:1fr}}
+.scopebox{background:var(--scope);border-radius:18px;padding:1rem;color:#DCE7F2}
+.controls{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-top:.8rem;font-family:var(--display);font-size:.9rem}
+.seg{display:inline-flex;border:1px solid #3A5170;border-radius:8px;overflow:hidden}
+.seg button{background:transparent;color:#DCE7F2;border:0;padding:.45rem .8rem;font:inherit;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--fiber);color:#fff}
+.btn{background:#22344D;color:#DCE7F2;border:1px solid #3A5170;border-radius:8px;padding:.45rem .8rem;font:inherit;cursor:pointer}
+.btn:hover{background:#2C4260}
+button:focus-visible,input:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
+.controls label{display:flex;gap:.4rem;align-items:center}
+.controls input[type=range]{accent-color:var(--glow);width:110px}
+.verdict{margin-top:.8rem;font-family:var(--display);font-weight:800;font-size:1.3rem;padding:.5rem .8rem;border-radius:8px;display:flex;justify-content:space-between;gap:1rem}
+.verdict.pass{background:#1E4D35;color:#B9F0CF}
+.verdict.fail{background:#5A1F18;color:#FFD0C8}
+.findings{font-family:var(--display);font-size:.88rem;color:#B6C6D8;margin:.5rem 0 0;padding-left:1.1rem;max-height:7.5rem;overflow:auto}
+
+/* tables */
+table{border-collapse:collapse;width:100%;min-width:560px;font-family:var(--display);font-size:.95rem;background:var(--panel)}
+th,td{text-align:left;padding:.6rem .75rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:700;background:color-mix(in srgb,var(--fiber) 10%,var(--panel))}
+.zdot{display:inline-block;width:.8rem;height:.8rem;border-radius:50%;margin-right:.4rem;vertical-align:-.05rem}
+.bad{color:var(--fail);font-weight:700}.good{color:var(--pass);font-weight:700}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:1.2rem}
+
+/* calculator */
+.calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:2rem;align-items:start}
+@media (max-width:760px){.calc{grid-template-columns:1fr}}
+.calc label{display:block;font-family:var(--display);font-weight:600;margin:0 0 1.1rem}
+.calc input{width:100%;accent-color:var(--fiber)}
+.calc output{float:right;font-weight:800}
+.total{font-family:var(--display);font-size:clamp(2.4rem,6vw,3.6rem);font-weight:800;font-stretch:80%;line-height:1}
+.bars{margin-top:1rem}
+.bar{height:22px;border-radius:4px;margin:.25rem 0 .7rem;transition:width .3s}
+@media (prefers-reduced-motion:reduce){.bar{transition:none}}
+footer{padding:2rem 0 3rem;border-top:1px solid var(--rule);font-family:var(--display);font-size:.9rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Clean, inspect, and why a micron decides pass or fail</h1>
+      <p class="lede">A visual walk-through of MicroCare's article on the fiber end-face standard IEC 61300-3-35: what it checks, why static makes dust come back, and what poor cleaning costs.</p>
+      <p class="src">Source: <a href="https://www.microcare.com/en-US/Resources/Resource-Center/Tech-Articles/Clean-Inspect-What-IEC-61300-3-35-Means-to-You">“Clean &amp; Inspect: What IEC 61300-3-35 Means to You”</a> by Brian Teague, MicroCare.</p>
+      <p>Try the scope on the right. Click anywhere on the end face to drop a particle or a scratch, and watch the verdict change depending on <em>where</em> it lands, not just how big it is. That is the core idea of the standard.</p>
+    </div>
+    <div class="scopebox" aria-label="Interactive fiber end-face inspection simulator">
+      <svg id="scope" viewBox="-300 -300 600 600" role="img" aria-label="Connector end face with zones A to D">
+        <defs>
+          <radialGradient id="coreGlow"><stop offset="0" stop-color="#BFF1FF"/><stop offset=".6" stop-color="#5FC6E4"/><stop offset="1" stop-color="#1B8FB0" stop-opacity=".2"/></radialGradient>
+          <radialGradient id="ferrule"><stop offset="0" stop-color="#6B7C92"/><stop offset="1" stop-color="#3A4A60"/></radialGradient>
+        </defs>
+        <circle r="290" fill="#060C15"/>
+        <circle r="250" fill="url(#ferrule)"/>
+        <circle r="135" fill="#4E5E74"/>
+        <circle r="115" fill="#8FA3BA"/>
+        <circle r="25" fill="url(#coreGlow)"/>
+        <g fill="none" stroke="#DCE7F2" stroke-opacity=".55" stroke-dasharray="6 6" stroke-width="1.5">
+          <circle r="25"/><circle r="115"/><circle r="135"/><circle r="250"/>
+        </g>
+        <g font-family="Archivo,Arial,sans-serif" font-size="15" fill="#E8F1F8" font-weight="700">
+          <text x="0" y="5" text-anchor="middle" fill="#0F1B2D">A</text>
+          <text x="0" y="-70" text-anchor="middle">B · cladding</text>
+          <text x="0" y="-121" text-anchor="middle" font-size="12">C</text>
+          <text x="0" y="-190" text-anchor="middle">D · contact</text>
+        </g>
+        <g id="marks"></g>
+        <text x="0" y="282" text-anchor="middle" font-family="Archivo,Arial,sans-serif" font-size="13" fill="#8FA3BA">Scale: 1 unit = 1 µm · outer ring 250 µm</text>
+      </svg>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="Defect type">
+          <button id="mParticle" aria-pressed="true">Particle / pit</button>
+          <button id="mScratch" aria-pressed="false">Scratch</button>
+        </div>
+        <label>Size <input id="size" type="range" min="1" max="15" value="4"> <span id="sizeOut">4 µm</span></label>
+        <button class="btn" id="dirty">Field-dirty example</button>
+        <button class="btn" id="clean">Clean it</button>
+      </div>
+      <div id="verdict" class="verdict pass" aria-live="polite"><span>PASS</span><span id="count">0 defects</span></div>
+      <ul class="findings" id="findings"></ul>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="wrap">
+  <h2>What the standard is for</h2>
+  <p>No factory can produce a perfect ferrule end face every time; an occasional small pit or scratch is normal. The IEC 61300-3-35 specification exists to define which imperfections are harmless and which will hurt the optical signal. The article's key point is that the <strong>location of a defect relative to the fiber core</strong> is what matters most, so the end face is judged in concentric zones.</p>
+  <figure class="scroll">
+    <table>
+      <thead><tr><th>Zone</th><th>Diameter (typical SM UPC)</th><th>Scratches allowed</th><th>Particles / pits allowed</th></tr></thead>
+      <tbody>
+        <tr><td><span class="zdot" style="background:#5FC6E4"></span>A · Core</td><td>0–25 µm</td><td class="bad">None</td><td class="bad">None</td></tr>
+        <tr><td><span class="zdot" style="background:#8FA3BA"></span>B · Cladding</td><td>25–115 µm</td><td>Any number ≤ 3 µm wide; none wider</td><td>Any &lt; 2 µm; up to 5 of 2–5 µm; none &gt; 5 µm</td></tr>
+        <tr><td><span class="zdot" style="background:#4E5E74"></span>C · Adhesive</td><td>115–135 µm</td><td class="good">No limit</td><td class="good">No limit</td></tr>
+        <tr><td><span class="zdot" style="background:#3A4A60"></span>D · Contact</td><td>135–250 µm</td><td class="good">No limit</td><td>None ≥ 10 µm</td></tr>
+      </tbody>
+    </table>
+    <figcaption>These zone values are commonly cited single-mode UPC criteria from the standard, added here for illustration; the article itself doesn't list them. Limits differ for APC, multimode and multi-fiber connectors and between editions, so set your scope to the exact profile you need.</figcaption>
+  </figure>
+</section>
+
+<section class="wrap">
+  <h2>Why your eyes aren't enough</h2>
+  <p>The article notes that a difference of just a micron or two can flip a result, and no operator can reliably tell a 5 µm defect from a 6 µm one by eye. Digital ferrule scopes with automated analysis measure size, area and position in software, removing that guesswork, and most also save an image as a record of the connector's condition.</p>
+  <figure>
+    <svg viewBox="0 0 760 210" role="img" aria-label="Two defects in zone B, 5 micron passes and 6 micron fails">
+      <g font-family="Archivo,Arial,sans-serif">
+        <rect x="10" y="10" width="360" height="190" rx="12" fill="var(--panel)" stroke="var(--rule)"/>
+        <rect x="390" y="10" width="360" height="190" rx="12" fill="var(--panel)" stroke="var(--rule)"/>
+        <circle cx="190" cy="100" r="58" fill="#8FA3BA"/><circle cx="190" cy="100" r="13" fill="url(#coreGlow)"/>
+        <circle cx="570" cy="100" r="58" fill="#8FA3BA"/><circle cx="570" cy="100" r="13" fill="url(#coreGlow)"/>
+        <circle cx="225" cy="78" r="5" fill="#3A2A1A"/>
+        <circle cx="605" cy="78" r="6" fill="#3A2A1A"/>
+        <text x="190" y="185" text-anchor="middle" font-weight="700" fill="var(--pass)" font-size="17">5 µm particle in zone B → PASS</text>
+        <text x="570" y="185" text-anchor="middle" font-weight="700" fill="var(--fail)" font-size="17">6 µm particle in zone B → FAIL</text>
+        <text x="190" y="32" text-anchor="middle" fill="var(--muted)" font-size="13">Looks identical to the human eye…</text>
+        <text x="570" y="32" text-anchor="middle" fill="var(--muted)" font-size="13">…but the software sees the difference</text>
+      </g>
+    </svg>
+    <figcaption>Illustrative: under typical single-mode UPC limits, zone B tolerates particles up to 5 µm. One extra micron is a fail.</figcaption>
+  </figure>
+</section>
+
+<section class="wrap">
+  <h2>Permanent defects vs. debris</h2>
+  <div class="two">
+    <div class="card">
+      <h3>Pits and scratches</h3>
+      <p>Permanent damage. Field installers can do little about it, but it is rare on arrival because most cable-assembly makers optically test every unit before shipping.</p>
+    </div>
+    <div class="card">
+      <h3>Debris</h3>
+      <p>The everyday problem: dust, lint, plastic or ceramic particles, fingerprint oil and similar. Best practice is to remove it from <em>both</em> connector end faces with optical-grade materials before mating. Left in place, grit gets pressed between the ferrules and can create new scratches and pits on both sides.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Inspect → clean → inspect</h2>
+  <p>Section 5.3 of the standard sets out the workflow: look first, clean only if needed, then look again before connecting. With a digital scope, the article says the whole check takes under five seconds.</p>
+  <figure class="scroll">
+    <svg viewBox="0 0 900 260" style="min-width:640px" role="img" aria-label="Flowchart of inspect, clean, re-inspect process">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+      <g font-family="Archivo,Arial,sans-serif" font-size="15" font-weight="600" text-anchor="middle">
+        <rect x="20" y="95" width="130" height="60" rx="10" fill="var(--fiber)"/><text x="85" y="130" fill="#fff">Inspect</text>
+        <polygon points="265,75 335,125 265,175 195,125" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.5"/><text x="265" y="130" fill="var(--ink)">Pass?</text>
+        <rect x="400" y="175" width="150" height="60" rx="10" fill="var(--warn)"/><text x="475" y="203" fill="#fff">Clean</text><text x="475" y="222" fill="#fff" font-size="12" font-weight="400">optical fluid + lint-free</text>
+        <rect x="600" y="175" width="130" height="60" rx="10" fill="var(--fiber)"/><text x="665" y="210" fill="#fff">Re-inspect</text>
+        <rect x="720" y="20" width="150" height="60" rx="10" fill="var(--pass)"/><text x="795" y="48" fill="#fff">Connect</text><text x="795" y="67" fill="#fff" font-size="12" font-weight="400">save the image</text>
+        <line x1="150" y1="125" x2="193" y2="125" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+        <path d="M265 75 V50 H718" fill="none" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/><text x="490" y="42" fill="var(--pass)" font-size="13">yes</text>
+        <path d="M265 175 V205 H398" fill="none" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/><text x="330" y="198" fill="var(--fail)" font-size="13">no</text>
+        <line x1="550" y1="205" x2="598" y2="205" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+        <path d="M665 175 V110 H337" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+        <text x="520" y="102" fill="var(--muted)" font-size="12" font-weight="400">evaluate again</text>
+      </g>
+    </svg>
+    <figcaption>If repeated cleaning can't clear a fault, it's likely a permanent pit or scratch rather than debris.</figcaption>
+  </figure>
+</section>
+
+<section class="wrap">
+  <h2>The dust that comes back: static charge</h2>
+  <p>A puzzling field symptom: a connector is cleaned and inspected spotless, yet days later there's dust on it again. The article blames the <em>process</em>. Dry wiping rubs two materials together, which moves electrons between them (triboelectric charging). Ceramic and composite MT ferrules are insulators, so the charge stays put until something conducts it away, and loose particles inside the housing are pulled onto the end face and held there by electrostatic attraction. The charge concentrates at the ferrule's apex, which is exactly where the fiber core sits.</p>
+  <figure class="scroll">
+    <svg viewBox="0 0 900 300" style="min-width:640px" role="img" aria-label="Dry wiping builds static that attracts dust to the apex; a cleaning fluid gives the charge a path to dissipate">
+      <g font-family="Archivo,Arial,sans-serif">
+        <rect x="10" y="10" width="430" height="280" rx="12" fill="var(--panel)" stroke="var(--rule)"/>
+        <rect x="460" y="10" width="430" height="280" rx="12" fill="var(--panel)" stroke="var(--rule)"/>
+        <text x="225" y="40" text-anchor="middle" font-weight="700" font-size="17" fill="var(--fail)">Dry wipe: charge builds up</text>
+        <text x="675" y="40" text-anchor="middle" font-weight="700" font-size="17" fill="var(--pass)">Wet clean: charge drains away</text>
+        <!-- ferrule left -->
+        <path d="M40 120 H250 Q300 120 300 165 Q300 210 250 210 H40 Z" fill="#B9C6D4" stroke="#6B7C92"/>
+        <line x1="40" y1="165" x2="298" y2="165" stroke="#5FC6E4" stroke-width="3"/>
+        <g fill="var(--fail)" font-weight="800" font-size="16"><text x="290" y="150">+</text><text x="300" y="170">+</text><text x="290" y="192">+</text><text x="270" y="135">+</text><text x="270" y="203">+</text></g>
+        <rect x="318" y="115" width="18" height="100" rx="4" fill="#E9E2D0" stroke="#A89C80"/>
+        <path d="M345 135 v60" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+        <path d="M345 195 v-60" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+        <text x="327" y="235" text-anchor="middle" font-size="12" fill="var(--muted)">dry wipe</text>
+        <g fill="#5A4430"><circle cx="380" cy="80" r="5"/><circle cx="395" cy="250" r="4"/><circle cx="210" cy="75" r="4"/><circle cx="160" cy="255" r="5"/></g>
+        <g stroke="var(--fail)" stroke-width="1.5" fill="none" stroke-dasharray="4 3">
+          <path d="M375 85 L310 140" marker-end="url(#ar)"/><path d="M390 245 L312 195" marker-end="url(#ar)"/>
+          <path d="M215 80 L280 130" marker-end="url(#ar)"/><path d="M165 250 L270 208" marker-end="url(#ar)"/>
+        </g>
+        <text x="225" y="280" text-anchor="middle" font-size="13" fill="var(--muted)">Insulating ferrule stores the charge; particles migrate to the apex</text>
+        <!-- ferrule right -->
+        <path d="M490 120 H700 Q750 120 750 165 Q750 210 700 210 H490 Z" fill="#B9C6D4" stroke="#6B7C92"/>
+        <line x1="490" y1="165" x2="748" y2="165" stroke="#5FC6E4" stroke-width="3"/>
+        <path d="M700 116 Q758 116 758 165 Q758 214 700 214" fill="none" stroke="var(--fiber)" stroke-width="7" stroke-opacity=".55"/>
+        <path d="M770 165 q15 -12 30 0 t30 0 t30 0" fill="none" stroke="var(--pass)" stroke-width="2.5" marker-end="url(#ar)"/>
+        <text x="815" y="150" text-anchor="middle" font-size="12" fill="var(--pass)">charge dissipates</text>
+        <g fill="#5A4430" opacity=".5"><circle cx="800" cy="235" r="4"/><circle cx="830" cy="250" r="5"/></g>
+        <path d="M770 205 L800 228" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#ar)"/>
+        <text x="670" y="100" text-anchor="middle" font-size="13" fill="var(--fiber)">thin film of optical cleaning fluid</text>
+        <text x="675" y="280" text-anchor="middle" font-size="13" fill="var(--muted)">Fluid gives a conductive path, so debris wipes off</text>
+      </g>
+    </svg>
+  </figure>
+  <h3>Everyday sources of contact-friction static</h3>
+  <p>The article lists four: dry-wipe cleaning, pushing inspection scopes and test gear into adapters, mating connectors, and air moved by equipment cooling fans and HVAC. Low humidity makes all of them worse.</p>
+</section>
+
+<section class="wrap">
+  <h2>What a dirty connector costs</h2>
+  <p>Dirty end faces slow data rates and can take a link down entirely. The article cites network downtime at roughly <strong>$8,000 per minute</strong> on average, a truck roll back to site at about <strong>$250–$500</strong> per incident, and labor at <strong>60–80%</strong> of fiber-deployment cost. Its argument: after spending heavily on test gear and training, skimping on cleaning consumables is a false economy. Play with the numbers below.</p>
+  <div class="calc card">
+    <div>
+      <label>Minutes of downtime <output id="oMin">5</output><input id="iMin" type="range" min="0" max="120" value="5"></label>
+      <label>Callbacks / truck rolls <output id="oRoll">4</output><input id="iRoll" type="range" min="0" max="50" value="4"></label>
+      <label>Cost per truck roll <output id="oCost">$375</output><input id="iCost" type="range" min="250" max="500" step="25" value="375"></label>
+    </div>
+    <div>
+      <div class="src">Estimated cost of skipping proper cleaning</div>
+      <div class="total" id="total">$41,500</div>
+      <div class="bars">
+        <div class="src">Downtime <span id="tDown"></span></div><div class="bar" id="bDown" style="background:var(--fail)"></div>
+        <div class="src">Callbacks <span id="tRoll"></span></div><div class="bar" id="bRoll" style="background:var(--warn)"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Choosing consumables</h2>
+  <p>The article's last section compares the cheap, common choices with materials designed for optics.</p>
+  <figure class="scroll">
+    <table>
+      <thead><tr><th>Common choice</th><th>The problem</th><th>Better choice</th></tr></thead>
+      <tbody>
+        <tr><td>Isopropyl alcohol (IPA)</td><td>Hygroscopic: pulls moisture and airborne dust into an open container, so 99% IPA is diluted and dirty within a few days. Also flammable and usually shipped as hazmat.</td><td>Engineered optical cleaning fluid in a sealed, non-refillable container: cleans better, dries fast, leaves no residue.</td></tr>
+        <tr><td>Paper tissue</td><td>Low shear strength, so fibers tear off and are left on the end face.</td><td>Optical-grade, lint-free wipes with high absorbency and shear strength.</td></tr>
+        <tr><td>Pre-saturated alcohol wipes</td><td>Prone to cross-contamination; the fluid degrades the packaging over time (faster with temperature swings), which leaches into the wipe.</td><td>Dry lint-free wipe plus fresh fluid applied at point of use.</td></tr>
+        <tr><td>Water-based cleaners</td><td>Weak cleaning, slow drying, can leave moisture and streaks, and can freeze in the cold.</td><td>Fast-drying optical fluid.</td></tr>
+        <tr><td>Reused wipes or sticks</td><td>Carry debris from one connector to the next.</td><td>Fresh surface every clean.</td></tr>
+      </tbody>
+    </table>
+  </figure>
+  <figure>
+    <svg viewBox="0 0 760 150" role="img" aria-label="IPA in an open container degrades over a few days">
+      <g font-family="Archivo,Arial,sans-serif" font-size="13" text-anchor="middle">
+        <line x1="60" y1="120" x2="700" y2="120" stroke="var(--rule)" stroke-width="2"/>
+        <g><rect x="95" y="40" width="50" height="70" rx="6" fill="#DDF3FA" stroke="var(--fiber)"/><text x="120" y="140" fill="var(--muted)">Day 0 · fresh 99%</text></g>
+        <g><rect x="345" y="40" width="50" height="70" rx="6" fill="#D9E6EA" stroke="var(--fiber)"/><circle cx="360" cy="70" r="2.5" fill="#5A4430"/><circle cx="380" cy="90" r="2" fill="#5A4430"/><text x="370" y="140" fill="var(--muted)">Day 1 · absorbing moisture</text></g>
+        <g><rect x="595" y="40" width="50" height="70" rx="6" fill="#CBD3CF" stroke="var(--warn)"/><g fill="#5A4430"><circle cx="608" cy="60" r="2.5"/><circle cx="628" cy="75" r="2"/><circle cx="615" cy="95" r="3"/><circle cx="635" cy="98" r="2"/><circle cx="622" cy="52" r="2"/></g><text x="620" y="140" fill="var(--muted)">Day 2–3 · diluted, with floaters</text></g>
+        <g fill="var(--fiber)" opacity=".7"><text x="245" y="60">H₂O</text><text x="490" y="55">H₂O</text><text x="495" y="85">dust</text></g>
+      </g>
+    </svg>
+    <figcaption>Illustrative timeline of what the article describes for IPA kept in a container that isn't hermetically sealed.</figcaption>
+  </figure>
+</section>
+
+<section class="wrap">
+  <h2>The takeaway</h2>
+  <p>Use a digital scope set to the IEC 61300-3-35 profile, follow inspect–clean–inspect on both connectors every time, clean with an optical-grade fluid and lint-free wipes rather than dry wipes, IPA or tissue, and do it right the first time. The article closes on the point that shortcuts here come back as callbacks, downtime and unhappy customers.</p>
+  <p class="note">MicroCare makes fiber-optic cleaning products, so the consumables advice comes from a vendor. The static and contamination mechanics it describes are widely accepted in the industry, but compare products on their own data.</p>
+</section>
+</main>
+
+<footer class="wrap">Explainer based on the MicroCare tech article by Brian Teague. Zone criteria table and diagrams added for illustration.</footer>
+
+<script>
+(function(){
+  const ZONES=[{k:'A',name:'core',r0:0,r1:25},{k:'B',name:'cladding',r0:25,r1:115},{k:'C',name:'adhesive',r0:115,r1:135},{k:'D',name:'contact',r0:135,r1:250}];
+  const svg=document.getElementById('scope'), marks=document.getElementById('marks');
+  const sizeIn=document.getElementById('size'), sizeOut=document.getElementById('sizeOut');
+  const bP=document.getElementById('mParticle'), bS=document.getElementById('mScratch');
+  let mode='particle', items=[];
+  const zoneOf=r=>ZONES.find(z=>r>=z.r0&&r<z.r1)||null;
+  function segDist(x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1,L=dx*dx+dy*dy;let t=L?-(x1*dx+y1*dy)/L:0;t=Math.max(0,Math.min(1,t));return Math.hypot(x1+t*dx,y1+t*dy);}
+  function setMode(m){mode=m;bP.setAttribute('aria-pressed',m==='particle');bS.setAttribute('aria-pressed',m==='scratch');sizeOut.textContent=sizeIn.value+(m==='scratch'?' µm wide':' µm');}
+  bP.onclick=()=>setMode('particle'); bS.onclick=()=>setMode('scratch');
+  sizeIn.oninput=()=>setMode(mode);
+  function add(type,x,y,s,a){
+    if(type==='particle'){items.push({type,x,y,s,r:Math.hypot(x,y)});}
+    else{const L=70,ang=a??Math.random()*Math.PI;const x1=x-Math.cos(ang)*L/2,y1=y-Math.sin(ang)*L/2,x2=x+Math.cos(ang)*L/2,y2=y+Math.sin(ang)*L/2;items.push({type,x1,y1,x2,y2,s,r:segDist(x1,y1,x2,y2)});}
+  }
+  svg.addEventListener('click',e=>{
+    const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.getScreenCTM().inverse());
+    if(Math.hypot(q.x,q.y)>250)return;
+    add(mode,q.x,q.y,+sizeIn.value);render();
+  });
+  function evaluate(){
+    const out=[];let fail=false;let bMid=0;
+    items.forEach(it=>{
+      const z=zoneOf(it.r);it.bad=false;if(!z)return;
+      const what=(it.type==='particle'?'Particle ':'Scratch ')+it.s+' µm in zone '+z.k+' ('+z.name+')';
+      let why='OK';
+      if(z.k==='A'){it.bad=true;why='nothing allowed in the core';}
+      else if(z.k==='B'){
+        if(it.type==='scratch'&&it.s>3){it.bad=true;why='scratch wider than 3 µm';}
+        if(it.type==='particle'&&it.s>5){it.bad=true;why='particle larger than 5 µm';}
+        if(it.type==='particle'&&it.s>=2&&it.s<=5)bMid++;
+      }
+      else if(z.k==='D'&&it.type==='particle'&&it.s>=10){it.bad=true;why='particle 10 µm or larger';}
+      if(it.bad)fail=true;
+      out.push({t:what+' → '+(it.bad?'FAIL: ':'')+why,bad:it.bad});
+    });
+    if(bMid>5){fail=true;out.push({t:bMid+' particles of 2–5 µm in zone B → FAIL: max 5 allowed',bad:true});}
+    return {fail,out};
+  }
+  function render(){
+    const {fail,out}=evaluate();
+    marks.innerHTML=items.map(it=>{
+      const c=it.bad?'#FF6B57':'#F2C14E';
+      if(it.type==='particle')return `<circle cx="${it.x}" cy="${it.y}" r="${Math.max(it.s/2,3)}" fill="#3A2A1A" stroke="${c}" stroke-width="1.5"/>`;
+      return `<line x1="${it.x1}" y1="${it.y1}" x2="${it.x2}" y2="${it.y2}" stroke="#1E2A38" stroke-width="${Math.max(it.s,2)}" stroke-linecap="round"/><line x1="${it.x1}" y1="${it.y1}" x2="${it.x2}" y2="${it.y2}" stroke="${c}" stroke-width="1" stroke-dasharray="3 3"/>`;
+    }).join('');
+    const v=document.getElementById('verdict');v.className='verdict '+(fail?'fail':'pass');
+    v.firstElementChild.textContent=fail?'FAIL':'PASS';
+    document.getElementById('count').textContent=items.length+(items.length===1?' defect':' defects');
+    document.getElementById('findings').innerHTML=out.length?out.map(o=>`<li style="color:${o.bad?'#FFB3A7':'#B6C6D8'}">${o.t}</li>`).join(''):'<li>Click the end face to add a particle or scratch.</li>';
+  }
+  document.getElementById('clean').onclick=()=>{items=[];render();};
+  document.getElementById('dirty').onclick=()=>{
+    items=[];
+    add('particle',160,-120,8);add('particle',-190,60,12);add('particle',70,50,3);add('particle',-50,-60,4);
+    add('scratch',180,140,2,0.6);add('particle',12,-8,3);render();
+  };
+  render();
+
+  // cost calculator
+  const iMin=document.getElementById('iMin'),iRoll=document.getElementById('iRoll'),iCost=document.getElementById('iCost');
+  const fmt=n=>'$'+n.toLocaleString('en-US');
+  function calc(){
+    const down=+iMin.value*8000, roll=+iRoll.value*+iCost.value, tot=down+roll, mx=Math.max(down,roll,1);
+    document.getElementById('oMin').textContent=iMin.value;
+    document.getElementById('oRoll').textContent=iRoll.value;
+    document.getElementById('oCost').textContent=fmt(+iCost.value);
+    document.getElementById('total').textContent=fmt(tot);
+    document.getElementById('tDown').textContent=fmt(down);
+    document.getElementById('tRoll').textContent=fmt(roll);
+    document.getElementById('bDown').style.width=(down/mx*100)+'%';
+    document.getElementById('bRoll').style.width=(roll/mx*100)+'%';
+  }
+  [iMin,iRoll,iCost].forEach(i=>i.oninput=calc);calc();
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

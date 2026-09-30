@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Two big mistakes in fiber cable installation — explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF1F2; --panel:#FFFFFF; --ink:#18262E; --muted:#56666F; --line:#C9D3D7;
+  --aqua:#1597A8; --aqua-soft:#D5EEF1; --yellow:#E9B824; --yellow-soft:#FBF0CB;
+  --bad:#C8412F; --bad-soft:#F7DDD8; --good:#2D7F52; --good-soft:#D9EFE2;
+  --ferrule:#DCE3E6; --clad:#B9C9CF; --core:#FFFFFF;
+  --head:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow","Segoe UI",Helvetica,Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#10191E; --panel:#172329; --ink:#E6EDEF; --muted:#9AAAB1; --line:#2E3E46;
+    --aqua:#3DC2D2; --aqua-soft:#15343A; --yellow:#F0C640; --yellow-soft:#3A3217;
+    --bad:#EE6D5A; --bad-soft:#3D1F1A; --good:#57B982; --good-soft:#173324;
+    --ferrule:#2C3A41; --clad:#4A5D66; --core:#DDEBEE;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10191E; --panel:#172329; --ink:#E6EDEF; --muted:#9AAAB1; --line:#2E3E46;
+  --aqua:#3DC2D2; --aqua-soft:#15343A; --yellow:#F0C640; --yellow-soft:#3A3217;
+  --bad:#EE6D5A; --bad-soft:#3D1F1A; --good:#57B982; --good-soft:#173324;
+  --ferrule:#2C3A41; --clad:#4A5D66; --core:#DDEBEE;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6}
+img,svg{max-width:100%}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+.prose{max-width:68ch}
+h1,h2,h3{font-family:var(--head);line-height:1.05;margin:0 0 .4em;letter-spacing:.005em}
+h1{font-size:clamp(2.4rem,6vw,4.2rem);font-weight:700}
+h2{font-size:clamp(1.9rem,4vw,2.7rem);font-weight:700}
+h3{font-size:1.45rem;font-weight:600}
+p{margin:0 0 1em}
+a{color:var(--aqua)}
+:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+
+/* Hero */
+header.hero{padding:56px 0 24px}
+.hero .lede{font-size:1.2rem;color:var(--muted);max-width:60ch}
+.source{font-size:.92rem;color:var(--muted)}
+.fiber-hero{margin:28px 0 8px;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.fiber-hero svg{display:block;width:100%;height:auto}
+.pulse{animation:travel 3.2s linear infinite}
+.pulse.p2{animation-delay:1.07s}.pulse.p3{animation-delay:2.14s}
+@keyframes travel{from{transform:translateX(0)}to{transform:translateX(640px)}}
+.scatter{animation:flash 3.2s linear infinite;opacity:0}
+@keyframes flash{0%,62%{opacity:0}70%{opacity:1}90%,100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.pulse,.scatter{animation:none}.scatter{opacity:1}}
+.caption{font-size:.9rem;color:var(--muted);padding:10px 16px;border-top:1px solid var(--line)}
+
+/* The two mistakes, side by side overview */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:26px 0 8px}
+.mistake{background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--aqua);border-radius:10px;padding:18px 20px}
+.mistake.pull{border-left-color:var(--yellow)}
+.mistake .num{font-family:var(--head);font-size:3rem;font-weight:700;line-height:1;color:var(--aqua)}
+.mistake.pull .num{color:var(--yellow)}
+.mistake p{margin:0;color:var(--muted)}
+
+section{padding:52px 0;border-top:1px solid var(--line)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+
+/* Endface lab */
+.lab{display:grid;grid-template-columns:minmax(240px,340px) 1fr;gap:26px;align-items:center}
+.lab svg{width:100%;height:auto;display:block}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+button{font:600 .98rem var(--body);padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--aqua)}
+button.warn{border-style:dashed}
+.readout{border-radius:10px;padding:12px 14px;font-weight:500}
+.readout.fail{background:var(--bad-soft);color:var(--bad)}
+.readout.pass{background:var(--good-soft);color:var(--good)}
+.readout.meh{background:var(--yellow-soft);color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.88rem;color:var(--muted);margin-top:8px}
+.legend span::before{content:"";display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:-1px;background:var(--c)}
+
+/* Shortcut comparisons */
+.vs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.vs figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.vs .bad{background:var(--bad-soft);padding:14px}
+.vs .good{padding:14px}
+.vs b{display:block;font-family:var(--head);font-size:1.15rem;font-weight:600;margin-bottom:2px}
+.vs .bad b{color:var(--bad)} .vs .good b{color:var(--good)}
+.vs small{display:block;color:var(--muted);font-size:.9rem;line-height:1.45}
+.vs svg{display:block;width:64px;height:64px;margin-bottom:6px}
+
+/* Workflow */
+.flow svg{width:100%;height:auto;display:block}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:6px 26px;list-style:none;padding:0;margin:18px 0 0}
+.rules li{padding-left:28px;position:relative}
+.rules li::before{position:absolute;left:0;top:0;font-weight:700;font-family:var(--head);font-size:1.15rem}
+.rules li.no::before{content:"✕";color:var(--bad)}
+.rules li.yes::before{content:"✓";color:var(--good)}
+
+/* Pulling */
+.pull-diag svg{width:100%;height:auto;display:block}
+.bend{display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:24px;align-items:center}
+.bend svg{width:100%;height:auto}
+input[type=range]{width:100%;accent-color:var(--aqua)}
+.note{font-size:.9rem;color:var(--muted)}
+
+.takeaway{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.takeaway .panel h3{margin-bottom:.3em}
+footer{padding:36px 0 60px;color:var(--muted);font-size:.9rem;border-top:1px solid var(--line)}
+
+@media (max-width:760px){
+  .split,.grid2,.lab,.vs,.rules,.bend,.takeaway{grid-template-columns:1fr}
+  header.hero{padding-top:32px}
+}
+</style>
+</head>
+<body>
+
+<header class="hero wrap">
+  <h1>Two mistakes that quietly ruin fiber links</h1>
+  <p class="lede">A visual walkthrough of Belden's field guide on fiber cable installation. The short version: most failed links come from dirty connectors or cables that were pulled the wrong way — and both are avoidable.</p>
+  <p class="source">Explaining: <a href="https://www.belden.com/blog/2-big-mistakes-to-avoid-during-fiber-cable-installation">“2 Big Mistakes to Avoid During Fiber Cable Installation”</a>, Massimo Carboni, Belden blog (Aug 2023).</p>
+
+  <figure class="fiber-hero" aria-label="Animation: light pulses travel through the fiber core and scatter off a dust particle at the connector endface">
+    <svg viewBox="0 0 800 220" role="img">
+      <rect x="0" y="60" width="700" height="100" fill="var(--clad)" opacity=".55"/>
+      <rect x="0" y="96" width="700" height="28" fill="var(--aqua-soft)"/>
+      <line x1="0" y1="96" x2="700" y2="96" stroke="var(--aqua)" stroke-width="1" opacity=".5"/>
+      <line x1="0" y1="124" x2="700" y2="124" stroke="var(--aqua)" stroke-width="1" opacity=".5"/>
+      <g fill="var(--aqua)">
+        <ellipse class="pulse" cx="40" cy="110" rx="26" ry="8"/>
+        <ellipse class="pulse p2" cx="40" cy="110" rx="26" ry="8"/>
+        <ellipse class="pulse p3" cx="40" cy="110" rx="26" ry="8"/>
+      </g>
+      <rect x="700" y="50" width="10" height="120" fill="var(--ink)" opacity=".75"/>
+      <circle cx="712" cy="108" r="9" fill="var(--bad)"/>
+      <g class="scatter" stroke="var(--bad)" stroke-width="3" stroke-linecap="round">
+        <line x1="722" y1="104" x2="772" y2="70"/>
+        <line x1="724" y1="110" x2="786" y2="110"/>
+        <line x1="722" y1="116" x2="770" y2="152"/>
+        <line x1="700" y1="100" x2="670" y2="72"/>
+      </g>
+      <text x="16" y="44" font-family="var(--body)" font-size="15" fill="var(--muted)">cladding</text>
+      <text x="16" y="146" font-family="var(--body)" font-size="15" fill="var(--aqua)">core — light travels here</text>
+      <text x="610" y="200" font-family="var(--body)" font-size="15" fill="var(--bad)">one dust particle on the endface</text>
+    </svg>
+    <figcaption class="caption">The fiber core is only a few to tens of microns wide, so a particle far too small to see can block or scatter the light at a connection.</figcaption>
+  </figure>
+
+  <div class="split">
+    <div class="mistake">
+      <div class="num">1</div>
+      <h3>Relaxed cleaning</h3>
+      <p>Skipping or shortcutting endface cleaning. Contamination is the leading cause of fiber link failure.</p>
+    </div>
+    <div class="mistake pull">
+      <div class="num">2</div>
+      <h3>Incorrect pulling</h3>
+      <p>Pulling on the jacket, over-tensioning or over-bending the cable, which damages fibers before the system is even switched on.</p>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- MISTAKE 1 -->
+<section>
+  <div class="wrap">
+    <h2>Mistake 1: cleaning that's too relaxed</h2>
+    <div class="prose">
+      <p>The author, a Belden fiber product engineer, says the industry's advice has always been to keep fiber clean at every step, yet installers under deadline pressure still skip it or cut corners. The consequences listed in the article:</p>
+      <p>No cleaning raises optical loss. Wrong cleaning can actively degrade the network. Either way you risk excess signal loss, higher reflectance, and even permanent damage to connector endfaces and the active equipment they plug into. Over the life of the network that shows up as lower yield and more service calls.</p>
+    </div>
+
+    <h3 style="margin-top:28px">Try it: inspect a connector endface</h3>
+    <div class="panel lab">
+      <svg id="endface" viewBox="0 0 300 300" role="img" aria-label="Connector endface as seen through an inspection scope">
+        <circle cx="150" cy="150" r="146" fill="var(--ferrule)" stroke="var(--line)" stroke-width="2"/>
+        <circle cx="150" cy="150" r="62" fill="var(--clad)"/>
+        <circle cx="150" cy="150" r="14" fill="var(--core)" stroke="var(--aqua)" stroke-width="2"/>
+        <g id="oil"><ellipse cx="138" cy="160" rx="54" ry="30" fill="var(--yellow)" opacity=".38" transform="rotate(-18 138 160)"/></g>
+        <g id="dust"></g>
+      </svg>
+      <div>
+        <p style="margin-bottom:6px">This is roughly what an inspection scope shows (not to scale). Try the shortcut first, then the proper methods.</p>
+        <div class="btns">
+          <button class="warn" data-act="air">Blast with canned air</button>
+          <button data-act="dry">Dry clean (one-click)</button>
+          <button data-act="wet">Wet clean, then dry</button>
+          <button data-act="reset">Recontaminate</button>
+        </div>
+        <div id="readout" class="readout fail" role="status" aria-live="polite"></div>
+        <div class="legend">
+          <span style="--c:var(--aqua)">core</span>
+          <span style="--c:var(--clad)">cladding</span>
+          <span style="--c:var(--bad)">dust / debris</span>
+          <span style="--c:var(--yellow)">oil film</span>
+        </div>
+      </div>
+    </div>
+    <p class="note" style="margin-top:10px">Based on the article's guidance: dry cleaning handles loose particles, wet cleaning is for oils and stubborn residue and should always be followed by a dry step, and canned air only moves particles around without removing oil.</p>
+
+    <h3 style="margin-top:40px">Shortcuts seen in the field, and what to use instead</h3>
+    <div class="vs">
+      <figure>
+        <div class="bad">
+          <svg viewBox="0 0 64 64"><path d="M22 58V26a6 6 0 0 1 12 0v10l10 2c4 1 6 4 5 8l-2 12Z" fill="none" stroke="var(--bad)" stroke-width="3" stroke-linejoin="round"/><circle cx="28" cy="12" r="4" fill="var(--bad)" opacity=".6"/></svg>
+          <b>Alcohol on a fingertip</b>
+          <small>Dipping a finger in isopropyl and wiping the endface leaves skin oils behind.</small>
+        </div>
+        <div class="good">
+          <svg viewBox="0 0 64 64"><rect x="22" y="6" width="20" height="40" rx="5" fill="none" stroke="var(--good)" stroke-width="3"/><rect x="28" y="46" width="8" height="12" fill="var(--good)"/><path d="M26 18h12" stroke="var(--good)" stroke-width="3"/></svg>
+          <b>One-click cleaner</b>
+          <small>A dry strand lifts dust, debris and oil from the endface in one push.</small>
+        </div>
+      </figure>
+      <figure>
+        <div class="bad">
+          <svg viewBox="0 0 64 64"><path d="M20 8 8 18l6 8 6-4v34h24V22l6 4 6-8L44 8c-2 5-7 7-12 7s-10-2-12-7Z" fill="none" stroke="var(--bad)" stroke-width="3" stroke-linejoin="round"/></svg>
+          <b>Wiping on a shirt</b>
+          <small>Rubbing the connector on clothing before plugging in transfers lint and fibers.</small>
+        </div>
+        <div class="good">
+          <svg viewBox="0 0 64 64"><circle cx="26" cy="26" r="16" fill="none" stroke="var(--good)" stroke-width="3"/><circle cx="26" cy="26" r="5" fill="var(--good)"/><path d="m38 38 16 16" stroke="var(--good)" stroke-width="5" stroke-linecap="round"/></svg>
+          <b>Automated inspection scope</b>
+          <small>An autofocus camera shows a sharp endface image in seconds; the most accurate way to verify.</small>
+        </div>
+      </figure>
+      <figure>
+        <div class="bad">
+          <svg viewBox="0 0 64 64"><rect x="12" y="18" width="40" height="36" rx="6" fill="none" stroke="var(--bad)" stroke-width="3"/><path d="M24 18v-6h16v6" fill="none" stroke="var(--bad)" stroke-width="3"/><path d="M22 34h20" stroke="var(--bad)" stroke-width="3"/></svg>
+          <b>Household disinfectant wipe</b>
+          <small>A quick wipe before connectorization leaves residue on the fiber end.</small>
+        </div>
+        <div class="good">
+          <svg viewBox="0 0 64 64"><rect x="8" y="16" width="48" height="38" rx="4" fill="none" stroke="var(--good)" stroke-width="3"/><path d="M24 16v-6h16v6M8 30h48" stroke="var(--good)" stroke-width="3" fill="none"/><rect x="28" y="26" width="8" height="8" fill="var(--good)"/></svg>
+          <b>Fiber cleaning kit</b>
+          <small>Everything needed for dry and wet cleaning, designed for optical endfaces.</small>
+        </div>
+      </figure>
+    </div>
+
+    <h3 style="margin-top:40px">The routine: every connector, every time it's mated</h3>
+    <p class="prose">The article is explicit that new connectors need cleaning too, and that cleaning happens before every single mating, with an inspection to confirm. That makes it a loop, not a one-off step:</p>
+    <div class="panel flow">
+      <svg viewBox="0 0 900 230" role="img" aria-label="Workflow: inspect, dry clean, wet then dry clean if oils remain, re-inspect, then mate when clean">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z" fill="var(--muted)"/></marker></defs>
+        <g font-family="var(--body)" font-size="16" text-anchor="middle">
+          <rect x="10" y="80" width="140" height="64" rx="10" fill="var(--aqua-soft)" stroke="var(--aqua)" stroke-width="2"/>
+          <text x="80" y="108" fill="var(--ink)" font-weight="600">1 Inspect</text><text x="80" y="128" fill="var(--muted)" font-size="13">scope the endface</text>
+
+          <rect x="200" y="80" width="150" height="64" rx="10" fill="var(--panel)" stroke="var(--line)" stroke-width="2"/>
+          <text x="275" y="108" fill="var(--ink)" font-weight="600">2 Dry clean</text><text x="275" y="128" fill="var(--muted)" font-size="13">loose particles</text>
+
+          <rect x="200" y="0" width="150" height="58" rx="10" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="2"/>
+          <text x="275" y="25" fill="var(--ink)" font-weight="600">Wet, then dry</text><text x="275" y="44" fill="var(--muted)" font-size="13">if oil or residue</text>
+
+          <rect x="400" y="80" width="150" height="64" rx="10" fill="var(--aqua-soft)" stroke="var(--aqua)" stroke-width="2"/>
+          <text x="475" y="108" fill="var(--ink)" font-weight="600">3 Re-inspect</text><text x="475" y="128" fill="var(--muted)" font-size="13">is it clean?</text>
+
+          <rect x="610" y="80" width="130" height="64" rx="10" fill="var(--good-soft)" stroke="var(--good)" stroke-width="2"/>
+          <text x="675" y="108" fill="var(--good)" font-weight="600">4 Mate</text><text x="675" y="128" fill="var(--muted)" font-size="13">connect</text>
+
+          <rect x="770" y="80" width="120" height="64" rx="10" fill="var(--panel)" stroke="var(--line)" stroke-width="2" stroke-dasharray="5 4"/>
+          <text x="830" y="108" fill="var(--ink)" font-weight="600">Unplugged?</text><text x="830" y="128" fill="var(--muted)" font-size="13">cap it</text>
+
+          <text x="580" y="104" fill="var(--good)" font-size="13">yes</text>
+          <text x="475" y="212" fill="var(--bad)" font-size="13">no — clean again</text>
+        </g>
+        <g stroke="var(--muted)" stroke-width="2" fill="none" marker-end="url(#ar)">
+          <path d="M150 112h46"/><path d="M350 112h46"/><path d="M550 112h56"/><path d="M740 112h26"/>
+          <path d="M275 80V62"/><path d="M350 29h60q20 0 30 20l20 28"/>
+          <path d="M475 144v50H275v-46"/>
+        </g>
+      </svg>
+    </div>
+
+    <ul class="rules">
+      <li class="no">Don't use canned air or dusters: they scatter particles and leave oils.</li>
+      <li class="yes">Do wear appropriate safety glasses.</li>
+      <li class="no">Don't touch connector endfaces.</li>
+      <li class="yes">Do keep protective caps on unplugged connectors.</li>
+      <li class="no">Don't touch the solvent dispensing tip.</li>
+      <li class="yes">Do inspect after cleaning, before mating.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- MISTAKE 2 -->
+<section>
+  <div class="wrap">
+    <h2>Mistake 2: pulling the cable the wrong way</h2>
+    <div class="prose">
+      <p>Pulling damage is sneaky: the article points out that small mistakes here may not show up right away, but can cause long-term signal loss or early cable failure. To understand why, look inside the cable.</p>
+    </div>
+
+    <div class="grid2" style="margin-top:14px">
+      <div class="panel">
+        <svg viewBox="0 0 300 300" role="img" aria-label="Cross-section of a fiber cable: outer jacket, aramid yarn strength members, buffered fibers">
+          <circle cx="150" cy="150" r="130" fill="var(--aqua)" opacity=".85"/>
+          <circle cx="150" cy="150" r="110" fill="var(--panel)"/>
+          <g id="yarn" fill="var(--yellow)"></g>
+          <g>
+            <circle cx="150" cy="150" r="20" fill="#E14B3B"/><circle cx="192" cy="150" r="20" fill="#2F6FD6"/>
+            <circle cx="108" cy="150" r="20" fill="#E28A2A"/><circle cx="150" cy="108" r="20" fill="#3A9E5B"/>
+            <circle cx="150" cy="192" r="20" fill="#8A5A3C"/><circle cx="180" cy="120" r="20" fill="#8C959A"/>
+            <circle cx="120" cy="180" r="20" fill="#F2F2F2" stroke="#999"/>
+            <circle cx="120" cy="120" r="20" fill="#2A2F33"/><circle cx="180" cy="180" r="20" fill="#E3C12A"/>
+          </g>
+        </svg>
+        <div class="legend">
+          <span style="--c:var(--aqua)">outer jacket (protection only)</span>
+          <span style="--c:var(--yellow)">aramid yarn — the part built to be pulled</span>
+          <span style="--c:#2F6FD6">buffered fibers</span>
+        </div>
+      </div>
+      <div class="prose">
+        <h3>Why the jacket isn't a rope</h3>
+        <p>Most fiber cables carry strength members, commonly aramid yarn, running the full length alongside the fibers. They take the pulling tension so the glass doesn't have to.</p>
+        <p>The jacket is just a protective sleeve. When installers pull on it, it stretches, and the fibers inside don't stretch with it. The article describes the result: the fibers end up displaced a few feet back from the cable end, termination isn't secure, and the jacket may tear, break or turn wavy.</p>
+        <p>Dragging cable tightly around corners or against other cables can also friction-burn the jacket.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:36px">Wrong pull vs. right pull</h3>
+    <div class="panel pull-diag">
+      <svg viewBox="0 0 900 330" role="img" aria-label="Comparison: pulling the jacket stretches it and leaves fibers behind; pulling the stripped aramid yarn with a grip keeps fibers in place">
+        <g font-family="var(--body)" font-size="15">
+          <text x="10" y="26" fill="var(--bad)" font-weight="600" font-size="18">✕ Pulling on the jacket</text>
+          <!-- fibers stop short -->
+          <rect x="10" y="66" width="520" height="12" rx="3" fill="#2F6FD6" opacity=".8"/>
+          <!-- stretched wavy jacket -->
+          <path d="M10 50 H420 Q450 44 470 54 T530 50 T590 56 T650 48 T710 54 L760 52" fill="none" stroke="var(--aqua)" stroke-width="6"/>
+          <path d="M10 94 H420 Q450 100 470 90 T530 96 T590 88 T650 96 T710 90 L760 92" fill="none" stroke="var(--aqua)" stroke-width="6"/>
+          <path d="M530 58 v30" stroke="var(--bad)" stroke-width="2" stroke-dasharray="4 3"/>
+          <path d="M760 72 H850" stroke="var(--bad)" stroke-width="4" marker-end="url(#arb)"/>
+          <text x="786" y="60" fill="var(--bad)">pull</text>
+          <text x="470" y="130" fill="var(--bad)">fibers left several feet back</text>
+          <text x="600" y="130" fill="var(--muted)"></text>
+          <text x="640" y="30" fill="var(--muted)">jacket stretched, wavy, may tear</text>
+
+          <text x="10" y="206" fill="var(--good)" font-weight="600" font-size="18">✓ Pulling on the strength members</text>
+          <rect x="10" y="234" width="560" height="44" rx="6" fill="var(--aqua)" opacity=".85"/>
+          <rect x="10" y="250" width="640" height="12" rx="3" fill="#2F6FD6" opacity=".8"/>
+          <path d="M570 240 C620 236 660 236 700 250 M570 272 C620 276 660 276 700 262 M570 256 H700" stroke="var(--yellow)" stroke-width="5" fill="none"/>
+          <path d="M700 238 L740 256 L700 274 Z" fill="var(--muted)"/>
+          <path d="M740 256 H850" stroke="var(--good)" stroke-width="4" marker-end="url(#arg)"/>
+          <text x="760" y="244" fill="var(--good)">pull</text>
+          <text x="560" y="310" fill="var(--muted)">jacket cut back · yarn tied to pulling grip · fibers stay put</text>
+        </g>
+        <defs>
+          <marker id="arb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10z" fill="var(--bad)"/></marker>
+          <marker id="arg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10z" fill="var(--good)"/></marker>
+        </defs>
+      </svg>
+    </div>
+
+    <h3 style="margin-top:36px">Try it: how tight is too tight?</h3>
+    <p class="prose">The article warns against bending past the cable's minimum bend radius, which raises attenuation (light leaks out of the core) and can break fibers. It doesn't give a number, so this demo uses a widely used rule of thumb; always check the actual spec sheet for your cable.</p>
+    <div class="panel bend">
+      <svg viewBox="0 0 260 260" role="img" aria-label="Cable bend visualisation">
+        <path id="bendPath" fill="none" stroke="var(--aqua)" stroke-width="14" stroke-linecap="round"/>
+        <path id="leak" fill="none" stroke="var(--bad)" stroke-width="3" stroke-dasharray="3 6" opacity="0"/>
+      </svg>
+      <div>
+        <label for="r"><b>Bend radius:</b> <span id="rv"></span> × cable diameter</label>
+        <input id="r" type="range" min="3" max="25" value="15">
+        <div id="bendOut" class="readout meh" role="status" aria-live="polite" style="margin-top:12px"></div>
+        <p class="note" style="margin-top:10px">Rule of thumb used here (not from the article): about 10× the cable's outer diameter when installed and at rest, about 20× while under pulling tension.</p>
+      </div>
+    </div>
+
+    <ul class="rules" style="margin-top:26px">
+      <li class="yes">Cut back some jacket and pull on the strength members only.</li>
+      <li class="no">Don't exceed the cable's maximum pulling force.</li>
+      <li class="yes">Stay above the minimum bend radius the whole run.</li>
+      <li class="no">Don't twist or pinch the cable while pulling.</li>
+      <li class="yes">Use proper cable grips, pulleys or sheaves to spread tension evenly.</li>
+      <li class="no">Don't drag it tight around corners or against other cables.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>The takeaway</h2>
+    <div class="takeaway">
+      <div class="panel" style="border-left:6px solid var(--aqua)">
+        <h3>Clean it</h3>
+        <p>Inspect, clean with the right tool, re-inspect, then connect. Every connector, every time. It takes a bit longer and saves far more in failed links and callbacks.</p>
+      </div>
+      <div class="panel" style="border-left:6px solid var(--yellow)">
+        <h3>Pull it properly</h3>
+        <p>Let the aramid yarn carry the load, respect the pulling-force and bend-radius limits, and keep the cable from twisting, pinching or rubbing.</p>
+      </div>
+    </div>
+    <p class="prose" style="margin-top:18px">The article's broader point: there's a gap between recommended practice and what actually happens on jobsites, and closing it is a way for installers to stand out.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">Summary and illustrations prepared as an explainer of the Belden article linked above. Diagrams are schematic, not to scale.</div>
+</footer>
+
+<script>
+(function(){
+  // aramid yarn dots in cross-section
+  const yarn=document.getElementById('yarn');
+  for(let i=0;i<70;i++){
+    const a=Math.random()*Math.PI*2, r=46+Math.random()*60;
+    const x=150+Math.cos(a)*r, y=150+Math.sin(a)*r;
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',x.toFixed(1));c.setAttribute('cy',y.toFixed(1));c.setAttribute('r',(2+Math.random()*2).toFixed(1));
+    c.setAttribute('opacity','.9');yarn.appendChild(c);
+  }
+
+  // Endface lab
+  const NS='http://www.w3.org/2000/svg', dust=document.getElementById('dust'), oil=document.getElementById('oil'), out=document.getElementById('readout');
+  let particles=[], hasOil=true;
+  function randPt(maxR){const a=Math.random()*Math.PI*2, r=Math.sqrt(Math.random())*maxR;return [150+Math.cos(a)*r,150+Math.sin(a)*r];}
+  function contaminate(){particles=[];for(let i=0;i<14;i++){const [x,y]=randPt(125);particles.push({x,y,r:3+Math.random()*6});}particles[0]={x:153,y:146,r:6};hasOil=true;draw('Contaminated. This connector would fail inspection: debris over the core and an oil film across the cladding.','fail');}
+  function draw(msg,cls){
+    dust.innerHTML='';
+    particles.forEach(p=>{const c=document.createElementNS(NS,'circle');c.setAttribute('cx',p.x);c.setAttribute('cy',p.y);c.setAttribute('r',p.r);c.setAttribute('fill','var(--bad)');c.setAttribute('opacity','.85');dust.appendChild(c);});
+    oil.style.display=hasOil?'':'none';
+    out.className='readout '+cls;out.textContent=msg;
+  }
+  function coreHits(){return particles.filter(p=>Math.hypot(p.x-150,p.y-150)<62+p.r).length;}
+  document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>{
+    const act=b.dataset.act;
+    if(act==='reset') return contaminate();
+    if(act==='air'){
+      if(!particles.length && !hasOil) return draw('Already clean. Canned air would only risk blowing new dust onto it.','meh');
+      particles=particles.map(p=>{const [x,y]=randPt(125);return {x,y,r:p.r};});
+      if(!particles.length){for(let i=0;i<4;i++){const [x,y]=randPt(125);particles.push({x,y,r:3+Math.random()*4});}}
+      const h=coreHits();
+      return draw(`Particles just moved around${h?` — ${h} still in the core/cladding zone`:''}, and the oil film is untouched. Still fails.`,'fail');
+    }
+    if(act==='dry'){
+      particles=[];
+      return draw(hasOil?'Loose dust is gone, but the oil film remains. Dry alone isn\'t enough here: use wet cleaning, then dry.':'Clean. Re-inspected and ready to mate.', hasOil?'meh':'pass');
+    }
+    if(act==='wet'){particles=[];hasOil=false;return draw('Pass. Solvent lifted the oil and the dry follow-up removed residue. Re-inspect confirms it\'s ready to mate.','pass');}
+  }));
+  contaminate();
+
+  // Bend radius
+  const r=document.getElementById('r'), rv=document.getElementById('rv'), bp=document.getElementById('bendPath'), leak=document.getElementById('leak'), bo=document.getElementById('bendOut');
+  function bend(){
+    const k=+r.value; rv.textContent=k;
+    const R=k*7;
+    const cx=40+R, cy=40+R;
+    bp.setAttribute('d',`M40 255 L40 ${cy} A ${R} ${R} 0 0 1 ${cx} 40 L 255 40`);
+    const mx=cx-R*Math.SQRT1_2, my=cy-R*Math.SQRT1_2;
+    leak.setAttribute('d',`M${mx} ${my} l -26 -26 M${mx+4} ${my} l -8 -34 M${mx} ${my+4} l -34 -8`);
+    if(k<10){bo.className='readout fail';bo.textContent='Too tight. Light escapes the core (higher attenuation) and the glass may crack or break.';leak.setAttribute('opacity','1');bp.setAttribute('stroke','var(--bad)');}
+    else if(k<20){bo.className='readout meh';bo.textContent='Acceptable once installed and at rest, but too tight while the cable is under pulling tension.';leak.setAttribute('opacity','0');bp.setAttribute('stroke','var(--yellow)');}
+    else{bo.className='readout pass';bo.textContent='Safe even while pulling. Gentle curves protect both signal and glass.';leak.setAttribute('opacity','0');bp.setAttribute('stroke','var(--good)');}
+  }
+  r.addEventListener('input',bend); bend();
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

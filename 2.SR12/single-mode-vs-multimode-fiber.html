@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Single-mode vs multimode fiber, explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F5F6; --panel:#FFFFFF; --ink:#17252F; --muted:#56687A; --line:#C9D5DA;
+  --glass:#DCEAEE; --clad:#EAF2F4; --smf:#D99A00; --smf-soft:#F7E3A8; --mmf:#0E97A3; --mmf-soft:#BFE7EA;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Serif 4", Georgia, "Times New Roman", serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1920; --panel:#15242D; --ink:#E4ECEF; --muted:#94A7B3; --line:#2B3F4B;
+    --glass:#1E3642; --clad:#182C36; --smf:#F2BE2E; --smf-soft:#4A3B12; --mmf:#3BC6D1; --mmf-soft:#0F3D42;
+  }
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 1.08rem/1.7 var(--body)}
+main{max-width:1080px;margin:0 auto;padding:0 clamp(1rem,4vw,2.5rem) 4rem}
+h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0 0 .6rem;font-weight:700}
+h1{font-size:clamp(2.4rem,6vw,4.4rem);letter-spacing:-.02em;max-width:14ch}
+h2{font-size:clamp(1.6rem,3.2vw,2.2rem);letter-spacing:-.01em}
+h3{font-size:1.15rem;font-weight:500}
+p{margin:0 0 1rem;max-width:66ch}
+.smf{color:var(--smf)} .mmf{color:var(--mmf)}
+.tag{font-family:var(--display);font-weight:700}
+header{padding:3.5rem 0 1.5rem}
+.lede{font-size:1.2rem;color:var(--muted);max-width:60ch}
+.source{font-size:.92rem;color:var(--muted)}
+.source a{color:inherit}
+section{padding:3.2rem 0;border-top:1px solid var(--line)}
+.split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:2.5rem;align-items:start}
+@media (max-width:820px){.split{grid-template-columns:1fr}}
+figure{margin:0}
+figcaption{font-size:.9rem;color:var(--muted);margin-top:.6rem}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1rem;overflow-x:auto}
+canvas{display:block;width:100%;height:auto}
+svg{display:block;max-width:100%;height:auto}
+.legend{display:flex;gap:1.5rem;flex-wrap:wrap;font-family:var(--display);font-size:.95rem;margin:.6rem 0 0}
+.legend span::before{content:"";display:inline-block;width:.8em;height:.8em;border-radius:50%;margin-right:.45em;vertical-align:-.05em;background:currentColor}
+label{font-family:var(--display);font-weight:500}
+input[type=range]{width:100%;accent-color:var(--mmf)}
+select{font:500 1rem var(--display);padding:.45rem .6rem;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);width:100%}
+:focus-visible{outline:3px solid var(--smf);outline-offset:2px}
+.readout{font-family:var(--display);font-size:1rem;margin-top:.5rem}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:1rem}
+th,td{text-align:left;padding:.7rem .8rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--display);font-weight:500}
+thead th{font-weight:700}
+thead th.smf{border-bottom:3px solid var(--smf)} thead th.mmf{border-bottom:3px solid var(--mmf)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media (max-width:640px){.two{grid-template-columns:1fr}}
+.card{border-left:4px solid var(--line);padding:.3rem 0 .3rem 1rem}
+.card.s{border-color:var(--smf)} .card.m{border-color:var(--mmf)}
+.card ul{margin:.3rem 0 0;padding-left:1.1rem}
+.verdict{margin-top:1rem;padding:1rem 1.2rem;border-radius:12px;background:var(--glass)}
+.verdict strong{font-family:var(--display);font-size:1.3rem;display:block;margin-bottom:.3rem}
+.note{font-size:.92rem;color:var(--muted)}
+.svgtext{font-family:var(--display);fill:var(--ink)}
+.svgmuted{font-family:var(--display);fill:var(--muted)}
+footer{padding:2rem 0;border-top:1px solid var(--line);font-size:.92rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <h1>Single-mode vs multimode fiber</h1>
+  <p class="lede">Both carry data as light through glass. The difference comes down to how wide the glass core is, and that one dimension decides how far the signal can go, what lights it, and what it costs.</p>
+  <p class="source">A visual explainer of the 123NET guide: <a href="https://www.123.net/blog/single-mode-vs-multimode-fiber/">Single-Mode vs Multimode Fiber: A Comprehensive Guide</a> (Jan 2024). Notes marked “extra context” are additions, not from the article.</p>
+</header>
+
+<!-- HERO SIMULATION -->
+<section style="border-top:none;padding-top:0">
+  <figure class="stage">
+    <canvas id="hero" width="1000" height="360" aria-label="Animation: light pulses travelling through a single-mode fiber in one straight path, and through a multimode fiber along several zig-zag paths that arrive at different times"></canvas>
+  </figure>
+  <div class="legend"><span class="smf">Single-mode (SMF): one straight path</span><span class="mmf">Multimode (MMF): many paths, bouncing off the core walls</span></div>
+  <figcaption>Watch the multimode pulses: the steep zig-zag rays travel a longer route and arrive late, so one short pulse turns into a smeared one. Core widths are exaggerated here; the true proportions are below.</figcaption>
+</section>
+
+<!-- 1. BASICS -->
+<section>
+  <div class="split">
+    <div>
+      <h2>Why fiber at all</h2>
+      <p>Fiber optic cable sends data as pulses of light instead of electrical current on copper. That buys three things: much more bandwidth, long distances before the signal needs help, and immunity to the electromagnetic interference that disturbs metal cables.</p>
+      <p>Those properties make fiber the backbone of the internet, streaming, cloud services and IoT networks. Within fiber there are two main families, and they are not interchangeable.</p>
+    </div>
+    <figure class="stage">
+      <svg viewBox="0 0 520 250" role="img" aria-label="Side view of a fiber: a glass core surrounded by cladding, with light reflecting at the boundary">
+        <rect x="10" y="40" width="500" height="170" rx="8" fill="var(--clad)" stroke="var(--line)"/>
+        <rect x="10" y="85" width="500" height="80" fill="var(--glass)" stroke="var(--line)"/>
+        <polyline points="10,125 70,85 150,165 230,85 310,165 390,85 470,165 510,138" fill="none" stroke="var(--mmf)" stroke-width="3"/>
+        <text x="20" y="30" class="svgmuted" font-size="14">Cladding: glass with a lower refractive index</text>
+        <text x="20" y="232" class="svgmuted" font-size="14">Light stays trapped by total internal reflection</text>
+        <text x="410" y="78" class="svgtext" font-size="14" text-anchor="end">Core: where light travels</text>
+      </svg>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. CORE DIAMETER -->
+<section>
+  <h2>The one dimension that matters: core diameter</h2>
+  <div class="split">
+    <div>
+      <p><span class="tag smf">Single-mode</span> has a tiny core of roughly 8.3–10 µm. It is so narrow that light can only travel one way: straight down the middle. With only one path, a pulse stays sharp, and the signal can go very long distances.</p>
+      <p><span class="tag mmf">Multimode</span> has a core of 50 or 62.5 µm, five to seven times wider. It is easier to launch light into, but that light spreads into many paths (“modes”), which limits how far a fast signal can travel cleanly.</p>
+      <p class="note">Extra context: both types share the same 125 µm outer cladding, so they look identical to the eye. Cable jackets give it away by convention: yellow for single-mode, aqua (OM3/OM4) or orange (OM1/OM2) for multimode. This page borrows those colors.</p>
+    </div>
+    <figure class="stage">
+      <svg viewBox="0 0 520 300" role="img" aria-label="Cross-sections to scale: SMF core 9 micrometres, MMF cores 50 and 62.5 micrometres, all inside 125 micrometre cladding">
+        <!-- scale: 1 µm = 1.6 px ; cladding r = 100 -->
+        <g transform="translate(90,130)">
+          <circle r="100" fill="var(--clad)" stroke="var(--line)"/>
+          <circle r="7.2" fill="var(--smf)"/>
+          <text y="130" text-anchor="middle" class="svgtext" font-size="16" font-weight="700">SMF</text>
+          <text y="150" text-anchor="middle" class="svgmuted" font-size="13">~9 µm core</text>
+        </g>
+        <g transform="translate(260,130)">
+          <circle r="100" fill="var(--clad)" stroke="var(--line)"/>
+          <circle r="40" fill="var(--mmf)"/>
+          <text y="130" text-anchor="middle" class="svgtext" font-size="16" font-weight="700">MMF</text>
+          <text y="150" text-anchor="middle" class="svgmuted" font-size="13">50 µm core</text>
+        </g>
+        <g transform="translate(430,130)">
+          <circle r="100" fill="var(--clad)" stroke="var(--line)"/>
+          <circle r="50" fill="var(--mmf)" opacity=".75"/>
+          <text y="130" text-anchor="middle" class="svgtext" font-size="16" font-weight="700">MMF</text>
+          <text y="150" text-anchor="middle" class="svgmuted" font-size="13">62.5 µm core</text>
+        </g>
+        <text x="260" y="20" text-anchor="middle" class="svgmuted" font-size="13">Drawn to scale · each outer ring is 125 µm cladding</text>
+      </svg>
+      <figcaption>For comparison, a human hair is about 70 µm thick. The single-mode core is roughly one-eighth of that.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 3. DISPERSION -->
+<section>
+  <div class="split">
+    <div>
+      <h2>Why more paths means less distance</h2>
+      <p>Data is a stream of on/off light pulses. In multimode fiber, parts of each pulse take routes of different lengths, so they arrive at slightly different times. This is <em>modal dispersion</em>: every pulse gets wider the further it travels.</p>
+      <p>Eventually neighbouring pulses overlap and the receiver can’t tell a 1 from a 0. That caps the useful bandwidth over distance. Single-mode fiber has only one path, so this effect essentially disappears.</p>
+      <label for="dist">Cable length: <span id="distOut">0.5 km</span></label>
+      <input id="dist" type="range" min="0" max="3" step="0.05" value="0.5">
+      <p class="note">Illustrative model, not measured data.</p>
+    </div>
+    <figure class="stage">
+      <svg id="disp" viewBox="0 0 560 330" role="img" aria-label="Two data pulses after travelling through each fiber type"></svg>
+    </figure>
+  </div>
+</section>
+
+<!-- 4. LIGHT SOURCES -->
+<section>
+  <h2>Different lights, different wavelengths</h2>
+  <div class="split">
+    <div>
+      <p><span class="tag smf">Single-mode</span> needs a laser: a tight, coherent beam is the only way to aim light into a 9 µm core. It runs at 1310 nm and 1550 nm, the infrared windows where glass loses and spreads the signal least.</p>
+      <p><span class="tag mmf">Multimode</span> can use cheaper, less precise sources: LEDs or VCSELs (vertical-cavity surface-emitting lasers). It runs at 850 nm and 1300 nm, suited to short links in buildings and data centers.</p>
+    </div>
+    <figure class="stage">
+      <svg viewBox="0 0 560 230" role="img" aria-label="Wavelength scale from 800 to 1650 nanometres showing MMF at 850 and 1300, SMF at 1310 and 1550">
+        <defs>
+          <linearGradient id="ir" x1="0" x2="1">
+            <stop offset="0" stop-color="#8B2E2E" stop-opacity=".45"/>
+            <stop offset="1" stop-color="#3A1010" stop-opacity=".45"/>
+          </linearGradient>
+        </defs>
+        <rect x="30" y="100" width="500" height="26" rx="4" fill="url(#ir)"/>
+        <g id="ticks"></g>
+        <text x="280" y="215" text-anchor="middle" class="svgmuted" font-size="13">Wavelength (nm), all in the invisible infrared</text>
+      </svg>
+      <div class="legend"><span class="mmf">MMF: LED / VCSEL</span><span class="smf">SMF: laser</span></div>
+    </figure>
+  </div>
+</section>
+
+<!-- 5. DISTANCE -->
+<section>
+  <h2>How far each one reaches</h2>
+  <p>The article places multimode at runs under about 2 km, and single-mode at up to around 100 km before the signal needs amplifying, at data rates of tens of Gbps. The scale below is logarithmic, because the gap is enormous.</p>
+  <figure class="stage">
+    <svg id="reach" viewBox="0 0 900 260" role="img" aria-label="Log-scale distance chart: multimode reaches up to about 2 km, single-mode up to about 100 km"></svg>
+  </figure>
+  <figcaption>Extra context: the faded part of the multimode bar matters. At 10 Gbps and above, typical multimode reach is only a few hundred metres (roughly 300–400 m on OM3/OM4); the full 2 km is realistic only at low speeds.</figcaption>
+</section>
+
+<!-- 6. COST -->
+<section>
+  <div class="split">
+    <div>
+      <h2>Cost: where the money goes</h2>
+      <p>Single-mode generally costs more to deploy. Its narrow core demands precise manufacturing, and it needs laser light sources, which are pricier than LEDs. Multimode uses simpler parts and is the cheaper choice for short runs.</p>
+      <p>The article’s advice is to weigh the upfront price against the job: over long distances, single-mode’s reach and bandwidth usually justify the extra spend.</p>
+      <p class="note">Extra context: in current deployments the bare single-mode cable is often no more expensive than multimode. The price gap mostly lives in the transceivers at each end.</p>
+    </div>
+    <figure class="stage">
+      <svg viewBox="0 0 520 260" role="img" aria-label="A link is two transceivers joined by cable; the transceivers carry most of the cost difference">
+        <g font-size="14">
+          <text x="20" y="30" class="svgtext" font-weight="700">A fiber link</text>
+          <!-- SMF row -->
+          <rect x="20" y="60" width="90" height="50" rx="8" fill="var(--smf-soft)" stroke="var(--smf)" stroke-width="2"/>
+          <text x="65" y="90" text-anchor="middle" class="svgtext">Laser</text>
+          <line x1="110" y1="85" x2="410" y2="85" stroke="var(--smf)" stroke-width="6"/>
+          <rect x="410" y="60" width="90" height="50" rx="8" fill="var(--smf-soft)" stroke="var(--smf)" stroke-width="2"/>
+          <text x="455" y="90" text-anchor="middle" class="svgtext">Receiver</text>
+          <text x="260" y="75" text-anchor="middle" class="svgmuted">SMF cable</text>
+          <text x="65" y="130" text-anchor="middle" class="svgtext" font-weight="700">$$$</text>
+          <text x="260" y="130" text-anchor="middle" class="svgtext" font-weight="700">$</text>
+          <text x="455" y="130" text-anchor="middle" class="svgtext" font-weight="700">$$$</text>
+          <!-- MMF row -->
+          <rect x="20" y="160" width="90" height="50" rx="8" fill="var(--mmf-soft)" stroke="var(--mmf)" stroke-width="2"/>
+          <text x="65" y="190" text-anchor="middle" class="svgtext">LED/VCSEL</text>
+          <line x1="110" y1="185" x2="410" y2="185" stroke="var(--mmf)" stroke-width="10"/>
+          <rect x="410" y="160" width="90" height="50" rx="8" fill="var(--mmf-soft)" stroke="var(--mmf)" stroke-width="2"/>
+          <text x="455" y="190" text-anchor="middle" class="svgtext">Receiver</text>
+          <text x="260" y="175" text-anchor="middle" class="svgmuted">MMF cable</text>
+          <text x="65" y="230" text-anchor="middle" class="svgtext" font-weight="700">$</text>
+          <text x="260" y="230" text-anchor="middle" class="svgtext" font-weight="700">$</text>
+          <text x="455" y="230" text-anchor="middle" class="svgtext" font-weight="700">$</text>
+        </g>
+      </svg>
+      <figcaption>Relative, not actual prices.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 7. COMPATIBILITY -->
+<section>
+  <div class="split">
+    <div>
+      <h2>Why you can’t mix them</h2>
+      <p>The two types aren’t interchangeable. Equipment is built for one core size and one kind of light source, so plugging the wrong fiber in gives a weak or unusable link.</p>
+      <p>The geometry shows why: light coming out of a 50 µm multimode core hits a 9 µm single-mode core, and almost all of it misses.</p>
+    </div>
+    <figure class="stage">
+      <svg viewBox="0 0 520 220" role="img" aria-label="Multimode core feeding into single-mode core, most light is lost at the joint">
+        <rect x="20" y="40" width="230" height="140" fill="var(--clad)" stroke="var(--line)"/>
+        <rect x="20" y="70" width="230" height="80" fill="var(--mmf)" opacity=".8"/>
+        <rect x="270" y="40" width="230" height="140" fill="var(--clad)" stroke="var(--line)"/>
+        <rect x="270" y="102" width="230" height="16" fill="var(--smf)"/>
+        <g stroke="var(--mmf)" stroke-width="2" opacity=".8">
+          <line x1="250" y1="78" x2="290" y2="60"/><line x1="250" y1="92" x2="290" y2="84"/>
+          <line x1="250" y1="128" x2="290" y2="136"/><line x1="250" y1="142" x2="290" y2="160"/>
+        </g>
+        <line x1="250" y1="110" x2="300" y2="110" stroke="var(--smf)" stroke-width="3"/>
+        <text x="135" y="28" text-anchor="middle" class="svgtext" font-size="14">MMF (50 µm)</text>
+        <text x="385" y="28" text-anchor="middle" class="svgtext" font-size="14">SMF (9 µm)</text>
+        <text x="260" y="205" text-anchor="middle" class="svgmuted" font-size="13">Only the light that lines up with the tiny core gets through</text>
+      </svg>
+    </figure>
+  </div>
+</section>
+
+<!-- 8. APPLICATIONS -->
+<section>
+  <h2>Where each one lives</h2>
+  <div class="two">
+    <div class="card s">
+      <h3 class="smf">Single-mode</h3>
+      <ul>
+        <li>Telecom backbones between cities and countries</li>
+        <li>Undersea cable systems</li>
+        <li>High-speed broadband, internet and cable TV networks</li>
+      </ul>
+    </div>
+    <div class="card m">
+      <h3 class="mmf">Multimode</h3>
+      <ul>
+        <li>Inside data centers, between racks and rows</li>
+        <li>Office and corporate LANs</li>
+        <li>University and school campus networks</li>
+      </ul>
+    </div>
+  </div>
+  <p style="margin-top:1.5rem">Looking ahead, the article points to research like photonic crystal fibers for single-mode (higher rates, lower loss), and to better light sources and fiber designs that could push multimode’s bandwidth and reach further.</p>
+</section>
+
+<!-- 9. PICKER -->
+<section>
+  <div class="split">
+    <div>
+      <h2>Which one do I need?</h2>
+      <p>The article boils the decision down to two questions: how far, and how fast. Try your own numbers.</p>
+      <p class="note">A simplified rule of thumb, using typical reach figures as extra context. Check your specific equipment’s specs before buying.</p>
+    </div>
+    <div class="stage">
+      <label for="pd">Distance of the run</label>
+      <select id="pd">
+        <option value="100">Up to 100 m (same room or row)</option>
+        <option value="400" selected>100–400 m (one building)</option>
+        <option value="2000">400 m – 2 km (campus)</option>
+        <option value="100000">2–100 km (across a city or region)</option>
+        <option value="1000000">Over 100 km (long-haul, undersea)</option>
+      </select>
+      <label for="ps" style="display:block;margin-top:1rem">Speed</label>
+      <select id="ps">
+        <option value="1">1 Gbps</option>
+        <option value="10" selected>10 Gbps</option>
+        <option value="100">40–100 Gbps and up</option>
+      </select>
+      <div class="verdict" id="verdict" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. TABLE -->
+<section>
+  <h2>At a glance</h2>
+  <div class="stage">
+    <table>
+      <thead><tr><th></th><th class="smf">Single-mode (SMF)</th><th class="mmf">Multimode (MMF)</th></tr></thead>
+      <tbody>
+        <tr><th>Core diameter</th><td>~8.3–10 µm</td><td>50 or 62.5 µm</td></tr>
+        <tr><th>Light paths</th><td>One</td><td>Many</td></tr>
+        <tr><th>Light source</th><td>Laser</td><td>LED or VCSEL</td></tr>
+        <tr><th>Wavelengths</th><td>1310 nm, 1550 nm</td><td>850 nm, 1300 nm</td></tr>
+        <tr><th>Typical reach</th><td>Up to ~100 km unamplified</td><td>Under ~2 km (much less at high speed)</td></tr>
+        <tr><th>Main weakness</th><td>Higher equipment cost</td><td>Modal dispersion over distance</td></tr>
+        <tr><th>Cost</th><td>Higher</td><td>Lower</td></tr>
+        <tr><th>Best for</th><td>Telecom, long-haul, undersea, broadband</td><td>Data centers, LANs, campuses</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  Explainer based on <a href="https://www.123.net/blog/single-mode-vs-multimode-fiber/" style="color:inherit">123NET’s guide</a>. Diagrams are illustrative; figures follow the article except where marked as extra context.
+</footer>
+</main>
+
+<script>
+(function(){
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- HERO CANVAS ---------- */
+  const cv = document.getElementById('hero'), ctx = cv.getContext('2d');
+  const W = 1000, H = 360, L0 = 60, L1 = 940;
+  const lanes = {
+    smf:{cy:95, clad:70, core:10},
+    mmf:{cy:260, clad:120, core:70}
+  };
+  const slopes = [0, .22, .38, .52, .66];
+  let parts = [], last = -1e9;
+  function tri(u){ let p = ((u % 4) + 4) % 4; return p < 1 ? p : p < 3 ? 2 - p : p - 4; }
+  function yAt(p, x){
+    const ln = lanes[p.f]; if (p.s === 0) return ln.cy;
+    const h = ln.core/2 - 3; return ln.cy + h * tri(x * p.s / h);
+  }
+  function spawn(t){
+    parts.push({f:'smf', s:0, x:0, v:1});
+    slopes.forEach(s => parts.push({f:'mmf', s, x:0, v:1/Math.sqrt(1+s*s)}));
+    last = t;
+  }
+  function drawLanes(){
+    ctx.clearRect(0,0,W,H);
+    for (const k of ['smf','mmf']){
+      const ln = lanes[k];
+      ctx.fillStyle = css('--clad'); ctx.fillRect(L0, ln.cy-ln.clad/2, L1-L0, ln.clad);
+      ctx.fillStyle = css('--glass'); ctx.fillRect(L0, ln.cy-ln.core/2, L1-L0, ln.core);
+      ctx.fillStyle = css('--ink'); ctx.font = '700 17px "Bricolage Grotesque", system-ui, sans-serif';
+      ctx.fillText(k === 'smf' ? 'Single-mode' : 'Multimode', L0, ln.cy - ln.clad/2 - 10);
+      ctx.fillStyle = css('--muted'); ctx.font = '500 13px "Bricolage Grotesque", system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('receiver', L1, ln.cy - ln.clad/2 - 10);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = css('--line'); ctx.fillRect(L1, ln.cy-ln.clad/2, 6, ln.clad);
+    }
+  }
+  function drawPath(p, x0, x1, color, width, alpha){
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    const a = Math.max(0,x0), b = Math.min(L1-L0, x1);
+    for (let x = a; x <= b; x += 2){ const y = yAt(p,x); x === a ? ctx.moveTo(L0+x,y) : ctx.lineTo(L0+x,y); }
+    ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  function staticFrame(){
+    drawLanes();
+    drawPath({f:'smf',s:0}, 0, L1-L0, css('--smf'), 3, 1);
+    slopes.forEach(s => drawPath({f:'mmf',s}, 0, L1-L0, css('--mmf'), 2, .75));
+  }
+  let prev = null;
+  function frame(t){
+    if (prev === null) prev = t;
+    const dt = Math.min(50, t - prev); prev = t;
+    if (t - last > 1700) spawn(t);
+    drawLanes();
+    const span = L1 - L0, speed = .32;
+    parts.forEach(p => {
+      p.x += p.v * speed * dt;
+      const col = p.f === 'smf' ? css('--smf') : css('--mmf');
+      drawPath(p, p.x - 140, p.x, col, 2.5, .55);
+      if (p.x <= span){
+        ctx.fillStyle = col; ctx.beginPath(); ctx.arc(L0+p.x, yAt(p,p.x), 5, 0, 7); ctx.fill();
+      }
+    });
+    parts = parts.filter(p => p.x - 140 < span);
+    requestAnimationFrame(frame);
+  }
+  if (reduce) staticFrame(); else requestAnimationFrame(frame);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (reduce) staticFrame(); });
+
+  /* ---------- DISPERSION ---------- */
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+  const disp = document.getElementById('disp'), slider = document.getElementById('dist'), out = document.getElementById('distOut');
+  function pulses(sig, amp, x0, w, base){
+    const c1 = x0 + w*0.35, c2 = x0 + w*0.65; let d = '';
+    for (let x = x0; x <= x0 + w; x += 2){
+      const g = amp*(Math.exp(-((x-c1)**2)/(2*sig*sig)) + Math.exp(-((x-c2)**2)/(2*sig*sig)));
+      d += (x === x0 ? 'M' : 'L') + x + ' ' + (base - g).toFixed(1);
+    }
+    return d;
+  }
+  function drawDisp(){
+    const km = +slider.value; out.textContent = km.toFixed(2).replace(/\.?0+$/,'') + ' km';
+    disp.innerHTML = '';
+    const rows = [
+      {k:'smf', label:'Single-mode', base:130, sig:7 + km*0.6},
+      {k:'mmf', label:'Multimode', base:290, sig:7 + km*28}
+    ];
+    rows.forEach(r => {
+      el('line',{x1:20,x2:540,y1:r.base,y2:r.base,stroke:'var(--line)'},disp);
+      const amp = 80 * Math.min(1, 7 / r.sig * 1.0) ;
+      el('path',{d:pulses(r.sig, amp, 20, 520, r.base), fill:'none', stroke:`var(--${r.k})`, 'stroke-width':3},disp);
+      const t = el('text',{x:20,y:r.base-100,class:'svgtext','font-size':15,'font-weight':700},disp); t.textContent = r.label;
+      const ok = r.sig < 40;
+      const s = el('text',{x:540,y:r.base-100,'text-anchor':'end',class:'svgmuted','font-size':13},disp);
+      s.textContent = ok ? 'Two bits, clearly separate' : 'Bits blur into each other';
+    });
+    const cap = el('text',{x:280,y:320,'text-anchor':'middle',class:'svgmuted','font-size':12},disp);
+    cap.textContent = 'Received signal: two pulses sent back to back';
+  }
+  slider.addEventListener('input', drawDisp); drawDisp();
+
+  /* ---------- SPECTRUM ---------- */
+  const ticks = document.getElementById('ticks');
+  const nm = v => 30 + (v - 800) / (1650 - 800) * 500;
+  [800,1000,1200,1400,1600].forEach(v => {
+    const t = el('text',{x:nm(v),y:145,'text-anchor':'middle',class:'svgmuted','font-size':11},ticks); t.textContent = v;
+  });
+  [[850,'mmf','850',true],[1300,'mmf','1300',true],[1310,'smf','1310',false],[1550,'smf','1550',false]].forEach(([v,k,lab,up]) => {
+    const x = nm(v);
+    el('line',{x1:x,x2:x,y1:up?60:126,y2:up?100:175,stroke:`var(--${k})`,'stroke-width':3},ticks);
+    el('circle',{cx:x,cy:up?60:175,r:6,fill:`var(--${k})`},ticks);
+    const t = el('text',{x:x + (lab==='1300'?-8:lab==='1310'?8:0),y:up?45:198,'text-anchor':lab==='1300'?'end':lab==='1310'?'start':'middle',class:'svgtext','font-size':14,'font-weight':700},ticks);
+    t.textContent = lab + ' nm';
+  });
+
+  /* ---------- REACH CHART ---------- */
+  const reach = document.getElementById('reach');
+  const X0 = 150, X1 = 870, lg = m => X0 + (Math.log10(m) - 1) / (Math.log10(200000) - 1) * (X1 - X0);
+  [[10,'10 m'],[100,'100 m'],[1000,'1 km'],[10000,'10 km'],[100000,'100 km']].forEach(([m,l]) => {
+    el('line',{x1:lg(m),x2:lg(m),y1:30,y2:170,stroke:'var(--line)','stroke-dasharray':'3 4'},reach);
+    const t = el('text',{x:lg(m),y:190,'text-anchor':'middle',class:'svgmuted','font-size':13},reach); t.textContent = l;
+  });
+  const bar = (y, k, to, op) => el('rect',{x:X0,y,width:lg(to)-X0,height:34,rx:6,fill:`var(--${k})`,opacity:op},reach);
+  bar(50,'smf',100000,1);
+  bar(115,'mmf',2000,.3); bar(115,'mmf',400,1);
+  [['Single-mode',72],['Multimode',137]].forEach(([l,y]) => { const t = el('text',{x:X0-12,y,'text-anchor':'end',class:'svgtext','font-size':15,'font-weight':700},reach); t.textContent = l; });
+  const a = el('text',{x:lg(2000)+8,y:137,class:'svgmuted','font-size':13},reach); a.textContent = '~2 km max, low speeds';
+  const b = el('text',{x:lg(400)-6,y:137,'text-anchor':'end',class:'svgtext','font-size':12},reach); b.textContent = '10G+ ≈ 400 m';
+  [[30,'rack row'],[250,'building'],[1500,'campus'],[30000,'city'],[150000,'undersea spans']].forEach(([m,l]) => {
+    const t = el('text',{x:lg(m),y:230,'text-anchor':'middle',class:'svgmuted','font-size':12,'font-style':'italic'},reach); t.textContent = l;
+  });
+  const c = el('text',{x:X0,y:250,class:'svgmuted','font-size':11},reach); c.textContent = 'Typical settings along the distance scale';
+
+  /* ---------- PICKER ---------- */
+  const pd = document.getElementById('pd'), ps = document.getElementById('ps'), vd = document.getElementById('verdict');
+  function decide(){
+    const d = +pd.value, s = +ps.value; let pick, why;
+    if (d > 100000){ pick = 'Single-mode, with amplification'; why = 'Beyond about 100 km even single-mode needs optical amplifiers along the route. Multimode is not an option.'; }
+    else if (d > 2000){ pick = 'Single-mode'; why = 'Past about 2 km, multimode’s dispersion makes it unusable. Single-mode is built for exactly this.'; }
+    else if (d > 400){
+      if (s === 1){ pick = 'Either could work, leaning single-mode'; why = 'At 1 Gbps, multimode can stretch to a few hundred metres or more depending on grade. For the upper end of this range, or future upgrades, single-mode is safer.'; }
+      else { pick = 'Single-mode'; why = 'At 10 Gbps and above, multimode reach typically tops out around 300–400 m, so this distance needs single-mode.'; }
+    }
+    else if (d > 100 && s === 100){ pick = 'Multimode, checking the specs'; why = 'Very high speeds over multimode shrink the reach, often to 100–150 m. Confirm your optics support the distance, or use single-mode.'; }
+    else { pick = 'Multimode'; why = 'Short and fast is multimode’s home ground: cheaper optics, easy to work with, and dispersion has no room to build up.'; }
+    const k = pick.startsWith('Multi') ? 'mmf' : pick.startsWith('Single') ? 'smf' : '';
+    vd.innerHTML = `<strong class="${k}">${pick}</strong>${why}`;
+  }
+  pd.addEventListener('change', decide); ps.addEventListener('change', decide); decide();
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Single-mode vs multimode fiber, explained visually</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9EEF2; --paper:#F7F9FB; --ink:#17232F; --muted:#51606E; --line:#C5CFD8;
+  --smf:#E8A800;      /* OS2 yellow jacket */
+  --smf-soft:#FFF1C2;
+  --mmf:#12A3A8;      /* OM3/OM4 aqua jacket */
+  --mmf-soft:#CDEFEF;
+  --om5:#7DB53A;      /* OM5 lime jacket */
+  --clad:#DCE4EA; --glass:#B9C7D2;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121A22; --paper:#1A242E; --ink:#E6ECF1; --muted:#9AA8B5; --line:#2E3C49;
+    --smf-soft:#3A3010; --mmf-soft:#0F3536; --clad:#26333F; --glass:#3A4A58;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121A22; --paper:#1A242E; --ink:#E6ECF1; --muted:#9AA8B5; --line:#2E3C49;
+  --smf-soft:#3A3010; --mmf-soft:#0F3536; --clad:#26333F; --glass:#3A4A58;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:17px;line-height:1.6}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-weight:700;line-height:1.1;margin:0}
+h1{font-size:clamp(2.4rem,6vw,4.2rem);letter-spacing:-.01em}
+h2{font-size:clamp(1.7rem,3.6vw,2.3rem);margin-bottom:.4em}
+h3{font-size:1.25rem;font-weight:500}
+p{max-width:68ch;margin:.6em 0}
+a{color:inherit}
+svg{max-width:100%;height:auto;display:block}
+.muted{color:var(--muted)}
+.chip{display:inline-block;width:.8em;height:.8em;border-radius:2px;vertical-align:-.05em;margin-right:.35em}
+.smf{color:var(--smf)} .mmf{color:var(--mmf)}
+
+/* hero */
+header{padding:48px 0 12px}
+.byline{font-size:.95rem;color:var(--muted);margin-top:10px}
+.hero-fig{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 18px 10px;margin:26px 0 8px}
+.hero-legend{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:.92rem;color:var(--muted);padding:6px 4px 4px}
+.tldr{border-left:5px solid var(--smf);padding:4px 0 4px 18px;margin:28px 0 8px;font-size:1.12rem;max-width:72ch}
+
+section{padding:44px 0 8px}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px;margin:18px 0}
+.fig-cap{font-size:.9rem;color:var(--muted);margin-top:8px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:720px){.two{grid-template-columns:1fr}}
+
+/* slider */
+.ctrl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:6px 0 10px}
+.ctrl label{font-weight:600}
+input[type=range]{flex:1;min-width:180px;accent-color:var(--mmf)}
+.readout{font-family:"Barlow Condensed",sans-serif;font-size:1.5rem;min-width:5ch}
+.verdict{font-size:.95rem;padding:8px 12px;border-radius:8px;background:var(--mmf-soft)}
+
+/* table */
+.tbl-wrap{overflow-x:auto;margin:14px 0}
+table{border-collapse:collapse;width:100%;min-width:620px;background:var(--paper);border-radius:12px;overflow:hidden}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top;font-size:.96rem}
+th{font-family:"Barlow Condensed",sans-serif;font-size:1.1rem;font-weight:700}
+thead th:nth-child(2){background:var(--smf-soft)} thead th:nth-child(3){background:var(--mmf-soft)}
+td.win{font-weight:600}
+tbody tr:last-child td{border-bottom:none}
+
+/* decision */
+.decide{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:14px}
+@media (max-width:720px){.decide{grid-template-columns:1fr}}
+.pick{border-radius:14px;padding:18px 20px;background:var(--paper);border:1px solid var(--line)}
+.pick.s{border-top:8px solid var(--smf)} .pick.m{border-top:8px solid var(--mmf)}
+.pick ul{margin:.4em 0 0;padding-left:1.1em} .pick li{margin:.25em 0}
+
+footer{padding:40px 0 60px;font-size:.9rem;color:var(--muted)}
+button.theme{position:fixed;right:14px;top:calc(14px + env(safe-area-inset-top,0px));background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:20px;padding:6px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--smf);outline-offset:2px}
+</style>
+</head>
+<body>
+<button class="theme" id="themeBtn" aria-label="Toggle light and dark theme">◐ Theme</button>
+
+<div class="wrap">
+<header>
+  <h1>Single-mode vs multimode fiber</h1>
+  <p class="byline">A visual explainer of the DCD industry-view article by Manja Thessin (AFL), October 2024</p>
+
+  <div class="hero-fig">
+    <svg id="heroSvg" viewBox="0 0 900 300" role="img" aria-label="Animated light pulses travelling through a single-mode fiber and a multimode fiber">
+      <!-- SMF -->
+      <text x="10" y="32" font-family="Barlow Condensed,sans-serif" font-size="20" font-weight="700" fill="var(--smf)">Single-mode (≈9 µm core)</text>
+      <rect x="10" y="48" width="880" height="70" rx="35" fill="var(--clad)"/>
+      <rect x="10" y="78" width="880" height="10" fill="var(--smf-soft)" stroke="var(--smf)" stroke-width="1"/>
+      <g id="smfRays"></g>
+      <!-- MMF -->
+      <text x="10" y="170" font-family="Barlow Condensed,sans-serif" font-size="20" font-weight="700" fill="var(--mmf)">Multimode (50 or 62.5 µm core)</text>
+      <rect x="10" y="186" width="880" height="100" rx="50" fill="var(--clad)"/>
+      <rect x="10" y="206" width="880" height="60" fill="var(--mmf-soft)" stroke="var(--mmf)" stroke-width="1"/>
+      <g id="mmfRays"></g>
+    </svg>
+    <div class="hero-legend">
+      <span>Dots = light launched at the same instant.</span>
+      <span>In single-mode they stay together. In multimode, steeper paths travel farther and arrive late.</span>
+    </div>
+  </div>
+
+  <p class="tldr"><strong>The short version:</strong> multimode fiber is still the cheap, easy choice for links inside a rack or row. But because of distance, bandwidth, density and future-proofing, the author argues single-mode is steadily becoming the default for the rest of the data center.</p>
+</header>
+
+<!-- 1. PHYSICS -->
+<section id="physics">
+  <h2>1. It starts with the size of the core</h2>
+  <p>Both fibers have the same outer glass diameter (125 µm cladding). The difference is the light-carrying core in the middle. Single-mode has a tiny ~9 µm core that only allows one path for light. Multimode has a core roughly 5–7× wider, which lets many paths (&ldquo;modes&rdquo;) travel at once.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 300" role="img" aria-label="Cross sections drawn to scale: single-mode 9 micron core, multimode 50 and 62.5 micron cores, all inside 125 micron cladding">
+      <g font-family="Barlow,sans-serif" font-size="15" fill="var(--ink)">
+        <!-- scale: 1 µm = 1.8 px -->
+        <g transform="translate(150,140)">
+          <circle r="112.5" fill="var(--clad)" stroke="var(--glass)" stroke-width="2"/>
+          <circle r="8.1" fill="var(--smf)"/>
+          <text y="150" text-anchor="middle" font-weight="600">Single-mode (OS2)</text>
+          <text y="172" text-anchor="middle" fill="var(--muted)">9 µm core</text>
+        </g>
+        <g transform="translate(450,140)">
+          <circle r="112.5" fill="var(--clad)" stroke="var(--glass)" stroke-width="2"/>
+          <circle r="45" fill="var(--mmf)"/>
+          <text y="150" text-anchor="middle" font-weight="600">Multimode OM2–OM5</text>
+          <text y="172" text-anchor="middle" fill="var(--muted)">50 µm core</text>
+        </g>
+        <g transform="translate(750,140)">
+          <circle r="112.5" fill="var(--clad)" stroke="var(--glass)" stroke-width="2"/>
+          <circle r="56.25" fill="var(--mmf)" opacity=".7"/>
+          <text y="150" text-anchor="middle" font-weight="600">Multimode OM1 (legacy)</text>
+          <text y="172" text-anchor="middle" fill="var(--muted)">62.5 µm core</text>
+        </g>
+      </g>
+    </svg>
+    <div class="fig-cap">Drawn to scale. The grey disc is the 125 µm cladding in each case; colors follow the standard cable jacket colors (yellow for single-mode, aqua for OM3/OM4).</div>
+  </div>
+
+  <h3>Why the core size matters: modal dispersion</h3>
+  <p>In a wide core, light bounces along at different angles. A steep ray covers more distance than a straight one, so parts of the same pulse arrive at slightly different times. The pulse smears out. Over a short link this is harmless; over a long one, neighbouring bits blur into each other and the receiver can no longer tell a 1 from a 0. Single-mode fiber has only one path, so this effect essentially disappears and signals can run for kilometres without regeneration.</p>
+
+  <div class="fig">
+    <div class="ctrl">
+      <label for="dist">Link length</label>
+      <input type="range" id="dist" min="0" max="600" value="50" step="5" aria-describedby="verdict">
+      <span class="readout" id="distOut">50 m</span>
+    </div>
+    <svg id="pulseSvg" viewBox="0 0 900 300" role="img" aria-label="Received signal for the bit pattern 1 0 1 1 0 1 after the chosen distance"></svg>
+    <div class="verdict" id="verdict"></div>
+    <div class="fig-cap">Illustrative model of the received signal for the bits 1 0 1 1 0 1 at a fixed high data rate. The dashed line is the receiver's decision threshold. Drag the slider to see multimode pulses merge as distance grows.</div>
+  </div>
+</section>
+
+<!-- 2. REACH -->
+<section id="reach">
+  <h2>2. Meters vs kilometers</h2>
+  <p>The article describes multimode as fine within a rack or row, but struggling once links go much beyond about a hundred meters. Single-mode is measured in kilometers. The chart below shows typical reach for common 100G optics to make that concrete.</p>
+  <div class="fig">
+    <svg id="reachSvg" viewBox="0 0 900 360" role="img" aria-label="Log scale bar chart of typical 100 gigabit reach by fiber type"></svg>
+    <div class="fig-cap">Typical 100G reach from IEEE/MSA optic specs (SR4, SWDM4, DR, FR, LR), added here for context; the article itself gives only the ~100 m vs kilometers contrast. Log scale: each gridline is 10× farther.</div>
+  </div>
+</section>
+
+<!-- 3. BANDWIDTH & ARCHITECTURE -->
+<section id="bandwidth">
+  <h2>3. The data deluge and leaf-spine networks</h2>
+  <p>Distance is only half of it. Large data centers use leaf-spine networks, where every leaf switch connects to every spine switch. Individual links may be short, but the combined bandwidth is enormous and links between rows or pods can get long. That is where the author says multimode starts to run out of room.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 380" role="img" aria-label="Leaf-spine data center network showing multimode fiber inside racks and single-mode fiber between leaf and spine switches">
+      <g font-family="Barlow,sans-serif" font-size="14" fill="var(--ink)">
+        <!-- spine -->
+        <g id="spines"></g>
+        <g id="leafs"></g>
+        <g id="lsLinks"></g>
+        <text x="450" y="28" text-anchor="middle" font-weight="600">Spine switches</text>
+        <text x="450" y="228" text-anchor="middle" font-weight="600" fill="var(--muted)">Leaf / top-of-rack switches</text>
+        <text x="450" y="370" text-anchor="middle" fill="var(--muted)">Servers in racks</text>
+      </g>
+    </svg>
+    <div class="hero-legend">
+      <span><span class="chip" style="background:var(--smf)"></span>Single-mode: leaf↔spine, between rows and pods, high aggregate bandwidth</span>
+      <span><span class="chip" style="background:var(--mmf)"></span>Multimode: server↔ToR inside the rack, short and cheap</span>
+    </div>
+  </div>
+
+  <div class="two">
+    <div>
+      <h3>Can multimode keep up?</h3>
+      <p>OM5 fiber stretches multimode further by carrying several short wavelengths at once (SWDM). The author's view is that this still falls behind the growth curve, while single-mode's bandwidth headroom is effectively unlimited and is the only realistic path to terabit links.</p>
+    </div>
+    <div>
+      <h3>AI and HPC push hardest</h3>
+      <p>AI/ML training clusters and HPC move huge volumes between GPUs, storage and the network. Low latency and high bandwidth directly affect how efficiently that expensive compute is used, which makes these workloads a major driver of single-mode adoption.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. WDM -->
+<section id="wdm">
+  <h2>4. One fiber, many lanes</h2>
+  <p>Wavelength division multiplexing (WDM) sends several colors of light down one single-mode fiber at the same time. The article's analogy: it turns a single road into a multi-lane expressway, multiplying capacity without pulling new cable.</p>
+  <div class="fig">
+    <svg viewBox="0 0 900 220" role="img" aria-label="Four wavelengths combined by a multiplexer into one single-mode fiber and separated again by a demultiplexer">
+      <g font-family="Barlow,sans-serif" font-size="14" fill="var(--ink)">
+        <g id="wdmIn"></g>
+        <rect x="200" y="40" width="70" height="140" rx="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5"/>
+        <text x="235" y="115" text-anchor="middle" font-weight="600">MUX</text>
+        <rect x="630" y="40" width="70" height="140" rx="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5"/>
+        <text x="665" y="115" text-anchor="middle" font-weight="600">DEMUX</text>
+        <rect x="270" y="98" width="360" height="24" rx="12" fill="var(--clad)" stroke="var(--smf)" stroke-width="2"/>
+        <g id="wdmCore"></g>
+        <text x="450" y="150" text-anchor="middle" fill="var(--muted)">one single-mode fiber</text>
+        <g id="wdmOut"></g>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- 5. SPACE -->
+<section id="space">
+  <h2>5. Space and flexibility</h2>
+  <div class="two">
+    <div class="fig">
+      <svg viewBox="0 0 420 260" role="img" aria-label="Minimum bend radius comparison: 10 millimetres for bend-insensitive single-mode versus about 30 millimetres for conventional fiber">
+        <g font-family="Barlow,sans-serif" font-size="14" fill="var(--ink)">
+          <!-- scale 1mm = 3px -->
+          <circle cx="110" cy="120" r="30" fill="none" stroke="var(--smf)" stroke-width="8"/>
+          <line x1="110" y1="120" x2="140" y2="120" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="110" y="200" text-anchor="middle" font-weight="600">10 mm</text>
+          <text x="110" y="220" text-anchor="middle" fill="var(--muted)">OS2, G.657.A1</text>
+          <circle cx="300" cy="120" r="90" fill="none" stroke="var(--glass)" stroke-width="8" stroke-dasharray="6 6"/>
+          <line x1="300" y1="120" x2="390" y2="120" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="300" y="240" text-anchor="middle" font-weight="600">≈30 mm</text>
+          <text x="300" y="256" text-anchor="middle" fill="var(--muted)">conventional G.652 (for reference)</text>
+        </g>
+      </svg>
+      <div class="fig-cap">Minimum bend radius to scale. Tighter bends mean tighter cable routing in crowded racks.</div>
+    </div>
+    <div>
+      <p>Data center floor space is costly. The article points to three space and design advantages for single-mode:</p>
+      <p><strong>Tight bends.</strong> Modern bend-insensitive OS2 fiber can bend down to about 10 mm without significant loss, making cable management easier.</p>
+      <p><strong>Denser connectors.</strong> Very small form factor (VSFF) connectors pack more single-mode ports into the same panel space.</p>
+      <p><strong>A generous loss budget.</strong> Low signal loss leaves room to add connectors, splitters and patch points without breaking the link, useful when the layout keeps changing.</p>
+      <p><strong>Stability.</strong> Multimode has gone through OM1 to OM5 with different capabilities, whereas single-mode has stayed consistent, so today's cabling is less likely to be obsolete tomorrow.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. TRADE-OFFS -->
+<section id="tradeoffs">
+  <h2>6. Side by side</h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Factor</th><th>Single-mode (SMF)</th><th>Multimode (MMF)</th></tr></thead>
+      <tbody>
+        <tr><td>Core diameter</td><td>~9 µm</td><td>50 or 62.5 µm</td></tr>
+        <tr><td>Light paths</td><td class="win">One, so no modal dispersion</td><td>Many, so pulses spread</td></tr>
+        <tr><td>Practical reach</td><td class="win">Kilometers</td><td>Rack/row; strains past ~100 m</td></tr>
+        <tr><td>Bandwidth headroom</td><td class="win">Virtually unlimited, WDM-friendly</td><td>Limited; OM5/SWDM extends it</td></tr>
+        <tr><td>Typical light source</td><td>Lasers (more costly)</td><td class="win">Low-cost VCSELs</td></tr>
+        <tr><td>Transceiver cost</td><td>Higher, though falling</td><td class="win">Lower</td></tr>
+        <tr><td>Installation</td><td>Needs precision, special tools and skills</td><td class="win">More forgiving</td></tr>
+        <tr><td>Bend radius / density</td><td class="win">Down to ~10 mm; VSFF connectors</td><td>Less compact</td></tr>
+        <tr><td>Standards churn</td><td class="win">Stable (OS1/OS2)</td><td>Many generations (OM1–OM5)</td></tr>
+        <tr><td>Best fit</td><td>Leaf-spine, inter-row/pod, AI/HPC, future terabit</td><td>Server-to-ToR within a rack</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="muted">Bold marks the side with the advantage for each factor.</p>
+</section>
+
+<!-- 7. VERDICT -->
+<section id="verdict-sec">
+  <h2>7. The author's conclusion</h2>
+  <p>Multimode is not disappearing: it remains a sensible, cost-effective choice for very short links. But the article frames the SMF vs MMF decision as a strategic one about future needs rather than a simple distance-or-price calculation, and argues single-mode is where data centers are heading.</p>
+  <div class="decide">
+    <div class="pick s">
+      <h3>Lean towards single-mode when…</h3>
+      <ul>
+        <li>links run between rows, pods or buildings</li>
+        <li>you are building leaf-spine fabrics at scale</li>
+        <li>AI/ML or HPC traffic is involved</li>
+        <li>you want the cabling to survive several speed upgrades</li>
+        <li>panel density and tight routing matter</li>
+      </ul>
+    </div>
+    <div class="pick m">
+      <h3>Multimode still makes sense when…</h3>
+      <ul>
+        <li>connections stay inside a rack or to a top-of-rack switch</li>
+        <li>budget for optics is the main constraint today</li>
+        <li>installers lack single-mode termination tools or experience</li>
+        <li>existing multimode plant already covers the need</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Explainer based on &ldquo;Single-mode vs multimode fiber&rdquo; by Manja Thessin (AFL), DatacenterDynamics, 9 Oct 2024:
+  <a href="https://www.datacenterdynamics.com/en/opinions/single-mode-vs-multimode-fiber/">datacenterdynamics.com</a>. The article is sponsored content from a fiber vendor. Diagrams are illustrative; reach figures and the G.652 bend radius are general industry references added for context.
+</footer>
+</div>
+
+<script>
+(function(){
+const NS="http://www.w3.org/2000/svg";
+const el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
+const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* theme toggle */
+const root=document.documentElement;
+document.getElementById("themeBtn").addEventListener("click",()=>{
+  const dark=root.dataset.theme?root.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme=dark?"light":"dark";
+  try{localStorage.setItem("fiberTheme",root.dataset.theme)}catch(e){}
+});
+try{const t=localStorage.getItem("fiberTheme");if(t)root.dataset.theme=t}catch(e){}
+
+/* ---------- HERO ANIMATION ---------- */
+function zigzag(x0,x1,yTop,yBot,angleDeg,startDown){
+  const h=yBot-yTop; const step=h/Math.tan(angleDeg*Math.PI/180);
+  let pts=[[x0,(yTop+yBot)/2]]; let x=x0+step/2, down=startDown;
+  while(x<x1){pts.push([x,down?yBot:yTop]);down=!down;x+=step;}
+  const [lx,ly]=pts[pts.length-1];
+  const frac=(x1-lx)/step; const ny=down?ly+(yBot-yTop)*frac:ly-(yBot-yTop)*frac;
+  pts.push([x1, Math.max(yTop,Math.min(yBot,ny))]);
+  return "M"+pts.map(p=>p.join(",")).join(" L");
+}
+const hero=[];
+function addRay(group,d,color,width){
+  const p=el("path",{d,fill:"none",stroke:color,"stroke-width":width,opacity:.35},group);
+  const dot=el("circle",{r:6,fill:color},group);
+  hero.push({p,dot,L:p.getTotalLength()});
+}
+addRay(document.getElementById("smfRays"),"M10,83 L890,83","var(--smf)",2);
+const mg=document.getElementById("mmfRays");
+[[0,false],[9,true],[17,false],[25,true]].forEach(([a,dn])=>{
+  const d=a===0?"M10,236 L890,236":zigzag(10,890,208,264,a,dn);
+  addRay(mg,d,"var(--mmf)",1.5);
+});
+const speed=260; // px per second
+const period=(Math.max(...hero.map(h=>h.L))/speed)+1.2;
+function place(t){
+  hero.forEach(h=>{const s=Math.min(t*speed,h.L);const pt=h.p.getPointAtLength(s);h.dot.setAttribute("cx",pt.x);h.dot.setAttribute("cy",pt.y);});
+}
+if(reduce){place(2.6);}else{
+  const t0=performance.now();
+  (function loop(now){place(((now-t0)/1000)%period);requestAnimationFrame(loop);})(t0);
+}
+
+/* ---------- PULSE SPREADING ---------- */
+const bits=[1,0,1,1,0,1];
+const psvg=document.getElementById("pulseSvg");
+const slider=document.getElementById("dist"), out=document.getElementById("distOut"), verdict=document.getElementById("verdict");
+function signal(sigma){
+  // sum of gaussians, bit spacing 1
+  const N=300, xs=[], ys=[];
+  for(let i=0;i<=N;i++){const x=-0.8+(bits.length-0.2+0.8)*i/N;let y=0;
+    bits.forEach((b,k)=>{if(b)y+=Math.exp(-((x-k)**2)/(2*sigma*sigma));});
+    xs.push(x);ys.push(y);}
+  const peak=Math.max(...ys); return {xs,ys:ys.map(v=>v/Math.max(1,peak)*Math.min(1,peak)),raw:ys};
+}
+function drawTrace(g,yBase,h,sigma,color,label){
+  const {xs,raw}=signal(sigma);
+  const maxY=Math.max(...raw);
+  const X=x=>80+(x+0.8)/(bits.length+0.6)*800;
+  const norm=raw.map(v=>v/maxY);
+  let d=`M${X(xs[0])},${yBase}`;
+  xs.forEach((x,i)=>d+=` L${X(x).toFixed(1)},${(yBase-norm[i]*h).toFixed(1)}`);
+  d+=` L${X(xs[xs.length-1])},${yBase} Z`;
+  el("path",{d,fill:color,"fill-opacity":.25,stroke:color,"stroke-width":2},g);
+  el("line",{x1:80,x2:880,y1:yBase-h*.5,y2:yBase-h*.5,stroke:"var(--muted)","stroke-dasharray":"5 5"},g);
+  el("line",{x1:80,x2:880,y1:yBase,y2:yBase,stroke:"var(--line)"},g);
+  const t=el("text",{x:10,y:yBase-h/2+5,"font-family":"Barlow Condensed,sans-serif","font-size":18,"font-weight":700,fill:color},g);t.textContent=label;
+  // sample at bit centers
+  let errors=0;
+  bits.forEach((b,k)=>{
+    let v=0;bits.forEach((bb,j)=>{if(bb)v+=Math.exp(-((k-j)**2)/(2*sigma*sigma));});v/=maxY;
+    const got=v>0.5?1:0; if(got!==b)errors++;
+    const tx=el("text",{x:X(k),y:yBase+20,"text-anchor":"middle","font-family":"Barlow,sans-serif","font-size":14,"font-weight":600,fill:got===b?"var(--ink)":"#D0342C"},g);
+    tx.textContent=got===b?b:b+"✗";
+  });
+  return errors;
+}
+function renderPulse(){
+  const m=+slider.value; out.textContent=m+" m";
+  psvg.innerHTML="";
+  const g=el("g",{},psvg);
+  const sSm=0.18, sMm=0.18+m*0.0016; // illustrative
+  const bx=el("text",{x:80,y:22,"font-family":"Barlow,sans-serif","font-size":14,fill:"var(--muted)"},g);bx.textContent="Sent: 1  0  1  1  0  1   →   received after "+m+" m";
+  drawTrace(g,130,85,sSm,"var(--smf)","SMF");
+  const e=drawTrace(g,270,85,sMm,"var(--mmf)","MMF");
+  verdict.textContent = e===0 && sMm<0.38 ? "Multimode: pulses are still distinct. Short links like this are multimode's sweet spot."
+    : e===0 ? "Multimode: pulses are smearing together. Margin is shrinking and errors are close."
+    : `Multimode: pulses have merged and ${e} bit${e>1?"s are":" is"} misread (red). Single-mode still reads every bit.`;
+}
+slider.addEventListener("input",renderPulse); renderPulse();
+
+/* ---------- REACH CHART ---------- */
+const reach=[
+  ["OM3 · 100G-SR4",70,"var(--mmf)"],["OM4 · 100G-SR4",100,"var(--mmf)"],["OM5 · 100G-SWDM4",150,"var(--om5)"],
+  ["OS2 · 100G-DR",500,"var(--smf)"],["OS2 · 100G-FR",2000,"var(--smf)"],["OS2 · 100G-LR",10000,"var(--smf)"]
+];
+const rs=document.getElementById("reachSvg");
+const L=v=>210+(Math.log10(v)-1)/(Math.log10(20000)-1)*660;
+[10,100,1000,10000].forEach(v=>{
+  el("line",{x1:L(v),x2:L(v),y1:20,y2:320,stroke:"var(--line)"},rs);
+  const t=el("text",{x:L(v),y:342,"text-anchor":"middle","font-family":"Barlow,sans-serif","font-size":14,fill:"var(--muted)"},rs);
+  t.textContent=v>=1000?(v/1000)+" km":v+" m";
+});
+el("rect",{x:L(10),y:14,width:L(100)-L(10),height:310,fill:"var(--mmf-soft)",opacity:.5},rs);
+const zt=el("text",{x:(L(10)+L(100))/2,y:34,"text-anchor":"middle","font-family":"Barlow,sans-serif","font-size":13,fill:"var(--muted)"},rs);zt.textContent="rack / row";
+reach.forEach(([name,v,c],i)=>{
+  const y=52+i*46;
+  const lab=el("text",{x:200,y:y+20,"text-anchor":"end","font-family":"Barlow,sans-serif","font-size":15,fill:"var(--ink)"},rs);lab.textContent=name;
+  el("rect",{x:L(10),y,width:L(v)-L(10),height:28,rx:4,fill:c},rs);
+  const vt=el("text",{x:L(v)+8,y:y+20,"font-family":"Barlow Condensed,sans-serif","font-size":17,"font-weight":700,fill:"var(--ink)"},rs);
+  vt.textContent=v>=1000?(v/1000)+" km":v+" m";
+});
+
+/* ---------- LEAF SPINE ---------- */
+const sp=document.getElementById("spines"), lf=document.getElementById("leafs"), ln=document.getElementById("lsLinks");
+const spX=[270,450,630], lfX=[110,290,470,650,830].map(x=>x-20);
+lfX.forEach(lx=>spX.forEach(sx=>el("line",{x1:sx,y1:62,x2:lx+20,y2:196,stroke:"var(--smf)","stroke-width":2.5},ln)));
+spX.forEach(x=>el("rect",{x:x-45,y:40,width:90,height:24,rx:5,fill:"var(--paper)",stroke:"var(--ink)","stroke-width":1.5},sp));
+lfX.forEach(x=>{
+  el("rect",{x:x-25,y:196,width:90,height:24,rx:5,fill:"var(--paper)",stroke:"var(--ink)","stroke-width":1.5},lf);
+  for(let r=0;r<3;r++){
+    const sy=258+r*28;
+    el("line",{x1:x+20,y1:220,x2:x+20,y2:sy,stroke:"var(--mmf)","stroke-width":2},ln);
+    el("rect",{x:x-10,y:sy,width:60,height:18,rx:3,fill:"var(--clad)",stroke:"var(--glass)"},lf);
+  }
+});
+
+/* ---------- WDM ---------- */
+const cols=["#D0342C","#E8A800","#2E9E4F","#2F6FD6"], lam=["λ1","λ2","λ3","λ4"];
+const wi=document.getElementById("wdmIn"), wo=document.getElementById("wdmOut"), wc=document.getElementById("wdmCore");
+cols.forEach((c,i)=>{
+  const y=55+i*37;
+  el("path",{d:`M60,${y} L200,${y}`,stroke:c,"stroke-width":4},wi);
+  const t=el("text",{x:30,y:y+5,"font-family":"Barlow,sans-serif","font-size":15,"font-weight":600,fill:c},wi);t.textContent=lam[i];
+  el("path",{d:`M700,${y} L840,${y}`,stroke:c,"stroke-width":4},wo);
+  const t2=el("text",{x:850,y:y+5,"font-family":"Barlow,sans-serif","font-size":15,"font-weight":600,fill:c},wo);t2.textContent=lam[i];
+  el("line",{x1:275,x2:625,y1:103+i*4.5,y2:103+i*4.5,stroke:c,"stroke-width":2.5},wc);
+});
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

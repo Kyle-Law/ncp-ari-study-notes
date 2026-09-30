@@ -2,6 +2,8 @@
 
 Folder naming: `<section>.T<n>` = exam topic, `<section>.SR<n>` = suggested reading, `<section>.O<n>` = other/extra material.
 
+After adding or moving a note, run `python3 tools/build_nav.py` to refresh the navbar on every page.
+
 ## AI Infrastructure Basics for Data Centers - 20%
 
 This section covers AI infrastructure basics, focusing on verifying data center power and cooling capacity, distinguishing AC/DC racks, balancing rPDUs, checking power redundancy and grounding, and understanding various cooling systems.
@@ -127,17 +129,25 @@ This section details the practical deployment of high-density cables. It covers 
 - [200G transceivers: QSFP-DD vs OSFP, explained](2.SR10/200g-qsfp-dd-vs-osfp-explained.html)
 
 **SR11** Single Mode vs. Multimode Fiber: A Complete Comparison Guide
+- [Single-mode vs multimode fiber, explained visually](2.SR11/single-mode-vs-multimode-fiber2.html)
 
 **SR12** Single-Mode vs. Multimode Fiber: A Comprehensive Guide
+- [Single-mode vs multimode fiber, explained](2.SR12/single-mode-vs-multimode-fiber.html)
 
 **SR13** 2 Big Mistakes to Avoid During Fiber Cable Installation
+- [Two big mistakes in fiber installation](2.SR13/fiber-installation-mistakes.html)
 
 **SR14** Single-Mode vs. Multimode Fiber—DCD
+- [Single-mode vs multimode fiber (DCD), explained](2.SR14/single-mode-vs-multimode-fiber3.html)
 
 **SR15** Cleaning and Inspecting MPO/MTP Connectors | Fluke Networks
+- [Cleaning and inspecting MPO/MTP connectors](2.SR15/mpo-mtp-cleaning-inspection.html)
 
 **SR16** The Fiber Optic Association, Inc.
+- [Fiber optic installation — FOA guide](2.SR16/foa-fiber-installation-explained.html)
 
 **SR17** Installing an OSFP Transceiver
+- [Installing an OSFP transceiver — visual guide](2.SR17/osfp-transceiver-install.html)
 
 **SR18** Clean & Inspect: What IEC 61300-3-35 Means to You | MicroCare
+- [Clean & inspect — IEC 61300-3-35 explained](2.SR18/iec-61300-3-35-explained.html)
