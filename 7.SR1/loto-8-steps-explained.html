@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lockout–Tagout in 8 steps, explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9ECEE; --panel:#FFFFFF; --ink:#1B2229; --muted:#56626C; --line:#C3CAD0;
+  --steel:#4A5661; --tag:#C8102E; --volt:#E8B400; --air:#2F7FC1; --safe:#2E8B57; --lock2:#2F5FB3;
+  --wire-dead:#9AA4AD;
+  --display:"Barlow Condensed","Arial Narrow","Roboto Condensed",sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#13181D; --panel:#1D242B; --ink:#E6EAED; --muted:#9AA6B0; --line:#36414B;
+    --steel:#8795A1; --tag:#E0344B; --volt:#F2C21B; --air:#5AA6E6; --safe:#4CB67B; --lock2:#6E97E6;
+    --wire-dead:#55616B;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{animation:none!important;transition:none!important} }
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.6 var(--body)}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--volt);outline-offset:3px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+/* Hero */
+header.hero{padding:56px 0 32px;border-bottom:6px solid var(--ink)}
+.hero .wrap{display:grid;grid-template-columns:1.4fr 1fr;gap:40px;align-items:center}
+.hero h1{font:700 clamp(2.8rem,7vw,5.2rem)/0.92 var(--display);margin:0 0 20px;letter-spacing:-0.01em}
+.hero p{max-width:60ch;margin:0 0 12px;color:var(--muted)}
+.hero .src{font-size:.92rem}
+.hero svg{width:100%;max-width:300px;justify-self:center;display:block}
+
+section{padding:56px 0}
+h2{font:700 clamp(1.9rem,4vw,2.6rem)/1 var(--display);margin:0 0 10px}
+.lede{color:var(--muted);max-width:65ch;margin:0 0 28px}
+
+/* Stepper */
+.steps-nav{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-bottom:16px}
+.steps-nav button{font:600 1rem/1.1 var(--display);background:var(--panel);color:var(--ink);border:1px solid var(--line);
+  padding:10px 6px;cursor:pointer;text-align:left;min-height:62px;border-radius:2px}
+.steps-nav button b{display:block;font-size:1.5rem;line-height:1}
+.steps-nav button[aria-current="step"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.steps-nav button.done b{color:var(--safe)}
+.stage{display:grid;grid-template-columns:1.35fr 1fr;gap:0;background:var(--panel);border:1px solid var(--line)}
+.scene-box{padding:16px;border-right:1px solid var(--line)}
+.scene-box svg{width:100%;height:auto;display:block}
+.info{padding:28px 28px 20px;display:flex;flex-direction:column}
+.info .num{font:700 4.5rem/0.8 var(--display);color:var(--tag)}
+.info h3{font:700 2rem/1.05 var(--display);margin:8px 0 12px}
+.info p{margin:0 0 14px}
+.info ul{margin:0 0 16px;padding-left:1.1em}
+.info li{margin-bottom:6px}
+.who{font-size:.92rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;margin-top:auto}
+.ctrls{display:flex;gap:8px;margin-top:14px}
+.ctrls button{font:600 1.05rem var(--display);padding:10px 18px;border:2px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.ctrls button.primary{background:var(--ink);color:var(--bg)}
+.ctrls button:disabled{opacity:.35;cursor:default}
+
+/* Scene SVG styling */
+.box{fill:var(--bg);stroke:var(--steel);stroke-width:2}
+.lbl{font:600 13px var(--body);fill:var(--ink)}
+.sm{font:500 11px var(--body);fill:var(--muted)}
+.wire{fill:none;stroke:var(--wire-dead);stroke-width:5;stroke-linecap:round}
+.pipe{fill:none;stroke:var(--wire-dead);stroke-width:9;stroke-linecap:round}
+.flow-e{fill:none;stroke:var(--volt);stroke-width:5;stroke-dasharray:8 10;animation:flow .6s linear infinite}
+.flow-a{fill:none;stroke:var(--air);stroke-width:5;stroke-dasharray:4 8;animation:flow 1s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-18}}
+.fan{transform-box:fill-box;transform-origin:center}
+.spin .fan{animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.handle{stroke:var(--ink);stroke-width:7;stroke-linecap:round}
+.knob{fill:var(--tag)}
+.lockbody{fill:var(--volt);stroke:var(--ink);stroke-width:1.5}
+.lockbody.b{fill:var(--lock2)}
+.shackle{fill:none;stroke:var(--steel);stroke-width:4}
+.tagc{fill:var(--tag)}
+.tagt{font:700 8px var(--body);fill:#fff}
+.mark{fill:none;stroke:var(--tag);stroke-width:2;stroke-dasharray:5 4}
+.badge{fill:var(--tag)} .badget{font:700 12px var(--body);fill:#fff}
+.okc{fill:var(--safe)} .noc{fill:var(--tag)}
+.callout{font:600 13px var(--body);fill:var(--ink)}
+.cond{opacity:0;transition:opacity .35s}
+#scene[data-step="1"] .s1,#scene[data-step="2"] .s2,#scene[data-step="3"] .s3,#scene[data-step="4"] .s4,
+#scene[data-step="5"] .s5,#scene[data-step="6"] .s6,#scene[data-step="7"] .s7,#scene[data-step="8"] .s8{opacity:1}
+
+/* energy chart */
+.chart{background:var(--panel);border:1px solid var(--line);border-top:none;padding:14px 16px 6px}
+.chart h4{font:600 1.1rem var(--display);margin:0}
+.chart p{margin:0;font-size:.9rem;color:var(--muted)}
+.chart svg{width:100%;height:auto;display:block}
+.pt{cursor:pointer}
+.pt circle{fill:var(--panel);stroke:var(--ink);stroke-width:2;transition:r .2s}
+.pt.cur circle{fill:var(--tag);stroke:var(--tag)}
+.pt text{font:600 12px var(--body);fill:var(--muted);text-anchor:middle}
+
+/* grids */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.types{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:22px}
+.type{background:var(--panel);border-left:5px solid var(--c);padding:14px 12px}
+.type svg{width:34px;height:34px;display:block;margin-bottom:8px;stroke:var(--c);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.type b{font:600 1.15rem var(--display);display:block}
+.type span{font-size:.88rem;color:var(--muted);line-height:1.35;display:block}
+.residual{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.residual span{border:1.5px solid var(--ink);padding:4px 12px;font-weight:500;font-size:.95rem}
+.fig{background:var(--panel);border:1px solid var(--line);padding:18px}
+.fig svg{width:100%;height:auto;display:block}
+.fig figcaption{font-size:.92rem;color:var(--muted);margin-top:8px}
+figure{margin:0}
+.verify{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.verify .fig h4{font:600 1.3rem var(--display);margin:8px 0 4px}
+.verify .fig p{margin:0;font-size:.95rem;color:var(--muted)}
+.band{background:var(--ink);color:var(--bg)}
+.band .lede{color:inherit;opacity:.8}
+.band .fig{background:transparent;border-color:rgba(255,255,255,.2)}
+.stat{font:700 clamp(2rem,5vw,3.2rem)/1 var(--display);margin:24px 0 6px}
+.stds{list-style:none;padding:0;margin:0}
+.stds li{padding:12px 0;border-bottom:1px solid var(--line)}
+.stds b{font:600 1.15rem var(--display);display:block}
+footer{padding:28px 0 48px;color:var(--muted);font-size:.9rem;border-top:1px solid var(--line)}
+
+@media (max-width:860px){
+  .hero .wrap,.stage,.two{grid-template-columns:1fr}
+  .hero svg{max-width:200px}
+  .scene-box{border-right:none;border-bottom:1px solid var(--line)}
+  .steps-nav{grid-template-columns:repeat(4,1fr)}
+  .types{grid-template-columns:repeat(2,1fr)}
+  .verify{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <h1>Lockout–Tagout in eight steps, explained</h1>
+      <p>Maintenance keeps electrical equipment healthy, but working on a machine is dangerous if energy can come back unexpectedly. Lockout–Tagout (LOTO) is the routine that makes sure a machine is truly dead, stays dead while people work on it, and comes back to life only when everyone is clear.</p>
+      <p>This page walks through the eight steps from ABB's feature article, with a live diagram of a machine moving through each one.</p>
+      <p class="src">Source: <a href="https://new.abb.com/news/detail/129861/lockout-tagout-procedures-in-8-steps">ABB News, “Lockout-Tagout procedures in 8 steps”</a>, 13 Oct 2025.</p>
+    </div>
+    <svg viewBox="0 0 200 260" role="img" aria-label="A padlock with a red danger tag hanging from it">
+      <path d="M70 70 V45 a30 30 0 0 1 60 0 V70" fill="none" stroke="var(--steel)" stroke-width="12"/>
+      <rect x="50" y="68" width="100" height="78" rx="6" fill="var(--volt)" stroke="var(--ink)" stroke-width="3"/>
+      <circle cx="100" cy="100" r="9" fill="var(--ink)"/><rect x="96" y="104" width="8" height="20" fill="var(--ink)"/>
+      <line x1="100" y1="146" x2="100" y2="166" stroke="var(--ink)" stroke-width="2"/>
+      <g transform="rotate(-6 100 210)">
+        <rect x="52" y="164" width="96" height="92" rx="6" fill="var(--tag)"/>
+        <circle cx="100" cy="176" r="5" fill="var(--bg)"/>
+        <text x="100" y="206" text-anchor="middle" style="font:700 20px var(--display);fill:#fff">DANGER</text>
+        <text x="100" y="226" text-anchor="middle" style="font:600 12px var(--body);fill:#fff">Do not operate</text>
+        <line x1="66" y1="238" x2="134" y2="238" stroke="#fff" stroke-width="1"/>
+        <text x="100" y="250" text-anchor="middle" style="font:500 9px var(--body);fill:#fff">Locked by: J. Lee</text>
+      </g>
+    </svg>
+  </div>
+</header>
+
+<main>
+<section id="steps">
+  <div class="wrap">
+    <h2>Follow one machine through all eight steps</h2>
+    <p class="lede">The diagram shows a motor fed by mains power, an air cylinder fed by compressed air, and a capacitor that keeps charge after power is cut. Step through with the buttons or your arrow keys and watch what changes.</p>
+
+    <div class="steps-nav" role="tablist" aria-label="LOTO steps" id="nav"></div>
+
+    <div class="stage">
+      <div class="scene-box">
+        <svg id="scene" data-step="1" viewBox="0 0 640 400" role="img" aria-labelledby="sceneDesc">
+          <desc id="sceneDesc">Diagram of a machine's energy sources, isolation points and locks, which changes for each LOTO step.</desc>
+
+          <!-- ROW 1 : electrical -->
+          <rect class="box" x="20" y="60" width="90" height="60" rx="4"/>
+          <path d="M36 72 l-8 18 h10 l-6 18 l16-22 h-10 l6-14z" fill="var(--volt)"/>
+          <text class="lbl" x="75" y="88" text-anchor="middle">Mains</text>
+          <text class="sm" x="75" y="104" text-anchor="middle">supply</text>
+          <path class="wire" d="M110 90 H220"/>
+          <path class="flow-e" d="M110 90 H220"/>
+
+          <rect class="box" x="220" y="40" width="100" height="150" rx="6"/>
+          <text class="lbl" x="270" y="60" text-anchor="middle">Disconnect</text>
+          <circle cx="270" cy="125" r="7" fill="var(--steel)"/>
+          <g class="cond s1 s2 s8"><line class="handle" x1="270" y1="125" x2="270" y2="80"/><circle class="knob" cx="270" cy="80" r="8"/><text class="sm" x="292" y="84">ON</text></g>
+          <g class="cond s3 s4 s5 s6 s7"><line class="handle" x1="270" y1="125" x2="270" y2="172"/><circle class="knob" cx="270" cy="172" r="8"/><text class="sm" x="284" y="150">OFF</text></g>
+
+          <path class="wire" d="M320 90 H492"/>
+          <path class="flow-e cond s1 s2 s8" d="M320 90 H492"/>
+
+          <!-- capacitor -->
+          <path class="wire" d="M410 90 V128 M410 140 V160 M398 160 H422 M402 165 H418" style="stroke-width:3"/>
+          <line x1="394" y1="128" x2="426" y2="128" stroke="var(--ink)" stroke-width="4"/>
+          <line x1="394" y1="140" x2="426" y2="140" stroke="var(--ink)" stroke-width="4"/>
+          <rect x="434" y="118" width="12" height="36" fill="none" stroke="var(--steel)" stroke-width="1.5"/>
+          <rect class="cond s1 s2 s3 s4 s8" x="436" y="120" width="8" height="32" fill="var(--volt)"/>
+          <text class="sm" x="410" y="182" text-anchor="middle">Stored charge</text>
+          <g class="cond s5"><path d="M452 124 l8 6 l-6 3 l8 6" fill="none" stroke="var(--volt)" stroke-width="2"/><text class="sm" x="466" y="140">discharged</text></g>
+
+          <!-- motor -->
+          <g class="motor" id="motor">
+            <circle cx="540" cy="100" r="48" class="box"/>
+            <g class="fan"><circle cx="540" cy="100" r="30" fill="none" stroke="none"/>
+              <path d="M540 100 L540 72 A12 12 0 0 1 552 90 Z M540 100 L564 114 A12 12 0 0 1 544 118 Z M540 100 L516 114 A12 12 0 0 1 524 94 Z" fill="var(--steel)"/>
+            </g>
+            <circle cx="540" cy="100" r="5" fill="var(--ink)"/>
+          </g>
+          <text class="lbl" x="540" y="165" text-anchor="middle">Motor</text>
+
+          <!-- start/stop station -->
+          <rect class="box" x="495" y="180" width="90" height="42" rx="4"/>
+          <circle cx="522" cy="201" r="10" fill="var(--safe)"/><text class="tagt" x="522" y="204" text-anchor="middle">I</text>
+          <circle cx="558" cy="201" r="10" fill="var(--tag)"/><text class="tagt" x="558" y="204" text-anchor="middle">O</text>
+          <circle class="cond s2" cx="558" cy="201" r="15" fill="none" stroke="var(--ink)" stroke-width="2"/>
+          <g class="cond s6"><circle cx="522" cy="201" r="15" fill="none" stroke="var(--ink)" stroke-width="2"/><text class="callout" x="596" y="206">no start</text></g>
+          <circle class="cond s8" cx="522" cy="201" r="15" fill="none" stroke="var(--safe)" stroke-width="3"/>
+
+          <!-- multimeter (step 6) -->
+          <g class="cond s6">
+            <rect x="436" y="6" width="74" height="44" rx="5" fill="var(--ink)"/>
+            <rect x="443" y="12" width="60" height="22" fill="#B9D9B0"/>
+            <text x="473" y="28" text-anchor="middle" style="font:700 14px var(--body);fill:#1B2229">0.0 V</text>
+            <path d="M455 50 L470 88 M492 50 L500 88" stroke="var(--tag)" stroke-width="2" fill="none"/>
+          </g>
+
+          <!-- ROW 2 : pneumatic -->
+          <rect class="box" x="20" y="290" width="90" height="60" rx="4"/>
+          <text class="lbl" x="65" y="316" text-anchor="middle">Air</text>
+          <text class="sm" x="65" y="332" text-anchor="middle">compressor</text>
+          <path class="pipe" d="M110 320 H300"/>
+          <path class="flow-a" d="M110 320 H300"/>
+          <polygon points="300,304 340,336 340,304 300,336" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+          <line x1="320" y1="320" x2="320" y2="296" stroke="var(--ink)" stroke-width="3"/>
+          <line class="cond s1 s2 s8" x1="320" y1="296" x2="356" y2="296" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/>
+          <line class="cond s3 s4 s5 s6 s7" x1="320" y1="296" x2="320" y2="266" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/>
+          <text class="sm" x="320" y="356" text-anchor="middle">Air valve</text>
+
+          <path class="pipe" d="M340 320 H470"/>
+          <path class="flow-a cond s1 s2 s8" d="M340 320 H470"/>
+          <!-- gauge -->
+          <line x1="410" y1="320" x2="410" y2="298" stroke="var(--steel)" stroke-width="3"/>
+          <circle cx="410" cy="282" r="18" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+          <line class="cond s1 s2 s3 s4 s8" x1="410" y1="282" x2="422" y2="270" stroke="var(--tag)" stroke-width="2.5"/>
+          <line class="cond s5 s6 s7" x1="410" y1="282" x2="397" y2="294" stroke="var(--tag)" stroke-width="2.5"/>
+          <text class="sm" x="410" y="258" text-anchor="middle">Pressure</text>
+          <g class="cond s5"><path d="M445 308 q6-10 0-20 M455 308 q6-10 0-20 M465 308 q6-10 0-20" fill="none" stroke="var(--air)" stroke-width="2"/><text class="sm" x="455" y="282" text-anchor="middle">bled off</text></g>
+
+          <rect class="box" x="470" y="300" width="100" height="40" rx="3"/>
+          <rect x="478" y="306" width="18" height="28" fill="var(--steel)"/>
+          <line x1="496" y1="320" x2="600" y2="320" stroke="var(--steel)" stroke-width="5"/>
+          <text class="sm" x="520" y="358" text-anchor="middle">Air cylinder</text>
+
+          <!-- Step 1 markers -->
+          <g class="cond s1">
+            <circle class="mark" cx="65" cy="90" r="52"/><circle class="badge" cx="112" cy="46" r="11"/><text class="badget" x="112" y="50" text-anchor="middle">1</text>
+            <circle class="mark" cx="65" cy="320" r="52"/><circle class="badge" cx="112" cy="276" r="11"/><text class="badget" x="112" y="280" text-anchor="middle">2</text>
+            <circle class="mark" cx="415" cy="140" r="38"/><circle class="badge" cx="452" cy="106" r="11"/><text class="badget" x="452" y="110" text-anchor="middle">3</text>
+            <text class="callout" x="20" y="225">3 energy sources found</text>
+            <text class="sm" x="20" y="243">from the equipment manual</text>
+          </g>
+
+          <!-- Step 2 bell -->
+          <g class="cond s2">
+            <path d="M40 240 q0-22 16-24 q16 2 16 24 l5 6 h-42z" fill="var(--volt)" stroke="var(--ink)" stroke-width="1.5"/>
+            <circle cx="56" cy="251" r="4" fill="var(--ink)"/>
+            <text class="callout" x="88" y="232">Crew notified,</text>
+            <text class="callout" x="88" y="248">then normal stop</text>
+          </g>
+
+          <!-- Step 3 callout -->
+          <g class="cond s3"><text class="callout" x="20" y="232">Cut off at the source:</text><text class="sm" x="20" y="250">switch opened, valve closed</text></g>
+
+          <!-- Locks & tags (4–7) -->
+          <g class="cond s4 s5 s6 s7">
+            <path class="shackle" d="M262 196 V184 a8 8 0 0 1 16 0 V196"/>
+            <rect class="lockbody" x="256" y="194" width="28" height="22" rx="3"/>
+            <line x1="270" y1="216" x2="270" y2="226" stroke="var(--ink)"/>
+            <rect class="tagc" x="248" y="226" width="44" height="46" rx="3"/>
+            <text class="tagt" x="270" y="244" text-anchor="middle" style="font-size:7px">DANGER</text>
+            <text class="tagt" x="270" y="256" text-anchor="middle" style="font-size:6px">J. Lee</text>
+            <!-- valve lock -->
+            <path class="shackle" d="M334 262 V252 a7 7 0 0 1 14 0 V262"/>
+            <rect class="lockbody" x="330" y="260" width="22" height="18" rx="3"/>
+            <rect class="tagc" x="356" y="258" width="22" height="28" rx="2"/>
+          </g>
+          <g class="cond s7">
+            <path class="shackle" d="M296 196 V184 a8 8 0 0 1 16 0 V196"/>
+            <rect class="lockbody b" x="290" y="194" width="28" height="22" rx="3"/>
+            <text class="sm" x="322" y="212">Shift B</text>
+            <circle cx="40" cy="238" r="16" fill="none" stroke="var(--ink)" stroke-width="2"/><path d="M40 228 V238 H48" stroke="var(--ink)" stroke-width="2" fill="none"/>
+            <text class="callout" x="64" y="234">Handover:</text><text class="sm" x="64" y="250">new crew adds own lock</text>
+          </g>
+          <g class="cond s4"><text class="callout" x="20" y="232">Lock + tag at</text><text class="sm" x="20" y="250">every isolation point</text></g>
+          <g class="cond s5"><text class="callout" x="20" y="232">Release what's left</text><text class="sm" x="20" y="250">charge and trapped air</text></g>
+          <g class="cond s6"><text class="callout" x="20" y="232">Prove it's dead</text><text class="sm" x="20" y="250">meter, gauge, try-start</text></g>
+
+          <!-- Step 8 -->
+          <g class="cond s8">
+            <circle class="okc" cx="32" cy="238" r="12"/><path d="M26 238 l4 5 l9-10" stroke="#fff" stroke-width="2.5" fill="none"/>
+            <text class="callout" x="52" y="234">Tools out, locks off,</text><text class="sm" x="52" y="250">area clear, crew told</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="info" aria-live="polite">
+        <div class="num" id="iNum">1</div>
+        <h3 id="iTitle"></h3>
+        <p id="iText"></p>
+        <ul id="iList"></ul>
+        <div class="who" id="iWho"></div>
+        <div class="ctrls">
+          <button id="prev">Previous</button>
+          <button id="next" class="primary">Next step</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart">
+      <h4>How much hazardous energy is left in the machine?</h4>
+      <p>A rough picture of the idea behind the sequence. Click a point to jump to that step.</p>
+      <svg id="chart" viewBox="0 0 640 170" aria-label="Chart of hazardous energy remaining at each step"></svg>
+    </div>
+  </div>
+</section>
+
+<section id="energy" style="padding-top:0">
+  <div class="wrap">
+    <h2>“Energy” means more than electricity</h2>
+    <p class="lede">Step 3 asks you to isolate every source, not just the main switch. The article names five kinds of energy to look for.</p>
+    <div class="types">
+      <div class="type" style="--c:var(--volt)"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg><b>Electrical</b><span>Unplug cords, open disconnects, pull fuses</span></div>
+      <div class="type" style="--c:var(--safe)"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4 20h16L14 9V3"/><path d="M7 15h10"/></svg><b>Chemical</b><span>Close supply valves on process lines</span></div>
+      <div class="type" style="--c:var(--air)"><svg viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7"/></svg><b>Pneumatic</b><span>Close air valves, vent trapped pressure</span></div>
+      <div class="type" style="--c:var(--lock2)"><svg viewBox="0 0 24 24"><path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/></svg><b>Hydraulic</b><span>Isolate pumps, relieve line pressure</span></div>
+      <div class="type" style="--c:var(--tag)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg><b>Mechanical</b><span>Block moving parts with safety devices</span></div>
+    </div>
+    <div class="two">
+      <div>
+        <h3 style="font:600 1.4rem var(--display);margin:0 0 6px">Residual energy that survives isolation (step 5)</h3>
+        <p style="margin:0;color:var(--muted)">Switching off and locking doesn't empty the machine. These can still hurt someone and must be released, relieved or blocked:</p>
+        <div class="residual"><span>Electric shock</span><span>Air pressure</span><span>Heat</span><span>Motion</span><span>Gravity</span></div>
+      </div>
+      <figure class="fig">
+        <svg viewBox="0 0 360 150" role="img" aria-label="A raised load held up by gravity, blocked with a support">
+          <rect x="30" y="20" width="120" height="30" fill="var(--steel)"/>
+          <line x1="90" y1="50" x2="90" y2="130" stroke="var(--steel)" stroke-width="6"/>
+          <rect x="40" y="95" width="18" height="35" fill="var(--volt)" stroke="var(--ink)"/>
+          <rect x="122" y="95" width="18" height="35" fill="var(--volt)" stroke="var(--ink)"/>
+          <line x1="20" y1="130" x2="170" y2="130" stroke="var(--ink)" stroke-width="2"/>
+          <text class="lbl" x="185" y="40">A raised press or lift</text>
+          <text class="sm" x="185" y="58">still wants to fall after power</text>
+          <text class="sm" x="185" y="73">is cut. Block it mechanically</text>
+          <text class="sm" x="185" y="88">(yellow supports) before work.</text>
+        </svg>
+        <figcaption>Gravity is the easiest residual energy to forget, because nothing looks “on”.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="locks" style="padding-top:0">
+  <div class="wrap two">
+    <div>
+      <h2>One person, one lock, one key</h2>
+      <p class="lede">Step 4 and step 8 hinge on a simple rule. Everyone working on the machine puts their own lock on each isolation point and keeps the only key. Nobody can remove another person's lock, so the machine can't be switched on until the last worker has taken theirs off.</p>
+      <p style="color:var(--muted)">The tag doesn't stop anything physically. It tells anyone walking by that the equipment is locked out and who did it.</p>
+    </div>
+    <figure class="fig">
+      <svg viewBox="0 0 380 230" role="img" aria-label="A group lockout hasp with three padlocks, each belonging to a different worker">
+        <rect x="150" y="20" width="80" height="40" class="box"/>
+        <line x1="190" y1="60" x2="190" y2="90" stroke="var(--ink)" stroke-width="7" stroke-linecap="round"/>
+        <text class="sm" x="190" y="14" text-anchor="middle">Isolator handle (OFF)</text>
+        <path d="M110 90 H270 V120 H110z" fill="none" stroke="var(--steel)" stroke-width="5"/>
+        <text class="sm" x="290" y="110">hasp</text>
+        <g>
+          <path class="shackle" d="M122 120 V132 M142 120 V132"/><rect class="lockbody" x="112" y="130" width="40" height="32" rx="4"/>
+          <text class="lbl" x="132" y="182" text-anchor="middle">Aisha</text><text class="sm" x="132" y="198" text-anchor="middle">electrician</text>
+        </g>
+        <g>
+          <path class="shackle" d="M182 120 V132 M202 120 V132"/><rect class="lockbody b" x="172" y="130" width="40" height="32" rx="4"/>
+          <text class="lbl" x="192" y="182" text-anchor="middle">Ben</text><text class="sm" x="192" y="198" text-anchor="middle">fitter</text>
+        </g>
+        <g>
+          <path class="shackle" d="M242 120 V132 M262 120 V132"/><rect x="232" y="130" width="40" height="32" rx="4" fill="var(--safe)" stroke="var(--ink)" stroke-width="1.5"/>
+          <text class="lbl" x="252" y="182" text-anchor="middle">Chen</text><text class="sm" x="252" y="198" text-anchor="middle">shift B</text>
+        </g>
+        <text class="sm" x="190" y="222" text-anchor="middle">The handle can only move once all three locks are off.</text>
+      </svg>
+      <figcaption>A group hasp lets several workers lock the same point. This is also how step 7's shift handovers stay safe.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="verify" style="padding-top:0">
+  <div class="wrap">
+    <h2>Three ways to prove it's dead (step 6)</h2>
+    <p class="lede">Assuming isolation worked is the mistake this step exists to catch. Work starts only after checks confirm there's no energy left.</p>
+    <div class="verify">
+      <div class="fig">
+        <svg viewBox="0 0 120 80" style="max-width:130px"><rect x="20" y="4" width="80" height="70" rx="8" fill="var(--ink)"/><rect x="30" y="14" width="60" height="26" fill="#B9D9B0"/><text x="60" y="33" text-anchor="middle" style="font:700 14px var(--body);fill:#1B2229">0.0 V</text><circle cx="60" cy="56" r="10" fill="none" stroke="var(--bg)" stroke-width="3"/></svg>
+        <h4>Test for voltage</h4><p>Use a multimeter at the equipment to confirm there's no voltage present.</p>
+      </div>
+      <div class="fig">
+        <svg viewBox="0 0 120 80" style="max-width:130px"><circle cx="60" cy="42" r="32" fill="var(--panel)" stroke="var(--ink)" stroke-width="3"/><path d="M36 60 A30 30 0 0 1 84 60" fill="none" stroke="var(--line)" stroke-width="4"/><line x1="60" y1="42" x2="40" y2="58" stroke="var(--tag)" stroke-width="3"/><circle cx="60" cy="42" r="4" fill="var(--ink)"/><text x="40" y="74" class="sm">0</text></svg>
+        <h4>Read the gauges</h4><p>Pressure gauges on air or hydraulic lines should sit at zero.</p>
+      </div>
+      <div class="fig">
+        <svg viewBox="0 0 120 80" style="max-width:130px"><circle cx="60" cy="40" r="26" fill="var(--safe)"/><text x="60" y="47" text-anchor="middle" style="font:700 20px var(--body);fill:#fff">I</text><path d="M30 12 L90 70 M90 12 L30 70" stroke="var(--tag)" stroke-width="5"/></svg>
+        <h4>Try to start it</h4><p>Briefly and safely press start. Nothing should happen. Return the control to off afterwards.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="program">
+  <div class="wrap two">
+    <div>
+      <h2>LOTO is a program, not just a checklist</h2>
+      <p class="lede">The article's closing point: the eight steps only work when they sit inside a wider program that's documented, practised and checked.</p>
+      <p style="opacity:.85">A good program protects people during servicing, returns equipment to a safe condition and improves reliability. It also cuts waste: switching equipment off and on correctly avoids damage, downtime, rework and missed production.</p>
+      <div class="stat">Top 10</div>
+      <p style="opacity:.85;margin:0">Even so, LOTO (the control of hazardous energy) keeps appearing year after year on OSHA's list of the ten most cited standards, meaning many sites still aren't following it.</p>
+    </div>
+    <figure class="fig">
+      <svg viewBox="0 0 400 300" role="img" aria-label="Four program elements feed the LOTO program, which produces three outcomes">
+        <g style="font:600 13px var(--body)">
+          <g fill="none" stroke="var(--bg)" stroke-opacity=".5" stroke-width="1.5">
+            <path d="M130 40 C170 40 170 150 200 150"/><path d="M130 110 C160 110 170 150 200 150"/>
+            <path d="M130 190 C160 190 170 150 200 150"/><path d="M130 260 C170 260 170 150 200 150"/>
+            <path d="M290 150 C310 150 310 70 330 70"/><path d="M290 150 H330"/><path d="M290 150 C310 150 310 230 330 230"/>
+          </g>
+          <g fill="var(--bg)">
+            <text x="10" y="44">Documentation</text><text x="10" y="114">Energy control</text><text x="10" y="129" style="font-weight:400;font-size:11px">procedures per asset</text>
+            <text x="10" y="194">Periodic</text><text x="10" y="209" style="font-weight:400;font-size:11px">inspections</text><text x="10" y="264">Ongoing training</text>
+          </g>
+          <rect x="200" y="120" width="90" height="60" fill="var(--volt)"/>
+          <text x="245" y="146" text-anchor="middle" fill="#1B2229" style="font:700 17px var(--display)">LOTO</text>
+          <text x="245" y="164" text-anchor="middle" fill="#1B2229" style="font:600 12px var(--body)">program</text>
+          <g fill="var(--bg)"><text x="334" y="66">Safe</text><text x="334" y="80">people</text><text x="334" y="146">Safe</text><text x="334" y="160">equipment</text><text x="334" y="226">Reliable</text><text x="334" y="240">operation</text></g>
+        </g>
+      </svg>
+      <figcaption style="color:inherit;opacity:.7">Regulatory compliance comes along with all three outcomes.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="standards">
+  <div class="wrap two">
+    <div>
+      <h2>Rules that require it</h2>
+      <p class="lede">Step 1 points out that energy control procedures aren't optional. The article cites three regulations and standards.</p>
+    </div>
+    <ul class="stds">
+      <li><b>OSHA 29 CFR 1910.147 (USA)</b>The control of hazardous energy, the core US lockout–tagout rule. <a href="https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147">osha.gov</a></li>
+      <li><b>EU Directive 2009/104/EC</b>Minimum safety and health requirements for work equipment used by workers. <a href="https://eur-lex.europa.eu/legal-content/en/TXT/?uri=CELEX%3A32009L0104">eur-lex.europa.eu</a></li>
+      <li><b>NFPA 70E, Article 120</b>Electrical safety in the workplace, covering how to create an electrically safe work condition. <a href="https://www.nfpa.org/product/nfpa-70e-standard/p0070ecode">nfpa.org</a></li>
+    </ul>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">This is an explanatory summary of ABB's article, written in plain language with added diagrams. It isn't a substitute for your site's own energy control procedures or local regulations. Original: <a href="https://new.abb.com/news/detail/129861/lockout-tagout-procedures-in-8-steps">new.abb.com/news/detail/129861</a>.</div>
+</footer>
+
+<script>
+const STEPS = [
+  {t:"Preparation", short:"Prepare",
+   p:"Before anything is switched off, an authorized employee works out every way energy gets into the machine and how each one can be safely disconnected.",
+   l:["Find all power sources, using the equipment manual or asking the manufacturer if unsure","Follow the site's written energy control procedure for this asset","These procedures are required by rules such as OSHA 1910.147, EU 2009/104/EC and NFPA 70E"],
+   w:"Who: the authorized employee planning the work."},
+  {t:"Notification and shutdown", short:"Notify",
+   p:"Everyone affected is told before the machine is stopped, so nobody restarts it by mistake while work is underway.",
+   l:["Tell relevant staff, give an estimate of how long it'll be down","Promise to tell them again when it's safe to run","Then stop the equipment using the manufacturer's normal shutdown method"],
+   w:"Note in the diagram: the motor has stopped, but the wires to it are still live. Stopping isn't isolating."},
+  {t:"Energy source isolation", short:"Isolate",
+   p:"The machine is physically cut off from every energy source: electrical, chemical, pneumatic, hydraulic and mechanical.",
+   l:["Unplug cords, open disconnects, pull fuses or switch off circuits","Close valves on air, fluid and chemical lines","Block moving parts with safety devices","Each asset's procedure should list every isolation point"],
+   w:"Note in the diagram: the capacitor is still charged and air is still trapped after the valve. Isolation alone doesn't empty the machine."},
+  {t:"Apply locks and tags", short:"Lock & tag",
+   p:"A lock goes on each isolation point so it physically can't be switched back on, and a tag on each lock shows that it's locked out and who did it.",
+   l:["The tag names the authorized employee and gives key lockout details","Whoever fits a lock keeps sole control of its key","Every authorized worker on the job fits their own lock and tag at every isolation point"],
+   w:"Who: each authorized employee doing the work."},
+  {t:"Release or secure stored energy", short:"Stored energy",
+   p:"With locks on, the next job is dealing with energy still inside the machine: charge, air pressure, heat, motion or gravity.",
+   l:["Identify every remaining source of stored energy","Disconnect, relieve or block each one","The step isn't done until all residual energy is gone or can't hurt anyone"],
+   w:"Note in the diagram: the capacitor is discharged and the trapped air is bled off, so the gauge drops to zero."},
+  {t:"Verify isolation", short:"Verify",
+   p:"The authorized employee confirms the equipment really is dead before anyone touches it.",
+   l:["Check pressure gauges read zero","Briefly and safely try to start the equipment","Test for voltage with a multimeter","Only now can maintenance, repair or upgrade work begin"],
+   w:"Who: the authorized employee, before handing over to the work."},
+  {t:"Keep LOTO in place during service", short:"Maintain",
+   p:"Jobs can run across several shifts or days. The lockout has to stay unbroken when people change over or new workers join.",
+   l:["Have a site-specific procedure for shift changes and handovers","New workers add their own locks before the leaving crew removes theirs","Clear communication is essential: gaps here have caused injuries and deaths"],
+   w:"Note in the diagram: a second lock from the incoming shift joins the first."},
+  {t:"Return equipment to service", short:"Restore",
+   p:"Energy is restored in the order set out in the LOTO procedure, once the machine and area are safe.",
+   l:["Remove tools, debris and then the LOTO devices","Check the equipment is connected correctly and no one is in the danger area","Notify affected employees, then start up","Only the person who fitted a lock may remove it"],
+   w:"Who: each lock's owner removes their own lock. The authorized employee restarts."}
+];
+const LEVEL = [100,80,45,45,0,0,0,100];
+let cur = 1;
+const scene = document.getElementById('scene');
+const nav = document.getElementById('nav');
+const chart = document.getElementById('chart');
+
+STEPS.forEach((s,i)=>{
+  const b=document.createElement('button');
+  b.setAttribute('role','tab');
+  b.innerHTML='<b>'+(i+1)+'</b>'+s.short;
+  b.onclick=()=>go(i+1);
+  nav.appendChild(b);
+});
+
+// chart
+(function(){
+  const ns='http://www.w3.org/2000/svg';
+  const X=i=>50+i*77, Y=v=>120-v*0.9;
+  let d='M'+X(0)+' '+Y(LEVEL[0]);
+  for(let i=1;i<8;i++){ d+=' L'+X(i)+' '+Y(LEVEL[i]); }
+  const area=document.createElementNS(ns,'path');
+  area.setAttribute('d',d+' L'+X(7)+' 120 L'+X(0)+' 120Z');
+  area.setAttribute('fill','var(--volt)'); area.setAttribute('fill-opacity','.25');
+  chart.appendChild(area);
+  const safe=document.createElementNS(ns,'rect');
+  safe.setAttribute('x',X(4)-20); safe.setAttribute('y',10); safe.setAttribute('width',X(6)-X(4)+40); safe.setAttribute('height',112);
+  safe.setAttribute('fill','var(--safe)'); safe.setAttribute('fill-opacity','.12');
+  chart.insertBefore(safe,area);
+  const st=document.createElementNS(ns,'text');
+  st.setAttribute('x',(X(4)+X(6))/2); st.setAttribute('y',26); st.setAttribute('text-anchor','middle');
+  st.setAttribute('class','sm'); st.textContent='safe to work';
+  chart.appendChild(st);
+  const line=document.createElementNS(ns,'path');
+  line.setAttribute('d',d); line.setAttribute('fill','none'); line.setAttribute('stroke','var(--ink)'); line.setAttribute('stroke-width','2.5');
+  chart.appendChild(line);
+  const base=document.createElementNS(ns,'line');
+  base.setAttribute('x1',30);base.setAttribute('x2',620);base.setAttribute('y1',120);base.setAttribute('y2',120);
+  base.setAttribute('stroke','var(--line)'); chart.appendChild(base);
+  LEVEL.forEach((v,i)=>{
+    const g=document.createElementNS(ns,'g'); g.setAttribute('class','pt'); g.setAttribute('tabindex','0');
+    g.setAttribute('role','button'); g.setAttribute('aria-label','Go to step '+(i+1));
+    const c=document.createElementNS(ns,'circle'); c.setAttribute('cx',X(i)); c.setAttribute('cy',Y(v)); c.setAttribute('r',7);
+    const t=document.createElementNS(ns,'text'); t.setAttribute('x',X(i)); t.setAttribute('y',140); t.textContent=(i+1);
+    const t2=document.createElementNS(ns,'text'); t2.setAttribute('x',X(i)); t2.setAttribute('y',156); t2.setAttribute('style','font-weight:500;font-size:10.5px'); t2.textContent=STEPS[i].short;
+    g.appendChild(c); g.appendChild(t); g.appendChild(t2);
+    g.addEventListener('click',()=>go(i+1));
+    g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go(i+1);}});
+    chart.appendChild(g);
+  });
+  const note=document.createElementNS(ns,'text');
+  note.setAttribute('x',(X(2)+X(3))/2); note.setAttribute('y',Y(45)-10); note.setAttribute('text-anchor','middle');
+  note.setAttribute('class','sm'); note.textContent='stored energy remains';
+  chart.appendChild(note);
+  const n2=document.createElementNS(ns,'text');
+  n2.setAttribute('x',X(7)-6); n2.setAttribute('y',Y(100)-10); n2.setAttribute('text-anchor','end');
+  n2.setAttribute('class','sm'); n2.textContent='back in service';
+  chart.appendChild(n2);
+})();
+
+function go(n){
+  cur=Math.max(1,Math.min(8,n));
+  const s=STEPS[cur-1];
+  scene.setAttribute('data-step',cur);
+  scene.classList.toggle('spin',cur===1||cur===8);
+  document.getElementById('iNum').textContent=cur;
+  document.getElementById('iTitle').textContent=s.t;
+  document.getElementById('iText').textContent=s.p;
+  document.getElementById('iList').innerHTML=s.l.map(x=>'<li>'+x+'</li>').join('');
+  document.getElementById('iWho').textContent=s.w;
+  [...nav.children].forEach((b,i)=>{
+    b.setAttribute('aria-current',i+1===cur?'step':'false');
+    b.classList.toggle('done',i+1<cur);
+  });
+  [...chart.querySelectorAll('.pt')].forEach((g,i)=>g.classList.toggle('cur',i+1===cur));
+  document.getElementById('prev').disabled=cur===1;
+  const nx=document.getElementById('next');
+  nx.textContent=cur===8?'Start again':'Next step';
+}
+document.getElementById('prev').onclick=()=>go(cur-1);
+document.getElementById('next').onclick=()=>go(cur===8?1:cur+1);
+document.addEventListener('keydown',e=>{
+  if(e.target.closest && e.target.closest('input,textarea')) return;
+  if(e.key==='ArrowRight') go(cur+1);
+  if(e.key==='ArrowLeft') go(cur-1);
+});
+go(1);
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

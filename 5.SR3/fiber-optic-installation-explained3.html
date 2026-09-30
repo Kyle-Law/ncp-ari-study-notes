@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fiber optic installation, explained — FOA Technical Bulletin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9EDEC;        /* galvanized tray grey */
+  --paper:#F7F9F8;
+  --ink:#16293A;       /* deep conduit blue */
+  --muted:#51606C;
+  --line:#C3CCCB;
+  --sm:#E8B800;        /* singlemode yellow jacket */
+  --om:#15A8A3;        /* OM3/4 aqua */
+  --mm:#EE7424;        /* multimode / innerduct orange */
+  --bad:#C8352B;
+  --good:#23845A;
+  --f1:#1F5FC4;--f2:#EE7424;--f3:#23945A;--f4:#8A5A2B;--f5:#7A8791;--f6:#FFFFFF;
+  --f7:#D12E2E;--f8:#1B1B1B;--f9:#F2CC0C;--f10:#7B3FB5;--f11:#F08BB0;--f12:#2EC7C0;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121B22;--paper:#1A252E;--ink:#E4ECEF;--muted:#9AABB5;--line:#2F3E48;
+    --bad:#F0685E;--good:#4CC28A;--f8:#000;
+  }
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 16px);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.6 "Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;line-height:1.08;margin:0}
+h1{font-size:clamp(2.6rem,7vw,4.8rem);font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(2rem,4.2vw,2.8rem);font-weight:700;margin-bottom:.4em}
+h3{font-size:1.45rem;font-weight:600;margin:1.8em 0 .4em}
+p{margin:.6em 0}
+a{color:inherit;text-decoration-color:var(--mm);text-underline-offset:3px}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--om);outline-offset:2px}
+img,svg{max-width:100%}
+.wrap{display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px;max-width:1180px;margin:0 auto;padding:0 28px}
+@media (max-width:900px){.wrap{grid-template-columns:1fr;gap:0;padding:0 18px}.rail{display:none}}
+
+/* hero */
+.hero{max-width:1180px;margin:0 auto;padding:64px 28px 40px}
+.hero p.lede{max-width:62ch;font-size:1.15rem;color:var(--muted)}
+.hero .src{font-size:.95rem;color:var(--muted)}
+.strand{margin:34px 0 0;height:70px;width:100%}
+.strand .core{stroke:var(--sm);stroke-width:4}
+.strand .clad{stroke:var(--line);stroke-width:18;stroke-linecap:round}
+.strand .pulse{fill:#FFF6BF;filter:drop-shadow(0 0 8px var(--sm))}
+@media (prefers-reduced-motion:reduce){.strand animateMotion{display:none}}
+
+/* rail: each part wears its TIA-598 fiber color */
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;padding-top:8px}
+.rail ol{list-style:none;margin:0;padding:0;border-left:3px solid var(--line)}
+.rail li a{display:flex;align-items:center;gap:10px;padding:7px 0 7px 14px;margin-left:-3px;border-left:3px solid transparent;text-decoration:none;color:var(--muted);font-size:.95rem;line-height:1.25}
+.rail li a.on{color:var(--ink);border-left-color:var(--ink);font-weight:600}
+.dot{flex:none;width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(0,0,0,.35)}
+
+main section{background:var(--paper);border-radius:6px;padding:40px clamp(18px,4vw,48px);margin:0 0 28px;border-top:6px solid var(--c,var(--ink))}
+main section > p, main section > ul, main section > h3{max-width:70ch}
+.partno{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:1.05rem;color:var(--muted);display:flex;align-items:center;gap:8px;margin-bottom:6px}
+figure{margin:26px 0;padding:0}
+figcaption{font-size:.92rem;color:var(--muted);margin-top:8px;max-width:70ch}
+.fig{background:var(--bg);border-radius:4px;padding:18px;overflow-x:auto}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:640px){.two{grid-template-columns:1fr}}
+.note{border-left:4px solid var(--mm);padding:6px 0 6px 16px;margin:18px 0;max-width:70ch}
+.rule{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:baseline;max-width:70ch}
+.big{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:2.2rem;line-height:1}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.95rem;min-width:520px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;font-size:.9rem;color:var(--muted)}
+.sw{display:inline-block;width:18px;height:18px;border-radius:3px;vertical-align:-4px;margin-right:8px;border:1px solid rgba(0,0,0,.3)}
+
+/* SVG helpers */
+svg text{font-family:"Barlow",system-ui,sans-serif;fill:var(--ink)}
+.t-m{fill:var(--muted)!important}
+.t-s{font-size:13px}.t-xs{font-size:11px}.t-b{font-weight:600}
+.s-ink{stroke:var(--ink)}.s-mut{stroke:var(--muted)}.s-line{stroke:var(--line)}
+.f-ink{fill:var(--ink)}.f-paper{fill:var(--paper)}.f-bg{fill:var(--bg)}.f-line{fill:var(--line)}
+.s-bad{stroke:var(--bad)}.s-good{stroke:var(--good)}.f-bad{fill:var(--bad)}.f-good{fill:var(--good)}
+.nofill{fill:none}
+
+/* checklist tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 0}
+.tabs button{font:600 1rem "Barlow",sans-serif;border:1.5px solid var(--line);background:transparent;color:var(--ink);padding:8px 14px;border-radius:4px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.checklist{list-style:none;padding:0;margin:14px 0 0;columns:2;column-gap:28px}
+@media (max-width:640px){.checklist{columns:1}}
+.checklist li{break-inside:avoid;margin:0 0 6px}
+.checklist label{display:flex;gap:10px;cursor:pointer;line-height:1.35}
+.checklist input{margin-top:3px;accent-color:var(--good);width:17px;height:17px;flex:none}
+.checklist input:checked + span{color:var(--muted);text-decoration:line-through}
+.progress{height:6px;background:var(--line);border-radius:3px;margin-top:14px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--good);width:0;transition:width .25s}
+
+/* controls */
+.ctl{display:flex;flex-wrap:wrap;gap:18px;align-items:end;margin-bottom:14px}
+.ctl label{display:flex;flex-direction:column;font-size:.9rem;color:var(--muted);gap:4px}
+.ctl input[type=number],.ctl select{font:500 1rem "Barlow",sans-serif;padding:7px 9px;border:1.5px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);width:130px}
+.ctl select{width:auto}
+input[type=range]{width:min(320px,100%);accent-color:var(--mm)}
+.out{font-family:"Barlow Condensed",sans-serif;font-size:1.3rem;font-weight:600}
+
+.steps{counter-reset:s;list-style:none;padding:0;max-width:70ch}
+.steps li{counter-increment:s;position:relative;padding-left:44px;margin:0 0 14px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-weight:600;font-size:.95rem}
+
+footer{max-width:1180px;margin:0 auto;padding:10px 28px 60px;color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>How to install fiber optic cable without breaking the light</h1>
+  <p class="lede">A visual walkthrough of the Fiber Optic Association's <em>Guide to Fiber Optic Installation</em> (Technical Bulletin, rev. March 2021). It covers premises cabling inside buildings plus the outside‑plant runs that link buildings on a campus: planning, handling, choosing cable, pulling, terminating, testing and documenting.</p>
+  <p class="src">Source: <a href="https://www.foa.org/tech/guides/INSTL.pdf">foa.org/tech/guides/INSTL.pdf</a>. Diagrams and tools on this page are illustrative; the numbers come from the guide unless marked otherwise.</p>
+  <svg class="strand" viewBox="0 0 1000 70" preserveAspectRatio="none" aria-hidden="true">
+    <path id="fpath" d="M10 35 C 200 5, 300 65, 500 35 S 800 5, 990 35" class="clad nofill"/>
+    <path d="M10 35 C 200 5, 300 65, 500 35 S 800 5, 990 35" class="core nofill"/>
+    <circle r="7" class="pulse"><animateMotion dur="3.2s" repeatCount="indefinite"><mpath href="#fpath"/></animateMotion></circle>
+  </svg>
+</header>
+
+<div class="wrap">
+<nav class="rail" aria-label="Parts of the guide">
+  <ol>
+    <li><a href="#p1"><span class="dot" style="background:var(--f1)"></span>1 · What it covers</a></li>
+    <li><a href="#p2"><span class="dot" style="background:var(--f2)"></span>2 · Planning</a></li>
+    <li><a href="#p3"><span class="dot" style="background:var(--f3)"></span>3 · Site rules</a></li>
+    <li><a href="#p4"><span class="dot" style="background:var(--f4)"></span>4 · Cables</a></li>
+    <li><a href="#p5"><span class="dot" style="background:var(--f5)"></span>5 · Pulling cable</a></li>
+    <li><a href="#p6"><span class="dot" style="background:var(--f6)"></span>6 · Connectors &amp; splices</a></li>
+    <li><a href="#p7"><span class="dot" style="background:var(--f7)"></span>7 · Testing</a></li>
+    <li><a href="#p8"><span class="dot" style="background:var(--f8)"></span>8 · Documentation</a></li>
+    <li><a href="#cheat"><span class="dot" style="background:var(--f9)"></span>Key numbers</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- PART 1 -->
+<section id="p1" style="--c:var(--f1)">
+  <div class="partno"><span class="dot" style="background:var(--f1)"></span>Part 1</div>
+  <h2>What the guide is for</h2>
+  <p>The bulletin sets out recommended procedures for installing and testing fiber cabling that carries communications, security and control signals. Its aim is a repeatable, high-quality installation. It sits inside a family of FOA documents, and it is the "how do we actually install it" piece.</p>
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 760 170" role="img" aria-label="FOA document family: design, user guide, installation, testing and restoration">
+        <g class="t-s">
+          <rect x="10" y="60" width="130" height="50" rx="4" class="f-paper s-line" stroke-width="1.5"/>
+          <text x="75" y="82" text-anchor="middle" class="t-b">Network design</text><text x="75" y="99" text-anchor="middle" class="t-m t-xs">choose the parts, route</text>
+          <rect x="165" y="60" width="130" height="50" rx="4" class="f-paper s-line" stroke-width="1.5"/>
+          <text x="230" y="82" text-anchor="middle" class="t-b">User's guide</text><text x="230" y="99" text-anchor="middle" class="t-m t-xs">should we use fiber?</text>
+          <rect x="320" y="50" width="140" height="70" rx="4" style="fill:var(--f1)"/>
+          <text x="390" y="82" text-anchor="middle" class="t-b" style="fill:#fff">Installation</text><text x="390" y="100" text-anchor="middle" class="t-xs" style="fill:#fff">this guide</text>
+          <rect x="485" y="60" width="130" height="50" rx="4" class="f-paper s-line" stroke-width="1.5"/>
+          <text x="550" y="82" text-anchor="middle" class="t-b">Testing &amp;</text><text x="550" y="99" text-anchor="middle" class="t-b">troubleshooting</text>
+          <rect x="630" y="60" width="120" height="50" rx="4" class="f-paper s-line" stroke-width="1.5"/>
+          <text x="690" y="82" text-anchor="middle" class="t-b">Restoration</text><text x="690" y="99" text-anchor="middle" class="t-m t-xs">fix it fast</text>
+          <path d="M140 85h180M460 85h25M615 85h15" class="s-mut" stroke-width="1.5" stroke-dasharray="4 4"/>
+          <text x="390" y="30" text-anchor="middle" class="t-m">Also keep NECA/FOA 301, the installation standard, at hand</text>
+          <text x="390" y="152" text-anchor="middle" class="t-m">Scope: indoor (premises) cabling + outside plant between campus buildings</text>
+        </g>
+      </svg>
+    </div>
+  </figure>
+</section>
+
+<!-- PART 2 -->
+<section id="p2" style="--c:var(--f2)">
+  <div class="partno"><span class="dot" style="background:var(--f2)"></span>Part 2</div>
+  <h2>Plan before anyone pulls cable</h2>
+  <p>An install coordinates many people and companies, so the guide recommends a checklist that follows the project from design to handover. Here it is as a working checklist in four phases. Ticks are kept only while this page is open.</p>
+  <div class="tabs" role="tablist" id="phaseTabs"></div>
+  <ul class="checklist" id="checklist"></ul>
+  <div class="progress" aria-hidden="true"><i id="prog"></i></div>
+  <p class="t-m" id="progTxt" style="color:var(--muted);font-size:.92rem"></p>
+</section>
+
+<!-- PART 3 -->
+<section id="p3" style="--c:var(--f3)">
+  <div class="partno"><span class="dot" style="background:var(--f3)"></span>Part 3</div>
+  <h2>Site rules: receiving, handling and building codes</h2>
+  <h3>When the materials arrive</h3>
+  <p>Inspect everything for damage on arrival, and test for continuity or loss if anything looks suspect. Check quantities against the order, including fiber count, fiber type and cable length. Report and replace anything missing or damaged. Store it all somewhere clean and dry, away from temperature extremes.</p>
+  <h3>Moving reels</h3>
+  <p>Small spools go by hand. Big reels need lifting gear or two or more trained people. Both cable ends must stay reachable so the reel can be tested, for example with a visual fault locator and bare‑fiber adapters.</p>
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 720 250" role="img" aria-label="Correct: slings on a pipe through the reel hub. Wrong: sling wrapped around the cable">
+        <!-- correct -->
+        <g transform="translate(40,0)">
+          <path d="M150 20 v18" class="s-ink" stroke-width="3"/>
+          <path d="M150 38 l-10 8 a10 10 0 1 0 20 0 z" class="f-ink"/>
+          <path d="M150 50 L60 140 M150 50 L240 140" class="s-mut" stroke-width="3"/>
+          <circle cx="150" cy="150" r="85" class="f-line s-ink" stroke-width="2"/>
+          <circle cx="150" cy="150" r="62" class="nofill" style="stroke:var(--sm)" stroke-width="18" opacity=".85"/>
+          <circle cx="150" cy="150" r="22" class="f-paper s-ink" stroke-width="2"/>
+          <rect x="40" y="143" width="220" height="14" rx="3" class="f-ink"/>
+          <circle cx="60" cy="150" r="5" class="f-paper"/><circle cx="240" cy="150" r="5" class="f-paper"/>
+          <text x="150" y="258" text-anchor="middle" class="t-b t-s" style="fill:var(--good)">✓ Pipe through the hub, matched slings</text>
+        </g>
+        <!-- wrong -->
+        <g transform="translate(380,0)">
+          <path d="M150 20 v18" class="s-ink" stroke-width="3"/>
+          <path d="M150 38 l-10 8 a10 10 0 1 0 20 0 z" class="f-ink"/>
+          <circle cx="150" cy="150" r="85" class="f-line s-ink" stroke-width="2"/>
+          <circle cx="150" cy="150" r="62" class="nofill" style="stroke:var(--sm)" stroke-width="18" opacity=".85"/>
+          <circle cx="150" cy="150" r="22" class="f-paper s-ink" stroke-width="2"/>
+          <path d="M150 50 L95 110 M150 50 L205 110" class="s-bad" stroke-width="3"/>
+          <path d="M95 110 Q150 250 205 110" class="nofill s-bad" stroke-width="5"/>
+          <path d="M125 150 l50 50 M175 150 l-50 50" class="s-bad" stroke-width="5" stroke-linecap="round"/>
+          <text x="150" y="258" text-anchor="middle" class="t-b t-s" style="fill:var(--bad)">✗ Sling around the spooled cable</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>Slings or chokers attach to a properly sized pipe through the reel's centre hole, never around the wound cable, which would crush it.</figcaption>
+  </figure>
+
+  <h3>Pathways, fire and grounding</h3>
+  <div class="two">
+    <div>
+      <p><strong>Build supports first.</strong> Trays, racks and conduit go in before the cable, following TIA/EIA‑569 and NECA/BICSI‑568, sized for future growth and bend radius.</p>
+      <p><strong>Never share a duct.</strong> Don't pull fiber into a conduit that already holds any cable. Add innerduct to divide an empty duct instead.</p>
+      <p><strong>Remove abandoned cable</strong> (not terminated and not tagged for future use), as the National Electrical Code requires, unless the owner says to keep it.</p>
+    </div>
+    <div>
+      <p><strong>Firestop every penetration</strong> through a fire separation with approved compounds or devices. A breach may need to be watched until sealed; confirm rules with the Authority Having Jurisdiction first.</p>
+      <p><strong>Ground the metal.</strong> Most fiber cable is non-conductive, but racks, patch panels and wall boxes are metal and must be grounded per the NEC and TIA‑607. Conductive (armored) cables need bonding too.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PART 4 -->
+<section id="p4" style="--c:var(--f4)">
+  <div class="partno"><span class="dot" style="background:var(--f4)"></span>Part 4</div>
+  <h2>Know the cable you're installing</h2>
+  <p>Cables are sorted two ways: by the fiber inside (multimode, singlemode, or a mix called hybrid) and by construction. Indoor cables are usually tight‑buffered with flame‑rated jackets; outdoor (OSP) cables are usually loose‑tube with water blocking and sometimes armor. Hybrid cables need each fiber identified, because multimode and singlemode are terminated differently.</p>
+
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 760 290" role="img" aria-label="Cross-sections of tight buffered, loose tube and ribbon cables">
+        <!-- Tight buffer distribution -->
+        <g transform="translate(125,125)">
+          <circle r="92" style="fill:#3A5870"/>
+          <circle r="80" style="fill:#E9D9A6"/>
+          <g style="fill:#C9AE5A">
+            <circle cx="-60" cy="-30" r="3"/><circle cx="55" cy="-40" r="3"/><circle cx="-20" cy="62" r="3"/><circle cx="40" cy="55" r="3"/><circle cx="-65" cy="25" r="3"/><circle cx="68" cy="10" r="3"/><circle cx="10" cy="-70" r="3"/><circle cx="-38" cy="-62" r="3"/>
+          </g>
+          <circle r="14" class="f-ink"/>
+          <g stroke="#333" stroke-width="1">
+            <circle cx="0" cy="-40" r="15" style="fill:var(--f1)"/><circle cx="35" cy="-20" r="15" style="fill:var(--f2)"/><circle cx="35" cy="20" r="15" style="fill:var(--f3)"/>
+            <circle cx="0" cy="40" r="15" style="fill:var(--f4)"/><circle cx="-35" cy="20" r="15" style="fill:var(--f5)"/><circle cx="-35" cy="-20" r="15" style="fill:#fff"/>
+          </g>
+          <text y="128" text-anchor="middle" class="t-b">Tight buffered</text>
+          <text y="146" text-anchor="middle" class="t-s t-m">900 µm coated fibers, aramid, stiffener</text>
+          <text y="162" text-anchor="middle" class="t-s t-m">Indoor · patch cords, backbones</text>
+        </g>
+        <!-- Loose tube -->
+        <g transform="translate(380,125)">
+          <circle r="92" style="fill:#1E1E1E"/>
+          <circle r="80" style="fill:#DCE3E5"/>
+          <circle r="16" style="fill:#5D6B73"/>
+          <g id="tubes"></g>
+          <text y="128" text-anchor="middle" class="t-b">Loose tube</text>
+          <text y="146" text-anchor="middle" class="t-s t-m">250 µm fibers floating in gel/dry block</text>
+          <text y="162" text-anchor="middle" class="t-s t-m">Outdoor · higher pull tension</text>
+        </g>
+        <!-- Ribbon -->
+        <g transform="translate(635,125)">
+          <circle r="92" style="fill:#1E1E1E"/>
+          <circle r="80" style="fill:#DCE3E5"/>
+          <rect x="-50" y="-44" width="100" height="88" rx="6" style="fill:#fff" stroke="#999"/>
+          <g id="ribbons"></g>
+          <text y="128" text-anchor="middle" class="t-b">Ribbon</text>
+          <text y="146" text-anchor="middle" class="t-s t-m">12 or 24 fibers per ribbon</text>
+          <text y="162" text-anchor="middle" class="t-s t-m">144 – 864+ fibers per cable</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>Simplified cross-sections, not to scale. Tight-buffered simplex, zipcord and breakout cables can be terminated directly; distribution-cable fibers and bare 250 µm loose-tube fibers need a breakout kit and the protection of a patch panel or box.</figcaption>
+  </figure>
+
+  <h3>Flame ratings: which cable goes where</h3>
+  <p>Every cable inside a building must be listed and carry an NEC 770 flammability marking. An unmarked cable should never go indoors. The letters decode as <strong>OF</strong> (optical fiber) + <strong>N</strong> non-conductive or <strong>C</strong> conductive + the rating.</p>
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 760 300" role="img" aria-label="Building cross section showing plenum, riser and general-purpose cable locations">
+        <rect x="40" y="20" width="520" height="260" class="f-paper s-ink" stroke-width="2"/>
+        <!-- floors -->
+        <path d="M40 150 H560" class="s-ink" stroke-width="6"/>
+        <!-- plenum spaces -->
+        <rect x="42" y="22" width="516" height="34" style="fill:var(--om);opacity:.18"/>
+        <rect x="42" y="153" width="516" height="34" style="fill:var(--om);opacity:.18"/>
+        <path d="M40 56 H560 M40 187 H560" class="s-mut" stroke-dasharray="6 5"/>
+        <!-- riser -->
+        <rect x="440" y="22" width="40" height="256" style="fill:var(--mm);opacity:.22"/>
+        <path d="M460 30 V270" style="stroke:var(--mm)" stroke-width="5"/>
+        <!-- plenum cable -->
+        <path d="M460 40 H90" style="stroke:var(--om)" stroke-width="5"/>
+        <path d="M460 170 H120" style="stroke:var(--om)" stroke-width="5"/>
+        <!-- general -->
+        <path d="M150 110 H300" style="stroke:var(--f10)" stroke-width="5"/>
+        <rect x="300" y="95" width="36" height="30" class="f-line s-ink"/>
+        <text x="318" y="140" text-anchor="middle" class="t-xs t-m">equip.</text>
+        <text x="225" y="100" text-anchor="middle" class="t-s t-b">OFNG / OFCG</text>
+        <text x="220" y="75" text-anchor="middle" class="t-xs t-m">ceiling air-handling space (plenum)</text>
+        <text x="300" y="47" text-anchor="middle" class="t-s t-b" style="fill:var(--om)"></text>
+        <text x="455" y="292" text-anchor="middle" class="t-xs t-m">vertical shaft</text>
+        <!-- legend -->
+        <g transform="translate(585,40)" class="t-s">
+          <path d="M0 6 h30" style="stroke:var(--om)" stroke-width="5"/><text x="40" y="11" class="t-b">OFNP / OFCP</text><text x="40" y="28" class="t-xs t-m">Plenum: air-handling spaces.</text><text x="40" y="42" class="t-xs t-m">Strictest rating.</text>
+          <path d="M0 76 h30" style="stroke:var(--mm)" stroke-width="5"/><text x="40" y="81" class="t-b">OFNR / OFCR</text><text x="40" y="98" class="t-xs t-m">Riser: vertical runs</text><text x="40" y="112" class="t-xs t-m">between floors.</text>
+          <path d="M0 146 h30" style="stroke:var(--f10)" stroke-width="5"/><text x="40" y="151" class="t-b">OFNG / OFCG</text><text x="40" y="168" class="t-xs t-m">General purpose:</text><text x="40" y="182" class="t-xs t-m">within a floor.</text>
+          <text x="0" y="222" class="t-b">OFN-LS</text><text x="0" y="238" class="t-xs t-m">Low-smoke variant.</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>Under the NEC, a higher rating can generally substitute for a lower one (plenum can go where riser or general is allowed), but not the other way round. That substitution rule comes from the NEC, not this guide.</figcaption>
+  </figure>
+
+  <h3>Color codes</h3>
+  <p>Three separate color systems help you identify what you're holding: the jacket, the connector, and each individual fiber.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Fiber type (TIA‑598C)</th><th>Jacket, non-military</th><th>Printed on cable</th></tr></thead>
+    <tbody>
+      <tr><td>Multimode 50/125 (OM2)</td><td><span class="sw" style="background:var(--mm)"></span>Orange</td><td>50/125</td></tr>
+      <tr><td>Multimode 50/125 laser-optimized (OM3/OM4)</td><td><span class="sw" style="background:var(--om)"></span>Aqua</td><td>850 LO 50/125</td></tr>
+      <tr><td>Multimode 62.5/125 (OM1)</td><td><span class="sw" style="background:var(--mm)"></span>Orange</td><td>62.5/125</td></tr>
+      <tr><td>Singlemode OS1, OS2</td><td><span class="sw" style="background:var(--sm)"></span>Yellow</td><td>SM or SM/NZDS</td></tr>
+      <tr><td>Polarization-maintaining singlemode</td><td><span class="sw" style="background:var(--f1)"></span>Blue</td><td>By agreement</td></tr>
+      <tr><td>Outside plant cable (any fiber)</td><td><span class="sw" style="background:#1B1B1B"></span>Black (UV resistant)</td><td>Read the jacket print</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 700 150" role="img" aria-label="Connector colors: beige multimode, blue singlemode, green angled APC">
+        <g id="connectors"></g>
+      </svg>
+    </div>
+    <figcaption>TIA‑568 connector body/boot colors. Because the ST and FC have metal bodies, colored boots often carry the code instead.</figcaption>
+  </figure>
+
+  <p>Individual fibers follow TIA‑598's 12‑color sequence. In loose‑tube cable the same sequence colors the tubes too, so a fiber is identified by tube color + fiber color. (The part markers on this page use the same sequence: Part 1 blue, Part 2 orange, and so on.)</p>
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 760 90" role="img" aria-label="The 12 fiber color code">
+        <g id="code12"></g>
+      </svg>
+      <div class="ctl" style="margin:14px 0 0">
+        <label>Find fiber number
+          <input type="number" id="fnum" min="1" max="864" value="15">
+        </label>
+        <div class="out" id="fout" aria-live="polite"></div>
+      </div>
+    </div>
+    <figcaption>Fiber finder assumes 12 fibers per tube, which is common but not universal. Always check the cable datasheet.</figcaption>
+  </figure>
+</section>
+
+<!-- PART 5 -->
+<section id="p5" style="--c:var(--f5)">
+  <div class="partno"><span class="dot" style="background:var(--f5)"></span>Part 5</div>
+  <h2>Pull it without hurting the glass</h2>
+  <p>Fiber cable can take more pulling force than copper, but only through its strength members. Stress, tight bends, twists and crush are what kill fibers, sometimes long after the job is done. Outdoors, cable is buried, pulled or blown into duct, or hung aerially; indoors it goes in trays, hangers, conduit or innerduct. Check the cable is long enough for the run and aim to do it in one pull.</p>
+
+  <h3>Pull by the strength members</h3>
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 760 130" role="img" aria-label="Pulling rope attached through a swivel to the aramid strength members">
+        <path d="M20 65 H200" class="s-mut" stroke-width="4" stroke-dasharray="10 4"/>
+        <text x="110" y="50" text-anchor="middle" class="t-s">Pull rope / tape</text>
+        <circle cx="222" cy="65" r="16" class="nofill s-ink" stroke-width="4"/>
+        <path d="M238 65 H270" class="s-ink" stroke-width="4"/>
+        <rect x="270" y="52" width="30" height="26" rx="4" class="f-ink"/>
+        <text x="270" y="105" text-anchor="middle" class="t-s t-b">Swivel pulling eye</text>
+        <text x="270" y="121" text-anchor="middle" class="t-xs t-m">stops twist</text>
+        <path d="M300 60 C 330 60, 340 55, 380 58 M300 70 C 330 70, 340 75, 380 72 M300 65 H380" style="stroke:#C9AE5A" stroke-width="3" class="nofill"/>
+        <text x="345" y="40" text-anchor="middle" class="t-s t-b">Aramid yarn</text>
+        <rect x="380" y="48" width="360" height="34" rx="6" style="fill:var(--sm)"/>
+        <text x="560" y="70" text-anchor="middle" class="t-s t-b" style="fill:#16293A">Cable jacket — don't pull by this*</text>
+        <text x="560" y="105" text-anchor="middle" class="t-xs t-m">*unless the maker approves and a proper grip is used</text>
+      </svg>
+    </div>
+    <figcaption>Never exceed the maximum pulling tension. Indoors, tight-buffered cable can be pulled by hand by wrapping it five times around a ~40 cm (8 in) spool and holding it gently.</figcaption>
+  </figure>
+
+  <h3>Bend radius: try it</h3>
+  <p>A kink or tight bend can break fiber, especially under tension. If the manufacturer gives no figure, the rule is <strong>20× the cable diameter while pulling</strong> and <strong>10× once installed</strong> and at rest.</p>
+  <figure>
+    <div class="fig">
+      <div class="ctl">
+        <label>Cable outer diameter: <span id="dval" class="out"></span>
+          <input type="range" id="dia" min="2" max="25" step="0.5" value="8">
+        </label>
+      </div>
+      <svg viewBox="0 0 700 260" role="img" aria-label="Minimum bend radius during pull and after install" id="bendSvg">
+        <g transform="translate(20,230)">
+          <path id="arcPull" class="nofill" stroke-linecap="round" style="stroke:var(--mm)"/>
+          <path id="arcRest" class="nofill" stroke-linecap="round" style="stroke:var(--om)"/>
+          <path d="M0 0 H660" class="s-line" stroke-width="1"/>
+        </g>
+        <g transform="translate(430,40)" class="t-s">
+          <rect width="16" height="16" rx="3" style="fill:var(--mm)"/><text x="26" y="13" class="t-b">While pulling (20×)</text>
+          <text x="26" y="34" class="out" id="rPull" style="font-size:22px"></text>
+          <rect y="70" width="16" height="16" rx="3" style="fill:var(--om)"/><text x="26" y="83" class="t-b">Installed, no load (10×)</text>
+          <text x="26" y="104" class="out" id="rRest" style="font-size:22px"></text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>Arcs drawn to scale with each other; stroke width shows the cable. The manufacturer's spec always overrides this rule of thumb.</figcaption>
+  </figure>
+
+  <h3>No twists: roll it off, lay it in figure‑8s</h3>
+  <div class="two">
+    <figure style="margin:0">
+      <div class="fig">
+        <svg viewBox="0 0 320 200" role="img" aria-label="Rolling cable off the reel vs spinning it off the end">
+          <g transform="translate(80,90)">
+            <circle r="50" class="f-line s-ink" stroke-width="2"/><circle r="12" class="f-paper s-ink"/>
+            <path d="M0 -50 C 60 -50, 90 -30, 110 -30" style="stroke:var(--sm)" stroke-width="6" class="nofill"/>
+            <path d="M-30 70 a 35 35 0 0 0 60 0" class="nofill s-good" stroke-width="2.5" marker-end="url(#ag)"/>
+            <text y="100" text-anchor="middle" class="t-s t-b" style="fill:var(--good)">✓ Roll off</text>
+          </g>
+          <g transform="translate(240,90)">
+            <ellipse rx="18" ry="50" class="f-line s-ink" stroke-width="2"/>
+            <path d="M0 -50 C 20 -70, 50 -20, 30 20 S 60 60, 70 40" style="stroke:var(--sm)" stroke-width="6" class="nofill"/>
+            <text y="100" text-anchor="middle" class="t-s t-b" style="fill:var(--bad)">✗ Spin off the end</text>
+          </g>
+          <defs><marker id="ag" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" class="f-good"/></marker></defs>
+        </svg>
+      </div>
+      <figcaption>Pulling cable off the end of a stationary spool adds one twist per turn.</figcaption>
+    </figure>
+    <figure style="margin:0">
+      <div class="fig">
+        <svg viewBox="0 0 320 200" role="img" aria-label="Figure-8 cable loop on the ground">
+          <path d="M160 100 C 220 30, 300 40, 300 100 S 220 170, 160 100 S 20 30, 20 100 S 100 170, 160 100" class="nofill" style="stroke:var(--sm)" stroke-width="8" stroke-linejoin="round"/>
+          <text x="80" y="104" text-anchor="middle" class="t-xs t-m">+½ twist</text>
+          <text x="240" y="104" text-anchor="middle" class="t-xs t-m">−½ twist</text>
+          <text x="160" y="190" text-anchor="middle" class="t-s t-b">Figure‑8 cancels the twist</text>
+        </svg>
+      </div>
+      <figcaption>Each loop of the 8 adds half a twist and the other takes it back out.</figcaption>
+    </figure>
+  </div>
+
+  <h3>Long outdoor runs</h3>
+  <p>Up to roughly 5 km (3 mi): use a jacket‑compatible lubricant and ideally an automated puller with tension control or a breakaway eye. Beyond about 4 km (2.5 mi), split the pull.</p>
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 760 150" role="img" aria-label="Pull from the middle out to both ends">
+        <path d="M40 90 H720" class="s-line" stroke-width="16" stroke-linecap="round"/>
+        <text x="40" y="130" class="t-s t-b">End A</text><text x="720" y="130" text-anchor="end" class="t-s t-b">End B</text>
+        <circle cx="380" cy="60" r="30" class="f-line s-ink" stroke-width="2"/><circle cx="380" cy="60" r="8" class="f-paper s-ink"/>
+        <text x="380" y="18" text-anchor="middle" class="t-s t-b">Reel set up mid-route</text>
+        <path d="M350 90 H90" style="stroke:var(--sm)" stroke-width="6" marker-end="url(#ay)"/>
+        <path d="M410 90 H670" style="stroke:var(--sm)" stroke-width="6" marker-end="url(#ay)"/>
+        <text x="220" y="80" text-anchor="middle" class="t-s">① pull first half</text>
+        <text x="540" y="80" text-anchor="middle" class="t-s">② figure‑8 the rest, pull other way</text>
+        <defs><marker id="ay" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" style="fill:var(--sm)"/></marker></defs>
+      </svg>
+    </div>
+    <figcaption>Alternatives: pull to intermediate points and figure‑8 there, or use intermediate "assist" pullers for one continuous pull.</figcaption>
+  </figure>
+
+  <h3>Vertical runs and securing cable</h3>
+  <div class="two">
+    <div>
+      <p>Drop vertical cables down rather than hauling them up. Support them often, with snug ties or Kellems grips, so the jacket isn't carrying the weight. Leave service loops: they help with gripping and give slack for future repairs or reroutes.</p>
+      <p>Fiber is sensitive to crushing. Tool‑tightened zip ties cause loss and breakage. Tighten ties by hand so they still slide along the cable, then trim the tail so nobody tightens them later. Hook‑and‑loop (Velcro‑type) ties are preferred.</p>
+    </div>
+    <figure style="margin:0">
+      <div class="fig">
+        <svg viewBox="0 0 320 170" role="img" aria-label="Hook and loop tie keeps cable round; tight zip tie crushes it">
+          <g transform="translate(80,75)">
+            <rect x="-48" y="-48" width="96" height="96" rx="48" class="nofill s-good" stroke-width="7"/>
+            <circle r="40" style="fill:var(--sm)"/>
+            <circle cx="-12" cy="-8" r="5" style="fill:var(--f1)"/><circle cx="10" cy="-10" r="5" style="fill:var(--f2)"/><circle cx="0" cy="12" r="5" style="fill:var(--f3)"/>
+            <text y="75" text-anchor="middle" class="t-s t-b" style="fill:var(--good)">✓ Hook‑and‑loop</text>
+          </g>
+          <g transform="translate(240,75)">
+            <ellipse rx="50" ry="24" style="fill:var(--sm)"/>
+            <rect x="-54" y="-28" width="108" height="56" rx="26" class="nofill s-bad" stroke-width="4"/>
+            <circle cx="-12" cy="-3" r="5" style="fill:var(--f1)"/><circle cx="4" cy="-4" r="5" style="fill:var(--f2)"/><circle cx="18" cy="2" r="5" style="fill:var(--f3)"/>
+            <text y="75" text-anchor="middle" class="t-s t-b" style="fill:var(--bad)">✗ Over‑tight zip tie</text>
+          </g>
+        </svg>
+      </div>
+    </figure>
+  </div>
+
+  <h3>Hardware along the route</h3>
+  <p>Premises cable rides in trays, ladder racks and J‑hooks per TIA‑569. Running it inside bright orange plenum‑rated innerduct adds protection and makes fiber easy to spot. Outside plant goes in conduit or innerduct, direct‑buried, or aerial (lashed to a messenger or self‑supporting). At the ends: breakout kits protect bare 250 µm fibers, sealed splice closures protect outdoor splices, and lockable splice/patch panels in racks organize terminations. Keep bend radius and avoid pinching everywhere, including inside the enclosures.</p>
+</section>
+
+<!-- PART 6 -->
+<section id="p6" style="--c:var(--f6)">
+  <div class="partno"><span class="dot" style="background:var(--f6)"></span>Part 6</div>
+  <h2>Joining fibers: connectors and splices</h2>
+  <p>There are two ways to end or join a fiber. A <strong>connector</strong> makes a joint you can unplug, and connects fibers to equipment. A <strong>splice</strong> makes a permanent joint. Either way it must have low loss, low back‑reflection, and be protected from dirt and damage.</p>
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 760 180" role="img" aria-label="Connector mating through an adapter vs fusion splice">
+        <g transform="translate(20,20)">
+          <text x="170" y="0" text-anchor="middle" class="t-b">Connector pair (mated)</text>
+          <path d="M0 70 H70" style="stroke:var(--sm)" stroke-width="8"/>
+          <rect x="70" y="52" width="70" height="36" rx="4" style="fill:#2D6FD1"/>
+          <rect x="140" y="63" width="30" height="14" class="f-line s-ink"/>
+          <rect x="150" y="45" width="40" height="50" class="nofill s-mut" stroke-dasharray="4 3"/>
+          <rect x="170" y="63" width="30" height="14" class="f-line s-ink"/>
+          <rect x="200" y="52" width="70" height="36" rx="4" style="fill:#2D6FD1"/>
+          <path d="M270 70 H340" style="stroke:var(--sm)" stroke-width="8"/>
+          <text x="170" y="120" text-anchor="middle" class="t-s">ferrules meet inside an adapter</text>
+          <text x="170" y="140" text-anchor="middle" class="t-s t-m">TIA limit 0.75 dB · removable</text>
+        </g>
+        <g transform="translate(420,20)">
+          <text x="160" y="0" text-anchor="middle" class="t-b">Fusion splice</text>
+          <path d="M0 70 H150" style="stroke:var(--sm)" stroke-width="8"/>
+          <path d="M170 70 H320" style="stroke:var(--sm)" stroke-width="8"/>
+          <path d="M150 70 H170" style="stroke:#FFF3A0" stroke-width="8"/>
+          <path d="M152 40 l6 14 l-8 4 l10 12" class="nofill" style="stroke:#3AA0FF" stroke-width="2.5"/>
+          <path d="M168 40 l-6 14 l8 4 l-10 12" class="nofill" style="stroke:#3AA0FF" stroke-width="2.5"/>
+          <rect x="110" y="95" width="100" height="16" rx="8" class="nofill s-mut" stroke-dasharray="4 3"/>
+          <text x="160" y="130" text-anchor="middle" class="t-s">glass welded by an electric arc, then sleeved</text>
+          <text x="160" y="150" text-anchor="middle" class="t-s t-m">TIA limit 0.3 dB · permanent</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>Mechanical splices instead align two cleaved fibers in a ferrule or V‑groove with index-matching gel. They serve for quick restoration or as permanent joints. Don't fusion splice in a dusty or explosive atmosphere: the arc can ignite it.</figcaption>
+  </figure>
+
+  <h3>Choosing a connector</h3>
+  <p>Styles include ST, SC, LC and MT‑RJ. Whatever you pick must suit the cable, the equipment, the optical loss target and the environment, and must mate with like connectors under a published TIA FOCIS intermateability standard. In practice multimode is usually terminated directly in the field, while singlemode is more often finished by <em>splicing on factory-made pigtails</em>.</p>
+
+  <h3>Termination methods compared</h3>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Method</th><th>How the fiber is held</th><th>Watch out for</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Epoxy / polish</strong></td><td>Two‑part epoxy, then polished on film. Most reliable, lowest loss.</td><td>Cure overnight or in a proper oven; a heat gun cures unevenly.</td></tr>
+      <tr><td><strong>Hot melt</strong></td><td>Heat-set glue pre-loaded in the connector, melted in an oven.</td><td>Follow the oven timing.</td></tr>
+      <tr><td><strong>Anaerobic</strong></td><td>Quick‑setting adhesive, sometimes with a setting agent.</td><td>Narrower temperature range; generally indoor only.</td></tr>
+      <tr><td><strong>Crimp / polish or crimp / cleave</strong></td><td>Mechanical crimp on the fiber.</td><td>A bad crimp lets the fiber "piston" in and out of the ferrule.</td></tr>
+      <tr><td><strong>Prepolished / splice</strong></td><td>Factory fiber stub; field fiber is cleaved and spliced inside.</td><td>Higher loss (connector + splice in one). Needs a good cleaver; check with a visual fault locator.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Whatever the method: follow the maker's instructions exactly, use only the approved adhesive, and cap finished connectors with dust caps until tested.</p>
+
+  <h3>How much loss is acceptable?</h3>
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 700 230" role="img" aria-label="Bar chart of connector and splice loss: TIA limits vs typical values">
+        <g transform="translate(200,20)" class="t-s">
+          <!-- scale: 0.8 dB = 440px -->
+          <path d="M0 0 V180" class="s-ink"/>
+          <g class="t-xs t-m">
+            <text x="0" y="198" text-anchor="middle">0</text><text x="137.5" y="198" text-anchor="middle">0.25</text><text x="275" y="198" text-anchor="middle">0.5</text><text x="412.5" y="198" text-anchor="middle">0.75 dB</text>
+          </g>
+          <path d="M137.5 0V180 M275 0V180 M412.5 0V180" class="s-line" stroke-dasharray="3 4"/>
+          <text x="-10" y="26" text-anchor="end">Connector, TIA‑568 limit</text><rect y="12" width="412.5" height="22" style="fill:var(--mm)"/>
+          <text x="-10" y="64" text-anchor="end">Adhesive/polish, typical</text><rect y="50" width="275" height="22" style="fill:var(--mm);opacity:.5"/><text x="283" y="66" class="t-xs t-m">"well under"</text>
+          <text x="-10" y="112" text-anchor="end">Splice, TIA‑568 limit</text><rect y="98" width="165" height="22" style="fill:var(--om)"/>
+          <text x="-10" y="150" text-anchor="end">SM fusion splice, typical</text><rect y="136" width="55" height="22" style="fill:var(--om);opacity:.5"/><text x="63" y="152" class="t-xs t-m">&lt; 0.1 dB</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>The 0.75 dB connector limit is set high so it covers every connector type. An end user may set tighter acceptance values, and those then apply.</figcaption>
+  </figure>
+
+  <h3>Verify, and get transmit/receive right</h3>
+  <p>Inspect every polished end face under a microscope (FOTP‑57), then loss‑test every fiber with a power meter and source. If a link fails its loss budget, or the customer requires it, use an OTDR to find the individual splice losses, testing from both ends and averaging, since OTDR readings vary by direction.</p>
+  <p>Links normally use one fiber each way, so each end's transmit fiber must reach the other end's receive port. Duplex connectors like duplex SC and MT‑RJ are keyed so they fit only one way; follow the TIA‑568‑B.3 polarity rules. With simplex connectors, document the connections and mark transmit and receive at both ends.</p>
+</section>
+
+<!-- PART 7 -->
+<section id="p7" style="--c:var(--f7)">
+  <div class="partno"><span class="dot" style="background:var(--f7)"></span>Part 7</div>
+  <h2>Test every fiber against its loss budget</h2>
+  <p>During design, each run gets a <em>loss budget</em>: the expected loss worked out from component specs. After installation you test each fiber and compare. The guide's test sequence:</p>
+  <ol class="steps">
+    <li><strong>Inspect and clean connectors.</strong> Use a 100–200× microscope (video scopes preferred, and they let you save images). Dust caps don't guarantee clean ends. Clean with fiber-specific supplies only.</li>
+    <li><strong>Continuity.</strong> Trace every fiber end to end with a visual tracer, VFL or OLTS to confirm routing, polarity and that the paperwork matches.</li>
+    <li><strong>Insertion loss.</strong> Test with an OLTS (power meter + source): multimode per TIA‑526‑14 at 850 and 1300 nm, singlemode per TIA‑526‑7 at 1310 and 1550 nm.</li>
+    <li><strong>Optional OTDR.</strong> Verifies installation quality and splices, but must not be used to measure cable loss.</li>
+    <li><strong>Record length</strong> if it isn't already known, from jacket markings, an OTDR, or an OLTS with a length feature.</li>
+    <li><strong>Troubleshoot and fix</strong> anything above expected loss.</li>
+  </ol>
+
+  <h3>How an insertion loss test is set up</h3>
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 760 160" role="img" aria-label="Light source, launch reference cable, cable plant, receive reference cable, power meter">
+        <rect x="10" y="45" width="100" height="60" rx="6" class="f-ink"/>
+        <text x="60" y="72" text-anchor="middle" class="t-s t-b" style="fill:var(--paper)">Light</text><text x="60" y="90" text-anchor="middle" class="t-s t-b" style="fill:var(--paper)">source</text>
+        <path d="M110 75 H220" style="stroke:var(--om)" stroke-width="6"/>
+        <text x="165" y="60" text-anchor="middle" class="t-xs">launch ref cable</text>
+        <rect x="220" y="62" width="14" height="26" style="fill:var(--mm)"/>
+        <rect x="234" y="40" width="292" height="70" rx="4" class="nofill s-mut" stroke-dasharray="6 4"/>
+        <path d="M234 75 H526" style="stroke:var(--om)" stroke-width="6"/>
+        <text x="380" y="30" text-anchor="middle" class="t-s t-b">Installed cable plant under test</text>
+        <circle cx="380" cy="75" r="6" class="f-ink"/><text x="380" y="100" text-anchor="middle" class="t-xs t-m">splice</text>
+        <rect x="526" y="62" width="14" height="26" style="fill:var(--mm)"/>
+        <path d="M540 75 H650" style="stroke:var(--om)" stroke-width="6"/>
+        <text x="595" y="60" text-anchor="middle" class="t-xs">receive ref cable</text>
+        <rect x="650" y="45" width="100" height="60" rx="6" class="f-ink"/>
+        <text x="700" y="72" text-anchor="middle" class="t-s t-b" style="fill:var(--paper)">Power</text><text x="700" y="90" text-anchor="middle" class="t-s t-b" style="fill:var(--paper)">meter</text>
+        <text x="380" y="145" text-anchor="middle" class="t-s">Measured loss = both end connections + fiber + splices in between</text>
+      </svg>
+    </div>
+    <figcaption>Reference cables need matching fiber and connectors in good condition (connector loss under 0.5 dB). Test them regularly and clean them often.</figcaption>
+  </figure>
+
+  <h3>Reading an OTDR trace</h3>
+  <p>An OTDR works like optical radar: it fires pulses and plots light scattered back along the fiber against distance. The trace shows length, segment loss, connectors, splices and stress points. Short premises cables can produce confusing artifacts, and the guide stresses that poorly trained OTDR users are the biggest source of testing problems.</p>
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 760 290" role="img" aria-label="Schematic OTDR trace with connector, splice, bend and end events">
+        <g transform="translate(60,20)">
+          <path d="M0 0 V230 H660" class="s-ink" stroke-width="1.5"/>
+          <text x="-40" y="120" transform="rotate(-90 -40 120)" text-anchor="middle" class="t-s t-m">Power (dB)</text>
+          <text x="330" y="258" text-anchor="middle" class="t-s t-m">Distance →</text>
+          <path d="M0 12 L20 10 L24 30 L150 54 L152 42 L158 66 L300 92 L302 99 L420 121 L424 138 L560 164 L562 120 L568 225 L580 212 L600 228 L620 214 L640 226 L660 216" class="nofill" style="stroke:var(--bad)" stroke-width="2.5" stroke-linejoin="round"/>
+          <rect x="0" y="0" width="150" height="230" style="fill:var(--om);opacity:.08"/>
+          <g class="t-xs">
+            <text x="75" y="210" text-anchor="middle" class="t-m">launch cable</text>
+            <text x="154" y="32" text-anchor="middle" class="t-b">connector</text><text x="154" y="44" text-anchor="middle" class="t-m">(reflective spike + drop)</text>
+            <text x="228" y="62" text-anchor="middle" class="t-m">slope = fiber loss/km</text>
+            <text x="301" y="80" text-anchor="middle" class="t-b">fusion splice</text>
+            <text x="422" y="108" text-anchor="middle" class="t-b">bend / stress</text><text x="422" y="160" text-anchor="middle" class="t-m">(drop, no spike)</text>
+            <text x="560" y="108" text-anchor="middle" class="t-b">end of fiber</text>
+            <text x="615" y="200" text-anchor="middle" class="t-m">noise</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <figcaption>Schematic only. Use long launch and receive cables (100 m for multimode, 1 km or more for singlemode) so the first and last connectors can be measured.</figcaption>
+  </figure>
+
+  <h3>Estimate a loss budget</h3>
+  <p>A quick calculator for the worst-case figure your measured loss should come in under. The per-km fiber limits are TIA‑568 maximums, which the guide doesn't list, so treat them as a starting point and use your design's own specs if you have them.</p>
+  <figure>
+    <div class="fig">
+      <div class="ctl">
+        <label>Fiber / wavelength
+          <select id="lbFiber">
+            <option value="3.5">Multimode @ 850 nm (3.5 dB/km)</option>
+            <option value="1.5">Multimode @ 1300 nm (1.5 dB/km)</option>
+            <option value="1.0">Singlemode indoor (1.0 dB/km)</option>
+            <option value="0.5" selected>Singlemode outside plant (0.5 dB/km)</option>
+          </select>
+        </label>
+        <label>Length (km)<input type="number" id="lbLen" value="2" min="0" step="0.1"></label>
+        <label>Connector pairs<input type="number" id="lbCon" value="2" min="0" step="1"></label>
+        <label>Splices<input type="number" id="lbSpl" value="3" min="0" step="1"></label>
+      </div>
+      <svg viewBox="0 0 700 90" role="img" aria-label="Loss budget stacked bar" id="lbSvg">
+        <rect x="0" y="10" width="700" height="34" class="f-line"/>
+        <rect id="lbB1" y="10" height="34" style="fill:var(--sm)"/>
+        <rect id="lbB2" y="10" height="34" style="fill:var(--mm)"/>
+        <rect id="lbB3" y="10" height="34" style="fill:var(--om)"/>
+        <g class="t-s" transform="translate(0,72)">
+          <rect width="12" height="12" y="-10" style="fill:var(--sm)"/><text x="18" id="lbT1"></text>
+          <rect x="220" width="12" height="12" y="-10" style="fill:var(--mm)"/><text x="238" id="lbT2"></text>
+          <rect x="460" width="12" height="12" y="-10" style="fill:var(--om)"/><text x="478" id="lbT3"></text>
+        </g>
+      </svg>
+      <p class="out" id="lbOut" aria-live="polite" style="margin:6px 0 0"></p>
+    </div>
+    <figcaption>Connector pairs at 0.75 dB and splices at 0.3 dB (TIA‑568 maximums from the guide). Real, well‑made links usually come in well under this.</figcaption>
+  </figure>
+
+  <h3>The test kit</h3>
+  <p>An OLTS or calibrated power meter and source matched to the fiber and wavelengths; good reference cables and mating adapters; a visual tracer or VFL; a 100–200× connector microscope; fiber‑specific cleaning supplies; and, optionally, an OTDR with launch and receive cables. A calibrated meter is the better choice if you also need to check transmitter and receiver power. Relevant FOA standards: FOA‑1 (insertion loss), FOA‑2 (single-ended loss), FOA‑3 (optical power), FOA‑4 (OTDR) and FOA‑5 (datalinks).</p>
+</section>
+
+<!-- PART 8 -->
+<section id="p8" style="--c:#555">
+  <div class="partno"><span class="dot" style="background:var(--f8)"></span>Part 8</div>
+  <h2>Document where every fiber goes</h2>
+  <p>Good records make testing, upgrades, moves and restoration far easier. Follow ANSI/TIA/EIA‑606. A backbone cable may carry many links to different places through patch panels and splice closures, so record the exact path of <em>every</em> fiber, every intermediate connection and every connector type, along with its insertion‑loss data and any OTDR traces.</p>
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 760 170" role="img" aria-label="Example documented fiber path from building A to building C">
+        <g class="t-s">
+          <rect x="10" y="50" width="110" height="60" rx="4" class="f-paper s-ink" stroke-width="1.5"/><text x="65" y="76" text-anchor="middle" class="t-b">Bldg A</text><text x="65" y="94" text-anchor="middle" class="t-xs t-m">Panel A1 · port 3</text>
+          <path d="M120 80 H250" style="stroke:var(--f2)" stroke-width="5"/><text x="185" y="70" text-anchor="middle" class="t-xs">cable 01 · fiber 2</text>
+          <rect x="250" y="55" width="110" height="50" rx="25" class="f-line s-ink"/><text x="305" y="78" text-anchor="middle" class="t-b">Closure SC‑4</text><text x="305" y="94" text-anchor="middle" class="t-xs t-m">tray 1 · splice 2</text>
+          <path d="M360 80 H490" style="stroke:var(--f3)" stroke-width="5"/><text x="425" y="70" text-anchor="middle" class="t-xs">cable 07 · fiber 15</text>
+          <rect x="490" y="50" width="110" height="60" rx="4" class="f-paper s-ink" stroke-width="1.5"/><text x="545" y="76" text-anchor="middle" class="t-b">Bldg C</text><text x="545" y="94" text-anchor="middle" class="t-xs t-m">Panel C2 · port 15</text>
+          <g transform="translate(620,40)" class="t-xs">
+            <text class="t-b">Record:</text><text y="18">LC/UPC both ends</text><text y="34">1.42 dB @1310</text><text y="50">1.38 dB @1550</text><text y="66">OTDR trace #A1‑03</text>
+          </g>
+          <text x="305" y="150" text-anchor="middle" class="t-m t-xs">Example values, for illustration only</text>
+        </g>
+      </svg>
+    </div>
+  </figure>
+  <p>After handover, the guide's closing checklist applies: inspect workmanship, review test data, bring up the communications system, finish documentation and the restoration plan, and store both along with spare components kept for repairs.</p>
+</section>
+
+<!-- CHEAT -->
+<section id="cheat" style="--c:var(--f9)">
+  <div class="partno"><span class="dot" style="background:var(--f9)"></span>Summary</div>
+  <h2>The numbers to remember</h2>
+  <div class="two">
+    <div class="rule"><span class="big">20×</span><span>cable diameter: minimum bend radius while pulling</span></div>
+    <div class="rule"><span class="big">10×</span><span>cable diameter: minimum bend radius once installed</span></div>
+    <div class="rule"><span class="big">0.75 dB</span><span>max per connector pair (TIA‑568)</span></div>
+    <div class="rule"><span class="big">0.3 dB</span><span>max per splice (TIA‑568); SM fusion typically &lt; 0.1</span></div>
+    <div class="rule"><span class="big">850 / 1300</span><span>nm test wavelengths for multimode</span></div>
+    <div class="rule"><span class="big">1310 / 1550</span><span>nm test wavelengths for singlemode</span></div>
+    <div class="rule"><span class="big">~4 km</span><span>beyond this, pull from the middle out or in stages</span></div>
+    <div class="rule"><span class="big">100–200×</span><span>connector inspection magnification</span></div>
+  </div>
+  <p class="note">The FOA presents this bulletin as an overview and guideline, not a complete specification. Use it as the basis for your own project documents, and let manufacturer instructions, local codes and the owner's specifications take precedence.</p>
+</section>
+</main>
+</div>
+
+<footer>Explainer based on “FOA Technical Bulletin: Guide To Fiber Optic Installation”, © The Fiber Optic Association, Inc. More at foa.org and fiberu.org.</footer>
+
+<script>
+(function(){
+  var C=['#1F5FC4','#EE7424','#23945A','#8A5A2B','#7A8791','#FFFFFF','#D12E2E','#1B1B1B','#F2CC0C','#7B3FB5','#F08BB0','#2EC7C0'];
+  var N=['Blue','Orange','Green','Brown','Slate','White','Red','Black','Yellow','Violet','Rose','Aqua'];
+  var NS='http://www.w3.org/2000/svg';
+  function el(tag,attrs,parent){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+
+  /* loose tubes */
+  var tubes=document.getElementById('tubes');
+  for(var i=0;i<6;i++){
+    var a=i*Math.PI/3-Math.PI/2, x=Math.cos(a)*48, y=Math.sin(a)*48;
+    el('circle',{cx:x,cy:y,r:24,fill:C[i],stroke:'#333','stroke-width':1},tubes);
+    el('circle',{cx:x,cy:y,r:19,fill:'#F6F0C8',opacity:.9},tubes);
+    for(var j=0;j<6;j++){var b=j*Math.PI/3;el('circle',{cx:x+Math.cos(b)*9,cy:y+Math.sin(b)*9,r:3,fill:C[j],stroke:'#444','stroke-width':.5},tubes);}
+  }
+  /* ribbons */
+  var rb=document.getElementById('ribbons');
+  for(var r=0;r<6;r++){for(var k=0;k<12;k++){el('circle',{cx:-44+k*8,cy:-35+r*14,r:3.4,fill:C[k],stroke:'#555','stroke-width':.5},rb);}}
+  /* 12 code */
+  var cg=document.getElementById('code12');
+  for(var q=0;q<12;q++){
+    var gx=q*62+34;
+    el('circle',{cx:gx,cy:30,r:20,fill:C[q],stroke:'#444','stroke-width':1},cg);
+    var t=el('text',{x:gx,y:36,'text-anchor':'middle','font-weight':'600','font-size':'14'},cg);t.textContent=q+1;
+    t.setAttribute('style','fill:'+([0,3,4,6,7,9].indexOf(q)>-1?'#fff':'#16293A'));
+    var n=el('text',{x:gx,y:70,'text-anchor':'middle',class:'t-xs'},cg);n.textContent=N[q];
+  }
+  /* connectors */
+  var cn=document.getElementById('connectors');
+  [['#D9C8A2','Beige','Multimode'],['#2D6FD1','Blue','Singlemode (UPC)'],['#2E9B57','Green','Singlemode angled (APC)']].forEach(function(c,i){
+    var g=el('g',{transform:'translate('+(40+i*225)+',30)'},cn);
+    el('path',{d:'M0 30 H50',stroke:'#E8B800','stroke-width':8},g);
+    el('path',{d:'M50 18 L80 22 V38 L50 42 Z',fill:c[0],stroke:'#333'},g);
+    el('rect',{x:80,y:14,width:60,height:32,rx:4,fill:c[0],stroke:'#333'},g);
+    el('rect',{x:140,y:24,width:22,height:12,fill:'#EEE',stroke:'#333'},g);
+    if(i===2){el('path',{d:'M162 24 L168 36 L162 36 Z',fill:'#EEE',stroke:'#333'},g);}
+    var a=el('text',{x:90,y:74,'text-anchor':'middle',class:'t-b t-s'},g);a.textContent=c[1];
+    var b=el('text',{x:90,y:92,'text-anchor':'middle',class:'t-xs t-m'},g);b.textContent=c[2];
+  });
+
+  /* fiber finder */
+  var fnum=document.getElementById('fnum'),fout=document.getElementById('fout');
+  function sw(i){return '<span class="sw" style="background:'+C[i]+'"></span>';}
+  function find(){
+    var n=parseInt(fnum.value,10);
+    if(!n||n<1){fout.textContent='Enter a fiber number from 1 up.';return;}
+    var tube=Math.floor((n-1)/12), f=(n-1)%12, tcol=tube%12, group=Math.floor(tube/12);
+    fout.innerHTML='Tube '+(tube+1)+' '+sw(tcol)+N[tcol]+(group?' (with group marker '+(group+1)+')':'')+' &nbsp;→&nbsp; fiber '+sw(f)+N[f];
+  }
+  fnum.addEventListener('input',find);find();
+
+  /* bend radius */
+  var dia=document.getElementById('dia');
+  function arcD(r){return 'M0 0 A'+r+' '+r+' 0 0 1 '+r+' '+(-r);} /* quarter arc from ground up */
+  function bend(){
+    var d=parseFloat(dia.value), rp=20*d, rr=10*d, scale=200/500;
+    document.getElementById('dval').textContent=d+' mm';
+    document.getElementById('rPull').textContent=rp+' mm radius';
+    document.getElementById('rRest').textContent=rr+' mm radius';
+    var sw=Math.max(2,d*scale*2);
+    var ap=document.getElementById('arcPull'), ar=document.getElementById('arcRest');
+    ap.setAttribute('d','M0 0 A'+rp*scale+' '+rp*scale+' 0 0 0 '+rp*scale+' '+(-rp*scale));
+    ar.setAttribute('d','M0 0 A'+rr*scale+' '+rr*scale+' 0 0 0 '+rr*scale+' '+(-rr*scale));
+    ap.setAttribute('transform','translate(0,0)');
+    ar.setAttribute('transform','translate('+(rp-rr)*scale+',0)');
+    ap.setAttribute('stroke-width',sw);ar.setAttribute('stroke-width',sw);
+  }
+  dia.addEventListener('input',bend);bend();
+
+  /* loss budget */
+  var ids=['lbFiber','lbLen','lbCon','lbSpl'];
+  function lb(){
+    var per=parseFloat(document.getElementById('lbFiber').value)||0;
+    var L=Math.max(0,parseFloat(document.getElementById('lbLen').value)||0);
+    var c=Math.max(0,parseInt(document.getElementById('lbCon').value,10)||0);
+    var s=Math.max(0,parseInt(document.getElementById('lbSpl').value,10)||0);
+    var f=per*L, cl=c*0.75, sl=s*0.3, tot=f+cl+sl, W=700, sc=tot>0?W/tot:0;
+    var b1=document.getElementById('lbB1'),b2=document.getElementById('lbB2'),b3=document.getElementById('lbB3');
+    b1.setAttribute('x',0);b1.setAttribute('width',f*sc);
+    b2.setAttribute('x',f*sc);b2.setAttribute('width',cl*sc);
+    b3.setAttribute('x',(f+cl)*sc);b3.setAttribute('width',sl*sc);
+    document.getElementById('lbT1').textContent='Fiber '+f.toFixed(2)+' dB';
+    document.getElementById('lbT2').textContent='Connectors '+cl.toFixed(2)+' dB';
+    document.getElementById('lbT3').textContent='Splices '+sl.toFixed(2)+' dB';
+    document.getElementById('lbOut').textContent='Maximum expected loss: '+tot.toFixed(2)+' dB. A measured loss above this needs troubleshooting.';
+  }
+  ids.forEach(function(i){document.getElementById(i).addEventListener('input',lb);});lb();
+
+  /* planning checklist */
+  var phases={
+    'Pre-install':['Main point of contact / project manager chosen','Link communications requirements set','Equipment requirements set, vendors chosen','Route chosen, permits obtained','Cable plant components and vendors chosen','Coordinated with facilities & electrical staff','Documentation and preliminary restoration plan ready','Test plan complete','Schedule and start date set, all parties notified','Components ordered; delivery, receiving and security arranged','Contractor/installer chosen, start date set','Route toured with contractor','Construction plans reviewed with contractor','Chosen components reviewed with contractor','Schedule reviewed with contractor','Safety rules reviewed with contractor','Spare materials for restoration agreed with contractor','Test plan reviewed with contractor'],
+    'Before starting':['All permits available for inspection','Sites prepared, power available','All components on site, inspected, secured','Contractor available','Relevant personnel notified','Safety rules posted and reviewed with all crews'],
+    'During install':['Inspect workmanship','Daily review of process, progress and test data','Problems and shortages reported and solved immediately'],
+    'After completion':['Inspect workmanship','Review cable plant test data','Set up and test the communications system','Update and complete documentation','Update and complete restoration plan','Store restoration plan, docs and spare components']
+  };
+  var state={},cur='Pre-install',tabs=document.getElementById('phaseTabs'),list=document.getElementById('checklist');
+  Object.keys(phases).forEach(function(p){state[p]=phases[p].map(function(){return false;});
+    var b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.textContent=p;
+    b.addEventListener('click',function(){cur=p;render();});tabs.appendChild(b);});
+  function render(){
+    Array.prototype.forEach.call(tabs.children,function(b){b.setAttribute('aria-selected',b.textContent===cur);});
+    list.innerHTML='';
+    phases[cur].forEach(function(item,i){
+      var li=document.createElement('li'),lab=document.createElement('label'),cb=document.createElement('input'),sp=document.createElement('span');
+      cb.type='checkbox';cb.checked=state[cur][i];sp.textContent=item;
+      cb.addEventListener('change',function(){state[cur][i]=cb.checked;prog();});
+      lab.appendChild(cb);lab.appendChild(sp);li.appendChild(lab);list.appendChild(li);
+    });prog();
+  }
+  function prog(){var d=state[cur].filter(Boolean).length,t=state[cur].length;
+    document.getElementById('prog').style.width=(100*d/t)+'%';
+    document.getElementById('progTxt').textContent=cur+': '+d+' of '+t+' done';}
+  render();
+
+  /* rail highlight */
+  var links=document.querySelectorAll('.rail a');
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){
+      links.forEach(function(l){l.classList.toggle('on',l.getAttribute('href')==='#'+e.target.id);});}});},{rootMargin:'-40% 0px -55% 0px'});
+    document.querySelectorAll('main section').forEach(function(s){io.observe(s);});
+  }
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

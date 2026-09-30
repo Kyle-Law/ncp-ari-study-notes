@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Troubleshooting Layer 1 on Cumulus Linux — a visual guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF1F4; --card:#FFFFFF; --ink:#1B2A41; --muted:#5A6A80; --rule:#CCD5DF;
+  --signal:#0E7C86; --signal-soft:#D6ECEE; --amber:#B7790A; --amber-soft:#F6EAD2;
+  --fault:#B23A48; --fault-soft:#F5DCE0; --ok:#2E7D4F; --ok-soft:#DCEFE3;
+  --scope:#13203A; --scope-grid:#253759; --trace:#5FE0E8;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"JetBrains Mono","SFMono-Regular",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{--paper:#111A2A;--card:#18233A;--ink:#E4EAF2;--muted:#9AA8BC;--rule:#2B3A55;
+  --signal:#4FC3CC;--signal-soft:#16353D;--amber:#E0A93A;--amber-soft:#3A2F17;
+  --fault:#E07080;--fault-soft:#3D1D25;--ok:#5BC586;--ok-soft:#17352A;--scope:#0B1426;--scope-grid:#1E2E4A;}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.62 var(--body)}
+a{color:var(--signal)}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+code,kbd,pre{font-family:var(--mono);font-size:.86em}
+code{background:var(--signal-soft);padding:.08em .35em;border-radius:3px}
+.shell{display:grid;grid-template-columns:250px minmax(0,1fr);gap:48px;max-width:1240px;margin:0 auto;padding:0 28px}
+nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:36px 0 36px}
+nav.toc p{font:700 15px/1.3 var(--display);margin:0 0 14px}
+nav.toc ol{list-style:none;margin:0;padding:0;counter-reset:t}
+nav.toc li{counter-increment:t}
+nav.toc a{display:grid;grid-template-columns:26px 1fr;padding:5px 0;text-decoration:none;color:var(--muted);font-size:14.5px;line-height:1.35;border-left:2px solid transparent;padding-left:10px}
+nav.toc a::before{content:counter(t);font:600 12px var(--mono);color:var(--rule);padding-top:2px}
+nav.toc a:hover,nav.toc a.on{color:var(--ink);border-left-color:var(--signal)}
+main{padding:0 0 120px;min-width:0}
+section{padding-top:64px;max-width:780px}
+section.wide{max-width:none}
+h1{font:800 clamp(38px,5.4vw,64px)/1.02 var(--display);letter-spacing:-.02em;margin:0 0 18px;max-width:14ch}
+h2{font:800 32px/1.1 var(--display);letter-spacing:-.01em;margin:0 0 16px;padding-top:26px;border-top:3px solid var(--ink)}
+h2 .n{font:600 14px var(--mono);color:var(--signal);display:block;margin-bottom:10px;letter-spacing:0}
+h3{font:700 20px/1.25 var(--display);margin:34px 0 8px}
+p{margin:0 0 14px;max-width:70ch}
+.lede{font-size:20px;line-height:1.5;color:var(--muted);max-width:56ch}
+figure{margin:26px 0;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:22px}
+figcaption{font-size:14px;color:var(--muted);margin-top:12px;max-width:none}
+svg text{font-family:var(--body)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font:700 14px var(--display);color:var(--muted)}
+.note{border-left:4px solid var(--amber);background:var(--amber-soft);padding:12px 16px;border-radius:0 6px 6px 0;margin:18px 0;max-width:70ch}
+.warn{border-left-color:var(--fault);background:var(--fault-soft)}
+.tip{border-left-color:var(--ok);background:var(--ok-soft)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.chip{display:inline-block;font:600 12.5px var(--mono);padding:2px 8px;border-radius:20px;border:1px solid currentColor}
+button,select,input{font:inherit}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.seg button{background:var(--card);color:var(--ink);border:0;padding:7px 14px;cursor:pointer;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+select{padding:7px 10px;border-radius:6px;border:1px solid var(--rule);background:var(--card);color:var(--ink)}
+input[type=range]{accent-color:var(--signal);width:100%}
+/* hero */
+.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:36px;align-items:center;padding-top:56px}
+.scopebox{background:var(--scope);border-radius:14px;padding:16px 16px 12px;color:#C7D6EA;box-shadow:0 0 0 6px #2A3B5C inset}
+.scopebox canvas{width:100%;height:auto;display:block;border-radius:6px}
+.scopebar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;font-size:13px;flex-wrap:wrap}
+.scopebar .seg{border-color:#33476B}.scopebar .seg button{background:transparent;color:#C7D6EA}
+.scopebar .seg button[aria-pressed="true"]{background:var(--trace);color:#0B1426}
+.readout{font:600 13px var(--mono);color:var(--trace)}
+.scopebox label{display:flex;gap:10px;align-items:center;font-size:13px;margin-top:8px}
+.scopebox input{accent-color:var(--trace)}
+@media (max-width:980px){.shell{grid-template-columns:1fr}nav.toc{display:none}.hero{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+<p>Layer 1, visually</p>
+<ol>
+<li><a href="#big">The big picture</a></li>
+<li><a href="#modules">Modules &amp; form factors</a></li>
+<li><a href="#encoding">Encoding, lanes &amp; speeds</a></li>
+<li><a href="#types">Active/passive &amp; compliance codes</a></li>
+<li><a href="#ddm">DDM/DOM optics telemetry</a></li>
+<li><a href="#autoneg">Auto-negotiation &amp; autodetect</a></li>
+<li><a href="#fec">Forward error correction</a></li>
+<li><a href="#si">Signal integrity &amp; eyes</a></li>
+<li><a href="#l1show">Reading l1-show</a></li>
+<li><a href="#workflow">The troubleshooting method</a></li>
+<li><a href="#down">Down or flapping links</a></li>
+<li><a href="#errors">Physical errors</a></li>
+<li><a href="#mtu">MTU mismatches</a></li>
+<li><a href="#power">High-power modules</a></li>
+<li><a href="#i2c">I2C bus lockups</a></li>
+<li><a href="#cheat">Command cheat sheet</a></li>
+</ol>
+</nav>
+<main>
+<header class="hero">
+  <div>
+    <h1>Troubleshooting Layer 1 on Cumulus Linux</h1>
+    <p class="lede">A visual walkthrough of NVIDIA's "Troubleshoot Layer 1" guide (Cumulus Linux 5.16): how bits physically cross a cable, what can go wrong, and how to read the tools that tell you which part failed.</p>
+    <p style="font-size:14px;color:var(--muted)">Source: <a href="https://docs.nvidia.com/networking-ethernet-software/cumulus-linux-516/Monitoring-and-Troubleshooting/Troubleshooting-Network-Interfaces/Troubleshoot-Layer-1/">docs.nvidia.com — Troubleshoot Layer 1</a>. This page is an explanatory summary, not a copy.</p>
+  </div>
+  <div class="scopebox" role="group" aria-label="Interactive eye diagram">
+    <canvas id="scope" width="640" height="400" aria-label="Simulated oscilloscope eye diagram"></canvas>
+    <div class="scopebar">
+      <div class="seg" role="group" aria-label="Encoding">
+        <button id="bNRZ" aria-pressed="true">NRZ (PAM2)</button>
+        <button id="bPAM4" aria-pressed="false">PAM4</button>
+      </div>
+      <span class="readout" id="eyeRead">eye opening: —</span>
+    </div>
+    <label>Noise / cable degradation <input type="range" id="noise" min="0" max="100" value="18"></label>
+  </div>
+</header>
+<p style="margin-top:18px;font-size:15px;color:var(--muted);max-width:none">↑ This is an <strong>eye diagram</strong>: thousands of bit transitions overlaid on each other. The clear gap in the middle is the "eye." Drag the noise slider to see a degrading cable close it, and switch to PAM4 to see why 50G+ lanes are so much more fragile (three small eyes instead of one big one). Every concept below ultimately comes back to keeping that eye open.</p>
+<section id="big">
+<h2><span class="n">01</span>The big picture</h2>
+<p>Layer 1 is the physical layer: the transceiver module, the cable or fiber, the port on the switch, and the electrical or optical signal between them. If Layer 1 is unhealthy, nothing above it (VLANs, routing, BGP) can work reliably, so it's the first thing to rule out when a link misbehaves.</p>
+<figure>
+<svg viewBox="0 0 760 250" width="100%" role="img" aria-label="Anatomy of a link between two switches">
+  <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--muted)"/></marker></defs>
+  <!-- Switch A -->
+  <rect x="10" y="40" width="170" height="130" rx="10" fill="var(--signal-soft)" stroke="var(--signal)"/>
+  <text x="95" y="64" text-anchor="middle" font-weight="700" fill="var(--ink)" font-size="15">Switch A</text>
+  <rect x="26" y="80" width="80" height="70" rx="6" fill="var(--card)" stroke="var(--rule)"/>
+  <text x="66" y="110" text-anchor="middle" font-size="12" fill="var(--ink)">ASIC</text>
+  <text x="66" y="126" text-anchor="middle" font-size="11" fill="var(--muted)">SerDes</text>
+  <rect x="120" y="92" width="52" height="46" rx="4" fill="var(--card)" stroke="var(--ink)"/>
+  <text x="146" y="119" text-anchor="middle" font-size="11" fill="var(--ink)">port</text>
+  <!-- module A -->
+  <rect x="190" y="95" width="90" height="40" rx="5" fill="var(--amber-soft)" stroke="var(--amber)"/>
+  <text x="235" y="113" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">module</text>
+  <text x="235" y="127" text-anchor="middle" font-size="10" fill="var(--muted)">EEPROM · laser/PHY</text>
+  <!-- cable -->
+  <path d="M280 108 C 380 70, 380 150, 480 108" fill="none" stroke="var(--ink)" stroke-width="3"/>
+  <path d="M280 122 C 380 160, 380 80, 480 122" fill="none" stroke="var(--ink)" stroke-width="3" opacity=".45"/>
+  <text x="380" y="72" text-anchor="middle" font-size="12" fill="var(--ink)">cable / fiber (TX → RX, RX ← TX)</text>
+  <!-- module B -->
+  <rect x="480" y="95" width="90" height="40" rx="5" fill="var(--amber-soft)" stroke="var(--amber)"/>
+  <text x="525" y="113" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">module</text>
+  <text x="525" y="127" text-anchor="middle" font-size="10" fill="var(--muted)">EEPROM · laser/PHY</text>
+  <!-- Switch B -->
+  <rect x="580" y="40" width="170" height="130" rx="10" fill="var(--signal-soft)" stroke="var(--signal)"/>
+  <text x="665" y="64" text-anchor="middle" font-weight="700" fill="var(--ink)" font-size="15">Switch B</text>
+  <rect x="588" y="92" width="52" height="46" rx="4" fill="var(--card)" stroke="var(--ink)"/>
+  <text x="614" y="119" text-anchor="middle" font-size="11" fill="var(--ink)">port</text>
+  <rect x="654" y="80" width="80" height="70" rx="6" fill="var(--card)" stroke="var(--rule)"/>
+  <text x="694" y="110" text-anchor="middle" font-size="12" fill="var(--ink)">ASIC</text>
+  <text x="694" y="126" text-anchor="middle" font-size="11" fill="var(--muted)">SerDes</text>
+  <!-- cause brackets -->
+  <g font-size="12">
+   <rect x="10" y="190" width="170" height="44" rx="6" fill="none" stroke="var(--signal)" stroke-dasharray="4 3"/>
+   <text x="95" y="208" text-anchor="middle" fill="var(--signal)" font-weight="700">Configuration</text>
+   <text x="95" y="225" text-anchor="middle" fill="var(--muted)">speed · autoneg · FEC · MTU</text>
+   <rect x="190" y="190" width="380" height="44" rx="6" fill="none" stroke="var(--fault)" stroke-dasharray="4 3"/>
+   <text x="380" y="208" text-anchor="middle" fill="var(--fault)" font-weight="700">Hardware (most common physical cause)</text>
+   <text x="380" y="225" text-anchor="middle" fill="var(--muted)">bad module · dirty/broken fiber · damaged DAC · rarely a port</text>
+   <rect x="580" y="190" width="170" height="44" rx="6" fill="none" stroke="var(--amber)" stroke-dasharray="4 3"/>
+   <text x="665" y="208" text-anchor="middle" fill="var(--amber)" font-weight="700">Driver (rare)</text>
+   <text x="665" y="225" text-anchor="middle" fill="var(--muted)">module mishandled</text>
+  </g>
+</svg>
+<figcaption>Every Layer 1 problem traces back to one of three root-cause families: a configuration mistake or mismatch between the two ends, a failing physical component, or (rarely) the switch driver mishandling a particular module — which usually has a workaround.</figcaption>
+</figure>
+<p>The rest of this guide is background you need to diagnose confidently (sections 2–8), how to read the diagnostic output (9), and a problem-by-problem playbook (10–15).</p>
+</section>
+
+<section id="modules">
+<h2><span class="n">02</span>Modules &amp; form factors</h2>
+<p>Two standards bodies define this world: <strong>IEEE 802.3</strong> specifies the Ethernet technologies and link characteristics, while the <strong>SFF MSA</strong> specs define how SFP/QSFP modules are physically built and how their management memory is laid out (SFF-8472 for SFP, SFF-8636 for QSFP, plus the OSFP MSA).</p>
+<p>Each pluggable carries an EEPROM describing itself. Byte 0 of that memory map is the <em>identifier</em>, which tells the switch what shape of module it is. <code>ethtool -m swpN</code> decodes it.</p>
+<figure>
+<svg viewBox="0 0 760 230" width="100%" role="img" aria-label="Form factors and lane counts">
+ <g font-size="12">
+  <!-- SFP -->
+  <g transform="translate(20,20)">
+   <rect width="140" height="60" rx="6" fill="var(--amber-soft)" stroke="var(--amber)"/>
+   <rect x="16" y="26" width="108" height="8" rx="2" fill="var(--signal)"/>
+   <text x="70" y="90" text-anchor="middle" font-weight="700" fill="var(--ink)" font-size="15">SFP / SFP28</text>
+   <text x="70" y="108" text-anchor="middle" fill="var(--muted)">ID 0x03 · 1 lane</text>
+   <text x="70" y="126" text-anchor="middle" fill="var(--ink)">10G or 25G</text>
+  </g>
+  <!-- QSFP+ -->
+  <g transform="translate(200,20)">
+   <rect width="150" height="80" rx="6" fill="var(--amber-soft)" stroke="var(--amber)"/>
+   <g fill="var(--signal)"><rect x="16" y="18" width="118" height="7" rx="2"/><rect x="16" y="31" width="118" height="7" rx="2"/><rect x="16" y="44" width="118" height="7" rx="2"/><rect x="16" y="57" width="118" height="7" rx="2"/></g>
+   <text x="75" y="110" text-anchor="middle" font-weight="700" fill="var(--ink)" font-size="15">QSFP+</text>
+   <text x="75" y="128" text-anchor="middle" fill="var(--muted)">ID 0x0d · 4 × 10G</text>
+   <text x="75" y="146" text-anchor="middle" fill="var(--ink)">40G</text>
+  </g>
+  <g transform="translate(380,20)">
+   <rect width="150" height="80" rx="6" fill="var(--amber-soft)" stroke="var(--amber)"/>
+   <g fill="var(--signal)"><rect x="16" y="18" width="118" height="7" rx="2"/><rect x="16" y="31" width="118" height="7" rx="2"/><rect x="16" y="44" width="118" height="7" rx="2"/><rect x="16" y="57" width="118" height="7" rx="2"/></g>
+   <text x="75" y="110" text-anchor="middle" font-weight="700" fill="var(--ink)" font-size="15">QSFP28 / 56</text>
+   <text x="75" y="128" text-anchor="middle" fill="var(--muted)">ID 0x11 · 4 × 25G or 50G</text>
+   <text x="75" y="146" text-anchor="middle" fill="var(--ink)">100G or 200G</text>
+  </g>
+  <g transform="translate(560,10)">
+   <rect width="180" height="110" rx="6" fill="var(--amber-soft)" stroke="var(--amber)"/>
+   <g fill="var(--signal)"><rect x="14" y="14" width="152" height="6" rx="2"/><rect x="14" y="25" width="152" height="6" rx="2"/><rect x="14" y="36" width="152" height="6" rx="2"/><rect x="14" y="47" width="152" height="6" rx="2"/><rect x="14" y="58" width="152" height="6" rx="2"/><rect x="14" y="69" width="152" height="6" rx="2"/><rect x="14" y="80" width="152" height="6" rx="2"/><rect x="14" y="91" width="152" height="6" rx="2"/></g>
+   <text x="90" y="130" text-anchor="middle" font-weight="700" fill="var(--ink)" font-size="15">QSFP-DD · OSFP</text>
+   <text x="90" y="148" text-anchor="middle" fill="var(--muted)">ID 0x18 · 8 × 50G → 400G</text>
+   <text x="90" y="166" text-anchor="middle" fill="var(--muted)">ID 0x19 · 8 × 100G → 800G</text>
+  </g>
+ </g>
+ <text x="380" y="215" text-anchor="middle" font-size="13" fill="var(--muted)">Each teal bar = one electrical lane driven by the switch's SerDes</text>
+</svg>
+<figcaption>QSFP-DD is a QSFP with a second, recessed row of contacts that doubles the lane count to eight. On the ASIC, SerDes blocks come in groups of 4 (8 for 400G), so an SFP port is really one lane borrowed from a 4-lane block — which is why some platforms restrict how SFP ports can be configured or broken out.</figcaption>
+</figure>
+</section>
+
+<section id="encoding">
+<h2><span class="n">03</span>Encoding, lanes &amp; speeds</h2>
+<p>"Encoding" covers two separate things: how a bit is represented as a voltage/light level, and how bits are grouped into blocks so the receiver can recover the clock and fix errors.</p>
+<div class="grid2">
+<figure style="margin:8px 0">
+<svg viewBox="0 0 340 170" width="100%" role="img" aria-label="NRZ has two levels, PAM4 has four">
+ <text x="85" y="18" text-anchor="middle" font-weight="700" fill="var(--ink)" font-size="14">NRZ / PAM2</text>
+ <text x="255" y="18" text-anchor="middle" font-weight="700" fill="var(--ink)" font-size="14">PAM4</text>
+ <g stroke="var(--rule)"><line x1="20" y1="40" x2="150" y2="40"/><line x1="20" y1="140" x2="150" y2="140"/>
+ <line x1="190" y1="40" x2="320" y2="40"/><line x1="190" y1="73" x2="320" y2="73"/><line x1="190" y1="107" x2="320" y2="107"/><line x1="190" y1="140" x2="320" y2="140"/></g>
+ <polyline points="20,140 40,140 45,40 75,40 80,140 95,140 100,40 150,40" fill="none" stroke="var(--signal)" stroke-width="2.5"/>
+ <polyline points="190,140 210,140 214,73 235,73 239,40 258,40 262,107 283,107 287,140 300,140 304,73 320,73" fill="none" stroke="var(--signal)" stroke-width="2.5"/>
+ <g font-size="12" fill="var(--muted)"><text x="155" y="44">1</text><text x="155" y="144">0</text>
+ <text x="324" y="44">11</text><text x="324" y="77">10</text><text x="324" y="111">01</text><text x="324" y="144">00</text></g>
+ <text x="85" y="162" text-anchor="middle" font-size="12" fill="var(--muted)">1 bit per symbol · big gap</text>
+ <text x="255" y="162" text-anchor="middle" font-size="12" fill="var(--muted)">2 bits per symbol · gaps ⅓ size</text>
+</svg>
+<figcaption>NRZ is used below 50 Gb/s per lane. PAM4 doubles throughput per symbol but squeezes the levels together, so noise tolerance drops sharply.</figcaption>
+</figure>
+<figure style="margin:8px 0">
+<svg viewBox="0 0 340 170" width="100%" role="img" aria-label="Block framing overhead">
+ <text x="10" y="20" font-weight="700" fill="var(--ink)" font-size="13">64B/66B</text>
+ <rect x="10" y="28" width="12" height="22" fill="var(--amber)"/><rect x="22" y="28" width="308" height="22" fill="var(--signal-soft)" stroke="var(--signal)"/>
+ <text x="176" y="44" text-anchor="middle" font-size="11" fill="var(--ink)">64 data bits</text>
+ <text x="10" y="64" font-size="11" fill="var(--muted)">2 sync bits (always a 0/1 transition) keep the clock locked</text>
+ <text x="10" y="92" font-weight="700" fill="var(--ink)" font-size="13">RS-FEC (528,514)</text>
+ <rect x="10" y="100" width="300" height="20" fill="var(--signal-soft)" stroke="var(--signal)"/><rect x="310" y="100" width="8" height="20" fill="var(--fault)"/>
+ <text x="10" y="134" font-weight="700" fill="var(--ink)" font-size="13">RS-FEC (544,514)</text>
+ <rect x="10" y="140" width="300" height="20" fill="var(--signal-soft)" stroke="var(--signal)"/><rect x="310" y="140" width="18" height="20" fill="var(--fault)"/>
+ <text x="160" y="115" text-anchor="middle" font-size="11" fill="var(--ink)">514 payload bits</text>
+ <text x="160" y="155" text-anchor="middle" font-size="11" fill="var(--ink)">514 payload bits</text>
+</svg>
+<figcaption>Red = correction overhead. Base-R ("FireCode") FEC instead borrows a bit from the 64B/66B sync header, adding lighter correction with no extra line rate.</figcaption>
+</figure>
+</div>
+<div class="tw"><table>
+<tr><th>Lane speed</th><th>Signaling</th><th>What's really on the wire</th></tr>
+<tr><td>10G</td><td>NRZ + 64B/66B</td><td>10.3125 Gb/s</td></tr>
+<tr><td>25G</td><td>NRZ + 64B/66B, optional RS(528,514) or Base-R FEC</td><td>25.78125 Gb/s</td></tr>
+<tr><td>50G</td><td>PAM4 + mandatory RS(544,514)</td><td>—</td></tr>
+<tr><td>100G</td><td>PAM4</td><td>—</td></tr>
+</table></div>
+<h3>How lanes add up to port speeds</h3>
+<p>Pick a port speed to see which lane combinations produce it.</p>
+<figure>
+<div id="laneBtns" class="seg" role="group" aria-label="Port speed" style="flex-wrap:wrap"></div>
+<div id="laneOut" style="margin-top:18px"></div>
+</figure>
+</section>
+
+<section id="types">
+<h2><span class="n">04</span>Active vs. passive, and compliance codes</h2>
+<div class="grid2">
+<figure style="margin:8px 0">
+<svg viewBox="0 0 340 150" width="100%" role="img" aria-label="Active module regenerates signal">
+ <text x="10" y="18" font-weight="700" font-size="14" fill="var(--ink)">Active (all optics, BASE-T, AOC)</text>
+ <rect x="10" y="40" width="50" height="40" rx="4" fill="var(--card)" stroke="var(--ink)"/><text x="35" y="65" text-anchor="middle" font-size="11" fill="var(--ink)">port</text>
+ <rect x="70" y="36" width="80" height="48" rx="5" fill="var(--amber-soft)" stroke="var(--amber)"/><text x="110" y="58" text-anchor="middle" font-size="11" fill="var(--ink)">re-drives</text><text x="110" y="72" text-anchor="middle" font-size="11" fill="var(--ink)">signal ⚡</text>
+ <path d="M60 60 L70 60" stroke="var(--signal)" stroke-width="2"/>
+ <path d="M150 60 L330 60" stroke="var(--signal)" stroke-width="4"/>
+ <text x="240" y="50" text-anchor="middle" font-size="11" fill="var(--muted)">strong signal from module power</text>
+ <text x="10" y="110" font-size="12" fill="var(--muted)">Port just supplies a baseline TX signal + power;</text>
+ <text x="10" y="126" font-size="12" fill="var(--muted)">the module's own laser/PHY does the heavy lifting.</text>
+</svg>
+</figure>
+<figure style="margin:8px 0">
+<svg viewBox="0 0 340 150" width="100%" role="img" aria-label="Passive DAC driven by the port">
+ <text x="10" y="18" font-weight="700" font-size="14" fill="var(--ink)">Passive (copper DAC)</text>
+ <rect x="10" y="40" width="50" height="40" rx="4" fill="var(--card)" stroke="var(--ink)"/><text x="35" y="65" text-anchor="middle" font-size="11" fill="var(--ink)">port ⚡</text>
+ <rect x="70" y="42" width="40" height="36" rx="5" fill="var(--card)" stroke="var(--rule)"/><text x="90" y="64" text-anchor="middle" font-size="10" fill="var(--muted)">plug</text>
+ <path d="M60 60 L330 60" stroke="var(--signal)" stroke-width="4"/>
+ <path d="M130 70 q 20 14 40 0 q 20 -14 40 0 q 20 14 40 0" fill="none" stroke="var(--amber)" stroke-width="2"/>
+ <text x="220" y="100" text-anchor="middle" font-size="11" fill="var(--amber)">link training tunes TX/RX</text>
+ <text x="10" y="126" font-size="12" fill="var(--muted)">Port's own TX drives the copper end-to-end.</text>
+</svg>
+</figure>
+</div>
+<div class="note warn">If the switch thinks an active module is passive (or vice versa) it tunes the port wrongly, which can hurt signal integrity. That's why the compliance code matters.</div>
+<h3>Decode a compliance code</h3>
+<p>The compliance code (also called Ethernet type, ethmode type or interface type) is read from the module EEPROM and tells the port what technology it's driving. It reads as <em>speed</em> + <em>BASE</em> + <em>media</em> + <em>lane count</em>.</p>
+<figure>
+<label for="ccSel" style="font-size:14px;color:var(--muted)">Choose a code </label>
+<select id="ccSel">
+ <option>100GBASE-CR4</option><option>10GBASE-SR</option><option>40GBASE-SR4</option><option>100GBASE-LR4</option><option>1000BASE-T</option><option>25GBASE-CR</option><option>100GBASE-CR2</option><option>100GBASE-SWDM4</option>
+</select>
+<div id="ccOut" style="margin-top:16px"></div>
+</figure>
+<p>Some modules are old, proprietary or oddly coded and aren't recognized correctly. On NVIDIA switches, the port firmware automatically overrides known supported modules to the right compliance code.</p>
+</section>
+
+<section id="ddm">
+<h2><span class="n">05</span>DDM/DOM: telemetry from optics</h2>
+<p>Digital Diagnostic / Optical Monitoring is an optional feature on optical transceivers that reports temperature, voltage, laser bias current, and — most usefully — <strong>TX optical power</strong> (what the laser emits) and <strong>RX optical power</strong> (what arrives). Readings are typically trustworthy to roughly ±10%. Show them with <code>nv show platform transceiver swpN</code> or <code>ethtool -m swpN</code>.</p>
+<figure>
+<svg viewBox="0 0 760 120" width="100%" role="img" aria-label="Alarm and warning threshold bands">
+ <rect x="20" y="40" width="110" height="34" fill="var(--fault-soft)" stroke="var(--fault)"/>
+ <rect x="130" y="40" width="90" height="34" fill="var(--amber-soft)" stroke="var(--amber)"/>
+ <rect x="220" y="40" width="320" height="34" fill="var(--ok-soft)" stroke="var(--ok)"/>
+ <rect x="540" y="40" width="90" height="34" fill="var(--amber-soft)" stroke="var(--amber)"/>
+ <rect x="630" y="40" width="110" height="34" fill="var(--fault-soft)" stroke="var(--fault)"/>
+ <g font-size="12" text-anchor="middle" fill="var(--ink)">
+ <text x="75" y="62">low alarm</text><text x="175" y="62">low warn</text><text x="380" y="62">normal operating range</text><text x="585" y="62">high warn</text><text x="685" y="62">high alarm</text></g>
+ <g font-size="11" fill="var(--muted)" text-anchor="middle"><text x="130" y="94">alarm threshold</text><text x="220" y="94">warning threshold</text><text x="540" y="94">warning threshold</text><text x="630" y="94">alarm threshold</text></g>
+ <text x="380" y="24" text-anchor="middle" font-size="13" fill="var(--ink)" font-weight="600">Each DDM value (e.g. RX power) has vendor thresholds</text>
+</svg>
+<figcaption>Alarm thresholds mark the edge of the vendor's design tolerance; warning thresholds sit a little closer to normal. When crossed, a flag flips Off → On — and it's <em>latched</em>: reading it (via ethtool, NetQ, etc.) resets it to Off. A value of exactly 0.0000 usually means "not implemented."</figcaption>
+</figure>
+</section>
+<section id="autoneg">
+<h2><span class="n">06</span>Auto-negotiation &amp; autodetect</h2>
+<p>"Auto-negotiation" is actually three different IEEE mechanisms, each tied to a media type. That's the source of most confusion: roughly half of modern link types have no autoneg standard at all.</p>
+<div class="tw"><table>
+<tr><th>Clause</th><th>Applies to</th><th>What it does</th></tr>
+<tr><td><span class="chip" style="color:var(--signal)">28</span></td><td>10/100/1000/10GBASE-T (twisted pair)</td><td>Agrees speed, duplex and pause/flow control. Mandatory for 1G and 10G over copper.</td></tr>
+<tr><td><span class="chip" style="color:var(--signal)">37</span></td><td>1000BASE-X (1G optical)</td><td>Detects one-way links (one side not receiving) and drops the link so traffic isn't black-holed.</td></tr>
+<tr><td><span class="chip" style="color:var(--signal)">73</span></td><td>25/40/50/100/200/400GBASE-CR (DAC)</td><td>Agrees speed and FEC, and runs <em>link training</em> to lower the bit error rate.</td></tr>
+</table></div>
+<h3>Should autoneg be on? Pick a link type</h3>
+<figure>
+<select id="anSel" aria-label="Link type">
+ <option value="bt">1000BASE-T / 10GBASE-T fixed copper port</option>
+ <option value="sfpt">1000BASE-T SFP (RJ45 module)</option>
+ <option value="1gx">1000BASE-X (1G optical)</option>
+ <option value="opt">Any other optical (10G, 25G, 100G SR/LR…)</option>
+ <option value="dac10">10G DAC</option>
+ <option value="dac25">25G+ DAC (CR, CR4, CR2…)</option>
+</select>
+<div id="anOut" style="margin-top:16px"></div>
+</figure>
+<h3>The golden rules</h3>
+<figure>
+<svg viewBox="0 0 760 170" width="100%" role="img" aria-label="Both ends must match">
+ <g font-size="13">
+ <rect x="20" y="20" width="200" height="56" rx="8" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="120" y="44" text-anchor="middle" fill="var(--ink)" font-weight="700">A: autoneg ON</text><text x="120" y="62" text-anchor="middle" fill="var(--muted)">speed/FEC left unset</text>
+ <rect x="540" y="20" width="200" height="56" rx="8" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="640" y="44" text-anchor="middle" fill="var(--ink)" font-weight="700">B: autoneg ON</text><text x="640" y="62" text-anchor="middle" fill="var(--muted)">speed/FEC left unset</text>
+ <line x1="220" y1="48" x2="540" y2="48" stroke="var(--ok)" stroke-width="4"/><text x="380" y="40" text-anchor="middle" fill="var(--ok)" font-weight="700">✓ link up</text>
+ <rect x="20" y="96" width="200" height="56" rx="8" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="120" y="120" text-anchor="middle" fill="var(--ink)" font-weight="700">A: autoneg OFF</text><text x="120" y="138" text-anchor="middle" fill="var(--muted)">speed + FEC forced</text>
+ <rect x="540" y="96" width="200" height="56" rx="8" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="640" y="120" text-anchor="middle" fill="var(--ink)" font-weight="700">B: autoneg OFF</text><text x="640" y="138" text-anchor="middle" fill="var(--muted)">same speed + FEC</text>
+ <line x1="220" y1="124" x2="540" y2="124" stroke="var(--ok)" stroke-width="4"/><text x="380" y="116" text-anchor="middle" fill="var(--ok)" font-weight="700">✓ link up ("force mode")</text>
+ </g>
+</svg>
+<figcaption>Where autoneg exists for the media, both ends must use the same setting. With autoneg OFF, set speed, duplex and FEC explicitly; with it ON, leave them unset. The one exception: 1000BASE-X uses speed 1000 <em>and</em> autoneg ON to get one-way link detection. MTU is never negotiated, and duplex only matters on 10M/100M links.</figcaption>
+</figure>
+<h3>Autodetect: what happens when autoneg is ON but the media can't negotiate</h3>
+<p>Because vendors let you enable autoneg on any port, Cumulus Linux handles the unsupported case with <strong>autodetect</strong>: the port cycles through plausible autoneg/speed/FEC combinations for that port + module until the link comes up. It isn't separately configurable — it's simply always active when autoneg is ON (the default on NVIDIA platforms). It's purely local; the neighbor is assumed to be forced, or running something equivalent.</p>
+<figure>
+<svg viewBox="0 0 760 120" width="100%" role="img" aria-label="Autodetect cycling through settings">
+ <g font-size="12" text-anchor="middle">
+ <rect x="10" y="30" width="130" height="50" rx="8" fill="var(--signal-soft)" stroke="var(--signal)"/><text x="75" y="52" fill="var(--ink)">try 100G</text><text x="75" y="68" fill="var(--muted)">FEC RS</text>
+ <rect x="160" y="30" width="130" height="50" rx="8" fill="var(--signal-soft)" stroke="var(--signal)"/><text x="225" y="52" fill="var(--ink)">try 100G</text><text x="225" y="68" fill="var(--muted)">FEC off</text>
+ <rect x="310" y="30" width="130" height="50" rx="8" fill="var(--signal-soft)" stroke="var(--signal)"/><text x="375" y="52" fill="var(--ink)">try 40G</text><text x="375" y="68" fill="var(--muted)">FEC off</text>
+ <text x="465" y="60" fill="var(--muted)" font-size="18">…</text>
+ <rect x="490" y="30" width="120" height="50" rx="8" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="550" y="60" fill="var(--ok)" font-weight="700">link up ✓</text>
+ <rect x="630" y="30" width="120" height="50" rx="8" fill="var(--fault-soft)" stroke="var(--fault)"/><text x="690" y="52" fill="var(--fault)" font-weight="700">never up?</text><text x="690" y="68" fill="var(--muted)">force it manually</text>
+ <g stroke="var(--muted)" marker-end="url(#ar)"><line x1="140" y1="55" x2="158" y2="55"/><line x1="290" y1="55" x2="308" y2="55"/></g>
+ </g>
+ <text x="380" y="108" text-anchor="middle" font-size="12" fill="var(--muted)">Illustrative sequence — the real list depends on the port and module. Compare configured vs. operational values with l1-show.</text>
+</svg>
+</figure>
+</section>
+
+<section id="fec">
+<h2><span class="n">07</span>Forward error correction (FEC)</h2>
+<p>FEC adds redundant bits so the receiver can repair a limited number of bit errors itself. The IEEE target is a bit error rate (BER) of <strong>10<sup>−12</sup></strong> — one bad bit per trillion. At 25G per lane and above, some cables can't hit that without FEC.</p>
+<div class="note warn">Both ends must run the <strong>same FEC algorithm</strong> or the link stays down. If the signal path looks healthy on both sides but the link won't come up, suspect an autoneg or FEC mismatch first.</div>
+<div class="tw"><table>
+<tr><th>Mode</th><th>Overhead / strength</th><th>Where it's used</th></tr>
+<tr><td><strong>RS (528,514)</strong></td><td>14 check bits per 514; fixes up to 7 bit errors. Reuses 64B/66B overhead so the line rate doesn't change.</td><td>25G NRZ lanes: 25G, 50G-CR2, 100G-SR4/CR4</td></tr>
+<tr><td><strong>RS (544,514)</strong></td><td>30 check bits per 514; fixes 14+ bit errors.</td><td>Required on 50G PAM4 lanes: all 200G/400G, 100G-CR2, 50G-CR</td></tr>
+<tr><td><strong>Base-R / FireCode</strong></td><td>Fixes 11 bits per 2048; lower latency than RS.</td><td>25G interfaces only</td></tr>
+<tr><td><strong>Off</strong></td><td>—</td><td>Fine on 25G lanes if the cable meets 10<sup>−12</sup> without it. 10G/40G should <em>never</em> need FEC — errors there mean bad hardware.</td></tr>
+<tr><td><strong>Auto</strong></td><td>Negotiated with neighbor</td><td>Default when autoneg is ON</td></tr>
+</table></div>
+<h3>FEC helper</h3>
+<figure>
+<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+<select id="fecIf" aria-label="Interface type">
+ <option value="10">10G / 40G</option>
+ <option value="25">25G, 100G-SR4/CR4, 50G-CR2 (25G NRZ lanes)</option>
+ <option value="50">50G-CR, 100G-CR2, 200G, 400G (PAM4 lanes)</option>
+</select>
+<div class="seg" role="group" aria-label="Autoneg">
+ <button id="fecOn" aria-pressed="true">Autoneg ON</button><button id="fecOff" aria-pressed="false">Autoneg OFF</button>
+</div></div>
+<div id="fecOut" style="margin-top:16px"></div>
+</figure>
+<p>Configured and operational FEC can legitimately differ. For example, configured <em>Auto</em> may show operational <em>RS</em> once negotiated, while configured <em>RS</em> on a down link shows operational <em>None</em>. <code>l1-show</code> displays both.</p>
+</section>
+
+<section id="si">
+<h2><span class="n">08</span>Signal integrity: link states &amp; eyes</h2>
+<p>The whole goal of Layer 1 is that bits sent on one side arrive intact on the other. The switch reports a ladder of states — each rung depends on the one below. Find the highest rung that's healthy and you know where to look.</p>
+<figure>
+<svg viewBox="0 0 760 260" width="100%" role="img" aria-label="Link state ladder">
+ <g font-size="13">
+ <rect x="40" y="200" width="340" height="44" rx="6" fill="var(--signal-soft)" stroke="var(--signal)"/><text x="56" y="227" fill="var(--ink)" font-weight="700">1 · RX power</text><text x="200" y="227" fill="var(--muted)" font-size="12">light/energy is arriving (DDM)</text>
+ <rect x="80" y="150" width="340" height="44" rx="6" fill="var(--signal-soft)" stroke="var(--signal)"/><text x="96" y="177" fill="var(--ink)" font-weight="700">2 · Signal detected</text><text x="250" y="177" fill="var(--muted)" font-size="12">receiver sees a signal</text>
+ <rect x="120" y="100" width="340" height="44" rx="6" fill="var(--signal-soft)" stroke="var(--signal)"/><text x="136" y="127" fill="var(--ink)" font-weight="700">3 · Signal lock</text><text x="270" y="127" fill="var(--muted)" font-size="12">receiver locked onto good signal</text>
+ <rect x="160" y="50" width="340" height="44" rx="6" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="176" y="77" fill="var(--ink)" font-weight="700">4 · Carrier detected</text><text x="330" y="77" fill="var(--muted)" font-size="12">both ends understand data</text>
+ <text x="330" y="32" text-anchor="middle" fill="var(--ok)" font-weight="700">= link up</text>
+ </g>
+ <g font-size="12" fill="var(--ink)">
+ <rect x="530" y="60" width="210" height="180" rx="8" fill="var(--card)" stroke="var(--rule)"/>
+ <text x="545" y="84" font-weight="700">Watch out</text>
+ <text x="545" y="108" fill="var(--muted)">Plenty of RX power ≠ good data.</text>
+ <text x="545" y="126" fill="var(--muted)">A strong but distorted signal</text>
+ <text x="545" y="144" fill="var(--muted)">can still fail to lock.</text>
+ <text x="545" y="174" fill="var(--muted)">Not every platform shows</text>
+ <text x="545" y="192" fill="var(--muted)">every rung.</text>
+ </g>
+</svg>
+</figure>
+<h3>Local fault vs. remote fault</h3>
+<p>The <em>RX fault</em> field tells you which direction is broken. Toggle the scenario:</p>
+<figure>
+<div class="seg" role="group" aria-label="Fault scenario"><button data-f="none" aria-pressed="true">None</button><button data-f="local" aria-pressed="false">Local fault</button><button data-f="remote" aria-pressed="false">Remote fault</button></div>
+<svg id="faultSvg" viewBox="0 0 760 170" width="100%" role="img" aria-label="Fault direction diagram" style="margin-top:12px">
+ <rect x="20" y="40" width="160" height="90" rx="10" fill="var(--signal-soft)" stroke="var(--signal)"/><text x="100" y="80" text-anchor="middle" font-weight="700" fill="var(--ink)">Local switch</text><text x="100" y="100" text-anchor="middle" font-size="12" fill="var(--muted)">(where you run l1-show)</text>
+ <rect x="580" y="40" width="160" height="90" rx="10" fill="var(--signal-soft)" stroke="var(--signal)"/><text x="660" y="90" text-anchor="middle" font-weight="700" fill="var(--ink)">Neighbor</text>
+ <line id="fTop" x1="180" y1="62" x2="580" y2="62" stroke="var(--ok)" stroke-width="5"/>
+ <line id="fBot" x1="580" y1="108" x2="180" y2="108" stroke="var(--ok)" stroke-width="5"/>
+ <text id="fTopT" x="380" y="52" text-anchor="middle" font-size="12" fill="var(--ink)">local TX → neighbor RX</text>
+ <text id="fBotT" x="380" y="128" text-anchor="middle" font-size="12" fill="var(--ink)">neighbor TX → local RX</text>
+ <text id="fMsg" x="380" y="160" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ok)">Both directions healthy.</text>
+</svg>
+</figure>
+<h3>Eyes and grades</h3>
+<p>Overlay every 1→0 and 0→1 transition on an oscilloscope and you get the eye pattern in the hero at the top of this page. A wide-open eye means 1s and 0s are easy to tell apart; a closing eye means bits get misread. One misread bit corrupts the frame's checksum (an FCS error) and the whole packet is lost — unless FEC catches it first.</p>
+<div class="grid2">
+<div class="note tip" style="margin:0"><strong>NVIDIA switches</strong> report eye height (mV) and a <strong>grade</strong>. For NRZ links below 100G, a grade under about <strong>4000</strong> suggests errors or instability may appear — though FEC may still clean it up.</div>
+<div class="note" style="margin:0"><strong>PAM4 (50G lanes)</strong> stacks three small eyes, so measurements are much lower by nature. FEC is mandatory there. Eyes aren't measured on fixed copper ports or on down links.</div>
+</div>
+</section>
+<style>
+.l1{background:var(--scope);color:#C7D6EA;border-radius:10px;padding:16px 0;font:13.5px/1.7 var(--mono);overflow-x:auto}
+.l1 .ln{display:block;padding:0 18px;white-space:pre;cursor:pointer;border-left:4px solid transparent}
+.l1 .ln:hover,.l1 .ln.sel{background:#22345A}
+.l1 .hd{color:#fff;font-weight:600}
+.l1 .s1{border-left-color:#E0A93A}.l1 .s2{border-left-color:#5FE0E8}.l1 .s3{border-left-color:#7DDC9A}.l1 .s4{border-left-color:#E07080}
+.l1wrap{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:start}
+.explain{position:sticky;top:20px;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px}
+.explain h4{margin:0 0 6px;font:700 16px var(--display)}
+.explain p{font-size:15px;margin:0 0 8px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:10px 0 0}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.check{list-style:none;padding:0;margin:0}
+.check li{display:grid;grid-template-columns:28px 1fr;gap:6px;padding:9px 0;border-bottom:1px solid var(--rule);max-width:70ch}
+.check input{width:18px;height:18px;margin-top:4px;accent-color:var(--signal)}
+.lanes{display:grid;grid-template-columns:70px 1fr 110px 70px;gap:8px 12px;align-items:center;font-size:14px}
+.bar{height:16px;border-radius:3px;background:var(--signal)}
+@media (max-width:980px){.l1wrap{grid-template-columns:1fr}.explain{position:static}}
+</style>
+<section id="l1show" class="wide">
+<h2 style="max-width:780px"><span class="n">09</span>Reading <code style="background:none;padding:0">l1-show</code></h2>
+<p>Linux's Ethernet tools don't present Layer 1 consistently across vendor drivers, so Cumulus Linux provides <code>sudo l1-show swpN</code> (must run as root) to gather everything in one hierarchical view. NVUE's <code>nv show platform transceiver swpN</code> covers the module/DDM side. <strong>Click any line</strong> below to see what it means and what to check.</p>
+<div class="l1wrap">
+<div>
+<div class="l1" id="l1" role="list"></div>
+<div class="legend"><span><i style="background:#E0A93A"></i>Module info (EEPROM)</span><span><i style="background:#5FE0E8"></i>Configured state (kernel)</span><span><i style="background:#7DDC9A"></i>Operational state</span><span><i style="background:#E07080"></i>Port hardware state (ASIC firmware)</span></div>
+</div>
+<aside class="explain" aria-live="polite" id="l1ex"><h4>Pick a line</h4><p>Work top to bottom on <em>both</em> ends of the link: identity → intent → reality → firmware diagnosis.</p></aside>
+</div>
+</section>
+
+<section id="workflow">
+<h2><span class="n">10</span>The troubleshooting method</h2>
+<p>The guide's approach is essentially the scientific method applied to cabling: characterize the symptom, find the lowest-level indicator that shows it, then change one thing at a time while watching that indicator.</p>
+<figure>
+<svg viewBox="0 0 760 330" width="100%" role="img" aria-label="Troubleshooting flowchart">
+ <g font-size="13" text-anchor="middle">
+ <rect x="250" y="10" width="260" height="46" rx="8" fill="var(--signal-soft)" stroke="var(--signal)"/><text x="380" y="38" fill="var(--ink)" font-weight="700">1 · Classify the problem</text>
+ <rect x="230" y="84" width="300" height="46" rx="8" fill="var(--signal-soft)" stroke="var(--signal)"/><text x="380" y="104" fill="var(--ink)" font-weight="700">2 · Design a test</text><text x="380" y="121" fill="var(--muted)" font-size="11">lowest-level indicator from l1-show / nv show</text>
+ <polygon points="380,156 500,190 380,224 260,190" fill="var(--amber-soft)" stroke="var(--amber)"/><text x="380" y="186" fill="var(--ink)" font-weight="700">3 · Config or</text><text x="380" y="203" fill="var(--ink)" font-weight="700">hardware?</text>
+ <rect x="20" y="166" width="200" height="48" rx="8" fill="var(--card)" stroke="var(--ink)"/><text x="120" y="186" fill="var(--ink)" font-weight="700">Configuration</text><text x="120" y="203" fill="var(--muted)" font-size="11">match both ends to guidance</text>
+ <rect x="540" y="166" width="200" height="48" rx="8" fill="var(--card)" stroke="var(--ink)"/><text x="640" y="186" fill="var(--ink)" font-weight="700">Hardware</text><text x="640" y="203" fill="var(--muted)" font-size="11">swap · move · loopback</text>
+ <text x="235" y="182" fill="var(--muted)" font-size="11">unsure? start here</text>
+ <rect x="230" y="262" width="300" height="50" rx="8" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="380" y="284" fill="var(--ink)" font-weight="700">4 · Make the fix permanent</text><text x="380" y="301" fill="var(--muted)" font-size="11">save config / replace failed part</text>
+ <g stroke="var(--muted)" stroke-width="1.6" fill="none" marker-end="url(#ar)">
+  <line x1="380" y1="56" x2="380" y2="82"/><line x1="380" y1="130" x2="380" y2="154"/>
+  <line x1="260" y1="190" x2="222" y2="190"/><line x1="500" y1="190" x2="538" y2="190"/>
+  <path d="M120 214 V287 H228"/><path d="M640 214 V287 H532"/>
+ </g>
+ </g>
+</svg>
+<figcaption>Use the test from step 2 as your progress meter throughout — if a change doesn't move it, undo it and try the next idea.</figcaption>
+</figure>
+<p>Problem classes the guide covers: link down or flapping · physical errors (not the same as <em>drops</em>, which are L2/L3 forwarding issues) · signal integrity · MTU mismatch · high-power module · I2C bus.</p>
+<h3>Isolating faulty hardware</h3>
+<p>Example tests: RX power reading, "neighbor is sending remote faults" in Troubleshooting Info, or <code>HwIfInErrors</code> in <code>ethtool -S swpN</code> climbing when FEC shouldn't be needed. Then work through these, re-running the test after each:</p>
+<figure>
+<svg viewBox="0 0 760 200" width="100%" role="img" aria-label="Hardware isolation steps">
+ <g font-size="12" text-anchor="middle">
+ <g transform="translate(10,20)"><rect width="140" height="120" rx="8" fill="var(--card)" stroke="var(--rule)"/><text x="70" y="24" font-weight="700" fill="var(--ink)">Swap cable</text>
+  <rect x="15" y="50" width="30" height="20" fill="var(--amber-soft)" stroke="var(--amber)"/><rect x="95" y="50" width="30" height="20" fill="var(--amber-soft)" stroke="var(--amber)"/><line x1="45" y1="60" x2="95" y2="60" stroke="var(--ok)" stroke-width="4"/>
+  <text x="70" y="96" fill="var(--muted)">known-good DAC/</text><text x="70" y="110" fill="var(--muted)">AOC/patch</text></g>
+ <g transform="translate(160,20)"><rect width="140" height="120" rx="8" fill="var(--card)" stroke="var(--rule)"/><text x="70" y="24" font-weight="700" fill="var(--ink)">Swap ends</text>
+  <rect x="15" y="50" width="30" height="20" fill="var(--signal-soft)" stroke="var(--signal)"/><rect x="95" y="50" width="30" height="20" fill="var(--amber-soft)" stroke="var(--amber)"/><path d="M30 46 C 50 30, 90 30, 110 46" stroke="var(--muted)" fill="none" marker-end="url(#ar)"/>
+  <text x="70" y="96" fill="var(--muted)">does the fault</text><text x="70" y="110" fill="var(--muted)">follow the module?</text></g>
+ <g transform="translate(310,20)"><rect width="140" height="120" rx="8" fill="var(--card)" stroke="var(--rule)"/><text x="70" y="24" font-weight="700" fill="var(--ink)">Loopback</text>
+  <rect x="20" y="40" width="100" height="40" rx="4" fill="var(--signal-soft)" stroke="var(--signal)"/><rect x="30" y="52" width="18" height="16" fill="var(--amber-soft)" stroke="var(--amber)"/><rect x="92" y="52" width="18" height="16" fill="var(--amber-soft)" stroke="var(--amber)"/><path d="M48 60 C 60 90, 80 90, 92 60" stroke="var(--ok)" stroke-width="3" fill="none"/>
+  <text x="70" y="100" fill="var(--muted)">both modules in</text><text x="70" y="114" fill="var(--muted)">one switch, then other</text></g>
+ <g transform="translate(460,20)"><rect width="140" height="120" rx="8" fill="var(--card)" stroke="var(--rule)"/><text x="70" y="24" font-weight="700" fill="var(--ink)">Replace 1-by-1</text>
+  <text x="70" y="62" fill="var(--ink)" font-size="22">⟲</text>
+  <text x="70" y="96" fill="var(--muted)">same model, new</text><text x="70" y="110" fill="var(--muted)">unit, one at a time</text></g>
+ <g transform="translate(610,20)"><rect width="140" height="120" rx="8" fill="var(--card)" stroke="var(--rule)"/><text x="70" y="24" font-weight="700" fill="var(--ink)">Other vendor</text>
+  <text x="70" y="62" fill="var(--ink)" font-size="22">⇄</text>
+  <text x="70" y="96" fill="var(--muted)">supported module</text><text x="70" y="110" fill="var(--muted)">from another vendor</text></g>
+ </g>
+ <text x="380" y="180" text-anchor="middle" font-size="13" fill="var(--muted)">Goal: narrow it to a single fiber, module, port, platform or configuration.</text>
+</svg>
+</figure>
+</section>
+
+<section id="down">
+<h2><span class="n">11</span>Down or flapping links</h2>
+<p>Symptoms include: <code>l1-show</code> reporting Kernel and Hardware both <em>Down</em>; <code>ip link show</code> showing <code>NO-CARRIER</code> (a healthy link shows <code>LOWER_UP</code>) or changing every second or two; carrier up/down entries in <code>/var/log/linkstate</code>; and no LLDP from the neighbor.</p>
+<h3>Checklist — run on both ends, top to bottom</h3>
+<ul class="check">
+<li><input type="checkbox" aria-label="done"><span><strong>Right port, right module?</strong> Vendor name and part number match what's physically installed.</span></li>
+<li><input type="checkbox" aria-label="done"><span><strong>Right type?</strong> Module type matches the link technology (a 100G DAC should read as 100G-CR4), and the far end agrees on the Ethernet type (check vendor docs if it isn't Cumulus).</span></li>
+<li><input type="checkbox" aria-label="done"><span><strong>Admin Up?</strong> Port configured and enabled.</span></li>
+<li><input type="checkbox" aria-label="done"><span><strong>Speed, autoneg and FEC</strong> consistent with the neighbor and the rules in sections 6–7.</span></li>
+<li><input type="checkbox" aria-label="done"><span><strong>MTU matches</strong> — won't keep the link down, but will break forwarding.</span></li>
+<li><input type="checkbox" aria-label="done"><span><strong>Operational state:</strong> kernel and hardware in sync? Speed <em>Unknown!</em> with autoneg on usually just means down. Operational FEC is <em>None</em> whenever the link is down.</span></li>
+<li><input type="checkbox" aria-label="done"><span><strong>TX/RX power</strong> in range (optics only) — and check <em>every lane</em> on QSFP; one dead lane kills the whole link.</span></li>
+<li><input type="checkbox" aria-label="done"><span><strong>LLDP neighbor</strong> is who you expect (blank when down).</span></li>
+<li><input type="checkbox" aria-label="done"><span><strong>Troubleshooting Info</strong> — the firmware's own diagnosis. Often the fastest first look.</span></li>
+</ul>
+<h3>Interpreting an RX/TX power reading</h3>
+<figure>
+<label for="pw" style="font-size:14px;color:var(--muted)">Drag to a reading (mW)</label>
+<input type="range" id="pw" min="0" max="6" step="1" value="4">
+<div style="display:flex;justify-content:space-between;font:12px var(--mono);color:var(--muted)"><span>0.0000</span><span>0.0001</span><span>0.02</span><span>0.05</span><span>0.5</span><span>0.8</span><span>1.5</span></div>
+<div id="pwOut" class="note" style="margin-top:14px"></div>
+<figcaption>Guide figures: short-reach optics typically transmit about 0.6–1.0 mW and work with RX above ~0.05 mW; long-reach optics transmit above 1.0 mW. Always check the module's own alarm/warning thresholds in <code>ethtool -m</code>, and its datasheet when in doubt.</figcaption>
+</figure>
+<h3>Firmware "Troubleshooting Info" messages</h3>
+<div class="tw"><table>
+<tr><th>Message (paraphrased)</th><th>Meaning</th><th>Next step</th></tr>
+<tr><td>Port closed by command</td><td>Interface is admin down</td><td>Bring it Admin Up</td></tr>
+<tr><td>Cable unplugged</td><td>No module detected</td><td>Check a module is present; reseat it</td></tr>
+<tr><td>Autoneg — no partner detected</td><td>Can't see the neighbor (autoneg/autodetect on)</td><td>Compare autoneg/FEC both sides; check RX/TX power; isolate hardware</td></tr>
+<tr><td>Force mode — no partner detected</td><td>Same, with autoneg off</td><td>Compare speed/autoneg/FEC both sides; check power; isolate hardware</td></tr>
+<tr><td>Neighbor sending remote faults</td><td>You hear them; they can't hear you</td><td>Suspect your TX path or their RX path</td></tr>
+</table></div>
+<p>If autodetect is enabled and the link won't come up, try disabling autoneg and forcing the speed.</p>
+<h3>What a failed lane looks like</h3>
+<figure>
+<div class="seg" role="group" aria-label="Example"><button data-ex="a" aria-pressed="true">AOC, lane 3 dead</button><button data-ex="b" aria-pressed="false">AOC, lanes 0–1 dead</button></div>
+<div id="laneViz" class="lanes" style="margin-top:16px"></div>
+<p id="laneMsg" style="margin-top:14px;font-size:15px"></p>
+<figcaption>Both examples are 40G-SR4 active optical cables with autoneg and FEC off. TX looks fine on every lane; one or more RX lanes collapse, signal lock fails there, the eye reads zero, and the port reports a <em>local</em> RX fault with no carrier. Because an AOC is one sealed assembly, the fix is replacing the whole cable.</figcaption>
+</figure>
+</section>
+
+<section id="errors">
+<h2><span class="n">12</span>Physical errors &amp; signal integrity</h2>
+<p>Physical errors come from marginal signal integrity or from missing the FEC a given cable type requires. Signal quality maps onto link behavior like this:</p>
+<figure>
+<svg viewBox="0 0 760 150" width="100%" role="img" aria-label="Signal quality spectrum">
+ <defs><linearGradient id="sq" x1="0" x2="1"><stop offset="0" stop-color="var(--fault)"/><stop offset=".5" stop-color="var(--amber)"/><stop offset="1" stop-color="var(--ok)"/></linearGradient></defs>
+ <rect x="20" y="40" width="720" height="18" rx="9" fill="url(#sq)"/>
+ <g font-size="13" fill="var(--ink)" text-anchor="middle">
+ <text x="100" y="30" font-weight="700">Very poor / none</text><text x="300" y="30" font-weight="700">Too marginal</text><text x="490" y="30" font-weight="700">Marginal</text><text x="670" y="30" font-weight="700">Good</text></g>
+ <g font-size="12" fill="var(--muted)" text-anchor="middle">
+ <text x="100" y="82">link stays down</text>
+ <text x="300" y="82">link flaps — FEC can't keep</text><text x="300" y="98">up, so it restarts the link</text>
+ <text x="490" y="82">link up with error counts;</text><text x="490" y="98">correct FEC may fix them</text>
+ <text x="670" y="82">BER ≤ 10⁻¹² ✓</text></g>
+ <text x="380" y="134" text-anchor="middle" font-size="12" fill="var(--muted)">Signal integrity is physical: once FEC is set correctly, remaining problems usually mean replacing a component.</text>
+</svg>
+</figure>
+<div class="grid2">
+<div class="note" style="margin:0"><strong>Uncorrected errors:</strong> <code>ethtool -S swpN | grep Errors</code>. With FEC on, these count only what FEC couldn't fix.</div>
+<div class="note" style="margin:0"><strong>Errors FEC corrected</strong> (NVIDIA): <code>sudo l1-show swpN --pcs-errors</code>.</div>
+</div>
+<p style="margin-top:16px">Counters also bump during link up/down transitions, so watch whether they <em>keep incrementing</em> over time rather than trusting a single snapshot. <code>/var/log/linkstate</code> records historical transitions. And rarely, a module misidentified as active vs. passive can itself cause signal-integrity trouble.</p>
+</section>
+
+<section id="mtu">
+<h2><span class="n">13</span>MTU mismatches</h2>
+<figure>
+<svg viewBox="0 0 760 150" width="100%" role="img" aria-label="MTU mismatch drops large frames">
+ <rect x="20" y="40" width="150" height="70" rx="10" fill="var(--signal-soft)" stroke="var(--signal)"/><text x="95" y="72" text-anchor="middle" font-weight="700" fill="var(--ink)">MTU 9216</text><text x="95" y="92" text-anchor="middle" font-size="12" fill="var(--muted)">link up ✓</text>
+ <rect x="590" y="40" width="150" height="70" rx="10" fill="var(--signal-soft)" stroke="var(--signal)"/><text x="665" y="72" text-anchor="middle" font-weight="700" fill="var(--ink)">MTU 1500</text><text x="665" y="92" text-anchor="middle" font-size="12" fill="var(--muted)">link up ✓</text>
+ <line x1="170" y1="75" x2="590" y2="75" stroke="var(--ink)" stroke-width="2"/>
+ <rect x="220" y="55" width="40" height="16" fill="var(--ok)"/><text x="240" y="50" text-anchor="middle" font-size="11" fill="var(--muted)">small ✓</text>
+ <rect x="340" y="80" width="140" height="18" fill="var(--fault)"/><text x="410" y="118" text-anchor="middle" font-size="12" fill="var(--fault)">large, don't-fragment packet ✗ dropped</text>
+ <text x="380" y="140" text-anchor="middle" font-size="12" fill="var(--muted)">e.g. OSPF adjacencies stuck, large transfers hanging</text>
+</svg>
+</figure>
+<p>An MTU mismatch generally leaves the link <em>up</em> — the clue is higher-layer breakage like OSPF adjacencies failing or non-fragmentable packets vanishing. Compare the <em>MTU</em> in l1-show's Configured State with the neighbor's. Vendors sometimes count MTU a few bytes differently (headers included or not), so check the neighbor's documentation before assuming a true mismatch.</p>
+</section>
+
+<section id="power">
+<h2><span class="n">14</span>High-power modules</h2>
+<p>Modules declare a power class; ones that need more than the default must request it, and the switch grants it only if that port supports it. Long-reach lasers are the usual high-power customers.</p>
+<figure>
+<div id="pwrChart"></div>
+<figcaption>Defaults: SFP runs class 2 (1.5 W), which every switch supports on all SFP ports at once. QSFP boots in low-power class 1 (1.5 W), then Cumulus enables normal power (classes 2–4, up to 3.5 W), supported on all QSFP ports at once. Classes 5–8 are high-power and port-dependent — e.g., on some Spectrum-1 switches only the first and last two ports accept them, and some models don't at all. Check your hardware spec.</figcaption>
+</figure>
+<p>To see whether a module asked for high power and got it, read the <em>Extended identifier description</em> lines in <code>sudo ethtool -m swpN</code>. Ignore the generic "max power consumption" line for high-power modules; the line that matters states the requested wattage and whether "High Power Class (&gt; 3.5 W)" is <strong>enabled</strong> or <strong>not enabled</strong>.</p>
+</section>
+
+<section id="i2c">
+<h2><span class="n">15</span>I2C bus lockups</h2>
+<p>I2C is the slow management bus the switch CPU uses to talk to modules, fans and power supplies. A defective module (most often a cheap one, though any can fail) can hang the bus. Data traffic may keep flowing for a while, but modules can be misconfigured, links fail or errors rise, and at worst the switch reboots or freezes. This is a hardware problem — not a Cumulus software bug.</p>
+<div class="note warn"><strong>Signs:</strong> modules disappear from <code>l1-show</code>/<code>ethtool -m</code>; repeated or bursty <code>smbus</code>, <code>i2c</code> or <code>EEPROM read</code> errors in <code>sudo tail -F /var/log/syslog</code>. Once one module locks the bus, others misbehave too, hiding the culprit. Fixes can hold for hours or months before recurring — so act decisively.</div>
+<h3>Recovery options: likelihood of clearing vs. traffic impact</h3>
+<figure>
+<svg viewBox="0 0 760 330" width="100%" role="img" aria-label="Recovery options chart">
+ <line x1="80" y1="280" x2="730" y2="280" stroke="var(--ink)"/><line x1="80" y1="280" x2="80" y2="30" stroke="var(--ink)"/>
+ <text x="405" y="316" text-anchor="middle" font-size="13" fill="var(--muted)">Traffic impact →</text>
+ <text x="30" y="160" text-anchor="middle" font-size="13" fill="var(--muted)" transform="rotate(-90 30 160)">Chance of clearing →</text>
+ <g font-size="12">
+  <circle cx="150" cy="235" r="11" fill="var(--signal)"/><text x="168" y="232" fill="var(--ink)" font-weight="600">Pull modules one by one</text><text x="168" y="248" fill="var(--muted)">may reveal the culprit</text>
+  <circle cx="330" cy="175" r="11" fill="var(--signal)"/><text x="348" y="172" fill="var(--ink)" font-weight="600">Restart switchd</text><text x="348" y="188" fill="var(--muted)">systemctl reset-failed; restart switchd</text>
+  <circle cx="500" cy="110" r="11" fill="var(--amber)"/><text x="518" y="107" fill="var(--ink)" font-weight="600">Reboot switch</text>
+  <circle cx="650" cy="55" r="11" fill="var(--fault)"/><text x="600" y="40" fill="var(--ink)" font-weight="600" text-anchor="end">Power cycle</text>
+ </g>
+</svg>
+<figcaption>Only the first option can identify the bad module. If traffic can be rerouted around the switch, do that and troubleshoot in a maintenance window; if not, act immediately.</figcaption>
+</figure>
+<h3>If it keeps coming back</h3>
+<p>Escalate systematically: remove half the modules and power-cycle (binary search); if errors persist with no modules, remove PSUs and fans one at a time between power cycles; if it still fails with everything isolated, replace the switch. If the switch recovers but the culprit is unknown, first replace any module with a syslog history of errors or past trouble — and if needed, replace all modules. NVIDIA Enterprise Support is the final escalation.</p>
+</section>
+
+<section id="cheat">
+<h2><span class="n">16</span>Command cheat sheet</h2>
+<div class="tw"><table>
+<tr><th>Command</th><th>Use it for</th></tr>
+<tr><td><code>sudo l1-show swpN</code></td><td>Full Layer 1 picture: module, configured, operational, hardware state</td></tr>
+<tr><td><code>sudo l1-show swpN --pcs-errors</code></td><td>Bit errors FEC corrected (NVIDIA)</td></tr>
+<tr><td><code>nv show platform transceiver swpN</code></td><td>Module identity and DDM: temperature, voltage, per-lane TX/RX power, bias, alarms</td></tr>
+<tr><td><code>sudo ethtool -m swpN</code></td><td>Decoded EEPROM: identifier, compliance code, thresholds, power class</td></tr>
+<tr><td><code>ethtool -S swpN | grep Errors</code></td><td>Uncorrected error counters (e.g. HwIfInErrors)</td></tr>
+<tr><td><code>ip link show swpN</code></td><td>Carrier: LOWER_UP vs NO-CARRIER</td></tr>
+<tr><td><code>/var/log/linkstate</code></td><td>History of link up/down transitions</td></tr>
+<tr><td><code>sudo tail -F /var/log/syslog</code></td><td>Watch for smbus / i2c / EEPROM read errors</td></tr>
+</table></div>
+</section>
+</main>
+</div>
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function segGroup(btns,cb){btns.forEach(b=>b.addEventListener('click',()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b);}));}
+
+/* ---------- Scope / eye diagram ---------- */
+const cv=$('#scope'),cx=cv.getContext('2d'),W=cv.width,H=cv.height;
+let mode='nrz',noise=+$('#noise').value;
+const gauss=()=>{let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+function levels(){return mode==='nrz'?[-1,1]:[-1,-1/3,1/3,1];}
+function sigma(){return noise/100*0.33;}
+function grid(a){cx.strokeStyle='rgba(60,90,140,'+a+')';cx.lineWidth=1;for(let i=1;i<10;i++){cx.beginPath();cx.moveTo(i*W/10,0);cx.lineTo(i*W/10,H);cx.stroke();}for(let j=1;j<8;j++){cx.beginPath();cx.moveTo(0,j*H/8);cx.lineTo(W,j*H/8);cx.stroke();}}
+function clear(){cx.fillStyle='#13203A';cx.fillRect(0,0,W,H);grid(.7);}
+function trace(){
+  const L=levels(),pick=()=>L[Math.floor(Math.random()*L.length)];
+  const a=pick(),b=pick(),c=pick(),amp=H*0.36,s=sigma();
+  const ui=W/2, t1=W/4+gauss()*s*ui*0.18, t2=3*W/4+gauss()*s*ui*0.18, tw=ui*0.32;
+  const lv=x=>{if(x<t1-tw/2)return a; if(x<t1+tw/2){const k=(x-(t1-tw/2))/tw;return a+(b-a)*(1-Math.cos(Math.PI*k))/2;}
+    if(x<t2-tw/2)return b; if(x<t2+tw/2){const k=(x-(t2-tw/2))/tw;return b+(c-b)*(1-Math.cos(Math.PI*k))/2;} return c;};
+  const off=gauss()*s;
+  cx.beginPath();
+  for(let x=0;x<=W;x+=4){const y=H/2-(lv(x)+off+gauss()*s*0.25)*amp;x?cx.lineTo(x,y):cx.moveTo(x,y);}
+  cx.stroke();
+}
+function style(){cx.strokeStyle='rgba(95,224,232,0.10)';cx.lineWidth=1.4;}
+function readout(){const sp=mode==='nrz'?2:2/3,open=Math.max(0,(sp-6*sigma())/sp);
+  $('#eyeRead').textContent='eye opening ≈ '+Math.round(open*100)+'%'+(mode==='pam4'?' (×3 eyes)':'');}
+function burst(n){style();for(let i=0;i<n;i++)trace();}
+function redrawStatic(){clear();burst(900);readout();}
+clear();readout();
+if(reduce){redrawStatic();}
+else{(function loop(){cx.fillStyle='rgba(19,32,58,0.05)';cx.fillRect(0,0,W,H);grid(.05);burst(7);requestAnimationFrame(loop);})();}
+segGroup([$('#bNRZ'),$('#bPAM4')],b=>{mode=b.id==='bNRZ'?'nrz':'pam4';clear();readout();if(reduce)redrawStatic();});
+$('#noise').addEventListener('input',e=>{noise=+e.target.value;readout();if(reduce)redrawStatic();});
+
+/* ---------- Lanes ---------- */
+const LANES={'1G':['one 10G/25G lane clocked down to 1G (or a native 1G lane on fixed-copper switches)'],'10G':[[10]],'25G':[[25]],'40G':[[10,10,10,10]],'50G':[[25,25],[50]],'100G':[[25,25,25,25],[50,50],[100]],'200G':[[50,50,50,50],[100,100]],'400G':[[50,50,50,50,50,50,50,50],[100,100,100,100]],'800G':[[100,100,100,100,100,100,100,100]]};
+const lb=$('#laneBtns');
+Object.keys(LANES).forEach((k,i)=>{const b=document.createElement('button');b.textContent=k;b.setAttribute('aria-pressed',k==='100G');lb.appendChild(b);});
+function drawLanes(k){const o=$('#laneOut');o.innerHTML='';LANES[k].forEach(opt=>{const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:10px;margin:10px 0;flex-wrap:wrap';
+  if(typeof opt==='string'){row.innerHTML='<span style="font-size:15px">'+opt+'</span>';o.appendChild(row);return;}
+  const lab=document.createElement('span');lab.style.cssText='font:600 13px var(--mono);min-width:92px;color:var(--muted)';lab.textContent=opt.length+' × '+opt[0]+'G';row.appendChild(lab);
+  opt.forEach(s=>{const d=document.createElement('span');const pam=s>=50;d.style.cssText='display:inline-flex;align-items:center;justify-content:center;height:30px;border-radius:4px;font:600 12px var(--mono);width:'+(s*1.1+22)+'px;background:'+(pam?'var(--amber-soft)':'var(--signal-soft)')+';border:1.5px solid '+(pam?'var(--amber)':'var(--signal)')+';color:var(--ink)';d.textContent=s+'G';row.appendChild(d);});
+  const t=document.createElement('span');t.style.cssText='font-size:13px;color:var(--muted)';t.textContent=opt[0]>=50?'PAM4':'NRZ';row.appendChild(t);o.appendChild(row);});}
+segGroup([...lb.children],b=>drawLanes(b.textContent));drawLanes('100G');
+
+/* ---------- Compliance decoder ---------- */
+const MEDIA={T:['Twisted pair (RJ45)','Active — onboard PHY handles BASE-T negotiation'],CR:['Copper twinax (DAC)','Passive — port drives the copper directly'],SR:['Short-range optical (multimode fiber)','Active optics'],LR:['Long-range optical (single-mode, km)','Active optics'],SWDM:['Short-wave wavelength-division multiplexed optical','Active optics'],CWDM:['Coarse WDM optical','Active optics']};
+function decode(code){const m=code.match(/^(\d+G?)BASE-([A-Z]+?)(\d?)$/);if(!m)return;let sp=m[1];const spd=sp==='1000'?1:parseInt(sp);const md=MEDIA[m[2]]||['?','?'];const n=m[3]?+m[3]:1;
+ let how='';if(m[2]==='CR')how=n>1?n+' twinax pairs, one per lane':'1 twinax pair';else if(m[2]==='SR')how=n>1?'a bundle of '+n+' fibers each way, one per lane':'one fiber each way';else if(m[2]==='LR'||m[2].includes('WDM'))how=n>1?n+' wavelengths multiplexed over a single fiber pair':'one wavelength';else how='4 twisted pairs (BASE-T)';
+ const per=m[2]==='T'?'—':(spd/n)+'G per lane';
+ const chip=(t,s,c)=>'<div style="display:inline-block;margin:0 6px 8px 0;border:1.5px solid '+c+';border-radius:8px;padding:8px 12px;vertical-align:top"><div style="font:700 18px var(--mono);color:'+c+'">'+t+'</div><div style="font-size:12.5px;color:var(--muted);max-width:22ch">'+s+'</div></div>';
+ $('#ccOut').innerHTML=chip(m[1]==='1000'?'1000':m[1],'total line rate','var(--signal)')+chip('BASE','baseband signaling','var(--muted)')+chip(m[2],md[0],'var(--amber)')+chip(m[3]||'(none)',n+' lane'+(n>1?'s':''),'var(--ok)')+
+ '<p style="margin:8px 0 0;font-size:15px"><strong>Physically:</strong> '+how+' · '+per+' · '+md[1]+'.</p>';}
+$('#ccSel').addEventListener('change',e=>decode(e.target.value));decode('100GBASE-CR4');
+
+/* ---------- Autoneg picker ---------- */
+const AN={bt:['ok','Required — leave it ON','1G and 10G over twisted pair must auto-negotiate; you can\'t disable it at 1G. Turning it off means forcing 100M or 10M plus the matching duplex.'],
+ sfpt:['ok','Leave the default (ON)','The module\'s onboard PHY negotiates on the RJ45 side by itself, without the port. Don\'t change it.'],
+ '1gx':['ok','Strongly recommended ON (speed 1000)','Clause 37 detects one-way failures and takes the link down instead of silently black-holing traffic.'],
+ opt:['amber','No autoneg standard exists','ON puts the port into autodetect, which usually works. If the link won\'t come up, turn autoneg OFF and force speed and FEC to match the neighbor.'],
+ dac10:['amber','No autoneg standard exists','Same as optics: autodetect if ON, or force speed if the link stays down.'],
+ dac25:['ok','Optional, but useful','Speed and FEC are usually known anyway, but clause 73 link training can improve signal integrity. Whatever you choose, match both ends.']};
+function an(v){const d=AN[v],c=d[0]==='ok'?'tip':'';$('#anOut').innerHTML='<div class="note '+c+'" style="margin:0"><strong>'+d[1]+'.</strong> '+d[2]+'</div>';}
+$('#anSel').addEventListener('change',e=>an(e.target.value));an('bt');
+
+/* ---------- FEC helper ---------- */
+let fecAN=true;
+function fec(){const v=$('#fecIf').value;let t,c='tip';
+ if(v==='10'){t=fecAN?'Leave FEC at Auto; it will resolve to none. 10G/40G links should never need FEC — if you see errors, replace the cable or module.':'Set FEC <strong>off</strong>. 10G/40G links should never need FEC — errors mean faulty hardware.';}
+ else if(v==='25'){t=fecAN?'Leave FEC at <strong>Auto</strong> and let it negotiate (RS, Base-R or off).':'You <strong>must</strong> set FEC explicitly — <strong>off, RS or Base-R</strong> — matching the neighbor exactly. The default Auto won\'t link up with autoneg disabled.';c=fecAN?'tip':'warn';}
+ else{t=fecAN?'Auto will negotiate <strong>RS (544,514)</strong>, which is mandatory on PAM4 lanes.':'Set FEC to <strong>RS</strong> on both ends — RS(544,514) is mandatory on 50G PAM4 lanes.';c=fecAN?'tip':'warn';}
+ $('#fecOut').innerHTML='<div class="note '+c+'" style="margin:0">'+t+'</div>';}
+$('#fecIf').addEventListener('change',fec);segGroup([$('#fecOn'),$('#fecOff')],b=>{fecAN=b.id==='fecOn';fec();});fec();
+
+/* ---------- Fault toggle ---------- */
+const F={none:['var(--ok)','var(--ok)','Both directions healthy. RX fault: None.','var(--ok)'],
+ local:['var(--ok)','var(--fault)','Local fault: this switch has no signal lock / can\'t decode what arrives on its RX path.','var(--fault)'],
+ remote:['var(--fault)','var(--ok)','Remote fault: your RX path works, but the neighbor is signalling (over it) that IT can\'t hear you. Suspect your TX, the fiber toward them, or their RX.','var(--fault)']};
+segGroup($$('[data-f]'),b=>{const d=F[b.dataset.f];$('#fTop').setAttribute('stroke',d[0]);$('#fBot').setAttribute('stroke',d[1]);
+ $('#fTop').setAttribute('stroke-dasharray',d[0].includes('fault')?'10 8':'');$('#fBot').setAttribute('stroke-dasharray',d[1].includes('fault')?'10 8':'');
+ $('#fMsg').textContent=d[2];$('#fMsg').setAttribute('fill',d[3]);});
+
+/* ---------- l1-show annotated ---------- */
+const L1=[
+ ['hd','','cumulus@leaf01:~$ sudo l1-show swp10',['The command','Run as root, ideally on both ends of the link at once so you can compare them side by side.']],
+ ['hd s1','s1','  Module Info',['Module Info','Everything here is read from the module\'s own EEPROM: who made it and what it claims to be.']],
+ ['s1','s1','      Vendor Name: ACME OPTICS      PN: SR-10G-01',['Vendor / part number','Does this match the module physically in this port? A quick way to catch "wrong port" or "wrong module" mistakes.']],
+ ['s1','s1','      Identifier: 0x03 (SFP)        Type: 10g-sr',['Identifier & type','Byte 0 identifier (0x03 = SFP) and the compliance code. Does the type match the link technology, and does the neighbor recognize the same type?']],
+ ['hd s2','s2','  Configured State',['Configured State','What you asked for, as held in the kernel (via NVUE / ifupdown2). switchd keeps the hardware in sync with it.']],
+ ['s2','s2','      Admin: Admin Up  Speed: 10G   MTU: 9216',['Admin / Speed / MTU','Admin Up = the port is enabled. With autoneg on, speed shows the negotiated or autodetected value. MTU must match the neighbor or higher-layer protocols suffer.']],
+ ['s2','s2','      Autoneg: On                   FEC: Auto',['Autoneg / FEC (configured)','Your intent. Compare against the neighbor and the rules in sections 6 and 7 — a mismatch here is the #1 configuration cause of a down link.']],
+ ['hd s3','s3','  Operational State',['Operational State','What is actually happening right now, in the kernel and in the hardware.']],
+ ['s3','s3','      Link Status: Kernel: Up       Hardware: Up',['Link status','Kernel and hardware should agree. Both Down = link down. If this changes between runs, the link is flapping.']],
+ ['s3','s3','      Speed: Kernel: 10G            Hardware: 10G',['Operational speed','Should equal the configured speed when up. Kernel shows "Unknown!" when down with autoneg on.']],
+ ['s3','s3','      Autoneg: On (Autodetect enabld) FEC: None',['Operational autoneg / FEC','Tells you whether autodetect is in play. FEC here is the value actually running — always None while the link is down.']],
+ ['s3','s3','      TX Power (mW): [0.61]',['TX power','Laser output from DDM (optics only; not DAC or BASE-T). Short-reach ≈ 0.6–1.0 mW. 0.0001 suggests the laser is off.']],
+ ['s3','s3','      RX Power (mW): [0.55]',['RX power','Light arriving. Short-reach generally works above ~0.05 mW. 0.0001 = no signal received. On QSFP, check each of the 4 lanes.']],
+ ['s3','s3','      Topo File Neighbor: spine01, swp3',['Topology file neighbor','Shown when /etc/ptm.d/topology.dot is populated and ptmd is running — the neighbor you EXPECT.']],
+ ['s3','s3','      LLDP Neighbor:      spine01, swp3',['LLDP neighbor','The neighbor that ACTUALLY answered via lldpd. Should match the topology file; blank when the link is down.']],
+ ['hd s4','s4','  Port Hardware State:',['Port Hardware State','Low-level data from the ASIC\'s port firmware. The layout differs between vendors; this is the NVIDIA format.']],
+ ['s4','s4','      Compliance Code: 10G Base-SR',['Compliance code (firmware)','How the firmware classified the module. If this disagrees with what\'s installed, the port may be tuned wrong.']],
+ ['s4','s4','      Cable Type: Optical Module (separated)',['Cable type','Passive copper, active cable or optical module. Must match reality (active vs passive matters for tuning).']],
+ ['s4','s4','      Speed: 10G                    Autodetect: Enabled',['Speed / autodetect','N/A or an unexpected speed when down with autoneg on. If autodetect is enabled and the link won\'t come up, try forcing speed with autoneg off.']],
+ ['s4','s4','      Eyes: 411                     Grade: 41609',['Eyes / grade','RX eye height (mV) and quality grade; zeros when the link is down. For NRZ below 100G, a grade under ~4000 is a warning sign.']],
+ ['s4','s4','      Troubleshooting Info: No issue was observed.',['Troubleshooting Info','The firmware\'s own diagnosis — last in the output but often the best first place to look. See the message table in section 11.']]];
+const box=$('#l1');
+L1.forEach((r,i)=>{const s=document.createElement('span');s.className='ln '+r[0];s.textContent=r[2];s.tabIndex=0;s.setAttribute('role','listitem');
+ const act=()=>{$$('.l1 .ln').forEach(x=>x.classList.remove('sel'));s.classList.add('sel');$('#l1ex').innerHTML='<h4>'+r[3][0]+'</h4><p>'+r[3][1]+'</p>';};
+ s.addEventListener('click',act);s.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});box.appendChild(s);});
+
+/* ---------- RX/TX power interpreter ---------- */
+const PW=[['0.0000','warn','Either the module doesn\'t implement this DDM reading at all, or nothing is being sent/received. Check whether other DDM values are populated.'],
+ ['0.0001','warn','DDM is supported, but there is no signal. As TX: the laser is likely disabled. As RX: nothing is arriving — broken/unplugged fiber, or the far laser is off.'],
+ ['0.02','warn','Very weak RX for a short-reach module — below the ~0.05 mW working floor. Suspect dirty connectors, a bad patch, excessive length or a failing far-end laser.'],
+ ['0.05','','Around the bottom edge for short-reach RX. May work, but compare against the module\'s low warning/alarm thresholds in ethtool -m.'],
+ ['0.5','tip','Healthy for short-reach RX (and in the typical short-reach TX range of ~0.6–1.0 mW).'],
+ ['0.8','tip','Normal short-reach TX / strong RX.'],
+ ['1.5','','Typical of long-reach TX (> 1.0 mW). As RX on a short link it could approach the high thresholds — check the datasheet.']];
+function pw(i){const d=PW[i];const o=$('#pwOut');o.className='note '+d[1];o.innerHTML='<strong>'+d[0]+' mW:</strong> '+d[2];}
+$('#pw').addEventListener('input',e=>pw(+e.target.value));pw(4);
+
+/* ---------- Lane failure viz ---------- */
+const EX={a:{rx:[0.159,0.1732,0.153,0.0067],lock:'YYYN',eye:[1,1,1,0],msg:'Lane 3 RX power collapsed (0.0067 mW), no signal lock and no eye on that lane → local RX fault, no carrier, link down. Three good lanes aren\'t enough: the whole 40G link fails.'},
+ b:{rx:[0.0001,0.0001,0.5255,0.64],lock:'YNYY',eye:[0,0,1,1],msg:'Lanes 0 and 1 read 0.0001 mW (no light). Signal lock on those lanes bounces — this snapshot catches lane 0 briefly showing Y — but their eyes are zero. Replace the AOC.'}};
+function lanes(k){const d=EX[k],v=$('#laneViz');v.innerHTML='<b style="font-size:13px;color:var(--muted)">Lane</b><b style="font-size:13px;color:var(--muted)">RX power</b><b style="font-size:13px;color:var(--muted)">Signal lock</b><b style="font-size:13px;color:var(--muted)">Eye</b>';
+ d.rx.forEach((p,i)=>{const bad=p<0.05;const w=Math.max(2,Math.min(100,p/0.7*100));
+ v.insertAdjacentHTML('beforeend','<span style="font:600 14px var(--mono)">'+i+'</span><span style="display:flex;align-items:center;gap:8px"><span class="bar" style="width:'+w+'%;background:'+(bad?'var(--fault)':'var(--signal)')+'"></span><span style="font:12px var(--mono);color:var(--muted)">'+p+'</span></span><span style="font:600 14px var(--mono);color:'+(d.lock[i]==='Y'?'var(--ok)':'var(--fault)')+'">'+d.lock[i]+'</span><span style="color:'+(d.eye[i]?'var(--ok)':'var(--fault)')+'">'+(d.eye[i]?'open':'0')+'</span>');});
+ $('#laneMsg').textContent=d.msg;}
+segGroup($$('[data-ex]'),b=>lanes(b.dataset.ex));lanes('a');
+
+/* ---------- Power class chart ---------- */
+(function(){const sfp=[1.0,1.5,2.0],q=[1.5,2.0,2.5,3.5,4.0,4.5,5.0,10.0];const max=10,bw=560,x0=150;let y=10,s='';
+ const row=(lab,w,col,note)=>{s+='<text x="'+(x0-10)+'" y="'+(y+14)+'" text-anchor="end" font-size="12" fill="var(--ink)">'+lab+'</text><rect x="'+x0+'" y="'+y+'" width="'+(w/max*bw)+'" height="18" rx="3" fill="'+col+'"/><text x="'+(x0+w/max*bw+6)+'" y="'+(y+14)+'" font-size="12" fill="var(--muted)">'+w.toFixed(1)+' W'+(note?' · '+note:'')+'</text>';y+=24;};
+ s+='<text x="0" y="'+(y+12)+'" font-weight="700" font-size="13" fill="var(--ink)">SFP</text>';y+=22;
+ sfp.forEach((w,i)=>row('class '+(i+1),w,i===1?'var(--ok)':i===2?'var(--amber)':'var(--signal)',i===1?'default':i===2?'port-dependent':''));y+=10;
+ s+='<text x="0" y="'+(y+12)+'" font-weight="700" font-size="13" fill="var(--ink)">QSFP</text>';y+=22;
+ q.forEach((w,i)=>row('class '+(i+1),w,i===0?'var(--signal)':i<4?'var(--ok)':'var(--amber)',i===0?'low-power (boot)':i===3?'normal max, all ports':i===4?'high-power →':''));
+ $('#pwrChart').innerHTML='<svg viewBox="0 0 760 '+(y+10)+'" width="100%" role="img" aria-label="Module power classes">'+s+'</svg>';})();
+
+/* ---------- TOC highlight ---------- */
+const links=$$('nav.toc a');const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-30% 0px -60% 0px'});
+$$('main section[id]').forEach(s=>io.observe(s));
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

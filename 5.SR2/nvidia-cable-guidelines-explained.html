@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cable Installation & Management, Explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF1F4; --panel:#FFFFFF; --ink:#1B2430; --muted:#5A6676; --line:#C9D1DB;
+  --fiber:#1E9AA8; --fiber-soft:#D3EEF1; --smf:#E0A526; --stop:#C23B2A; --stop-soft:#F7DEDA;
+  --go:#2F7D45; --go-soft:#DCEFE1; --metal:#8A96A6; --rack:#3A4656;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#141A22; --panel:#1C2430; --ink:#E6EBF1; --muted:#9AA6B6; --line:#334052;
+    --fiber:#3FC3D1; --fiber-soft:#173A40; --smf:#F0BC45; --stop:#F0705E; --stop-soft:#3D221F;
+    --go:#62C07C; --go-soft:#1B3524; --metal:#7C8898; --rack:#8C9AAE;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 var(--body)}
+a{color:var(--fiber)}
+:focus-visible{outline:3px solid var(--smf);outline-offset:2px}
+.wrap{display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px;max-width:1180px;margin:0 auto;padding:0 24px}
+nav{position:sticky;top:0;align-self:start;padding:40px 0;font-size:15px}
+nav ol{list-style:none;margin:0;padding:0;border-left:3px solid var(--line)}
+nav li a{display:block;padding:6px 0 6px 14px;margin-left:-3px;border-left:3px solid transparent;color:var(--muted);text-decoration:none}
+nav li a:hover{color:var(--ink);border-left-color:var(--fiber)}
+nav .src{margin-top:20px;color:var(--muted);font-size:13px;line-height:1.45}
+main{padding-bottom:80px;min-width:0}
+h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0}
+h1{font-size:clamp(40px,6vw,68px);font-weight:700;letter-spacing:-.5px;max-width:14ch}
+h2{font-size:34px;font-weight:600;margin-bottom:10px}
+h3{font-size:22px;font-weight:600;margin:28px 0 6px}
+p{max-width:68ch;margin:0 0 14px}
+section{padding:56px 0 8px;border-top:1px solid var(--line)}
+.hero{padding:48px 0 24px;border:none}
+.hero p.lede{font-size:20px;color:var(--muted);max-width:56ch;margin-top:16px}
+.hero svg{width:100%;height:auto;margin-top:24px;display:block}
+.draw{stroke-dasharray:1400;stroke-dashoffset:1400;animation:draw 3s ease-out .3s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:20px;margin:18px 0 22px;overflow-x:auto}
+.fig svg{display:block;width:100%;height:auto;min-width:520px}
+.fig figcaption,.cap{font-size:14px;color:var(--muted);margin-top:10px}
+.note{border-left:4px solid var(--smf);padding:10px 16px;background:var(--panel);margin:16px 0;max-width:68ch}
+.note.stop{border-color:var(--stop)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.two .fig{margin:0}
+.two .fig svg{min-width:0}
+.tag{font-family:var(--display);font-weight:700;font-size:18px}
+.ok{color:var(--go)} .bad{color:var(--stop)}
+/* don't grid */
+.dont{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px 16px}
+.card svg{width:100%;height:84px;display:block;margin-bottom:8px}
+.card .x{color:var(--stop);font-weight:600;line-height:1.35;margin-bottom:6px}
+.card .y{color:var(--muted);font-size:15px;line-height:1.4}
+.card .y::before{content:"Instead: ";color:var(--go);font-weight:600}
+/* svg utilities */
+.s-ink{stroke:var(--ink)} .s-muted{stroke:var(--muted)} .s-fiber{stroke:var(--fiber)} .s-stop{stroke:var(--stop)} .s-go{stroke:var(--go)} .s-metal{stroke:var(--metal)} .s-rack{stroke:var(--rack)} .s-smf{stroke:var(--smf)} .s-line{stroke:var(--line)}
+.f-ink{fill:var(--ink)} .f-muted{fill:var(--muted)} .f-fiber{fill:var(--fiber)} .f-stop{fill:var(--stop)} .f-go{fill:var(--go)} .f-metal{fill:var(--metal)} .f-panel{fill:var(--panel)} .f-paper{fill:var(--paper)} .f-rack{fill:var(--rack)} .f-smf{fill:var(--smf)} .f-soft{fill:var(--fiber-soft)} .f-stopsoft{fill:var(--stop-soft)} .f-gosoft{fill:var(--go-soft)} .f-line{fill:var(--line)}
+.nf{fill:none}
+svg text{font-family:var(--body);font-size:13px;fill:var(--ink)}
+svg text.m{fill:var(--muted);font-size:12px}
+svg text.h{font-family:var(--display);font-weight:600;font-size:16px}
+/* slider */
+.ctrl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:15px}
+input[type=range]{width:260px;accent-color:var(--fiber)}
+#bendState{font-family:var(--display);font-weight:700;font-size:20px}
+/* flow */
+.flow{display:flex;flex-wrap:wrap;gap:0;align-items:stretch;margin:18px 0}
+.flow div{flex:1 1 150px;background:var(--panel);border:1px solid var(--line);padding:12px 14px;position:relative;font-size:15px}
+.flow div b{display:block;font-family:var(--display);font-size:20px;color:var(--fiber)}
+/* checklist */
+.check{list-style:none;padding:0;margin:16px 0;max-width:72ch}
+.check li{border-bottom:1px solid var(--line)}
+.check label{display:flex;gap:12px;padding:10px 4px;cursor:pointer;align-items:flex-start}
+.check input{width:20px;height:20px;margin-top:3px;accent-color:var(--go);flex:none}
+.check input:checked+span{color:var(--muted);text-decoration:line-through}
+#progress{font-family:var(--display);font-size:22px;font-weight:600}
+.bar{height:8px;background:var(--line);border-radius:4px;max-width:420px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;width:0;background:var(--go);transition:width .25s}
+@media (max-width:860px){
+  .wrap{grid-template-columns:1fr;gap:0}
+  nav{position:static;padding:20px 0 0}
+  nav ol{display:flex;flex-wrap:wrap;border:none;gap:4px 14px}
+  nav li a{padding:2px 0;border:none;margin:0}
+  .two{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav aria-label="Sections">
+  <ol>
+    <li><a href="#handling">Unpacking & handling</a></li>
+    <li><a href="#donts">The 15 don'ts</a></li>
+    <li><a href="#bend">Bend radius</a></li>
+    <li><a href="#support">Support & hanging</a></li>
+    <li><a href="#env">Work environment</a></li>
+    <li><a href="#rack">Installing in the rack</a></li>
+    <li><a href="#manage">Managing cable runs</a></li>
+    <li><a href="#insert">Inserting a cable</a></li>
+    <li><a href="#extract">Extracting a cable</a></li>
+    <li><a href="#checklist">Field checklist</a></li>
+  </ol>
+  <p class="src">Explains NVIDIA's <a href="https://networking-docs.nvidia.com/cablemanagfaq/cable-installation-and-management-guidelines" target="_blank" rel="noopener">Cable Installation and Management Guidelines</a> (last updated May 2023). Diagrams are simplified illustrations, not NVIDIA's figures.</p>
+</nav>
+
+<main>
+<header class="hero">
+  <h1>Treat every cable like a thin glass pipe</h1>
+  <p class="lede">NVIDIA's networking docs collect lessons from cables returned as damaged. Most of that damage can't be repaired, and almost all of it came from handling: bending, pulling, stepping, crushing, dirt. This page walks through the guidance with a diagram for each idea.</p>
+  <svg viewBox="0 0 900 230" role="img" aria-label="A cable routed from a switch port with a gentle curve, supported by soft ties, down the side of a rack">
+    <rect x="40" y="30" width="820" height="170" rx="4" class="f-panel s-line" stroke-width="1.5"/>
+    <rect x="60" y="50" width="16" height="130" class="f-rack"/>
+    <rect x="824" y="50" width="16" height="130" class="f-rack"/>
+    <rect x="200" y="60" width="500" height="44" rx="3" class="f-paper s-rack" stroke-width="2"/>
+    <g class="f-rack">
+      <rect x="220" y="72" width="26" height="20" rx="2"/><rect x="254" y="72" width="26" height="20" rx="2"/><rect x="288" y="72" width="26" height="20" rx="2"/><rect x="322" y="72" width="26" height="20" rx="2"/>
+      <rect x="552" y="72" width="26" height="20" rx="2"/><rect x="586" y="72" width="26" height="20" rx="2"/><rect x="620" y="72" width="26" height="20" rx="2"/><rect x="654" y="72" width="26" height="20" rx="2"/>
+    </g>
+    <text x="400" y="88" class="m">switch front panel</text>
+    <rect x="224" y="76" width="18" height="12" class="f-fiber"/>
+    <path class="draw s-fiber nf" stroke-width="7" stroke-linecap="round" d="M233 92 C233 150, 200 160, 150 160 L100 160 C88 160 84 170 84 185 L84 200"/>
+    <rect x="658" y="76" width="18" height="12" class="f-fiber"/>
+    <path class="draw s-fiber nf" stroke-width="7" stroke-linecap="round" d="M667 92 C667 150, 700 160, 750 160 L800 160 C812 160 816 170 816 185 L816 200"/>
+    <g class="f-go"><rect x="140" y="150" width="8" height="20" rx="2"/><rect x="104" y="150" width="8" height="20" rx="2"/><rect x="752" y="150" width="8" height="20" rx="2"/><rect x="788" y="150" width="8" height="20" rx="2"/></g>
+    <text x="108" y="140" class="m">soft velcro ties</text>
+    <text x="250" y="140" class="m">wide, pre-bent curve</text>
+    <text x="480" y="140" class="m">outer ports dressed to the side</text>
+  </svg>
+</header>
+
+<section id="handling">
+  <h2>Unpacking and handling</h2>
+  <p>Active cables and transceivers contain electronics, so they're built with enough static (ESD) tolerance for normal data center use, but you should still follow standard ESD precautions when unpacking and plugging them in. Open the packaging in a space that matches the storage humidity listed on the product datasheet; each datasheet also has the specific ESD figures for that part.</p>
+  <div class="fig">
+    <svg viewBox="0 0 760 150" role="img" aria-label="Three steps: check humidity against datasheet, ground yourself, then unpack">
+      <g stroke-width="2" class="nf">
+        <rect x="20" y="25" width="200" height="100" rx="6" class="s-line"/><rect x="280" y="25" width="200" height="100" rx="6" class="s-line"/><rect x="540" y="25" width="200" height="100" rx="6" class="s-line"/>
+        <path d="M225 75h50M485 75h50" class="s-muted"/><path d="M268 69l7 6-7 6M528 69l7 6-7 6" class="s-muted"/>
+      </g>
+      <path d="M60 50c0 0-16 22-16 34a16 16 0 0 0 32 0c0-12-16-34-16-34z" class="f-fiber"/>
+      <text x="92" y="72" class="h">Humidity</text><text x="92" y="92" class="m">within datasheet</text><text x="92" y="108" class="m">storage range</text>
+      <path d="M318 45v28M308 73h20M311 81h14M315 89h6" class="s-ink" stroke-width="3" fill="none"/>
+      <text x="344" y="72" class="h">ESD precautions</text><text x="344" y="92" class="m">wrist strap / grounded</text><text x="344" y="108" class="m">work surface</text>
+      <rect x="566" y="54" width="40" height="34" class="f-line"/><path d="M566 54l20-12 20 12" class="s-muted nf" stroke-width="2"/>
+      <text x="620" y="72" class="h">Unpack gently</text><text x="620" y="92" class="m">no kinks, no</text><text x="620" y="108" class="m">yanking from box</text>
+    </svg>
+  </div>
+</section>
+
+<section id="donts">
+  <h2>The 15 don'ts</h2>
+  <p>These come straight from damage NVIDIA has seen on returned cables. Each card shows the mistake and the safer habit to use instead.</p>
+  <div class="dont" id="dontGrid"></div>
+</section>
+
+<section id="bend">
+  <h2>Bend radius: the most common silent killer</h2>
+  <p>Every cable has a minimum bend radius on its datasheet. Bend tighter than that and fiber can crack or leak light, while copper pairs can deform and lose signal quality. Damage isn't always visible, and a kinked cable is effectively scrap. Keep turns as wide as the space allows.</p>
+  <div class="fig">
+    <svg id="bendSvg" viewBox="0 0 700 300" role="img" aria-label="Interactive bend radius diagram">
+      <line x1="80" y1="260" x2="640" y2="260" class="s-line" stroke-width="1" stroke-dasharray="4 4"/>
+      <path id="bendPath" class="nf" stroke-width="12" stroke-linecap="round"/>
+      <circle id="bendCircle" class="nf s-muted" stroke-width="1" stroke-dasharray="3 4"/>
+      <line id="bendR" class="s-muted" stroke-width="1.5"/>
+      <text id="bendRText" class="m"></text>
+      <rect x="84" y="40" width="30" height="46" rx="3" class="f-rack"/>
+      <text x="124" y="60" class="m">connector</text>
+    </svg>
+    <div class="ctrl">
+      <label for="bendIn">Bend radius (× cable outer diameter)</label>
+      <input id="bendIn" type="range" min="2" max="20" step="1" value="12">
+      <span id="bendVal"></span>
+      <span id="bendState"></span>
+    </div>
+    <p class="cap">Illustrative only. The page says to follow each product's recommended radius. The 10× figure used here is a common industry rule of thumb for static installs, not an NVIDIA number; always check the datasheet.</p>
+  </div>
+  <div class="two">
+    <figure class="fig">
+      <svg viewBox="0 0 320 170" role="img" aria-label="Kink versus gentle loop">
+        <path d="M20 120 L140 120 L150 60 L160 120 L300 120" class="nf s-stop" stroke-width="8" stroke-linejoin="miter" stroke-linecap="round"/>
+        <circle cx="150" cy="64" r="16" class="nf s-stop" stroke-width="2" stroke-dasharray="3 3"/>
+        <text x="20" y="30" class="h bad">Kink</text><text x="20" y="152" class="m">permanent damage; don't twist it open</text>
+      </svg>
+    </figure>
+    <figure class="fig">
+      <svg viewBox="0 0 320 170" role="img" aria-label="Opening a mild kink by unlooping">
+        <path d="M20 120 C110 120 110 50 160 50 C210 50 210 120 300 120" class="nf s-go" stroke-width="8" stroke-linecap="round"/>
+        <path d="M150 34 a20 20 0 0 1 22 4" class="nf s-muted" stroke-width="2"/><path d="M170 30l4 9-9 1" class="nf s-muted" stroke-width="2"/>
+        <text x="20" y="30" class="h ok">Unloop instead</text><text x="20" y="152" class="m">if a kink is mild, open the loop, never twist</text>
+      </svg>
+    </figure>
+  </div>
+</section>
+
+<section id="support">
+  <h2>Support, hanging and fasteners</h2>
+  <p>A cable's own weight becomes strain on its connector. The guidance: never let a cable hang freely for more than 2 m (7 ft), support it at least every 2 m or lay it in a tray, and bundle with soft hook-and-loop (velcro) ties spaced 30 to 60 cm (12 to 24 in) apart. Hard zip ties and staples crush the jacket and the fibers inside.</p>
+  <figure class="fig">
+    <svg viewBox="0 0 760 250" role="img" aria-label="Comparison of unsupported sagging cable versus cable supported every 2 meters with velcro ties every 30 to 60 cm">
+      <text x="20" y="28" class="h bad">Unsupported span over 2 m</text>
+      <rect x="20" y="40" width="14" height="40" class="f-rack"/><rect x="726" y="40" width="14" height="40" class="f-rack"/>
+      <path d="M34 50 Q380 150 726 50" class="nf s-stop" stroke-width="6"/>
+      <text x="300" y="130" class="m">weight pulls on the connectors</text>
+      <text x="20" y="150" class="h ok">Supported every ≤ 2 m, velcro every 30–60 cm</text>
+      <line x1="20" y1="200" x2="740" y2="200" class="s-line" stroke-width="2"/>
+      <path d="M34 190 L726 190" class="nf s-go" stroke-width="6"/>
+      <g class="f-metal"><rect x="30" y="196" width="8" height="30"/><rect x="376" y="196" width="8" height="30"/><rect x="722" y="196" width="8" height="30"/></g>
+      <g class="f-go">
+        <rect x="120" y="182" width="7" height="16" rx="2"/><rect x="210" y="182" width="7" height="16" rx="2"/><rect x="300" y="182" width="7" height="16" rx="2"/>
+        <rect x="466" y="182" width="7" height="16" rx="2"/><rect x="556" y="182" width="7" height="16" rx="2"/><rect x="646" y="182" width="7" height="16" rx="2"/>
+      </g>
+      <path d="M38 240 H376" class="s-muted" stroke-width="1.5"/><path d="M38 234v12M376 234v12" class="s-muted" stroke-width="1.5"/><text x="180" y="236" class="m">≤ 2 m</text>
+      <path d="M120 172 H210" class="s-muted" stroke-width="1.5"/><path d="M120 167v10M210 167v10" class="s-muted" stroke-width="1.5"/><text x="128" y="165" class="m">30–60 cm</text>
+    </svg>
+  </figure>
+  <p>Also avoid over-bundling or stacking bundles on top of each other. Cables on the bottom of a heavy pile get compressed and can lose performance.</p>
+</section>
+
+<section id="env">
+  <h2>A suitable working environment</h2>
+  <p>Dust is the main enemy of fiber. Airborne particles are roughly the same size as a single-mode fiber's core, so one speck can block a meaningful share of the light path and scratch the polished connector face. Dirt is the most common cause of scratched connectors and high loss readings.</p>
+  <figure class="fig">
+    <svg viewBox="0 0 760 260" role="img" aria-label="Scale comparison of a dust particle against single-mode and multi-mode fiber cores">
+      <g transform="translate(40,20)">
+        <circle cx="90" cy="100" r="62.5" class="f-line"/><circle cx="90" cy="100" r="4.5" class="f-smf"/>
+        <circle cx="96" cy="97" r="5" class="f-muted" opacity=".85"/>
+        <text x="20" y="200" class="h">Single-mode</text><text x="20" y="218" class="m">~9 µm core, 125 µm cladding</text>
+      </g>
+      <g transform="translate(290,20)">
+        <circle cx="90" cy="100" r="62.5" class="f-line"/><circle cx="90" cy="100" r="25" class="f-soft s-fiber" stroke-width="1"/>
+        <circle cx="100" cy="94" r="5" class="f-muted" opacity=".85"/>
+        <text x="20" y="200" class="h">Multi-mode 50 µm</text><text x="20" y="218" class="m">core, 125 µm cladding</text>
+      </g>
+      <g transform="translate(540,20)">
+        <circle cx="90" cy="100" r="62.5" class="f-line"/><circle cx="90" cy="100" r="31.25" class="f-soft s-fiber" stroke-width="1"/>
+        <circle cx="104" cy="92" r="5" class="f-muted" opacity=".85"/>
+        <text x="20" y="200" class="h">Multi-mode 62.5 µm</text><text x="20" y="218" class="m">never mix with 50 µm</text>
+      </g>
+      <text x="236" y="40" class="m">grey dot ≈ 10 µm dust particle (to scale)</text>
+    </svg>
+    <figcaption>Core sizes are standard fiber dimensions shown to scale. The 50 vs 62.5 µm point returns in the cable management section.</figcaption>
+  </figure>
+  <div class="two">
+    <div>
+      <h3>Keep it clean and cool</h3>
+      <p>Work in a clean area, away from heating vents that blow dust onto connectors. Leave dust caps on every connector, splice, patch panel and unused port until the moment you connect. Keep cables out of direct sunlight and away from condensation, and remove unused cables that restrict airflow and cause overheating.</p>
+    </div>
+    <div>
+      <h3>Keep copper away from noise</h3>
+      <p>Copper cables pick up electromagnetic interference. Route them away from power converters, air conditioners, power cords, fluorescent lighting, building electrical runs and fire-suppression components.</p>
+    </div>
+  </div>
+  <figure class="fig">
+    <svg viewBox="0 0 760 150" role="img" aria-label="Copper cable routed with distance from EMI sources">
+      <rect x="30" y="30" width="110" height="60" rx="4" class="f-stopsoft s-stop" stroke-width="1.5"/><text x="46" y="58" class="h">Power / AC</text><text x="46" y="76" class="m">EMI source</text>
+      <path d="M150 60 q10 -10 20 0 t20 0 t20 0" class="nf s-stop" stroke-width="2"/><path d="M150 72 q10 -10 20 0 t20 0" class="nf s-stop" stroke-width="2" opacity=".6"/>
+      <path d="M140 120 H740" class="nf s-smf" stroke-width="6"/><text x="560" y="110" class="m">copper run</text>
+      <path d="M250 30 H740" class="nf s-fiber" stroke-width="6"/><text x="560" y="22" class="m">fiber run (kept separate)</text>
+      <path d="M220 100v18M220 100l-5 6M220 100l5 6" class="s-muted nf" stroke-width="1.5"/>
+      <text x="230" y="96" class="m">keep distance</text>
+    </svg>
+  </figure>
+</section>
+
+<section id="rack">
+  <h2>Installing inside the rack</h2>
+  <p>The goal is a rack where every transceiver, fan and power unit can still be pulled out, air still flows, and no connector carries the weight of its cable. That means planning space before you plug anything in: the rack must be wide enough for cables to run between the switch and the side walls, and the cable management system and rack floor should carry the cable weight.</p>
+
+  <h3>Plug from the outside in, split left and right</h3>
+  <figure class="fig">
+    <svg viewBox="0 0 760 300" role="img" aria-label="Rack front view: ports are populated from both outer edges toward the middle; the left half is dressed to the left side of the rack and the right half to the right side">
+      <rect x="20" y="20" width="720" height="260" rx="4" class="nf s-line" stroke-width="1.5"/>
+      <rect x="30" y="30" width="18" height="240" class="f-rack"/><rect x="712" y="30" width="18" height="240" class="f-rack"/>
+      <rect x="140" y="60" width="480" height="50" rx="3" class="f-paper s-rack" stroke-width="2"/>
+      <g id="ports"></g>
+      <g id="rackCables"></g>
+      <g class="f-go"><rect x="60" y="215" width="40" height="8" rx="2"/><rect x="660" y="215" width="40" height="8" rx="2"/></g>
+      <text x="106" y="224" class="m">left bundle</text><text x="654" y="224" class="m" text-anchor="end">right bundle</text>
+      <text x="380" y="262" class="m" text-anchor="middle">circled numbers = plug-in order, edges first, center last</text>
+    </svg>
+    <figcaption>Mount each cable to the rack with velcro first, then plug it in. Work from both edges toward the center, bundle each half, and route the halves to their own side of the rack. The middle stays clear so fans and PSUs can be extracted.</figcaption>
+  </figure>
+
+  <div class="two">
+    <figure class="fig">
+      <svg viewBox="0 0 340 200" role="img" aria-label="Pre-bent cable tip reduces strain on the port">
+        <rect x="20" y="40" width="30" height="120" class="f-rack"/>
+        <rect x="50" y="85" width="40" height="30" rx="3" class="f-metal"/>
+        <path d="M90 100 H120 C160 100 170 120 170 170" class="nf s-go" stroke-width="10" stroke-linecap="round"/>
+        <text x="190" y="80" class="h ok">Pre-bent tip</text><text x="190" y="100" class="m">curve formed before</text><text x="190" y="116" class="m">plugging in, so the</text><text x="190" y="132" class="m">port carries no leverage</text>
+        <text x="20" y="190" class="m">matters most for thick cables, e.g. 26 AWG copper</text>
+      </svg>
+    </figure>
+    <figure class="fig">
+      <svg viewBox="0 0 340 200" role="img" aria-label="Top view: switch recessed deeper into the rack reduces cable protrusion past the door">
+        <rect x="30" y="30" width="280" height="140" class="nf s-line" stroke-width="2"/>
+        <line x1="30" y1="30" x2="310" y2="30" class="s-rack" stroke-width="4"/><text x="236" y="22" class="m">front door</text>
+        <rect x="70" y="70" width="200" height="60" class="f-soft s-fiber" stroke-width="1.5"/><text x="120" y="105" class="m">switch (recessed)</text>
+        <path d="M110 70 C110 50 90 45 60 45 M230 70 C230 50 250 45 280 45" class="nf s-fiber" stroke-width="5"/>
+        <path d="M290 150 h-14 M290 150 v-14" class="nf s-muted" stroke-width="1.5"/><text x="150" y="160" class="m">leave room for hot air to exit</text>
+        <text x="34" y="192" class="m">NVIDIA rail kits allow deeper mounting</text>
+      </svg>
+    </figure>
+  </div>
+
+  <h3>Install one, test one</h3>
+  <p>Test each cable as you install it: connect both ends and confirm a physical and a logical link before moving to the next cable. Finding a bad cable now is far cheaper than hunting for it in a finished bundle.</p>
+  <div class="flow" role="list">
+    <div role="listitem"><b>1. Mount</b>fix the cable to the rack with velcro</div>
+    <div role="listitem"><b>2. Pre-bend</b>shape the tip toward its route</div>
+    <div role="listitem"><b>3. Connect</b>both ends, holding the connector</div>
+    <div role="listitem"><b>4. Verify</b>physical link light and logical link up</div>
+    <div role="listitem"><b>5. Next</b>only then move to the next cable</div>
+  </div>
+  <p>Other rack rules: keep cables away from the front of other equipment, don't block airflow or transceiver removal, and avoid routing through pipes and holes that will be full the next time you need to add a run. Plan for switches (such as leaf switches) to be extracted without unplugging their neighbors.</p>
+</section>
+
+<section id="manage">
+  <h2>Managing cable runs</h2>
+  <h3>Stay under 90% of the rated reach</h3>
+  <p>Use cables of the right length with only a little slack at each end, and keep every run below 90% of the maximum distance its media type supports under the relevant standard.</p>
+  <figure class="fig">
+    <svg viewBox="0 0 760 110" role="img" aria-label="Bar showing safe zone up to 90% of max supported distance">
+      <rect x="20" y="40" width="648" height="28" class="f-gosoft s-go" stroke-width="1.5"/>
+      <rect x="668" y="40" width="72" height="28" class="f-stopsoft s-stop" stroke-width="1.5"/>
+      <text x="30" y="59" class="m">plan runs in this range</text><text x="674" y="59" class="m">margin</text>
+      <text x="20" y="30" class="m">0</text><text x="668" y="30" class="m" text-anchor="middle">90%</text><text x="740" y="30" class="m" text-anchor="end">100% (max)</text>
+      <text x="20" y="92" class="m">The margin absorbs connector loss, aging and dirt over the life of the link.</text>
+    </svg>
+  </figure>
+
+  <h3>Group, color and label</h3>
+  <p>Bundle cables by purpose, for example inter-switch links in one group and uplinks to core devices in another. Use colored ties where the color encodes the endpoints, and label every cable at both ends and along the run. Keep copper and fiber in separate runs, never mix 50 µm and 62.5 µm multi-mode fiber in one link, pre-install spare cables for future replacements, and put the main distribution area in the middle of the data center to keep runs short.</p>
+  <figure class="fig">
+    <svg viewBox="0 0 760 230" role="img" aria-label="Data hall plan with central distribution area and color-coded bundles labeled at both ends">
+      <rect x="20" y="20" width="720" height="190" rx="4" class="nf s-line" stroke-width="1.5"/>
+      <rect x="320" y="80" width="120" height="70" rx="4" class="f-soft s-fiber" stroke-width="2"/>
+      <text x="336" y="110" class="h">Main</text><text x="336" y="128" class="m">distribution area</text>
+      <g class="f-line s-rack" stroke-width="1"><rect x="50" y="40" width="60" height="36"/><rect x="50" y="154" width="60" height="36"/><rect x="650" y="40" width="60" height="36"/><rect x="650" y="154" width="60" height="36"/></g>
+      <path d="M110 58 C220 58 240 95 320 95" class="nf s-fiber" stroke-width="5"/>
+      <path d="M110 172 C220 172 240 135 320 135" class="nf s-smf" stroke-width="5"/>
+      <path d="M650 58 C540 58 520 95 440 95" class="nf s-go" stroke-width="5"/>
+      <path d="M650 172 C540 172 520 135 440 135" class="nf s-stop" stroke-width="5"/>
+      <g class="f-panel s-ink" stroke-width="1"><rect x="112" y="50" width="14" height="10"/><rect x="302" y="88" width="14" height="10"/><rect x="200" y="62" width="14" height="10"/></g>
+      <text x="130" y="44" class="m">label at both ends + along run</text>
+      <text x="130" y="200" class="m">tie color = endpoint pair</text>
+      <text x="470" y="200" class="m">shortest runs from the center</text>
+    </svg>
+  </figure>
+</section>
+
+<section id="insert">
+  <h2>Inserting a cable</h2>
+  <p>Grip the connector body near its lower part between your thumb and index finger, hold it square to the port panel, and push gently into the cage. Push on the connector, never on the cable, and never use the pull-tab to insert; the tab is only for removal.</p>
+  <div class="two">
+    <figure class="fig">
+      <svg viewBox="0 0 340 200" role="img" aria-label="Correct: connector held at its body, pushed straight in perpendicular to the panel">
+        <rect x="20" y="30" width="26" height="140" class="f-rack"/>
+        <rect x="46" y="85" width="10" height="30" class="f-metal"/>
+        <rect x="80" y="84" width="90" height="32" rx="3" class="f-metal"/>
+        <path d="M170 100 H320" class="s-fiber" stroke-width="8"/>
+        <ellipse cx="120" cy="124" rx="18" ry="9" class="f-gosoft s-go" stroke-width="2"/>
+        <ellipse cx="120" cy="76" rx="18" ry="9" class="f-gosoft s-go" stroke-width="2"/>
+        <path d="M150 150 H70" class="s-go" stroke-width="3"/><path d="M80 143l-10 7 10 7" class="nf s-go" stroke-width="3"/>
+        <text x="200" y="40" class="h ok">Correct</text><text x="200" y="60" class="m">grip connector body,</text><text x="200" y="76" class="m">push straight in</text>
+      </svg>
+    </figure>
+    <figure class="fig">
+      <svg viewBox="0 0 340 200" role="img" aria-label="Incorrect: connector angled into port and pushed by the cable">
+        <rect x="20" y="30" width="26" height="140" class="f-rack"/>
+        <rect x="46" y="85" width="10" height="30" class="f-metal"/>
+        <g transform="rotate(-18 110 100)"><rect x="70" y="84" width="90" height="32" rx="3" class="f-metal"/><path d="M160 100 H300" class="s-fiber" stroke-width="8"/></g>
+        <path d="M290 30 L240 60" class="s-stop" stroke-width="3"/><path d="M244 51l-4 9 10 1" class="nf s-stop" stroke-width="3"/>
+        <text x="200" y="150" class="h bad">Incorrect</text><text x="200" y="170" class="m">angled, pushed via cable</text>
+        <text x="180" y="190" class="m">or via the pull-tab</text>
+      </svg>
+    </figure>
+  </div>
+</section>
+
+<section id="extract">
+  <h2>Extracting a cable</h2>
+  <p>For a transceiver or cable with an integrated pull-tab: take the tab, pull firmly but gently straight out, perpendicular to the panel, until the module releases from the cage, then slide it out. Never pull by the cable jacket.</p>
+  <div class="two">
+    <figure class="fig">
+      <svg viewBox="0 0 340 200" role="img" aria-label="Correct: pull the tab straight out">
+        <rect x="20" y="30" width="26" height="140" class="f-rack"/>
+        <rect x="46" y="84" width="90" height="32" rx="3" class="f-metal"/>
+        <path d="M136 100 H320" class="s-fiber" stroke-width="8"/>
+        <path d="M110 116 v30 h60" class="nf s-smf" stroke-width="5" stroke-linecap="round"/>
+        <path d="M180 146 H260" class="s-go" stroke-width="3"/><path d="M250 139l10 7-10 7" class="nf s-go" stroke-width="3"/>
+        <text x="200" y="40" class="h ok">Correct</text><text x="200" y="60" class="m">pull tab, straight out</text><text x="120" y="176" class="m">pull-tab</text>
+      </svg>
+    </figure>
+    <figure class="fig">
+      <svg viewBox="0 0 340 200" role="img" aria-label="Incorrect: pulling on the cable jacket">
+        <rect x="20" y="30" width="26" height="140" class="f-rack"/>
+        <rect x="46" y="84" width="90" height="32" rx="3" class="f-metal"/>
+        <path d="M136 100 C200 100 230 60 300 50" class="nf s-stop" stroke-width="8"/>
+        <path d="M250 80 L310 70" class="s-stop" stroke-width="3"/><path d="M300 64l10 6-8 8" class="nf s-stop" stroke-width="3"/>
+        <text x="200" y="150" class="h bad">Incorrect</text><text x="200" y="170" class="m">yanking the jacket strains</text><text x="200" y="186" class="m">the cable-to-plug joint</text>
+      </svg>
+    </figure>
+  </div>
+</section>
+
+<section id="checklist">
+  <h2>Field checklist</h2>
+  <p>A condensed version of the whole guide to tick through on site. Nothing is saved; it resets when you close the page.</p>
+  <div id="progress">0 of 0 done</div>
+  <div class="bar"><i id="barFill"></i></div>
+  <ul class="check" id="checkList"></ul>
+</section>
+</main>
+</div>
+
+<script>
+// ---------- Don't cards ----------
+const C = 'class="nf s-fiber" stroke-width="7" stroke-linecap="round"';
+const R = 'class="nf s-stop" stroke-width="3" stroke-linecap="round"';
+const conn = (x,y)=>`<rect x="${x}" y="${y}" width="26" height="16" rx="2" class="f-metal"/>`;
+const donts = [
+  ["Twist the cable","Lay it flat and let it follow its natural lay.",
+   `<path d="M10 42 H150" ${C}/><path d="M50 30 l12 24 M70 30 l12 24 M90 30 l12 24" class="s-panel" stroke="var(--panel)" stroke-width="3"/><path d="M175 22 a18 18 0 1 1 -18 20" ${R}/><path d="M154 36l3 7 7-3" ${R}/>`],
+  ["Pull the cable","Carry it; apply force at the connector only.",
+   `${conn(20,34)}<path d="M46 42 H170" ${C}/><path d="M150 20 H200" ${R}/><path d="M192 13l8 7-8 7" ${R}/>`],
+  ["Staple the cable","Secure it with soft velcro ties.",
+   `<path d="M10 50 H210" ${C}/><path d="M80 62 V36 H130 V62" class="nf s-stop" stroke-width="4"/>`],
+  ["Uncoil it by pulling a loop off","Roll the coil out along the path so no kink forms.",
+   `<circle cx="60" cy="42" r="26" ${C}/><path d="M86 42 C120 42 120 20 140 30 C160 40 140 60 160 50 L210 50" ${C}/><circle cx="148" cy="42" r="14" ${R}/>`],
+  ["Step on cables or connectors","Plan paths away from foot traffic and rolling carts.",
+   `<path d="M10 64 H210" ${C}/><path d="M80 10 h26 v34 h26 q10 0 10 10 v6 h-62 z" class="f-stopsoft s-stop" stroke-width="2"/>`],
+  ["Pull it out of the box through openings or around corners","Unroll it as you lay it down and walk it through turns.",
+   `<rect x="20" y="16" width="70" height="56" class="f-line"/><path d="M90 30 L100 30 C130 30 110 60 210 60" ${C}/><circle cx="96" cy="30" r="10" ${R}/>`],
+  ["Twist a kink open","If mild, open it by unlooping. Severe kinks mean replacement.",
+   `<path d="M10 55 L90 55 L105 20 L120 55 L210 55" class="nf s-fiber" stroke-width="7" stroke-linejoin="miter"/><path d="M150 18 a14 14 0 1 1 -12 16" ${R}/>`],
+  ["Cram it into a tight space","Find an alternative route.",
+   `<rect x="60" y="10" width="20" height="70" class="f-rack"/><rect x="140" y="10" width="20" height="70" class="f-rack"/><path d="M10 45 H84 C95 45 95 30 100 40 C105 55 115 30 120 45 C125 55 130 45 136 45 H210" ${C}/>`],
+  ["Let it hang more than 2 m (7 ft)","Add intermediate retention points to take the weight.",
+   `<rect x="10" y="10" width="10" height="30" class="f-rack"/><rect x="200" y="10" width="10" height="30" class="f-rack"/><path d="M20 20 Q110 110 200 20" ${C}/><text x="92" y="44" class="m">&gt;2 m</text>`],
+  ["Drop the cable or connectors","Set it down gently with connectors resting on a stable surface.",
+   `${conn(90,8)}<path d="M103 24 V40" ${C}/><path d="M60 50 V76 M150 50 V76" ${R}/><path d="M54 68l6 8 6-8 M144 68l6 8 6-8" ${R}/><path d="M20 80 H200" class="s-line" stroke-width="2"/>`],
+  ["Cinch it with hard fasteners or zip ties","Use soft hook-and-loop (velcro) ties.",
+   `<path d="M10 40 H90 Q105 46 120 40 H210" ${C}/><rect x="98" y="26" width="16" height="30" rx="3" class="nf s-stop" stroke-width="3"/><path d="M114 30 h20" ${R}/>`],
+  ["Drag it or its connectors over a surface","Carry the whole cable between connection points.",
+   `<path d="M10 68 H210" class="s-line" stroke-width="2"/>${conn(30,50)}<path d="M56 60 C80 64 120 64 200 50" ${C}/><path d="M10 52 h14 M4 60 h18" ${R}/>`],
+  ["Force the connector in by pushing the cable","Push and pull at the connector body only.",
+   `<rect x="16" y="14" width="16" height="60" class="f-rack"/>${conn(40,36)}<path d="M66 44 C90 44 90 30 110 38 C130 46 140 44 200 44" ${C}/><path d="M200 22 H150" ${R}/><path d="M158 15l-8 7 8 7" ${R}/>`],
+  ["Over-bundle or stack bundles","Keep bundles modest and side by side, not piled up.",
+   `<circle cx="80" cy="64" r="16" class="f-soft s-fiber" stroke-width="3"/><circle cx="116" cy="64" r="16" class="f-soft s-fiber" stroke-width="3"/><circle cx="98" cy="34" r="16" class="f-soft s-fiber" stroke-width="3"/><circle cx="98" cy="8" r="12" class="f-soft s-fiber" stroke-width="3"/><path d="M150 20 V60" ${R}/><path d="M144 52l6 8 6-8" ${R}/>`],
+  ["Bend beyond the recommended radius","Make every turn as wide as possible.",
+   `<path d="M20 70 H100 C114 70 114 56 100 56 C92 56 100 70 100 20" ${C}/><circle cx="104" cy="62" r="12" ${R}/>`]
+];
+document.getElementById('dontGrid').innerHTML = donts.map(([x,y,svg])=>
+  `<div class="card"><svg viewBox="0 0 220 84" aria-hidden="true">${svg}</svg><div class="x">Don't ${x.charAt(0).toLowerCase()+x.slice(1)}.</div><div class="y">${y}</div></div>`).join('');
+
+// ---------- Bend slider ----------
+const bendIn=document.getElementById('bendIn'), bp=document.getElementById('bendPath'), bc=document.getElementById('bendCircle'),
+      br=document.getElementById('bendR'), brt=document.getElementById('bendRText'), bv=document.getElementById('bendVal'), bs=document.getElementById('bendState');
+function drawBend(){
+  const k=+bendIn.value, OD=8, r=k*OD*1.1; // px
+  const x0=99, y0=86, cx=x0+r, cy=260-r;  // vertical drop then quarter turn to horizontal along y=260
+  bp.setAttribute('d',`M${x0} ${y0} V${cy} A${r} ${r} 0 0 0 ${cx} 260 H660`);
+  bc.setAttribute('cx',cx); bc.setAttribute('cy',cy); bc.setAttribute('r',r);
+  br.setAttribute('x1',cx); br.setAttribute('y1',cy); br.setAttribute('x2',cx-r*0.707); br.setAttribute('y2',cy+r*0.707);
+  brt.setAttribute('x',cx+6); brt.setAttribute('y',cy-6); brt.textContent=`r = ${k}× OD`;
+  let cls, txt;
+  if(k<6){cls='s-stop';txt='Damage likely';bs.className='bad'}
+  else if(k<10){cls='s-smf';txt='Too tight for most cables';bs.className=''; bs.style.color='var(--smf)'}
+  else {cls='s-go';txt='Comfortable';bs.className='ok'}
+  if(k>=10||k<6) bs.style.color='';
+  bp.setAttribute('class','nf '+cls);
+  bv.textContent=k+'× OD'; bs.textContent=txt;
+}
+bendIn.addEventListener('input',drawBend); drawBend();
+
+// ---------- Rack ports / cable order ----------
+(function(){
+  const g=document.getElementById('ports'), cg=document.getElementById('rackCables');
+  const n=12, x0=160, w=30, gap=6; let ports='', cables='';
+  const order=[]; for(let i=0;i<n/2;i++){order.push(i, n-1-i)}
+  for(let i=0;i<n;i++){
+    const x=x0+i*(w+gap); ports+=`<rect x="${x}" y="72" width="${w}" height="26" rx="2" class="f-rack"/>`;
+    const step=order.indexOf(i)+1; const left=i<n/2;
+    const px=x+w/2, bx=left?80:680, lane=left?i:(n-1-i);
+    cables+=`<path d="M${px} 98 C${px} ${160+lane*6} ${bx+(left?lane*3:-lane*3)} ${160+lane*4} ${bx+(left?lane*3:-lane*3)} 215 V270" class="nf s-fiber" stroke-width="3" opacity=".85"/>`;
+    cables+=`<circle cx="${px}" cy="50" r="10" class="f-panel s-ink" stroke-width="1"/><text x="${px}" y="54" text-anchor="middle" style="font-size:11px">${step}</text>`;
+  }
+  g.innerHTML=ports; cg.innerHTML=cables;
+})();
+
+// ---------- Checklist ----------
+const items=[
+ "Unpack in an area within the datasheet's storage humidity; use ESD precautions",
+ "Dust caps on every connector and port until the moment of connection",
+ "Work area clean, away from heating vents, sunlight and condensation",
+ "Rack has room at the sides for cables; fans, PSUs and transceivers stay extractable",
+ "Cables don't block airflow or other equipment",
+ "Each cable mounted to the rack with velcro before plugging in",
+ "Plug from the outer ports toward the middle; left half left, right half right",
+ "Cable tips pre-bent before insertion (especially thick copper)",
+ "Velcro every 30–60 cm; supports or tray at least every 2 m",
+ "No bends tighter than the datasheet minimum radius; no kinks",
+ "Connector inserted by its body, square to the panel",
+ "Each cable tested for physical and logical link before the next",
+ "Runs under 90% of rated reach; slack kept minimal",
+ "Copper and fiber in separate runs; copper away from EMI sources",
+ "No mixing of 50 µm and 62.5 µm multi-mode in one link",
+ "Bundles grouped by purpose, color-coded ties, labels at both ends and along run",
+ "Unused cables removed; spares pre-installed"
+];
+const list=document.getElementById('checkList');
+list.innerHTML=items.map((t,i)=>`<li><label><input type="checkbox" id="c${i}"><span>${t}</span></label></li>`).join('');
+function upd(){const done=list.querySelectorAll('input:checked').length;
+  document.getElementById('progress').textContent=`${done} of ${items.length} done`;
+  document.getElementById('barFill').style.width=(done/items.length*100)+'%';}
+list.addEventListener('change',upd); upd();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

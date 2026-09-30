@@ -83,6 +83,64 @@ https://cdn10.servertech.com/assets/documents/documents/823/original/Alternating
 
 
 
+## Pre-Deployment Planning and Site Assessment for AI Data Centers - 11%
+This exam section covers pre-deployment planning, including physical network documentation, site surveys for load capacity, and verifying environmental readiness (power, cooling, thermal zones) for AI infrastructure.
+
+### Potential Exam Topics:
+- **T1** Describe physical network design documentation.
+- **T2** Conduct site surveys for cable management infrastructure (load capacity, clearances).
+- **T3** Verify environmental readiness (rack spacing, power, cooling, thermal zones).
+- **T4** Describe inventory check procedures.
+
+### Suggested Readings
+
+**SR1** ANSI/TIA-606-B Explained: The Data Center Cable Labeling Standard That Keeps Chaos in Check
+
+**SR2** Enhanced Efficiency in Data Center With Elevated Return Air Temperature
+
+**SR3** 392.18(F) Cable Tray Access
+
+**SR4** What Is the Difference Between an 80% Rated Breaker and a 100% Rated Breaker?
+
+**SR5** Manage Airflow for Cooling Efficiency | ENERGY STAR
+
+**SR6** Implementing Data Center Cooling Best Practices
+
+**SR7** Move to a Hot Aisle/Cold Aisle Layout | ENERGY STAR
+
+**SR8** Networking Solutions for the Era of AI | NVIDIA
+
+
+
+## Rack Infrastructure Preparation for AI Platforms - 10%
+This section covers preparing rack infrastructure for AI platforms, focusing on extra-wide rack specifications, cable management, EMI mitigation for power/data pathways, and verifying containment clearances.
+
+### Potential Exam Topics:
+- **T1** Describe extra-wide racks for AI platforms.
+- **T2** Install cable management accessories (vertical/horizontal ducts, bend radius managers).
+- **T3** Coordinate power and data cable pathways (EMI mitigation).
+- **T4** Verify rack containment clearance (front-post to front door and front-post to rear-post or inter-rack posts).
+
+### Suggested Readings
+
+**SR1** Best Practices Guide for Energy-Efficient Data Center Design
+
+**SR2** NVIDIA DGX™ H100/H200 System User Guide
+
+**SR3** InfiniBand Cables Explained: HDR vs NDR, QSFP56 vs OSFP, DAC vs AOC
+
+**SR4** Wyr-Grid Overhead Cable Tray Routing System
+
+**SR5** NFPA 70 (NEC) Code Development
+
+**SR6** Cisco Nexus Installation Guide
+
+**SR7** Rack Cooling Systems | Vertiv Thermal Management
+
+**SR8** Server Rack Cabinet Compatibility Guide
+
+
+
 ## High-Density Cabling Installation for AI Clusters - 30%
 This section details the practical deployment of high-density cables. It covers distinguishing between NVIDIA and other cables, understanding transceiver form factors (OSFP/QSFP) and fiber types (MMF/SMF), deploying InfiniBand copper and MPO/APC fiber optic cables, implementing the 50/50 left-right routing strategy, and applying professional cable management practices, including cleaning connectors.
 
@@ -102,52 +160,132 @@ This section details the practical deployment of high-density cables. It covers 
 **SR1** Cable Validation Tool (CVT) Fundamentals: free self-paced course
 
 **SR2** Choosing Between OSFP and QSFP-DD: Key Considerations for 800G Optical Transceivers
-- [OSFP vs QSFP-DD for 800G, explained](2.SR2/osfp-vs-qsfpdd-explained.html)
+- [OSFP vs QSFP-DD for 800G, explained](4.SR2/osfp-vs-qsfpdd-explained.html)
 
 **SR3** Cable Management Best Practices—NVIDIA DGX SuperPOD™
-- [Cable management best practices, explained](2.SR3/cable-management-best-practices.html)
+- [Cable management best practices, explained](4.SR3/cable-management-best-practices.html)
 
 **SR4** Deploying the Bundles—NVIDIA DGX SuperPOD: Cabling Data Centers Design Guide
-- [Deploying the bundles, explained](2.SR4/deploying-the-bundles-explained.html)
+- [Deploying the bundles, explained](4.SR4/deploying-the-bundles-explained.html)
 
 **SR5** Maintaining NDR Connectors and Cables—NVIDIA DGX SuperPOD
-- [Keeping NDR optics clean](2.SR5/ndr-connector-maintenance-explained.html)
+- [Keeping NDR optics clean](4.SR5/ndr-connector-maintenance-explained.html)
 
 **SR6** Connectors and Cages
-- [Connectors and cages, explained (NVIDIA LinkX)](2.SR6/nvidia-connectors-and-cages.html)
+- [Connectors and cages, explained (NVIDIA LinkX)](4.SR6/nvidia-connectors-and-cages.html)
 
 **SR7** Validated and Supported Cables and Switches—NVIDIA Docs
-- [ConnectX-7 validated cables & switches, explained](2.SR7/connectx7-cables-explained.html)
+- [ConnectX-7 validated cables & switches, explained](4.SR7/connectx7-cables-explained.html)
 
 **SR8** NVIDIA Q32xx and Q34xx XDR 800 Gb/s InfiniBand Switch Systems User Manual
-- [Reading the LEDs on Q32xx / Q34xx XDR switches](2.SR8/nvidia-xdr-switch-led-guide.html)
+- [Reading the LEDs on Q32xx / Q34xx XDR switches](4.SR8/nvidia-xdr-switch-led-guide.html)
 
 **SR9** How to Understand OSFP vs. QSFP-DD Form Factors—BYXGD
-- [OSFP vs QSFP-DD, explained visually](2.SR9/osfp-vs-qsfp-dd-explained.html)
+- [OSFP vs QSFP-DD, explained visually](4.SR9/osfp-vs-qsfp-dd-explained.html)
 
 **SR10** 200G Optical Transceiver: QSFP‑DD vs. OSFP for Data Centers
-- [200G transceivers: QSFP-DD vs OSFP, explained](2.SR10/200g-qsfp-dd-vs-osfp-explained.html)
+- [200G transceivers: QSFP-DD vs OSFP, explained](4.SR10/200g-qsfp-dd-vs-osfp-explained.html)
 
 **SR11** Single Mode vs. Multimode Fiber: A Complete Comparison Guide
-- [Single-mode vs multimode fiber, explained visually](2.SR11/single-mode-vs-multimode-fiber2.html)
+- [Single-mode vs multimode fiber, explained visually](4.SR11/single-mode-vs-multimode-fiber2.html)
 
 **SR12** Single-Mode vs. Multimode Fiber: A Comprehensive Guide
-- [Single-mode vs multimode fiber, explained](2.SR12/single-mode-vs-multimode-fiber.html)
+- [Single-mode vs multimode fiber, explained](4.SR12/single-mode-vs-multimode-fiber.html)
 
 **SR13** 2 Big Mistakes to Avoid During Fiber Cable Installation
-- [Two big mistakes in fiber installation](2.SR13/fiber-installation-mistakes.html)
+- [Two big mistakes in fiber installation](4.SR13/fiber-installation-mistakes.html)
 
 **SR14** Single-Mode vs. Multimode Fiber—DCD
-- [Single-mode vs multimode fiber (DCD), explained](2.SR14/single-mode-vs-multimode-fiber3.html)
+- [Single-mode vs multimode fiber (DCD), explained](4.SR14/single-mode-vs-multimode-fiber3.html)
 
 **SR15** Cleaning and Inspecting MPO/MTP Connectors | Fluke Networks
-- [Cleaning and inspecting MPO/MTP connectors](2.SR15/mpo-mtp-cleaning-inspection.html)
+- [Cleaning and inspecting MPO/MTP connectors](4.SR15/mpo-mtp-cleaning-inspection.html)
 
 **SR16** The Fiber Optic Association, Inc.
-- [Fiber optic installation — FOA guide](2.SR16/foa-fiber-installation-explained.html)
+- [Fiber optic installation — FOA guide](4.SR16/foa-fiber-installation-explained.html)
 
 **SR17** Installing an OSFP Transceiver
-- [Installing an OSFP transceiver — visual guide](2.SR17/osfp-transceiver-install.html)
+- [Installing an OSFP transceiver — visual guide](4.SR17/osfp-transceiver-install.html)
 
 **SR18** Clean & Inspect: What IEC 61300-3-35 Means to You | MicroCare
-- [Clean & inspect — IEC 61300-3-35 explained](2.SR18/iec-61300-3-35-explained.html)
+- [Clean & inspect — IEC 61300-3-35 explained](4.SR18/iec-61300-3-35-explained.html)
+
+
+
+## Cable Support Systems and Weight Management - 7%
+This section covers defining a team orientation plan for the cabling workflow, designing cable support systems for ultra-high-density loads, installing overhead cable support infrastructure, and implementing cable slack management.
+
+### Potential Exam Topics:
+- **T1** Define a team orientation plan for the cabling workflow.
+- **T2** Design cable support systems for ultra-high-density loads.
+- **T3** Install overhead cable support infrastructure.
+- **T4** Implement cable slack management.
+- **T5** Understand the causes of unexpected visual results.
+- **T6** Update the extent attribute of a mesh after updating its points.
+
+> T5 and T6 appear this way on NVIDIA's exam page but look like a copy-paste error from another exam.
+
+### Suggested Readings
+
+**SR1** Networking—NVIDIA DGX SuperPOD: Data Center Design Featuring NVIDIA DGX H100 Systems
+- [DGX SuperPOD H100 networking: cables, trays and load](5.SR1/dgx-superpod-h100-networking-explained.html)
+
+**SR2** Cable Installation and Management Guidelines—NVIDIA Docs
+- [Cable installation & management, explained](5.SR2/nvidia-cable-guidelines-explained.html)
+
+**SR3** The Fiber Optic Association, Inc.
+- [Fiber optic installation — FOA technical bulletin](5.SR3/fiber-optic-installation-explained3.html)
+
+**SR4** The FOA Reference for Fiber Optics-Installing Fiber Optic Cable
+- [Installing fiber optic cable — visual explainer](5.SR4/fiber-cable-installation-explained.html)
+- [Installing fiber optic cable — explained](5.SR4/fiber-cable-installation-explained2.html)
+
+
+
+## Testing, Verification, and Documentation for AI Cabling - 12%
+This section covers cable continuity/link testing, final quality inspection (bend radius, labeling, airflow), documentation with diagrams and photos, and troubleshooting signal integrity issues like BER.
+
+### Potential Exam Topics:
+- **T1** Perform cable continuity and link testing (optical power meter, link status, differentiate between NVIDIA vs. non-NVIDIA cabling).
+- **T2** Conduct final deployment quality inspection (bend radius, labeling, airflow).
+- **T3** Document cable deployment with photos and as-built diagrams.
+- **T4** Troubleshoot signal integrity issues (dirty connectors, over-bending, BER, link down vs. high BER issues).
+
+### Suggested Readings
+
+**SR1** Diagnosing OTDR Test Failures—DTX Compact OTDR Module | Fluke Networks
+- [Diagnosing OTDR test failures, explained](6.SR1/otdr-test-failures-explained.html)
+
+**SR2** Contaminants Such as Dust on Fiber Optic Connector End Face Cause Poor IO Performance
+- [Dirty fiber connectors and poor I/O performance](6.SR2/fiber-connector-contamination-explained.html)
+
+**SR3** NVIDIA Cumulus™ Linux User Guide
+- [Troubleshooting Layer 1 on Cumulus Linux](6.SR3/cumulus-layer1-troubleshooting-explained.html)
+
+**SR4** OTDR—Optical Time Domain Reflectometer | Fluke Networks
+
+
+
+## Safety, Standards, and Compliance for Data Centers - 10%
+This section covers adhering to electrical safety, LOTO, fire compliance, NVIDIA installation standards, and proper ESD protection within high-power data center environments.
+
+### Potential Exam Topics:
+- **T1** Adhere to electrical safety practices (LOTO, PPE, 120 kW+ environments).
+- **T2** Comply with fire safety and cable flame ratings (NEC plenum requirements).
+- **T3** Follow NVIDIA-specific installation standards (DU-10438, warranty compliance).
+- **T4** Implement ESD protection for sensitive components.
+
+### Suggested Readings
+
+**SR1** Lockout-Tagout Procedures in 8 Steps
+- [Lockout–tagout in 8 steps, explained](7.SR1/loto-8-steps-explained.html)
+
+**SR2** The 7 Steps in a LOTO Procedure: What Are They, and How Do They Work?
+
+**SR3** The Role of CMP and CMR Cables in Data Centers and Office Buildings
+
+**SR4** Fire-Rated Cable Guide: Understanding CM, CMR, and CMP Standards | Wonderful Group
+
+**SR5** Data Center Humidity: ASHRAE Standards, ESD Risks, and System Selection
+
+**SR6** Cisco Optical Transceiver Handling Guide

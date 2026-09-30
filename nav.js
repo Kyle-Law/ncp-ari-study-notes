@@ -3,7 +3,12 @@
   const DATA = {
  "sections": {
   "1": "AI Infrastructure Basics for Data Centers - 20%",
-  "2": "High-Density Cabling Installation for AI Clusters - 30%"
+  "2": "Pre-Deployment Planning and Site Assessment for AI Data Centers - 11%",
+  "3": "Rack Infrastructure Preparation for AI Platforms - 10%",
+  "4": "High-Density Cabling Installation for AI Clusters - 30%",
+  "5": "Cable Support Systems and Weight Management - 7%",
+  "6": "Testing, Verification, and Documentation for AI Cabling - 12%",
+  "7": "Safety, Standards, and Compliance for Data Centers - 10%"
  },
  "kinds": {
   "T": "Exam topics",
@@ -152,123 +157,186 @@
    "title": "Liquid cooling architectures for AI data centers, explained"
   },
   {
-   "path": "2.SR2/osfp-vs-qsfpdd-explained.html",
-   "section": "2",
+   "path": "4.SR2/osfp-vs-qsfpdd-explained.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR2",
    "title": "OSFP vs QSFP-DD for 800G, explained"
   },
   {
-   "path": "2.SR3/cable-management-best-practices.html",
-   "section": "2",
+   "path": "4.SR3/cable-management-best-practices.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR3",
    "title": "Cable Management Best Practices, explained"
   },
   {
-   "path": "2.SR4/deploying-the-bundles-explained.html",
-   "section": "2",
+   "path": "4.SR4/deploying-the-bundles-explained.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR4",
    "title": "Deploying the Bundles, explained — DGX SuperPOD cabling"
   },
   {
-   "path": "2.SR5/ndr-connector-maintenance-explained.html",
-   "section": "2",
+   "path": "4.SR5/ndr-connector-maintenance-explained.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR5",
    "title": "Keeping NDR optics clean — an explainer"
   },
   {
-   "path": "2.SR6/nvidia-connectors-and-cages.html",
-   "section": "2",
+   "path": "4.SR6/nvidia-connectors-and-cages.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR6",
    "title": "Connectors and Cages, explained — NVIDIA LinkX"
   },
   {
-   "path": "2.SR7/connectx7-cables-explained.html",
-   "section": "2",
+   "path": "4.SR7/connectx7-cables-explained.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR7",
    "title": "ConnectX-7 validated cables & switches, explained"
   },
   {
-   "path": "2.SR8/nvidia-xdr-switch-led-guide.html",
-   "section": "2",
+   "path": "4.SR8/nvidia-xdr-switch-led-guide.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR8",
    "title": "Reading the LEDs on NVIDIA Q32xx / Q34xx XDR InfiniBand Switches"
   },
   {
-   "path": "2.SR9/osfp-vs-qsfp-dd-explained.html",
-   "section": "2",
+   "path": "4.SR9/osfp-vs-qsfp-dd-explained.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR9",
    "title": "OSFP vs QSFP-DD, explained visually"
   },
   {
-   "path": "2.SR10/200g-qsfp-dd-vs-osfp-explained.html",
-   "section": "2",
+   "path": "4.SR10/200g-qsfp-dd-vs-osfp-explained.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR10",
    "title": "200G Transceivers: QSFP-DD vs OSFP, explained"
   },
   {
-   "path": "2.SR11/single-mode-vs-multimode-fiber2.html",
-   "section": "2",
+   "path": "4.SR11/single-mode-vs-multimode-fiber2.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR11",
    "title": "Single-mode vs multimode fiber, explained visually"
   },
   {
-   "path": "2.SR12/single-mode-vs-multimode-fiber.html",
-   "section": "2",
+   "path": "4.SR12/single-mode-vs-multimode-fiber.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR12",
    "title": "Single-mode vs multimode fiber, explained"
   },
   {
-   "path": "2.SR13/fiber-installation-mistakes.html",
-   "section": "2",
+   "path": "4.SR13/fiber-installation-mistakes.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR13",
    "title": "Two big mistakes in fiber cable installation — explained"
   },
   {
-   "path": "2.SR14/single-mode-vs-multimode-fiber3.html",
-   "section": "2",
+   "path": "4.SR14/single-mode-vs-multimode-fiber3.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR14",
    "title": "Single-mode vs multimode fiber, explained visually"
   },
   {
-   "path": "2.SR15/mpo-mtp-cleaning-inspection.html",
-   "section": "2",
+   "path": "4.SR15/mpo-mtp-cleaning-inspection.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR15",
    "title": "Cleaning and Inspecting MPO/MTP Connectors, Explained"
   },
   {
-   "path": "2.SR16/foa-fiber-installation-explained.html",
-   "section": "2",
+   "path": "4.SR16/foa-fiber-installation-explained.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR16",
    "title": "Fiber Optic Installation, Explained — FOA Guide"
   },
   {
-   "path": "2.SR17/osfp-transceiver-install.html",
-   "section": "2",
+   "path": "4.SR17/osfp-transceiver-install.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR17",
    "title": "Installing an OSFP transceiver — visual guide"
   },
   {
-   "path": "2.SR18/iec-61300-3-35-explained.html",
-   "section": "2",
+   "path": "4.SR18/iec-61300-3-35-explained.html",
+   "section": "4",
    "kind": "SR",
    "code": "SR18",
    "title": "Clean & Inspect — IEC 61300-3-35 explained visually"
+  },
+  {
+   "path": "5.SR1/dgx-superpod-h100-networking-explained.html",
+   "section": "5",
+   "kind": "SR",
+   "code": "SR1",
+   "title": "DGX SuperPOD H100 networking, explained: cables, trays and load"
+  },
+  {
+   "path": "5.SR2/nvidia-cable-guidelines-explained.html",
+   "section": "5",
+   "kind": "SR",
+   "code": "SR2",
+   "title": "Cable Installation & Management, Explained"
+  },
+  {
+   "path": "5.SR3/fiber-optic-installation-explained3.html",
+   "section": "5",
+   "kind": "SR",
+   "code": "SR3",
+   "title": "Fiber optic installation, explained — FOA Technical Bulletin"
+  },
+  {
+   "path": "5.SR4/fiber-cable-installation-explained.html",
+   "section": "5",
+   "kind": "SR",
+   "code": "SR4",
+   "title": "Installing Fiber Optic Cable — Visual Explainer"
+  },
+  {
+   "path": "5.SR4/fiber-cable-installation-explained2.html",
+   "section": "5",
+   "kind": "SR",
+   "code": "SR4",
+   "title": "Installing Fiber Optic Cable — Explained"
+  },
+  {
+   "path": "6.SR1/otdr-test-failures-explained.html",
+   "section": "6",
+   "kind": "SR",
+   "code": "SR1",
+   "title": "Diagnosing OTDR Test Failures — Explained"
+  },
+  {
+   "path": "6.SR2/fiber-connector-contamination-explained.html",
+   "section": "6",
+   "kind": "SR",
+   "code": "SR2",
+   "title": "Dirty fiber connectors and poor I/O performance — explained"
+  },
+  {
+   "path": "6.SR3/cumulus-layer1-troubleshooting-explained.html",
+   "section": "6",
+   "kind": "SR",
+   "code": "SR3",
+   "title": "Troubleshooting Layer 1 on Cumulus Linux — a visual guide"
+  },
+  {
+   "path": "7.SR1/loto-8-steps-explained.html",
+   "section": "7",
+   "kind": "SR",
+   "code": "SR1",
+   "title": "Lockout–Tagout in 8 steps, explained"
   }
  ]
 };

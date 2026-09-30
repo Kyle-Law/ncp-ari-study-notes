@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DGX SuperPOD H100 networking, explained: cables, trays and load</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF1F4; --panel:#F8FAFB; --ink:#1C2B3A; --muted:#566676; --grid:#CAD5DF;
+  --tray:#D9A514; --fiber:#159C9D; --copper:#B5642B; --alert:#C0392B; --line:#8FA1B2;
+  --sans:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --cond:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--paper:#131D26;--panel:#1A2632;--ink:#E2E9EF;--muted:#9AABBA;--grid:#2C3B49;
+    --tray:#E9B930;--fiber:#2EC0C1;--copper:#D98049;--alert:#E5695B;--line:#5B6E80;}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px;background-attachment:fixed}
+body::before{content:"";position:fixed;inset:0;background:var(--paper);opacity:.82;z-index:-1}
+a{color:var(--fiber)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--tray);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+header.top{padding:48px 0 12px}
+h1,h2,h3{font-family:var(--cond);font-weight:700;line-height:1.1;margin:0}
+h1{font-size:clamp(2.2rem,5vw,3.6rem);letter-spacing:-.01em;max-width:18ch}
+h2{font-size:clamp(1.7rem,3.2vw,2.3rem);margin-bottom:12px}
+h3{font-size:1.25rem;margin:18px 0 6px}
+.lede{max-width:64ch;color:var(--muted);font-size:1.1rem;margin:14px 0 0}
+.src{font-size:.9rem;color:var(--muted);margin-top:10px}
+section{padding:40px 0;border-top:2px solid var(--ink)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:36px;align-items:start}
+@media (max-width:860px){.two{grid-template-columns:1fr}}
+.prose p{max-width:62ch;margin:0 0 14px}
+.panel{background:var(--panel);border:1.5px solid var(--ink);padding:18px}
+.fig-cap{font-size:.88rem;color:var(--muted);margin-top:8px}
+svg text{font-family:var(--cond);fill:var(--ink)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-family:var(--cond);font-weight:600;font-size:1rem;border-bottom:2px solid var(--ink)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.sel td{background:color-mix(in srgb,var(--tray) 22%,transparent)}
+/* hero calculator */
+.hero{display:grid;grid-template-columns:320px minmax(0,1fr);gap:28px;margin-top:28px}
+@media (max-width:860px){.hero{grid-template-columns:1fr}}
+.ctl label{display:block;font-family:var(--cond);font-weight:600;font-size:1rem;margin:12px 0 4px}
+.ctl input[type=number],.ctl select{width:100%;padding:8px;font:inherit;background:var(--paper);color:var(--ink);border:1.5px solid var(--ink)}
+.ctl input[type=range]{width:100%;accent-color:var(--tray)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.readout{margin-top:16px;border-top:1.5px solid var(--ink);padding-top:12px;font-variant-numeric:tabular-nums}
+.readout div{display:flex;justify-content:space-between;gap:8px;padding:3px 0}
+.readout strong{font-family:var(--cond);font-size:1.15rem}
+.verdict{margin-top:10px;padding:10px 12px;font-weight:600;border-left:6px solid var(--fiber);background:color-mix(in srgb,var(--fiber) 12%,transparent)}
+.verdict.bad{border-color:var(--alert);background:color-mix(in srgb,var(--alert) 12%,transparent)}
+.seg{display:inline-flex;border:1.5px solid var(--ink);margin:6px 0 14px}
+.seg button{font:600 1rem var(--cond);padding:6px 14px;background:transparent;color:var(--ink);border:0;cursor:pointer}
+.seg button+button{border-left:1.5px solid var(--ink)}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.formula{font-family:var(--cond);font-size:1.5rem;padding:12px 16px;border:1.5px dashed var(--ink);display:inline-block;margin:6px 0 14px}
+.checks{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0;border:1.5px solid var(--ink)}
+.checks li{padding:14px 16px;border-right:1px solid var(--grid);border-bottom:1px solid var(--grid);background:var(--panel)}
+.checks b{font-family:var(--cond);font-size:1.1rem;display:block}
+.checks span{color:var(--muted);font-size:.93rem}
+.note{font-size:.92rem;color:var(--muted);border-left:3px solid var(--tray);padding-left:12px;max-width:62ch}
+footer{padding:30px 0 60px;border-top:2px solid var(--ink);color:var(--muted);font-size:.9rem}
+.key{display:flex;flex-wrap:wrap;gap:16px;font-size:.9rem;margin-top:8px}
+.key i{display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>How much cable does a DGX H100 SuperPOD put over your head?</h1>
+  <p class="lede">An illustrated walkthrough of NVIDIA's <em>Networking</em> chapter from the DGX SuperPOD data center design guide for H100 systems. The chapter isn't about network topology as such; it's about the physical consequence of that topology: hundreds of cables per scalable unit that need trays wide enough and supports strong enough to carry them.</p>
+  <p class="src">Source: <a href="https://docs.nvidia.com/dgx-superpod/design-guides/dgx-superpod-data-center-design-h100/latest/networking.html">docs.nvidia.com — Networking (last updated Nov 19, 2025)</a></p>
+
+  <div class="hero">
+    <div class="panel ctl" aria-label="Cable tray fill calculator">
+      <h3 style="margin-top:0">Try it: will your tray hold one SU?</h3>
+      <label for="cables">Cables to route</label>
+      <select id="preset">
+        <option value="508" selected>1 SU — 508 cables</option>
+        <option value="1020">2 SUs — 1,020 cables</option>
+        <option value="1532">3 SUs — 1,532 cables</option>
+        <option value="2044">4 SUs — 2,044 cables</option>
+        <option value="custom">Custom count…</option>
+      </select>
+      <input id="cables" type="number" min="1" max="5000" value="508" style="margin-top:6px">
+      <label for="ctype">Cable type</label>
+      <select id="ctype">
+        <option value="3.0" selected>AOC fiber — 3.0 mm</option>
+        <option value="9.43">Copper — 9.43 mm</option>
+      </select>
+      <div class="row2">
+        <div><label for="tw">Tray width (in)</label><input id="tw" type="number" step="0.1" min="1" value="4.6"></div>
+        <div><label for="td">Tray depth (in)</label><input id="td" type="number" step="0.1" min="0.5" value="2.5"></div>
+      </div>
+      <label for="fill">Max fill ratio: <span id="fillv">50</span>%</label>
+      <input id="fill" type="range" min="20" max="60" value="50">
+      <div class="readout" aria-live="polite">
+        <div><span>Tray area</span><strong id="oA"></strong></div>
+        <div><span>Capacity at fill ratio</span><strong id="oN"></strong></div>
+        <div><span>Minimum area needed</span><strong id="oMin"></strong></div>
+        <div><span>Cable load</span><strong id="oW"></strong></div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <svg id="traySvg" viewBox="0 0 640 400" width="100%" role="img" aria-label="Cross-section of a cable tray filled with cables"></svg>
+      <div class="key"><span><i style="background:var(--tray)"></i>Tray wall</span><span><i id="keyCable" style="background:var(--fiber)"></i>Cable cross-section</span><span><i style="border-top:2px dashed var(--alert);height:0;margin-bottom:5px"></i>Fill-ratio limit</span></div>
+      <p class="fig-cap">Cables drawn to scale in the tray's cross-section. The default (4.6 × 2.5 in = 11.5 in²) is the guide's minimum tray for one SU of 3 mm AOC cables at 50% fill.</p>
+    </div>
+  </div>
+</header>
+
+<section id="scope">
+  <div class="two">
+    <div class="prose">
+      <h2>What this chapter covers</h2>
+      <p>The page deliberately narrows its scope. Network <em>architecture</em> (fabrics, switch models, connectivity) lives in the separate DGX SuperPOD Reference Architecture, and detailed cabling practice lives in NVIDIA's <em>Cabling Data Centers</em> guide. This chapter only discusses the network where it touches the building: space, weight and pathways.</p>
+      <p>So the whole page reduces to one question for a facilities team: <strong>given how many cables this cluster needs, how big and how strong must the overhead cable pathways be?</strong></p>
+    </div>
+    <div class="panel">
+      <svg viewBox="0 0 520 250" width="100%" role="img" aria-label="Where this chapter sits among NVIDIA documents">
+        <rect x="10" y="20" width="160" height="70" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="90" y="50" text-anchor="middle" font-size="15">Reference Architecture</text>
+        <text x="90" y="70" text-anchor="middle" font-size="13" style="fill:var(--muted)">topology, switches</text>
+        <rect x="350" y="20" width="160" height="70" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="430" y="50" text-anchor="middle" font-size="15">Cabling Data Centers</text>
+        <text x="430" y="70" text-anchor="middle" font-size="13" style="fill:var(--muted)">cable practice</text>
+        <rect x="160" y="150" width="200" height="80" fill="color-mix(in srgb,var(--tray) 25%,transparent)" stroke="var(--ink)" stroke-width="2"/>
+        <text x="260" y="183" text-anchor="middle" font-size="18" font-weight="700">This chapter</text>
+        <text x="260" y="205" text-anchor="middle" font-size="13">cable counts → trays → load</text>
+        <path d="M90 90 L220 150" stroke="var(--ink)" stroke-width="1.5" marker-end="url(#ar)" fill="none" stroke-dasharray="5 4"/>
+        <path d="M430 90 L300 150" stroke="var(--ink)" stroke-width="1.5" marker-end="url(#ar)" fill="none" stroke-dasharray="5 4"/>
+        <text x="120" y="130" font-size="12" style="fill:var(--muted)">counts only</text>
+        <text x="345" y="130" font-size="12" style="fill:var(--muted)">for details</text>
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--ink)"/></marker></defs>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section id="weight">
+  <div class="two">
+    <div class="prose">
+      <h2>Two kinds of cable, very different footprints</h2>
+      <p>For planning, the guide gives average figures for the two cable types (Table 17). Use them to size trays, ladder racks and strain reliefs early on, then redo the math with the actual spec sheets once the cables are chosen.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Cable type</th><th class="num">Avg. diameter</th><th class="num">Weight / m</th><th class="num">Weight / ft</th></tr></thead>
+        <tbody>
+          <tr><td>Copper</td><td class="num">9.43 ± 0.4 mm</td><td class="num">0.045 kg</td><td class="num">0.03 lb</td></tr>
+          <tr><td>AOC fiber optic</td><td class="num">3.0 ± 0.4 mm</td><td class="num">0.009 kg</td><td class="num">0.006 lb</td></tr>
+        </tbody>
+      </table></div>
+      <p style="margin-top:14px">The comparison on the right is the real takeaway: a copper cable occupies about <strong>10×</strong> the tray cross-section of an AOC cable and weighs <strong>5×</strong> as much per metre. That's why fiber (active optical cable) dominates the long runs across the data hall.</p>
+    </div>
+    <div class="panel">
+      <svg viewBox="0 0 520 300" width="100%" role="img" aria-label="Copper versus AOC cable diameter and weight, to scale">
+        <text x="20" y="28" font-size="16" font-weight="700">Cross-section (to scale, 1 mm = 12 px)</text>
+        <circle cx="120" cy="120" r="56.6" fill="var(--copper)" opacity=".9"/>
+        <circle cx="120" cy="120" r="46" fill="none" stroke="var(--paper)" stroke-width="1" opacity=".5"/>
+        <text x="120" y="200" text-anchor="middle" font-size="15">Copper 9.43 mm</text>
+        <circle cx="260" cy="120" r="18" fill="var(--fiber)"/>
+        <text x="260" y="200" text-anchor="middle" font-size="15">AOC 3.0 mm</text>
+        <text x="330" y="100" font-size="30" font-weight="700">≈ 9.9×</text>
+        <text x="330" y="124" font-size="14" style="fill:var(--muted)">area ratio (9.43 ÷ 3)²</text>
+        <text x="20" y="238" font-size="16" font-weight="700">Weight per metre</text>
+        <rect x="20" y="248" width="450" height="16" fill="var(--copper)"/><text x="476" y="261" font-size="14">0.045 kg</text>
+        <rect x="20" y="270" width="90" height="16" fill="var(--fiber)"/><text x="116" y="283" font-size="14">0.009 kg (5× lighter)</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section id="plan">
+  <h2>Six things to pre-plan</h2>
+  <p class="prose" style="max-width:66ch">Cables concentrate heavily in two places: the central management racks and the overhead pathways above them. The guide lists the areas of analysis that must be settled before installation:</p>
+  <ul class="checks">
+    <li><b>Top-of-rack penetrations</b><span>Openings in rack roofs where cable bundles drop in.</span></li>
+    <li><b>Cable tray type</b><span>Ladder, wire-basket, solid-bottom and so on.</span></li>
+    <li><b>Tray width and depth</b><span>Sets the usable cross-sectional area A.</span></li>
+    <li><b>Tray fill ratio</b><span>How much of A cables may occupy; the guide says stay at or below 50%.</span></li>
+    <li><b>Structural load</b><span>Cable + tray + support weight, checked against anchors.</span></li>
+    <li><b>Cable management devices</b><span>Strain reliefs, waterfalls, bend-radius guides.</span></li>
+  </ul>
+  <h3 style="margin-top:26px">Standards and codes that apply</h3>
+  <p class="prose" style="max-width:66ch">Pathway hardware should follow ANSI/TIA, BICSI and NEMA industry standards, and must also comply with local fire and electrical codes:</p>
+  <div class="scroll" style="max-width:640px"><table>
+    <thead><tr><th>Region</th><th>Electrical code named in the guide</th></tr></thead>
+    <tbody>
+      <tr><td>United States, Mexico</td><td>National Electric Code (NEC)</td></tr>
+      <tr><td>Canada</td><td>Canadian Electric Code</td></tr>
+      <tr><td>Europe</td><td>IEC (International Electrotechnical Commission)</td></tr>
+      <tr><td>United Kingdom</td><td>BS 7671</td></tr>
+      <tr><td>France</td><td>NF C 15-100</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="fabric">
+  <h2>Where the cable counts come from</h2>
+  <div class="two">
+    <div class="prose">
+      <p>The compute fabric is a two-tier <strong>leaf–spine</strong> InfiniBand network. It grows in <strong>scalable units (SUs)</strong> of 32 DGX H100 systems, each with 8 GPUs and 8 compute network ports. Every SU adds 8 leaf switches, and every leaf connects up to every spine.</p>
+      <p>Pick an SU count to see the fabric and its counts (Table 18):</p>
+      <div class="seg" role="group" aria-label="Number of scalable units">
+        <button data-su="1" aria-pressed="true">1 SU</button><button data-su="2" aria-pressed="false">2 SUs</button><button data-su="3" aria-pressed="false">3 SUs</button><button data-su="4" aria-pressed="false">4 SUs</button>
+      </div>
+      <div class="scroll"><table id="t18">
+        <thead><tr><th class="num">SUs</th><th class="num">Nodes</th><th class="num">GPUs</th><th class="num">Leaf</th><th class="num">Spine</th><th class="num">Node + UFM cables</th><th class="num">Spine–leaf cables</th></tr></thead>
+        <tbody>
+          <tr data-su="1"><td class="num">1</td><td class="num">31*</td><td class="num">248</td><td class="num">8</td><td class="num">4</td><td class="num">252</td><td class="num">256</td></tr>
+          <tr data-su="2"><td class="num">2</td><td class="num">63</td><td class="num">504</td><td class="num">16</td><td class="num">8</td><td class="num">508</td><td class="num">512</td></tr>
+          <tr data-su="3"><td class="num">3</td><td class="num">95</td><td class="num">760</td><td class="num">24</td><td class="num">16</td><td class="num">764</td><td class="num">768</td></tr>
+          <tr data-su="4"><td class="num">4</td><td class="num">127</td><td class="num">1,016</td><td class="num">32</td><td class="num">16</td><td class="num">1,020</td><td class="num">1,024</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note" style="margin-top:12px">* The SU is designed for 32 nodes, but one DGX H100 is removed from the cluster to free leaf ports for the UFM (Unified Fabric Manager) appliance. That's why node counts end in …1, …3, …5, …7. The node cable count works out as nodes × 8 ports + 4 UFM links: 31 × 8 + 4 = 252.</p>
+    </div>
+    <div class="panel">
+      <svg id="fabSvg" viewBox="0 0 640 380" width="100%" role="img" aria-label="Leaf-spine compute fabric diagram"></svg>
+      <div class="key"><span><i style="background:var(--ink)"></i>Spine switch</span><span><i style="background:var(--fiber)"></i>Leaf switch</span><span><i style="background:var(--muted)"></i>DGX H100 node</span><span><i style="background:var(--alert)"></i>Slot given to UFM</span></div>
+      <svg id="barSvg" viewBox="0 0 640 220" width="100%" role="img" aria-label="Total compute fabric cables by SU count" style="margin-top:18px"></svg>
+      <p class="fig-cap">Total cables per cluster size. Both cable groups grow almost linearly: roughly 510 cables per SU.</p>
+    </div>
+  </div>
+</section>
+
+<section id="overhead">
+  <div class="two">
+    <div class="prose">
+      <h2>Overhead pathways and their supports</h2>
+      <p>The guide's Figures 18 and 19 show front and rear views of a typical overhead cable management system above one SU (see them on the <a href="https://docs.nvidia.com/dgx-superpod/design-guides/dgx-superpod-data-center-design-h100/latest/networking.html">original page</a>). The schematic here captures the support rules that go with it:</p>
+      <p><strong>Straight sections</strong> are typically supported every <strong>5 ft</strong> (1.5 m). Curved sections may need extra supports, and any span longer than 5 ft should be evaluated.</p>
+      <p><strong>Splices, joints and height transitions</strong> need a support within <strong>1 ft</strong> (0.3 m).</p>
+      <p><strong>Supports and their anchors</strong> are evaluated separately. Each must carry cables, tray and support structure combined.</p>
+    </div>
+    <div class="panel">
+      <svg viewBox="0 0 640 330" width="100%" role="img" aria-label="Elevation of an overhead cable tray above a row of racks with support spacing">
+        <!-- ceiling -->
+        <rect x="0" y="0" width="640" height="14" fill="var(--grid)"/>
+        <!-- supports -->
+        <g stroke="var(--ink)" stroke-width="3">
+          <line x1="40" y1="14" x2="40" y2="92"/><line x1="220" y1="14" x2="220" y2="92"/>
+          <line x1="310" y1="14" x2="310" y2="92"/><line x1="400" y1="14" x2="400" y2="92"/><line x1="580" y1="14" x2="580" y2="92"/>
+        </g>
+        <!-- tray -->
+        <rect x="20" y="92" width="600" height="22" fill="none" stroke="var(--tray)" stroke-width="4"/>
+        <g fill="var(--fiber)"><rect x="24" y="102" width="592" height="10" opacity=".7"/></g>
+        <!-- splice -->
+        <line x1="355" y1="86" x2="355" y2="120" stroke="var(--alert)" stroke-width="3" stroke-dasharray="4 3"/>
+        <text x="355" y="80" text-anchor="middle" font-size="13" style="fill:var(--alert)">splice</text>
+        <!-- dims -->
+        <g stroke="var(--muted)" stroke-width="1" font-size="13">
+          <line x1="40" y1="140" x2="220" y2="140"/><line x1="40" y1="134" x2="40" y2="146"/><line x1="220" y1="134" x2="220" y2="146"/>
+          <line x1="310" y1="140" x2="355" y2="140"/><line x1="310" y1="134" x2="310" y2="146"/><line x1="355" y1="134" x2="355" y2="146"/>
+          <line x1="355" y1="140" x2="400" y2="140"/><line x1="400" y1="134" x2="400" y2="146"/>
+        </g>
+        <text x="130" y="160" text-anchor="middle" font-size="14">≤ 5 ft (1.5 m)</text>
+        <text x="355" y="162" text-anchor="middle" font-size="13">≤ 1 ft each side</text>
+        <!-- drops -->
+        <g stroke="var(--fiber)" stroke-width="3" fill="none">
+          <path d="M90 114 Q90 150 90 190"/><path d="M170 114 Q170 150 170 190"/><path d="M270 114 Q270 150 270 190"/>
+          <path d="M450 114 Q450 150 450 190"/><path d="M530 114 Q530 150 530 190"/>
+        </g>
+        <!-- racks -->
+        <g fill="var(--panel)" stroke="var(--ink)" stroke-width="1.5">
+          <rect x="60" y="190" width="60" height="130"/><rect x="140" y="190" width="60" height="130"/><rect x="240" y="190" width="60" height="130"/>
+          <rect x="330" y="190" width="60" height="130" fill="color-mix(in srgb,var(--tray) 20%,var(--panel))"/>
+          <rect x="420" y="190" width="60" height="130"/><rect x="500" y="190" width="60" height="130"/>
+        </g>
+        <text x="360" y="260" text-anchor="middle" font-size="12">mgmt</text>
+        <text x="360" y="275" text-anchor="middle" font-size="12">rack</text>
+        <path d="M345 114 L345 190 M360 114 L360 190 M375 114 L375 190" stroke="var(--fiber)" stroke-width="3"/>
+        <text x="90" y="260" text-anchor="middle" font-size="12" style="fill:var(--muted)">DGX</text>
+        <text x="170" y="260" text-anchor="middle" font-size="12" style="fill:var(--muted)">DGX</text>
+        <text x="270" y="260" text-anchor="middle" font-size="12" style="fill:var(--muted)">DGX</text>
+        <text x="450" y="260" text-anchor="middle" font-size="12" style="fill:var(--muted)">DGX</text>
+        <text x="530" y="260" text-anchor="middle" font-size="12" style="fill:var(--muted)">DGX</text>
+      </svg>
+      <p class="fig-cap">Schematic elevation (not to scale). Cable density peaks at the central management/network rack, where every leaf-spine and node cable converges.</p>
+    </div>
+  </div>
+</section>
+
+<section id="formula">
+  <div class="two">
+    <div class="prose">
+      <h2>The tray fill formula</h2>
+      <p>To find how many cables a tray holds, divide the usable area by the area of one cable's circular cross-section:</p>
+      <div class="formula">N = (F / 100) × A ÷ [ π × (D / 2)² ]</div>
+      <p>where <strong>A</strong> is the inside tray area (in²), <strong>D</strong> the cable diameter (in), <strong>F</strong> the fill ratio (%), and <strong>N</strong> the number of cables.</p>
+      <h3>The guide's worked example</h3>
+      <p>A 3 mm AOC cable is 0.118 in across, so it takes up π × 0.059² ≈ 0.01096 in². A tray of <strong>11.5 in²</strong> (7,419 mm²) at 50% fill gives 0.5 × 11.5 ÷ 0.01096 ≈ <strong>524 cables</strong>, just enough for the <strong>508</strong> cables in one SU (252 node + 256 spine–leaf). That's why the guide calls 11.5 in² the minimum.</p>
+      <p class="note">Why 50%? Cables don't pack perfectly, and trays need headroom for airflow, bend radius, future adds and pulling new cables without damaging existing ones. The guide advises never filling beyond 50%.</p>
+    </div>
+    <div class="panel">
+      <svg viewBox="0 0 520 330" width="100%" role="img" aria-label="Worked example: tray capacity versus cables needed for one SU">
+        <text x="20" y="30" font-size="16" font-weight="700">11.5 in² tray, 50% fill, 3 mm AOC</text>
+        <rect x="20" y="50" width="480" height="40" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+        <rect x="20" y="50" width="240" height="40" fill="color-mix(in srgb,var(--fiber) 35%,transparent)"/>
+        <line x1="260" y1="44" x2="260" y2="96" stroke="var(--alert)" stroke-width="2" stroke-dasharray="5 4"/>
+        <text x="140" y="76" text-anchor="middle" font-size="14">usable 5.75 in²</text>
+        <text x="380" y="76" text-anchor="middle" font-size="14" style="fill:var(--muted)">kept free</text>
+        <text x="20" y="140" font-size="16" font-weight="700">Capacity vs. demand (cables)</text>
+        <rect x="20" y="155" width="458" height="30" fill="var(--fiber)"/>
+        <text x="484" y="176" font-size="15" font-weight="700">524</text>
+        <text x="28" y="175" font-size="14" style="fill:var(--paper)">tray capacity</text>
+        <rect x="20" y="195" width="220" height="30" fill="var(--muted)"/>
+        <rect x="240" y="195" width="224" height="30" fill="var(--ink)"/>
+        <text x="470" y="216" font-size="15" font-weight="700">508</text>
+        <text x="28" y="215" font-size="13" style="fill:var(--paper)">252 node + UFM</text>
+        <text x="248" y="215" font-size="13" style="fill:var(--paper)">256 spine–leaf</text>
+        <text x="20" y="270" font-size="15">Margin: 16 cables (≈ 3%). With copper instead,</text>
+        <text x="20" y="292" font-size="15">the same tray would hold only about 53 cables.</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section id="load">
+  <div class="two">
+    <div class="prose">
+      <h2>Structural load</h2>
+      <p>The guide's reference figure for one SU: 508 fiber cables × 0.009 kg/m = <strong>4.57 kg (≈ 10 lb) per linear metre</strong> of pathway, from cables alone. The tray and its hangers add to this, and it multiplies with every SU sharing the same run.</p>
+      <p>Drag the slider to see the cable load per metre and per 5 ft support span as the cluster grows, and how badly copper would change it.</p>
+      <label for="suLoad" style="font-family:var(--cond);font-weight:600">Scalable units on this pathway: <span id="suLoadV">1</span></label>
+      <input id="suLoad" type="range" min="1" max="4" value="1" style="width:100%;accent-color:var(--tray)">
+      <p class="note" style="margin-top:14px">These are planning numbers. Recalculate with the actual cable quantities and manufacturer weights before signing off on trays, hangers and anchors.</p>
+    </div>
+    <div class="panel">
+      <svg id="loadSvg" viewBox="0 0 520 280" width="100%" role="img" aria-label="Cable load per metre for fiber versus copper"></svg>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Explainer built from NVIDIA's "Networking" chapter of <em>NVIDIA DGX SuperPOD: Data Center Design Featuring NVIDIA DGX H100 Systems</em>. Figures are NVIDIA's planning guidance; diagrams here are illustrative schematics, not NVIDIA drawings. Next chapter in the guide: Cooling and Airflow Optimization.
+</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e; }
+function txt(parent,x,y,s,attrs={}){ const t=el("text",Object.assign({x,y},attrs),parent); t.textContent=s; return t; }
+const fmt = n => n.toLocaleString("en-US",{maximumFractionDigits:0});
+
+/* ---------- Hero tray calculator ---------- */
+const presetSel=$("preset"), cablesIn=$("cables");
+presetSel.addEventListener("change",()=>{ if(presetSel.value!=="custom"){cablesIn.value=presetSel.value;} else cablesIn.focus(); drawTray(); });
+cablesIn.addEventListener("input",()=>{ const m=[...presetSel.options].find(o=>o.value===cablesIn.value); presetSel.value=m?m.value:"custom"; drawTray(); });
+["ctype","tw","td","fill"].forEach(id=>$(id).addEventListener("input",drawTray));
+
+function drawTray(){
+  const svg=$("traySvg"); svg.innerHTML="";
+  const n=Math.max(1,Math.min(5000,+cablesIn.value||1));
+  const dmm=+$("ctype").value, D=dmm/25.4;
+  const W=Math.max(1,+$("tw").value||1), H=Math.max(.5,+$("td").value||.5);
+  const F=+$("fill").value; $("fillv").textContent=F;
+  const A=W*H, cArea=Math.PI*(D/2)**2;
+  const cap=Math.floor(F/100*A/cArea);
+  const minA=n*cArea/(F/100);
+  const isFiber=dmm<5;
+  const kgm=n*(isFiber?0.009:0.045);
+  $("oA").textContent=A.toFixed(2)+" in²";
+  $("oN").textContent=fmt(cap)+" cables";
+  $("oMin").textContent=minA.toFixed(1)+" in²";
+  $("oW").textContent=kgm.toFixed(2)+" kg/m ("+(kgm*2.2046).toFixed(1)+" lb/m)";
+  const ok=cap>=n, v=$("verdict");
+  v.className="verdict"+(ok?"":" bad");
+  v.textContent= ok ? `Fits: ${fmt(n)} cables use ${(n*cArea/A*100).toFixed(0)}% of the tray, within the ${F}% limit.`
+                    : `Too small: ${fmt(n)} cables need ${(n*cArea/A*100).toFixed(0)}% fill. Use at least ${minA.toFixed(1)} in² of tray.`;
+  const col=isFiber?"var(--fiber)":"var(--copper)";
+  $("keyCable").style.background=col;
+
+  // geometry
+  const pad=30, maxW=640-2*pad, maxH=330;
+  const s=Math.min(maxW/W, maxH/H);           // px per inch
+  const tw=W*s, th=H*s, x0=(640-tw)/2, y0=20+ (maxH-th);
+  svg.setAttribute("viewBox",`0 0 640 ${y0+th+50}`);
+  // tray U-shape
+  el("path",{d:`M${x0} ${y0} L${x0} ${y0+th} L${x0+tw} ${y0+th} L${x0+tw} ${y0}`,fill:"none",stroke:"var(--tray)","stroke-width":6,"stroke-linejoin":"round"},svg);
+  // circles (hex pack from bottom)
+  const r=D/2*s, dy=2*r*0.866;
+  const g=el("g",{fill:col},svg);
+  let placed=0,row=0;
+  while(placed<n){
+    const cy=y0+th-r-row*dy;
+    if(cy-r < y0-0.5) break;
+    const off=(row%2)?r:0;
+    for(let cx=x0+r+off; cx<=x0+tw-r+0.01 && placed<n; cx+=2*r){ el("circle",{cx:cx.toFixed(1),cy:cy.toFixed(1),r:Math.max(r*0.96,0.4)},g); placed++; }
+    row++;
+  }
+  // fill line
+  const fy=y0+th-th*F/100;
+  el("line",{x1:x0-10,x2:x0+tw+10,y1:fy,y2:fy,stroke:"var(--alert)","stroke-width":2,"stroke-dasharray":"7 5"},svg);
+  txt(svg,x0+tw+12>600?x0+tw-4:x0+tw+12,fy-6,`${F}% fill`,{"font-size":14,"text-anchor":x0+tw+12>600?"end":"start",style:"fill:var(--alert)"});
+  // dims
+  txt(svg,x0+tw/2,y0+th+26,`${W} in wide × ${H} in deep`,{"font-size":15,"text-anchor":"middle"});
+  if(placed<n) txt(svg,x0+tw/2,y0+th+44,`${fmt(n-placed)} cables don't physically fit`,{"font-size":14,"text-anchor":"middle",style:"fill:var(--alert)","font-weight":700});
+}
+drawTray();
+
+/* ---------- Fabric diagram + table ---------- */
+const DATA={1:{leaf:8,spine:4,nodes:31,node:252,sl:256},2:{leaf:16,spine:8,nodes:63,node:508,sl:512},3:{leaf:24,spine:16,nodes:95,node:764,sl:768},4:{leaf:32,spine:16,nodes:127,node:1020,sl:1024}};
+let curSU=1;
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{curSU=+b.dataset.su; document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b)); drawFabric(); drawBars();}));
+document.querySelectorAll("#t18 tbody tr").forEach(tr=>tr.addEventListener("click",()=>document.querySelector(`.seg button[data-su="${tr.dataset.su}"]`).click()));
+
+function drawFabric(){
+  document.querySelectorAll("#t18 tbody tr").forEach(tr=>tr.classList.toggle("sel",+tr.dataset.su===curSU));
+  const d=DATA[curSU], svg=$("fabSvg"); svg.innerHTML="";
+  const L=20,R=620, yS=50, yL=190, yN=300;
+  const spX=i=>L+ (R-L)*(i+0.5)/d.spine, lfX=i=>L+(R-L)*(i+0.5)/d.leaf;
+  // spine-leaf mesh
+  const mesh=el("g",{stroke:"var(--line)","stroke-width":curSU>2?0.5:0.9,opacity:.75},svg);
+  for(let i=0;i<d.spine;i++) for(let j=0;j<d.leaf;j++) el("line",{x1:spX(i),y1:yS+9,x2:lfX(j),y2:yL-9},mesh);
+  // leaf-node rails
+  const suW=(R-L)/curSU;
+  for(let s=0;s<curSU;s++){
+    const bx=L+s*suW+6, bw=suW-12;
+    for(let j=0;j<8;j++){ const lx=lfX(s*8+j); el("line",{x1:lx,y1:yL+9,x2:bx+bw*(j+0.5)/8,y2:yN-4,stroke:"var(--fiber)","stroke-width":1.4},svg); }
+    // nodes: 32 ticks
+    const nw=bw/32;
+    for(let k=0;k<32;k++){
+      const isUFM = (s===curSU-1 && k===31);
+      el("rect",{x:bx+k*nw+0.6,y:yN,width:Math.max(nw-1.2,1),height:26,fill:isUFM?"var(--alert)":"var(--muted)"},svg);
+    }
+    txt(svg,bx+bw/2,yN+46,`SU ${s+1}`,{"font-size":14,"text-anchor":"middle","font-weight":600});
+  }
+  // switches
+  const sw=Math.min(26,(R-L)/d.spine-6), lw=Math.min(22,(R-L)/d.leaf-3);
+  for(let i=0;i<d.spine;i++) el("rect",{x:spX(i)-sw/2,y:yS-9,width:sw,height:18,fill:"var(--ink)"},svg);
+  for(let j=0;j<d.leaf;j++) el("rect",{x:lfX(j)-lw/2,y:yL-9,width:lw,height:18,fill:"var(--fiber)"},svg);
+  txt(svg,L,yS-18,`${d.spine} spine switches`,{"font-size":15,"font-weight":700});
+  txt(svg,L,yL-16,`${d.leaf} leaf switches · ${fmt(d.sl)} spine–leaf cables`,{"font-size":14});
+  txt(svg,R,yN-10,`${d.nodes} DGX nodes · ${fmt(d.node)} node + UFM cables`,{"font-size":14,"text-anchor":"end"});
+}
+function drawBars(){
+  const svg=$("barSvg"); svg.innerHTML="";
+  const max=2100, L=70, W=540, H=150, y0=180;
+  for(let t=0;t<=2000;t+=500){ const y=y0-H*t/max; el("line",{x1:L,x2:L+W,y1:y,y2:y,stroke:"var(--grid)"},svg); txt(svg,L-8,y+4,fmt(t),{"font-size":12,"text-anchor":"end",style:"fill:var(--muted)"}); }
+  for(let s=1;s<=4;s++){
+    const d=DATA[s], bw=70, x=L+(s-0.5)*W/4-bw/2;
+    const h1=H*d.node/max, h2=H*d.sl/max, sel=s===curSU;
+    el("rect",{x,y:y0-h1,width:bw,height:h1,fill:"var(--muted)",opacity:sel?1:.55},svg);
+    el("rect",{x,y:y0-h1-h2,width:bw,height:h2,fill:"var(--ink)",opacity:sel?1:.55},svg);
+    txt(svg,x+bw/2,y0-h1-h2-6,fmt(d.node+d.sl),{"font-size":14,"text-anchor":"middle","font-weight":sel?700:500});
+    txt(svg,x+bw/2,y0+18,`${s} SU${s>1?"s":""}`,{"font-size":13,"text-anchor":"middle"});
+  }
+  txt(svg,L,16,"Total fabric cables",{"font-size":15,"font-weight":700});
+  el("rect",{x:L+170,y:6,width:12,height:12,fill:"var(--muted)"},svg); txt(svg,L+188,16,"node + UFM",{"font-size":13});
+  el("rect",{x:L+270,y:6,width:12,height:12,fill:"var(--ink)"},svg); txt(svg,L+288,16,"spine–leaf",{"font-size":13});
+}
+drawFabric(); drawBars();
+
+/* ---------- Load chart ---------- */
+$("suLoad").addEventListener("input",drawLoad);
+function drawLoad(){
+  const s=+$("suLoad").value; $("suLoadV").textContent=s;
+  const d=DATA[s], n=d.node+d.sl;
+  const fib=n*0.009, cu=n*0.045, span=1.524;
+  const svg=$("loadSvg"); svg.innerHTML="";
+  const max=100, L=20, W=380;
+  txt(svg,L,26,`${fmt(n)} cables on the pathway`,{"font-size":16,"font-weight":700});
+  const rows=[["AOC fiber",fib,"var(--fiber)"],["Copper (hypothetical)",cu,"var(--copper)"]];
+  rows.forEach((r,i)=>{
+    const y=60+i*90, w=Math.max(2,W*Math.min(r[1],max)/max);
+    txt(svg,L,y,r[0],{"font-size":15});
+    el("rect",{x:L,y:y+8,width:w,height:28,fill:r[2]},svg);
+    txt(svg,L+w+8,y+28,`${r[1].toFixed(1)} kg/m`,{"font-size":16,"font-weight":700});
+    txt(svg,L,y+56,`${(r[1]*2.2046).toFixed(1)} lb/m · ${(r[1]*span).toFixed(1)} kg per 5 ft support span`,{"font-size":13,style:"fill:var(--muted)"});
+  });
+  txt(svg,L,258,"Cables only; add tray and hanger weight on top.",{"font-size":13,style:"fill:var(--muted)"});
+}
+drawLoad();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

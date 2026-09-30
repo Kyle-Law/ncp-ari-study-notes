@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Diagnosing OTDR Test Failures — Explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF1F2; --ink:#17242F; --muted:#51616D; --rule:#C9D2D7;
+  --screen:#1C2A33; --grid:#2E404C; --axis:#8FA3B0;
+  --trace:#F0A23A; --fault:#C23B2E; --ok:#2F7D74; --info:#3F6FA8;
+  --card:#FFFFFF;
+  --sans:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --cond:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141B20; --ink:#E4EAEE; --muted:#9AAAB5; --rule:#2C3942;
+    --screen:#0F171C; --grid:#23323C; --card:#1B252C;
+    --fault:#E0604F; --ok:#4FB0A3; --info:#7AA6DA;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141B20; --ink:#E4EAEE; --muted:#9AAAB5; --rule:#2C3942;
+  --screen:#0F171C; --grid:#23323C; --card:#1B252C;
+  --fault:#E0604F; --ok:#4FB0A3; --info:#7AA6DA;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 var(--sans)}
+main{max-width:920px;margin:0 auto;padding:40px 20px 80px}
+h1,h2,h3{font-family:var(--cond);line-height:1.15;margin:0}
+h1{font-size:clamp(2.2rem,6vw,3.6rem);font-weight:700;letter-spacing:-.01em}
+h2{font-size:2rem;font-weight:600;margin-top:64px;padding-top:18px;border-top:3px solid var(--ink)}
+h3{font-size:1.35rem;font-weight:600}
+p{max-width:70ch}
+.lede{font-size:1.15rem;color:var(--muted);margin-top:14px}
+.src{font-size:.9rem;color:var(--muted)}
+.src a{color:var(--info)}
+svg{display:block;max-width:100%;height:auto}
+.screen{background:var(--screen);border-radius:10px;padding:10px;margin:22px 0}
+.scroll{overflow-x:auto}
+.figcap{font-size:.9rem;color:var(--muted);margin-top:-8px}
+/* hero trace */
+.hero{margin-top:28px}
+/* setup diagram */
+.setup text{fill:var(--ink);font-family:var(--cond);font-size:15px}
+.setup .sub{fill:var(--muted);font-family:var(--sans);font-size:12px}
+/* failure blocks */
+.fails{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:22px}
+.fail{background:var(--card);border-left:5px solid var(--fault);padding:16px 18px;border-radius:4px}
+.fail h3{margin-bottom:6px}
+.fail ul{margin:6px 0 0;padding-left:1.1em}
+.fail li{margin:4px 0}
+.fail .look{font-size:.92rem;color:var(--muted)}
+.note{background:var(--card);border:1px dashed var(--info);padding:14px 18px;border-radius:4px;margin-top:18px}
+.note strong{color:var(--info)}
+/* matrix */
+table{border-collapse:collapse;min-width:620px;width:100%;margin-top:18px;background:var(--card)}
+th,td{padding:10px 12px;border-bottom:1px solid var(--rule);text-align:left;font-size:.95rem}
+th{font-family:var(--cond);font-size:1.05rem;font-weight:600}
+td.c{text-align:center}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--fault)}
+.dot.s{background:transparent;border:2px solid var(--fault)}
+.legend{font-size:.88rem;color:var(--muted);margin-top:8px}
+/* viewer */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.tabs button{font:500 .95rem var(--sans);padding:8px 14px;border-radius:999px;border:1.5px solid var(--rule);background:var(--card);color:var(--ink);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tabs button:focus-visible,input:focus-visible{outline:3px solid var(--info);outline-offset:2px}
+.explain{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px}
+.explain h3{font-size:1.1rem;margin-bottom:4px}
+.explain p,.explain ul{margin:0;font-size:.97rem}
+.explain ul{padding-left:1.1em}
+.explain .see h3{color:var(--trace)}
+.explain .why h3{color:var(--fault)}
+.explain .fix h3{color:var(--ok)}
+/* calculator */
+.calc{background:var(--card);padding:20px;border-radius:6px;margin-top:18px}
+.calc label{display:block;font-weight:600;margin-top:10px}
+.calc input[type=range]{width:100%}
+.readout{font-family:var(--cond);font-size:1.6rem;font-weight:600}
+.bar{height:22px;border-radius:3px}
+.formula{font-family:var(--cond);font-size:1.3rem;background:var(--paper);display:inline-block;padding:6px 14px;border-radius:4px}
+footer{margin-top:60px;font-size:.9rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+
+<h1>Why an OTDR test fails, and how to read the trace to find out</h1>
+<p class="lede">A visual walkthrough of Fluke Networks' knowledge-base article on diagnosing OTDR test failures with the DTX Compact OTDR module. It covers what each failed limit usually means and how the common fault shapes look on the trace.</p>
+<p class="src">Source: <a href="https://www.flukenetworks.com/knowledge-base/dtx-compact-otdr/diagnosing-otdr-test-failures-dtx-compact-otdr-module">Fluke Networks Knowledge Base</a> (2014). All traces below are redrawn illustrations, not the original figures.</p>
+
+<!-- ============ 1. BASICS ============ -->
+<h2>First, how an OTDR sees a fibre</h2>
+<p>An OTDR (optical time-domain reflectometer) fires short light pulses into one end of the fibre and listens to what comes back. Two things return: a faint, continuous glow scattered back by the glass itself (backscatter), and sharp flashes of reflection wherever light hits an air gap or glass surface, such as a connector or the fibre end. Plotting returned power against distance gives the trace.</p>
+
+<div class="screen scroll hero"><svg id="refTrace" viewBox="0 0 860 330" role="img" aria-label="Annotated healthy OTDR trace"></svg></div>
+<p class="figcap">A healthy link. Height is returned power (dB); left to right is distance down the fibre.</p>
+
+<div class="explain">
+  <div><h3>Downward slope</h3><p>Normal fibre attenuation. A steady straight slope means uniform glass.</p></div>
+  <div><h3>Spike plus a step down</h3><p>A <em>reflective</em> event: a connector or mechanical splice. The spike is reflection; the step is loss.</p></div>
+  <div><h3>Step down, no spike</h3><p>A <em>non-reflective</em> event: a fusion splice or a bend. Only loss, no reflection.</p></div>
+  <div><h3>Big spike, then noise</h3><p>The fibre end. After it only instrument noise remains.</p></div>
+</div>
+
+<p style="margin-top:28px">To measure the first and last connectors of the link properly, testers put a launch fibre in front and a receive (tail) fibre after the link. With <em>launch compensation</em> enabled, the tester subtracts those reference cords from the results.</p>
+<div class="scroll"><svg class="setup" viewBox="0 0 860 150" role="img" aria-label="OTDR test setup with launch and receive fibres">
+  <rect x="10" y="40" width="110" height="70" rx="8" fill="var(--screen)"/>
+  <text x="65" y="80" text-anchor="middle" style="fill:var(--trace)">OTDR</text>
+  <path d="M120 75 C150 75 150 75 170 75" stroke="var(--info)" stroke-width="4" fill="none"/>
+  <circle cx="220" cy="75" r="38" fill="none" stroke="var(--info)" stroke-width="4"/>
+  <circle cx="220" cy="75" r="28" fill="none" stroke="var(--info)" stroke-width="4"/>
+  <text x="220" y="135" text-anchor="middle">Launch fibre</text>
+  <path d="M258 75 H300" stroke="var(--info)" stroke-width="4"/>
+  <rect x="300" y="66" width="14" height="18" fill="var(--ink)"/>
+  <path d="M314 75 H566" stroke="var(--trace)" stroke-width="6"/>
+  <rect x="566" y="66" width="14" height="18" fill="var(--ink)"/>
+  <text x="440" y="60" text-anchor="middle">Link under test</text>
+  <text x="440" y="100" text-anchor="middle" class="sub">first and last connectors are included in the measurement</text>
+  <path d="M580 75 H622" stroke="var(--info)" stroke-width="4"/>
+  <circle cx="660" cy="75" r="38" fill="none" stroke="var(--info)" stroke-width="4"/>
+  <circle cx="660" cy="75" r="28" fill="none" stroke="var(--info)" stroke-width="4"/>
+  <text x="660" y="135" text-anchor="middle">Receive fibre</text>
+  <path d="M698 75 H760" stroke="var(--info)" stroke-width="4"/>
+  <text x="770" y="80" class="sub">open end</text>
+</svg></div>
+
+<!-- ============ 2. LIMIT FAILURES ============ -->
+<h2>When a test limit fails</h2>
+<p>The article groups failures by which limit tripped. Most causes fall into a handful of physical faults or setup mistakes, so the same suspect often appears under several headings. This grid shows which cause can trip which limit.</p>
+
+<div class="scroll"><table>
+  <thead><tr><th>Possible cause</th><th>Overall loss</th><th>Largest event</th><th>Fibre length / distance</th></tr></thead>
+  <tbody>
+    <tr><td>Dirty or damaged connector</td><td class="c"><span class="dot"></span></td><td class="c"><span class="dot"></span></td><td></td></tr>
+    <tr><td>Bad fusion or mechanical splice, or a sharp bend</td><td class="c"><span class="dot"></span></td><td class="c"><span class="dot"></span></td><td></td></tr>
+    <tr><td>Mismatched fibre (core size, backscatter coefficient, mode field diameter)</td><td class="c"><span class="dot"></span></td><td class="c"><span class="dot"></span></td><td></td></tr>
+    <tr><td>Wrong fibre type selected in Setup</td><td class="c"><span class="dot s"></span></td><td></td><td class="c"><span class="dot s"></span></td></tr>
+    <tr><td>Broken fibre or open connection</td><td></td><td></td><td class="c"><span class="dot"></span></td></tr>
+    <tr><td>Index of refraction (n) needs adjusting</td><td></td><td></td><td class="c"><span class="dot s"></span></td></tr>
+    <tr><td>Wrong test limit selected</td><td></td><td></td><td class="c"><span class="dot s"></span></td></tr>
+  </tbody>
+</table></div>
+<p class="legend"><span class="dot"></span> physical fault in the cabling &nbsp;&nbsp; <span class="dot s"></span> tester setup mistake</p>
+
+<div class="fails">
+  <div class="fail">
+    <h3>Overall loss fails</h3>
+    <p class="look">Total loss end to end is over the limit.</p>
+    <ul>
+      <li>Dirty or damaged connections: look for high-loss reflective events.</li>
+      <li>Wrong fibre type on the OTDR tab in Setup.</li>
+      <li>A cord, launch fibre or segment of the wrong fibre type. If your cords are right, look for a mismatched section in the link.</li>
+      <li>Bad splice or sharp bend: locate it on the trace or event table.</li>
+    </ul>
+  </div>
+  <div class="fail">
+    <h3>Largest event fails</h3>
+    <p class="look">One single event has more loss than allowed.</p>
+    <ul>
+      <li>It is a dirty or damaged connector.</li>
+      <li>It is a junction between mismatched fibre types.</li>
+      <li>It is a bad splice or a sharp bend.</li>
+    </ul>
+  </div>
+  <div class="fail">
+    <h3>Length or distance is wrong</h3>
+    <p class="look">A known length reads too long or too short, or an event sits in the wrong place.</p>
+    <ul>
+      <li>The fibre is broken, or a connection is open where the trace ends.</li>
+      <li>Wrong fibre type on the Cable tab in Setup.</li>
+      <li>Index of refraction (n) needs adjusting on the Cable tab.</li>
+      <li>Wrong test limit selected on the OTDR tab.</li>
+    </ul>
+  </div>
+  <div class="fail" style="border-left-color:var(--info)">
+    <h3>An event fails but is within limits</h3>
+    <p class="look">The event itself is fine; it inherits the fail.</p>
+    <ul>
+      <li>The fibre <em>segment before</em> the event exceeded a limit. Press F3 View Details from the Event Table or OTDR Results screen to see the segment result.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="note"><strong>Warning instead of fail?</strong> Overall loss can show a WARNING if the first or last event is hidden (buried in another event's dead zone). With launch compensation on, the warning appears if the launch event is hidden, or the event right after the receive event is hidden.</div>
+
+<!-- ============ 3. SIGNATURES ============ -->
+<h2>Reading fault shapes on the trace</h2>
+<p>The second half of the article is a gallery of trace shapes. Pick one to see what it looks like, what usually causes it, and what to do. Several of these can be mistaken by the tester for the fibre end even though cabling continues beyond them.</p>
+
+<div class="tabs" role="tablist" id="tabs"></div>
+<div class="screen scroll"><svg id="sigTrace" viewBox="0 0 860 330" role="img" aria-label="Fault signature trace"></svg></div>
+<div class="explain" id="sigText" aria-live="polite"></div>
+
+<!-- ============ 4. GHOST TIP ============ -->
+<h2>Spotting ghosts</h2>
+<p>A ghost is a fake echo. A strongly reflective connector bounces light back to the OTDR, which bounces it forward again, so the tester sees a second copy of a real reflection at a multiple of the real distance. Ghosts are not faults in themselves, but mid-cable ghosts point to a dirty, highly reflective, badly seated or wrongly polished connector.</p>
+<div class="screen scroll"><svg id="ghostRule" viewBox="0 0 860 200" role="img" aria-label="Ghosts at equal multiples of connector distance"></svg></div>
+<p>The tell-tale signs: ghosts show almost no loss, they fall at whole multiples of the distance to a real connector, and repeats from one source are evenly spaced. On a trace with several ghosts, the event table may name only the first one. Ghosts caused by hidden events may not be labelled as ghosts at all, and ghosts after the fibre end are not listed in the event table.</p>
+
+<!-- ============ 5. IOR ============ -->
+<h2>Why the index of refraction changes length</h2>
+<p>The OTDR never measures distance directly. It times the round trip of the light and converts time to distance using the speed of light in glass, which depends on the index of refraction <em>n</em>.</p>
+<p class="formula">distance = (speed of light × round-trip time) ÷ (2 × n)</p>
+<p>If the <em>n</em> set on the tester does not match the fibre, every distance on the trace scales by the ratio. Try it:</p>
+<div class="calc">
+  <label for="nSet">n set on the tester: <span id="nVal"></span></label>
+  <input id="nSet" type="range" min="1.440" max="1.520" step="0.001" value="1.482">
+  <p style="margin:6px 0 14px;font-size:.9rem;color:var(--muted)">Assumed real fibre: 500.0 m long, n = 1.482</p>
+  <div style="font-size:.9rem">Actual length</div>
+  <div class="bar" style="background:var(--ok);width:62.5%"></div>
+  <div style="font-size:.9rem;margin-top:10px">Tester reports</div>
+  <div class="bar" id="measBar" style="background:var(--trace)"></div>
+  <p class="readout" id="measOut"></p>
+</div>
+
+<footer>Redrawn and explained from Fluke Networks' article "Diagnosing OTDR Test Failures – DTX Compact OTDR Module". Check your tester's manual for model-specific menus and limits.</footer>
+</main>
+
+<script>
+/* ---------- deterministic noise ---------- */
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+const W=860,H=330,PL=52,PR=20,PT=58,PB=38,YMAX=45;
+const NS="http://www.w3.org/2000/svg";
+
+/* Build a synthetic OTDR trace from a list of events */
+function trace(cfg){
+  const r=rng(cfg.seed||7), N=700, pts=[];
+  const P0=30, att=cfg.att??3, floor=5;
+  const evs=cfg.events||[], ghosts=cfg.ghosts||[], end=cfg.end;
+  const lossBefore=x=>evs.filter(e=>x>=e.x).reduce((s,e)=>s+e.loss,0);
+  const levelEnd=P0-att*end.x-lossBefore(end.x);
+  for(let i=0;i<=N;i++){
+    const x=cfg.xmax*i/N; let y;
+    const front=16*Math.exp(-x/0.02);
+    if(x<end.x){
+      y=P0-att*x-lossBefore(x)+front;
+      for(const e of evs){ if(e.refl&&x>=e.x) y+=e.refl*Math.exp(-(x-e.x)/(e.tau||0.008)); }
+      y+=(r()-.5)*0.12;
+    }else{
+      const spike=levelEnd+end.refl*Math.exp(-(x-end.x)/0.008);
+      const fall=levelEnd*Math.exp(-(x-end.x)/0.01);
+      y=Math.max(floor+r()*1.6, spike, fall);
+    }
+    for(const g of ghosts){ if(x>=g.x) y+=g.h*Math.exp(-(x-g.x)/0.008); }
+    pts.push([x,Math.min(YMAX,Math.max(0,y))]);
+  }
+  return pts;
+}
+
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+
+function draw(svg,cfg){
+  svg.innerHTML="";
+  const h=cfg.h||H;
+  const sx=x=>PL+x/cfg.xmax*(W-PL-PR), sy=y=>PT+(YMAX-y)/YMAX*(h-PT-PB);
+  // grid
+  for(let d=0;d<=YMAX;d+=10){el("line",{x1:PL,x2:W-PR,y1:sy(d),y2:sy(d),stroke:"var(--grid)","stroke-width":1},svg);
+    const t=el("text",{x:PL-8,y:sy(d)+4,"text-anchor":"end",fill:"var(--axis)","font-size":11,"font-family":"var(--sans)"},svg);t.textContent=d}
+  const step=cfg.xmax>2?0.5:0.25;
+  for(let k=0;k<=cfg.xmax+1e-9;k+=step){el("line",{x1:sx(k),x2:sx(k),y1:PT,y2:h-PB,stroke:"var(--grid)","stroke-width":1},svg);
+    const t=el("text",{x:sx(k),y:h-PB+18,"text-anchor":"middle",fill:"var(--axis)","font-size":11,"font-family":"var(--sans)"},svg);t.textContent=k.toFixed(2)+" km"}
+  const yl=el("text",{x:14,y:PT-14,fill:"var(--axis)","font-size":11,"font-family":"var(--sans)"},svg);yl.textContent="dB";
+  // highlight zones
+  (cfg.zones||[]).forEach(z=>el("rect",{x:sx(z[0]),y:PT,width:sx(z[1])-sx(z[0]),height:h-PT-PB,fill:z[2]||"var(--fault)",opacity:.14},svg));
+  // trace
+  const pts=trace(cfg);
+  el("path",{d:"M"+pts.map(p=>sx(p[0]).toFixed(1)+" "+sy(p[1]).toFixed(1)).join("L"),fill:"none",stroke:"var(--trace)","stroke-width":2,"stroke-linejoin":"round"},svg);
+  // annotations
+  (cfg.notes||[]).forEach(n=>{
+    const col=n.k==="f"?"var(--fault)":n.k==="g"?"var(--info)":"var(--axis)";
+    const X=sx(n.x), ly=PT-30+(n.row||0)*16;
+    el("line",{x1:X,x2:X,y1:ly+6,y2:n.y!=null?sy(n.y):h-PB,stroke:col,"stroke-width":1.3,"stroke-dasharray":"4 3"},svg);
+    const t=el("text",{x:X+(n.dx||0),y:ly,"text-anchor":n.a||"middle",fill:col==="var(--axis)"?"#D5DEE4":col,"font-size":13.5,"font-weight":600,"font-family":"var(--cond)"},svg);
+    t.textContent=n.t;
+  });
+}
+
+/* ---------- 1. reference trace ---------- */
+draw(document.getElementById("refTrace"),{
+  xmax:2.4,seed:3,
+  events:[{x:0.4,loss:0.4,refl:7},{x:1.05,loss:0.25,refl:0},{x:1.7,loss:0.4,refl:6}],
+  end:{x:2.05,refl:12},
+  notes:[
+    {x:0.02,t:"Front reflection",a:"start",dx:4,row:0},
+    {x:0.4,t:"Connector",row:1},
+    {x:0.72,y:30-3*0.72-0.4,t:"Slope = fibre loss",row:0,k:"i"},
+    {x:1.05,y:30-3*1.05-0.4,t:"Splice",row:1},
+    {x:1.7,t:"Connector",row:0},
+    {x:2.05,t:"Fibre end",row:1},
+    {x:2.28,y:7,t:"Noise",row:0}
+  ]
+});
+
+/* ---------- 3. signature gallery ---------- */
+const S=[
+ {name:"Large reflective, high loss",
+  cfg:{xmax:2,seed:11,events:[{x:0.35,loss:0.3,refl:6},{x:0.9,loss:3.2,refl:11}],end:{x:1.7,refl:10},
+   zones:[[0.86,1.0]],notes:[{x:0.9,t:"Big spike and a big drop",k:"f"}]},
+  see:"A tall reflection followed by a large step down in the trace. The tester may call it the fibre end even though cabling continues.",
+  why:["Dirty, scratched, cracked, misaligned or unseated connector (misalignment can also create ghosts).","A good connector with a sharp bend or crack inside its dead zone.","A crack in the fibre.","Fibres mismatched across the connector, for example a larger core feeding a smaller one."],
+  fix:"Clean, re-polish or replace bad connectors. Use a visual fault locator (red laser) to pinpoint bends and cracks. Tight bends can look like a break, especially at longer wavelengths."},
+ {name:"Excessive tailing",
+  cfg:{xmax:2,seed:12,events:[{x:0.35,loss:0.3,refl:6},{x:0.9,loss:0.6,refl:11,tau:0.09}],end:{x:1.7,refl:10},
+   zones:[[0.9,1.22]],notes:[{x:0.9,t:"Reflection decays slowly",k:"f",a:"start",dx:4}]},
+  see:"Instead of dropping back quickly, the reflection trails off over a long distance. Anything inside that tail is hidden.",
+  why:["Same list as the large reflective event: dirty or damaged, misaligned or unseated connector.","A bend or crack close to a connector.","Mismatched fibres at the junction."],
+  fix:"Inspect and clean the connector first. Then check for bends near it and confirm the fibre types on both sides match."},
+ {name:"Small reflective, high loss",
+  cfg:{xmax:2,seed:13,events:[{x:0.35,loss:0.3,refl:6},{x:1.0,loss:2.6,refl:1.6}],end:{x:1.7,refl:10},
+   zones:[[0.96,1.1]],notes:[{x:1.0,t:"Small blip, large drop",k:"f"}]},
+  see:"Only a small reflection, but a large step down. May also be reported as the fibre end.",
+  why:["A very sharp bend (often shows more loss at the longer wavelength).","A crack in the fibre.","A mechanical splice with high loss."],
+  fix:"Compare wavelengths and use a visual fault locator to confirm. Rework bad mechanical splices; relieve bends."},
+ {name:"Gainer",
+  cfg:{xmax:2,seed:14,events:[{x:0.35,loss:0.3,refl:6},{x:0.9,loss:-1.3,refl:9}],end:{x:1.7,refl:10},
+   zones:[[0.86,1.0],[0.9,1.7,"var(--info)"]],notes:[{x:0.9,t:"Trace steps UP after the event",k:"f"},{x:1.3,y:30-3*1.3-0.3+1.3,t:"Fibre that scatters more light",k:"g",row:1}]},
+  see:"A reflective event after which the trace is higher than before, as if the connector added light.",
+  why:["A connector joining mismatched fibres, here a smaller core feeding a larger core. The larger fibre scatters more light back, which looks like gain.","Testing from the other end would show the same event as unusually high loss."],
+  fix:"Treat gain as a sign of mismatch, not a good result. Test from both ends and average, and confirm all segments are the same fibre type."},
+ {name:"Ghost after the end",
+  cfg:{xmax:2.4,seed:15,events:[{x:0.6,loss:0.4,refl:8}],end:{x:1.2,refl:14},ghosts:[{x:2.4-0.0001,h:0},{x:1.8,h:5}],
+   notes:[{x:1.2,t:"Real end",row:0},{x:1.8,t:"Ghost (in the noise)",k:"g",row:1}]},
+  see:"A reflection sitting in the noise past the real fibre end.",
+  why:["An echo of a strong reflection, not a real event. These are not listed in the event table."],
+  fix:"Generally no action needed. It does not indicate a fault in the cabling."},
+ {name:"Ghosts mid-cable",
+  cfg:{xmax:2,seed:16,events:[{x:0.45,loss:1.6,refl:13}],end:{x:1.75,refl:10},ghosts:[{x:0.9,h:5},{x:1.35,h:3}],
+   zones:[[0.41,0.55]],notes:[{x:0.45,t:"Source: poorly seated connector",k:"f",row:0},{x:0.9,t:"Ghost ×2",k:"g",row:1},{x:1.35,t:"Ghost ×3",k:"g",row:1}]},
+  see:"Extra reflections with almost no loss, spaced at multiples of the distance to a strongly reflective connector.",
+  why:["Dirty or highly reflective connector.","Connector not seated properly (usually also shows significant loss, as here).","Connector with the wrong type of polish."],
+  fix:"Fix the source connector and the ghosts disappear. The event table lists mid-cable ghosts with their source, though only the first ghost may be named."}
+];
+
+const tabs=document.getElementById("tabs"), sigSvg=document.getElementById("sigTrace"), sigText=document.getElementById("sigText");
+function show(i){
+  [...tabs.children].forEach((b,j)=>b.setAttribute("aria-selected",i===j));
+  const s=S[i]; draw(sigSvg,s.cfg);
+  sigText.innerHTML=`<div class="see"><h3>What you see</h3><p>${s.see}</p></div>
+  <div class="why"><h3>Likely causes</h3><ul>${s.why.map(w=>"<li>"+w+"</li>").join("")}</ul></div>
+  <div class="fix"><h3>What to do</h3><p>${s.fix}</p></div>`;
+}
+S.forEach((s,i)=>{const b=document.createElement("button");b.textContent=s.name;b.setAttribute("role","tab");b.onclick=()=>show(i);tabs.appendChild(b)});
+show(0);
+
+/* ---------- 4. ghost spacing ---------- */
+(function(){
+  const svg=document.getElementById("ghostRule");
+  const cfg={xmax:2,seed:21,h:200,events:[{x:0.5,loss:0.5,refl:14}],end:{x:1.85,refl:10},ghosts:[{x:1.0,h:5},{x:1.5,h:3}],
+    notes:[{x:0,t:"0",row:0,a:"start"},{x:0.5,t:"d",row:0,k:"f"},{x:1.0,t:"2d",row:0,k:"g"},{x:1.5,t:"3d",row:0,k:"g"}]};
+  draw(svg,cfg);
+  const sx=x=>PL+x/cfg.xmax*(W-PL-PR);
+  [[0,0.5],[0.5,1.0],[1.0,1.5]].forEach(([a,b])=>{
+    const yy=74;
+    el("line",{x1:sx(a)+4,x2:sx(b)-4,y1:yy,y2:yy,stroke:"#D5DEE4","stroke-width":1.2,"marker-end":"none"},svg);
+    const t=el("text",{x:(sx(a)+sx(b))/2,y:yy-4,"text-anchor":"middle",fill:"#D5DEE4","font-size":12,"font-family":"var(--sans)"},svg);t.textContent="equal spacing";
+  });
+})();
+
+/* ---------- 5. IOR calculator ---------- */
+const nSet=document.getElementById("nSet"),nVal=document.getElementById("nVal"),measBar=document.getElementById("measBar"),measOut=document.getElementById("measOut");
+function calc(){
+  const n=parseFloat(nSet.value), L=500*1.482/n, err=L-500;
+  nVal.textContent=n.toFixed(3);
+  measBar.style.width=(L/800*100)+"%";
+  measOut.textContent=`${L.toFixed(1)} m  (${err>=0?"+":""}${err.toFixed(1)} m, ${(err/5).toFixed(2)}%)`;
+}
+nSet.addEventListener("input",calc);calc();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

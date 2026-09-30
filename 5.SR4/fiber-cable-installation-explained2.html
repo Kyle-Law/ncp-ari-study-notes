@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installing Fiber Optic Cable — Explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF1F2; --panel:#FFFFFF; --ink:#17262F; --muted:#56666F; --rule:#C9D2D7;
+  --jacket:#E8B400; --jacket-dark:#B38A00; --aqua:#0E9AA7; --red:#C23B2E; --green:#2E8B57;
+  --aramid:#D9B45A; --steel:#8A98A3;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --paper:#12191E; --panel:#1B252C; --ink:#E4EAED; --muted:#9AAAB3; --rule:#33424B;
+    --steel:#6F7E88; }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:400 17px/1.6 "Barlow",system-ui,-apple-system,"Segoe UI",sans-serif}
+h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;line-height:1.1;margin:0}
+h1{font-size:clamp(2.6rem,7vw,4.6rem);font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(1.9rem,4vw,2.6rem);font-weight:700;margin-bottom:.4em}
+h3{font-size:1.35rem;font-weight:600;margin:0 0 .3em}
+p{margin:0 0 1em;max-width:68ch}
+a{color:var(--aqua)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+header.hero{padding:56px 0 40px;border-bottom:6px solid var(--jacket)}
+.hero .lede{font-size:1.2rem;color:var(--muted);max-width:60ch;margin-top:14px}
+.src{font-size:.9rem;color:var(--muted);margin-top:18px}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px 18px;padding:16px 0;font-size:.95rem;border-bottom:1px solid var(--rule)}
+nav.toc a{color:var(--ink);text-decoration:none;border-bottom:2px solid transparent}
+nav.toc a:hover,nav.toc a:focus-visible{border-color:var(--jacket)}
+section{padding:56px 0;border-bottom:1px solid var(--rule)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:820px){.grid2,.grid3{grid-template-columns:1fr}}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:16px}
+figcaption{font-size:.92rem;color:var(--muted);margin-top:10px}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:"Barlow",system-ui,sans-serif;fill:var(--ink)}
+.limit h3{display:flex;align-items:baseline;gap:10px}
+.limit .n{font-size:2.4rem;color:var(--jacket-dark)}
+@media (prefers-color-scheme:dark){.limit .n{color:var(--jacket)}}
+.warn{border-left:5px solid var(--red);background:var(--panel);padding:14px 18px;margin:18px 0;max-width:72ch}
+.tip{border-left:5px solid var(--aqua);background:var(--panel);padding:14px 18px;margin:18px 0;max-width:72ch}
+ol.steps{padding-left:1.3em;max-width:68ch}
+ol.steps li{margin-bottom:.6em}
+/* calculator */
+.calc{background:var(--ink);color:var(--paper);border-radius:6px;padding:28px;display:grid;grid-template-columns:1.1fr 1fr;gap:28px;margin-top:24px}
+@media (prefers-color-scheme:dark){.calc{background:#0A1014;color:var(--ink)}}
+@media(max-width:820px){.calc{grid-template-columns:1fr}}
+.calc label{display:block;font-weight:600;margin:14px 0 6px}
+.calc input[type=range]{width:100%;accent-color:var(--jacket)}
+.calc input[type=number]{width:120px;padding:6px 8px;font:inherit;border-radius:3px;border:1px solid var(--steel);background:transparent;color:inherit}
+.seg{display:inline-flex;border:1px solid var(--steel);border-radius:3px;overflow:hidden}
+.seg button{font:inherit;padding:8px 14px;background:transparent;color:inherit;border:0;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--jacket);color:#17262F;font-weight:600}
+.seg button:focus-visible,.calc input:focus-visible{outline:3px solid var(--aqua);outline-offset:2px}
+.readout{font-family:"Barlow Condensed",sans-serif;font-size:3.2rem;font-weight:700;color:var(--jacket);line-height:1}
+.readout small{font-size:1.1rem;color:inherit;opacity:.75;font-weight:500}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;margin-top:14px;font-size:.98rem}
+.kv dt{opacity:.7}.kv dd{margin:0;font-weight:600}
+.verdict{margin-top:10px;padding:8px 12px;border-radius:3px;font-weight:600;display:inline-block}
+.calc svg text{fill:currentColor}
+table{border-collapse:collapse;width:100%;background:var(--panel);font-size:.98rem}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:"Barlow Condensed",sans-serif;font-size:1.1rem}
+.tablewrap{overflow-x:auto}
+footer{padding:32px 0 48px;color:var(--muted);font-size:.92rem}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}
+.flow{animation:flow 1.4s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-24}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Installing fiber optic cable</h1>
+    <p class="lede">A visual walkthrough of the Fiber Optic Association's installation guidelines: where cable goes, how to pull it, and the three limits that separate a working link from a quietly broken one.</p>
+    <p class="src">Explaining: <a href="https://www.foa.org/tech/ref/install/installcbl.html">FOA Reference — Installing Fiber Optic Cable</a>. Summary and diagrams are an original explanation, not a copy of the page.</p>
+  </div>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="Sections">
+  <a href="#limits">The three limits</a><a href="#where">Where cable goes</a><a href="#plan">Before the pull</a>
+  <a href="#tension">Pulling tension</a><a href="#bend">Bend radius</a><a href="#twist">Twisting</a>
+  <a href="#vertical">Vertical runs</a><a href="#ties">Cable ties</a><a href="#summary">Cheat sheet</a>
+</nav>
+
+<!-- ================= LIMITS ================= -->
+<section id="limits">
+  <h2>The core idea: three limits you can't exceed</h2>
+  <p>Fiber cable is actually built to take <em>more</em> pulling force than copper — but only when that force goes through the right parts of the cable. Every fiber cable has a datasheet with three numbers that must never be exceeded during installation. Go past any of them and the glass inside can crack, sometimes invisibly, failing weeks or years later.</p>
+  <div class="grid3">
+    <figure class="limit">
+      <h3><span class="n">1</span> Pulling tension</h3>
+      <svg viewBox="0 0 240 120" role="img" aria-label="Cable being pulled with a tension gauge">
+        <rect x="10" y="52" width="130" height="16" rx="8" fill="var(--jacket)"/>
+        <line x1="140" y1="60" x2="178" y2="60" stroke="var(--steel)" stroke-width="3"/>
+        <rect x="178" y="44" width="36" height="32" rx="4" fill="none" stroke="var(--ink)" stroke-width="2"/>
+        <line x1="196" y1="68" x2="206" y2="50" stroke="var(--red)" stroke-width="2.5"/>
+        <path d="M214 60 L232 60" stroke="var(--ink)" stroke-width="3"/>
+        <path d="M226 54 L234 60 L226 66" fill="none" stroke="var(--ink)" stroke-width="3"/>
+        <text x="10" y="100" font-size="12">max load, pulled by strength members</text>
+      </svg>
+    </figure>
+    <figure class="limit">
+      <h3><span class="n">2</span> Bend radius</h3>
+      <svg viewBox="0 0 240 120" role="img" aria-label="Cable bending around a radius">
+        <path d="M20 30 L110 30 A60 60 0 0 1 170 90 L170 110" fill="none" stroke="var(--jacket)" stroke-width="12" stroke-linecap="round"/>
+        <circle cx="110" cy="90" r="3" fill="var(--ink)"/>
+        <line x1="110" y1="90" x2="152" y2="48" stroke="var(--ink)" stroke-dasharray="4 3"/>
+        <text x="96" y="80" font-size="13">R</text>
+        <text x="10" y="112" font-size="12">no tighter than a minimum R</text>
+      </svg>
+    </figure>
+    <figure class="limit">
+      <h3><span class="n">3</span> Crush load</h3>
+      <svg viewBox="0 0 240 120" role="img" aria-label="Cable squeezed by a clamp">
+        <path d="M10 52 L100 52 Q120 60 140 52 L230 52 L230 68 L140 68 Q120 60 100 68 L10 68 Z" fill="var(--jacket)"/>
+        <path d="M120 20 L120 44" stroke="var(--red)" stroke-width="3"/><path d="M113 36 L120 46 L127 36" fill="none" stroke="var(--red)" stroke-width="3"/>
+        <path d="M120 100 L120 76" stroke="var(--red)" stroke-width="3"/><path d="M113 84 L120 74 L127 84" fill="none" stroke="var(--red)" stroke-width="3"/>
+        <text x="10" y="112" font-size="12">don't squeeze: ties, clamps, weight</text>
+      </svg>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= WHERE ================= -->
+<section id="where">
+  <h2>Where cable goes</h2>
+  <p>The method depends on the job and the cable type. Outdoors (the "outside plant", or OSP) cable is buried directly in the ground, pulled or blown into conduit and innerduct, or strung aerially between poles. Indoors it runs in raceways, trays above ceilings or under raised floors, hangers, conduit, or special ducts it can be blown through with compressed gas. The techniques are much like those for copper cable — the difference is how unforgiving the glass is to mishandling.</p>
+  <figure>
+    <svg viewBox="0 0 960 340" role="img" aria-label="Outdoor and indoor installation methods">
+      <!-- sky/ground -->
+      <rect x="0" y="200" width="960" height="140" fill="var(--steel)" opacity=".18"/>
+      <line x1="0" y1="200" x2="960" y2="200" stroke="var(--muted)" stroke-width="2"/>
+      <text x="16" y="28" font-size="18" font-weight="600">Outdoors</text>
+      <text x="600" y="28" font-size="18" font-weight="600">Indoors</text>
+      <!-- poles aerial -->
+      <rect x="40" y="70" width="8" height="130" fill="var(--muted)"/><rect x="250" y="70" width="8" height="130" fill="var(--muted)"/>
+      <path d="M44 84 Q151 124 254 84" fill="none" stroke="var(--jacket)" stroke-width="5"/>
+      <text x="100" y="66" font-size="14">Aerial, pole to pole</text>
+      <!-- direct buried -->
+      <path d="M40 200 L40 250 L150 250 L150 200" fill="none" stroke="var(--muted)" stroke-dasharray="5 4"/>
+      <line x1="40" y1="244" x2="150" y2="244" stroke="var(--jacket)" stroke-width="5"/>
+      <text x="40" y="276" font-size="14">Direct buried</text>
+      <!-- conduit innerduct -->
+      <circle cx="260" cy="262" r="30" fill="none" stroke="var(--muted)" stroke-width="3"/>
+      <circle cx="248" cy="254" r="10" fill="none" stroke="var(--aqua)" stroke-width="2.5"/>
+      <circle cx="272" cy="254" r="10" fill="none" stroke="var(--aqua)" stroke-width="2.5"/>
+      <circle cx="260" cy="274" r="10" fill="none" stroke="var(--aqua)" stroke-width="2.5"/>
+      <circle cx="248" cy="254" r="4" fill="var(--jacket)"/>
+      <text x="196" y="312" font-size="14">Conduit with innerducts</text>
+      <!-- blown -->
+      <line x1="330" y1="262" x2="500" y2="262" stroke="var(--muted)" stroke-width="14" stroke-linecap="round" opacity=".5"/>
+      <line x1="330" y1="262" x2="470" y2="262" stroke="var(--jacket)" stroke-width="5"/>
+      <path class="flow" d="M340 250 L490 250" stroke="var(--aqua)" stroke-width="2" stroke-dasharray="8 4"/>
+      <text x="330" y="296" font-size="14">Pulled or blown with air</text>
+      <!-- divider -->
+      <line x1="560" y1="40" x2="560" y2="330" stroke="var(--rule)" stroke-width="2"/>
+      <!-- building -->
+      <rect x="600" y="50" width="330" height="270" fill="var(--panel)" stroke="var(--muted)" stroke-width="2"/>
+      <line x1="600" y1="100" x2="930" y2="100" stroke="var(--muted)" stroke-dasharray="6 4"/>
+      <text x="612" y="72" font-size="13">Above ceiling</text>
+      <rect x="640" y="80" width="250" height="12" fill="none" stroke="var(--steel)" stroke-width="2"/>
+      <line x1="646" y1="86" x2="884" y2="86" stroke="var(--jacket)" stroke-width="4"/>
+      <text x="700" y="118" font-size="13">cable tray</text>
+      <line x1="600" y1="270" x2="930" y2="270" stroke="var(--muted)" stroke-dasharray="6 4"/>
+      <line x1="620" y1="290" x2="910" y2="290" stroke="var(--jacket)" stroke-width="4"/>
+      <text x="612" y="312" font-size="13">Under raised floor</text>
+      <rect x="880" y="100" width="18" height="170" fill="none" stroke="var(--aqua)" stroke-width="2"/>
+      <line x1="889" y1="100" x2="889" y2="270" stroke="var(--jacket)" stroke-width="4"/>
+      <text x="760" y="190" font-size="13">conduit / riser</text>
+      <line x1="840" y1="186" x2="876" y2="186" stroke="var(--muted)"/>
+      <path d="M640 140 Q660 160 680 140 Q700 160 720 140" fill="none" stroke="var(--jacket)" stroke-width="4"/>
+      <line x1="660" y1="100" x2="660" y2="150" stroke="var(--steel)"/><line x1="700" y1="100" x2="700" y2="150" stroke="var(--steel)"/>
+      <text x="630" y="176" font-size="13">hangers</text>
+    </svg>
+    <figcaption>Outdoor methods (left) and indoor methods (right). The same care rules apply to all of them.</figcaption>
+  </figure>
+</section>
+
+<!-- ================= PLAN ================= -->
+<section id="plan">
+  <h2>Before the pull</h2>
+  <div class="grid2">
+    <div>
+      <ol class="steps">
+        <li><strong>Read the manufacturer's instructions.</strong> Fiber cable is often built for a specific job, and the maker may have rules that override the general ones below.</li>
+        <li><strong>Check the cable is long enough.</strong> Coming up short means a splice, and every splice needs its own protection and adds loss.</li>
+        <li><strong>Walk the route.</strong> Know the obstacles and choose the method before anything moves.</li>
+        <li><strong>Aim for a single pull.</strong> Fewer handling stages means fewer chances to overstress the cable.</li>
+      </ol>
+    </div>
+    <figure>
+      <svg viewBox="0 0 420 200" role="img" aria-label="Short cable forces a splice; correct length runs end to end">
+        <text x="10" y="24" font-size="14" font-weight="600">Too short</text>
+        <rect x="10" y="36" width="12" height="30" fill="var(--muted)"/><rect x="398" y="36" width="12" height="30" fill="var(--muted)"/>
+        <line x1="22" y1="51" x2="250" y2="51" stroke="var(--jacket)" stroke-width="6"/>
+        <line x1="270" y1="51" x2="398" y2="51" stroke="var(--jacket)" stroke-width="6"/>
+        <rect x="236" y="38" width="48" height="26" rx="4" fill="none" stroke="var(--red)" stroke-width="2.5"/>
+        <text x="220" y="86" font-size="13" fill="var(--red)">splice + enclosure</text>
+        <text x="10" y="124" font-size="14" font-weight="600">Right length, one pull</text>
+        <rect x="10" y="136" width="12" height="30" fill="var(--muted)"/><rect x="398" y="136" width="12" height="30" fill="var(--muted)"/>
+        <line x1="22" y1="151" x2="398" y2="151" stroke="var(--jacket)" stroke-width="6"/>
+        <path d="M195 151 m-7 0 l5 6 l10 -12" fill="none" stroke="var(--green)" stroke-width="3"/>
+      </svg>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= TENSION ================= -->
+<section id="tension">
+  <h2>Pulling tension: pull the Kevlar, not the glass</h2>
+  <div class="grid2">
+    <div>
+      <p>Inside most fiber cables is a layer of aramid yarn (DuPont's Kevlar). It's there specifically to carry pulling load. Attach your pull to those strength members, and the fibers ride along unstressed. Pull on anything else and the load can end up on the fibers.</p>
+      <p>Pulling by the outer jacket is only acceptable when the manufacturer says the design allows it, and then only with an approved cable grip — which is usually tied into the strength members anyway.</p>
+      <p>Connect the pull rope or tape through a <strong>swivel pulling eye</strong> so the cable can't be twisted as tension builds (more on twist below).</p>
+    </div>
+    <figure>
+      <svg viewBox="0 0 400 300" role="img" aria-label="Cross section of a fiber optic cable">
+        <circle cx="150" cy="150" r="120" fill="var(--jacket)"/>
+        <circle cx="150" cy="150" r="104" fill="var(--aramid)"/>
+        <g stroke="var(--jacket-dark)" stroke-width="1.2" opacity=".7">
+          <path d="M70 110 q10 -8 20 0 M95 70 q10 -8 20 0 M180 62 q10 -8 20 0 M218 100 q10 -8 20 0 M226 170 q10 -8 20 0 M196 220 q10 -8 20 0 M120 232 q10 -8 20 0 M66 190 q10 -8 20 0"/>
+        </g>
+        <circle cx="150" cy="150" r="70" fill="var(--panel)"/>
+        <g>
+          <circle cx="126" cy="130" r="14" fill="#1f6fd1"/><circle cx="174" cy="130" r="14" fill="#f08a1c"/>
+          <circle cx="126" cy="172" r="14" fill="#2e9e4f"/><circle cx="174" cy="172" r="14" fill="#8a5a2b"/>
+          <circle cx="150" cy="151" r="14" fill="#8e9aa3"/>
+        </g>
+        <line x1="270" y1="60" x2="235" y2="80" stroke="var(--ink)"/><text x="274" y="58" font-size="14">Jacket</text>
+        <line x1="270" y1="110" x2="236" y2="118" stroke="var(--ink)"/><text x="274" y="108" font-size="14">Aramid yarn</text>
+        <text x="274" y="126" font-size="12" fill="var(--muted)">pull here</text>
+        <line x1="270" y1="190" x2="188" y2="172" stroke="var(--ink)"/><text x="274" y="188" font-size="14">Buffered fibers</text>
+        <text x="274" y="206" font-size="12" fill="var(--muted)">never load these</text>
+      </svg>
+      <figcaption>Simplified tight-buffer cable. The aramid layer carries the pull; the fibers should feel none of it.</figcaption>
+    </figure>
+  </div>
+
+  <figure style="margin-top:28px">
+    <svg viewBox="0 0 900 150" role="img" aria-label="Pull rope attached to cable through a swivel pulling eye">
+      <path d="M20 75 Q40 60 60 75 T100 75 T140 75 T180 75 T220 75" fill="none" stroke="var(--steel)" stroke-width="6"/>
+      <text x="40" y="118" font-size="14">Pull rope / tape</text>
+      <path d="M150 40 a18 10 0 1 1 0.1 0" fill="none" stroke="var(--red)" stroke-width="2"/>
+      <path d="M166 38 l6 4 -7 3" fill="none" stroke="var(--red)" stroke-width="2"/>
+      <text x="120" y="26" font-size="12" fill="var(--red)">rope wants to twist</text>
+      <circle cx="260" cy="75" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="3"/>
+      <circle cx="260" cy="75" r="9" fill="var(--steel)"/>
+      <line x1="220" y1="75" x2="236" y2="75" stroke="var(--steel)" stroke-width="6"/>
+      <text x="224" y="124" font-size="14">Swivel</text>
+      <text x="206" y="140" font-size="12" fill="var(--muted)">spins freely</text>
+      <path d="M284 75 L360 60 L360 90 Z" fill="var(--steel)"/>
+      <text x="300" y="124" font-size="14">Grip on aramid</text>
+      <rect x="360" y="60" width="520" height="30" rx="15" fill="var(--jacket)"/>
+      <g stroke="var(--jacket-dark)" stroke-width="2" opacity=".6"><line x1="365" y1="68" x2="520" y2="68"/><line x1="365" y1="82" x2="520" y2="82"/></g>
+      <text x="580" y="124" font-size="14">Cable goes in straight, untwisted</text>
+    </svg>
+    <figcaption>A swivel between the rope and the cable lets rope twist spin away harmlessly.</figcaption>
+  </figure>
+
+  <div class="grid2" style="margin-top:28px">
+    <div>
+      <h3>Rules for the pull itself</h3>
+      <p><strong>Never exceed the rated maximum tension.</strong> Ask the cable maker and the suppliers of conduit, innerduct and lubricant for tension ratings and lubricant guidance.</p>
+      <p><strong>Lubricate long pulls</strong> — and make sure the lubricant is compatible with the jacket. Long means up to roughly 5 km (3 mi) outdoors, or a few hundred metres inside a building.</p>
+      <p><strong>Prefer a machine puller</strong> with tension control, or a breakaway pulling eye that snaps before the cable limit is reached.</p>
+      <p><strong>For very long outdoor runs</strong> (beyond about 4 km / 2.5 mi), start in the middle and pull toward each end, or put automated pullers at intermediate points so the pull stays continuous.</p>
+      <div class="tip"><strong>Indoor shortcut for tight-buffer cable:</strong> you can pull by the jacket if you wrap the cable five times around a large spool (about 40 cm / 8 in) used as a mandrel and hold it gently. Friction spreads the load along the jacket instead of concentrating it.</div>
+    </div>
+    <figure>
+      <svg viewBox="0 0 440 290" role="img" aria-label="Middle-out pull strategy for very long runs">
+        <text x="10" y="22" font-size="14" font-weight="600">Very long run: pull from the middle</text>
+        <rect x="10" y="60" width="16" height="36" fill="var(--muted)"/><rect x="414" y="60" width="16" height="36" fill="var(--muted)"/>
+        <text x="4" y="116" font-size="12">End A</text><text x="398" y="116" font-size="12">End B</text>
+        <line x1="26" y1="78" x2="414" y2="78" stroke="var(--rule)" stroke-width="10" stroke-linecap="round"/>
+        <line x1="120" y1="78" x2="320" y2="78" stroke="var(--jacket)" stroke-width="6"/>
+        <circle cx="220" cy="78" r="18" fill="var(--panel)" stroke="var(--ink)" stroke-width="2.5"/><circle cx="220" cy="78" r="5" fill="var(--ink)"/>
+        <text x="190" y="52" font-size="12">reel at midpoint</text>
+        <path d="M110 78 l-18 0 m6 -6 l-6 6 6 6" fill="none" stroke="var(--aqua)" stroke-width="3"/>
+        <path d="M330 78 l18 0 m-6 -6 l6 6 -6 6" fill="none" stroke="var(--aqua)" stroke-width="3"/>
+        <text x="10" y="170" font-size="14" font-weight="600">…or add intermediate pullers</text>
+        <line x1="26" y1="220" x2="414" y2="220" stroke="var(--rule)" stroke-width="10" stroke-linecap="round"/>
+        <line x1="26" y1="220" x2="340" y2="220" stroke="var(--jacket)" stroke-width="6"/>
+        <rect x="10" y="202" width="16" height="36" fill="var(--muted)"/><rect x="414" y="202" width="16" height="36" fill="var(--muted)"/>
+        <g fill="var(--panel)" stroke="var(--aqua)" stroke-width="2.5">
+          <rect x="130" y="204" width="36" height="32" rx="4"/><rect x="270" y="204" width="36" height="32" rx="4"/>
+        </g>
+        <text x="118" y="258" font-size="12">puller</text><text x="258" y="258" font-size="12">puller</text>
+        <path d="M360 220 l18 0 m-6 -6 l6 6 -6 6" fill="none" stroke="var(--aqua)" stroke-width="3"/>
+      </svg>
+      <figcaption>Both tricks keep the tension at any one point below the cable's limit.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= BEND ================= -->
+<section id="bend">
+  <h2>Bend radius: 20× while pulling, 10× once installed</h2>
+  <p>Bend a fiber cable too tightly and you can damage it — a kink can break it outright, especially mid-pull. The usual rule of thumb:</p>
+  <div class="grid2">
+    <figure>
+      <svg viewBox="0 0 420 260" role="img" aria-label="Bend radius under tension versus installed">
+        <text x="10" y="22" font-size="14" font-weight="600">During pulling (under tension)</text>
+        <path d="M20 50 L90 50 A80 80 0 0 1 170 130" fill="none" stroke="var(--jacket)" stroke-width="8"/>
+        <circle cx="90" cy="130" r="3" fill="var(--ink)"/><line x1="90" y1="130" x2="147" y2="73" stroke="var(--ink)" stroke-dasharray="4 3"/>
+        <text x="190" y="100" font-size="20" font-weight="700">R ≥ 20 × OD</text>
+        <text x="10" y="166" font-size="14" font-weight="600">After installation (no tension)</text>
+        <path d="M20 190 L90 190 A40 40 0 0 1 130 230" fill="none" stroke="var(--jacket)" stroke-width="8"/>
+        <circle cx="90" cy="230" r="3" fill="var(--ink)"/><line x1="90" y1="230" x2="118" y2="202" stroke="var(--ink)" stroke-dasharray="4 3"/>
+        <text x="190" y="222" font-size="20" font-weight="700">R ≥ 10 × OD</text>
+      </svg>
+      <figcaption>OD = outside diameter of the cable. A cable under load needs twice the gentleness.</figcaption>
+    </figure>
+    <div>
+      <div class="warn"><strong>Radius, not diameter.</strong> The rule gives a <em>radius</em>. A pulley or sheave's size is usually quoted as a diameter, which must be twice the radius. Mixing these up halves your safety margin.</div>
+      <p><strong>Always check the datasheet.</strong> Some cables — high-fiber-count designs in particular — have their own bend specifications that differ from the rule of thumb.</p>
+      <p><strong>Why it matters beyond the fiber:</strong> cable damaged during installation typically voids the manufacturer's warranty. Warranties commonly exclude improper installation, and datasheets state the installation and in-service bend limits explicitly — so exceeding them leaves you owning the failure.</p>
+    </div>
+  </div>
+
+  <!-- Calculator -->
+  <div class="calc" id="calc">
+    <div>
+      <h3 style="color:inherit">Bend radius calculator</h3>
+      <label for="od">Cable outside diameter: <span id="odv">13</span> mm</label>
+      <input type="range" id="od" min="2" max="40" step="0.5" value="13">
+      <label>Situation</label>
+      <div class="seg" role="group" aria-label="Situation">
+        <button type="button" id="mPull" aria-pressed="true">Pulling (20×)</button>
+        <button type="button" id="mInst" aria-pressed="false">Installed (10×)</button>
+      </div>
+      <p style="margin:22px 0 4px;opacity:.75">Minimum bend radius</p>
+      <div class="readout"><span id="rOut">260</span> <small>mm</small></div>
+      <dl class="kv">
+        <dt>In inches</dt><dd id="rIn">10.2 in</dd>
+        <dt>Minimum pulley / sheave diameter</dt><dd id="dOut">520 mm (20.5 in)</dd>
+      </dl>
+      <label for="have">Check a bend you have (radius, mm)</label>
+      <input type="number" id="have" min="0" step="1" placeholder="e.g. 150">
+      <div id="verdict" class="verdict" aria-live="polite"></div>
+    </div>
+    <div>
+      <svg id="bendSvg" viewBox="0 0 320 320" role="img" aria-label="Scaled drawing of the minimum bend">
+        <circle id="minCirc" cx="160" cy="170" r="120" fill="none" stroke="currentColor" stroke-opacity=".35" stroke-dasharray="5 5"/>
+        <path id="cableArc" fill="none" stroke="var(--jacket)" stroke-linecap="butt"/>
+        <circle id="haveCirc" cx="160" cy="170" r="0" fill="none" stroke="var(--red)" stroke-width="2"/>
+        <line id="rLine" x1="160" y1="170" x2="160" y2="50" stroke="currentColor" stroke-dasharray="4 3"/>
+        <circle cx="160" cy="170" r="3" fill="currentColor"/>
+        <text id="rLbl" x="166" y="115" font-size="14">R</text>
+        <text x="10" y="310" font-size="12" opacity=".75">Drawn to proportion: cable thickness vs. bend</text>
+      </svg>
+    </div>
+  </div>
+  <p style="margin-top:14px;color:var(--muted)">Worked example from the guide: a 13 mm (½ in) cable being pulled needs at least 20 × 13 = 260 mm (10 in) of radius — so a pulley at least 520 mm (20 in) across.</p>
+</section>
+
+<!-- ================= TWIST ================= -->
+<section id="twist">
+  <h2>Don't twist the cable</h2>
+  <p>Twist stresses the fibers, and tension on ropes and cable naturally tries to create it. Three habits prevent it.</p>
+  <div class="grid3">
+    <figure>
+      <h3>Use a swivel pulling eye</h3>
+      <svg viewBox="0 0 240 140" role="img" aria-label="Swivel eye isolates rope twist">
+        <path d="M10 70 Q25 55 40 70 T70 70 T100 70" fill="none" stroke="var(--steel)" stroke-width="5"/>
+        <circle cx="118" cy="70" r="16" fill="var(--panel)" stroke="var(--ink)" stroke-width="3"/><circle cx="118" cy="70" r="6" fill="var(--steel)"/>
+        <rect x="134" y="60" width="100" height="20" rx="10" fill="var(--jacket)"/>
+        <text x="10" y="120" font-size="12">twist stops at the swivel</text>
+      </svg>
+      <figcaption>Rope twist is absorbed before it reaches the cable.</figcaption>
+    </figure>
+    <figure>
+      <h3>Roll it off the spool</h3>
+      <svg viewBox="0 0 240 140" role="img" aria-label="Rolling cable off a spool versus pulling over the flange">
+        <!-- good -->
+        <circle cx="50" cy="50" r="32" fill="none" stroke="var(--muted)" stroke-width="4"/>
+        <circle cx="50" cy="50" r="18" fill="var(--jacket)" opacity=".85"/><circle cx="50" cy="50" r="4" fill="var(--ink)"/>
+        <line x1="50" y1="82" x2="110" y2="82" stroke="var(--jacket)" stroke-width="5"/>
+        <path d="M50 18 a32 32 0 0 1 28 16" fill="none" stroke="var(--green)" stroke-width="2"/>
+        <text x="84" y="40" font-size="12" fill="var(--green)">spool turns</text>
+        <!-- bad -->
+        <ellipse cx="170" cy="112" rx="36" ry="10" fill="none" stroke="var(--muted)" stroke-width="4"/>
+        <rect x="150" y="80" width="40" height="32" fill="var(--jacket)" opacity=".85"/>
+        <ellipse cx="170" cy="80" rx="36" ry="10" fill="var(--panel)" stroke="var(--muted)" stroke-width="4"/>
+        <path d="M170 76 C170 50 200 60 190 40 C182 26 210 26 206 10" fill="none" stroke="var(--jacket)" stroke-width="4"/>
+        <path d="M214 60 l14 14 m0 -14 l-14 14" stroke="var(--red)" stroke-width="3"/>
+        <text x="10" y="132" font-size="12">✓ roll it off</text><text x="130" y="138" font-size="12">✗ over the end</text>
+      </svg>
+      <figcaption>Lifting cable off the end of a stationary spool adds one twist per turn.</figcaption>
+    </figure>
+    <figure>
+      <h3>Lay out a figure-8</h3>
+      <svg viewBox="0 0 240 140" role="img" aria-label="Cable laid in a figure-8">
+        <path d="M120 70 C160 20 220 20 220 70 C220 120 160 120 120 70 C80 20 20 20 20 70 C20 120 80 120 120 70" fill="none" stroke="var(--jacket)" stroke-width="6"/>
+        <text x="150" y="74" font-size="12">+½ twist</text>
+        <text x="46" y="74" font-size="12">−½ twist</text>
+      </svg>
+      <figcaption>When staging a long pull on the ground, each lobe cancels the other's half-twist. A plain coil would accumulate twist.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= VERTICAL ================= -->
+<section id="vertical">
+  <h2>Vertical runs in buildings</h2>
+  <div class="grid2">
+    <div>
+      <p><strong>Drop, don't lift.</strong> Whenever possible, feed cable down a riser from the top rather than hauling it up — gravity helps instead of adding tension.</p>
+      <p><strong>Support it often.</strong> A long hanging cable pulls on its own jacket. Support it at frequent intervals with cable ties (snug, never deforming the jacket) or Kellems-style mesh grips.</p>
+      <p><strong>Leave service loops.</strong> A loop of spare cable gives you something to grip for support and slack for future repairs or re-routing.</p>
+    </div>
+    <figure>
+      <svg viewBox="0 0 360 340" role="img" aria-label="Cable dropped down a riser with supports and a service loop">
+        <g stroke="var(--muted)" stroke-width="3">
+          <line x1="20" y1="60" x2="340" y2="60"/><line x1="20" y1="150" x2="340" y2="150"/><line x1="20" y1="240" x2="340" y2="240"/><line x1="20" y1="330" x2="340" y2="330"/>
+        </g>
+        <text x="250" y="52" font-size="12">top floor</text>
+        <circle cx="120" cy="34" r="22" fill="none" stroke="var(--ink)" stroke-width="3"/><circle cx="120" cy="34" r="5" fill="var(--ink)"/>
+        <path d="M142 34 L180 34 L180 300" fill="none" stroke="var(--jacket)" stroke-width="6"/>
+        <path d="M200 90 l0 30 m-6 -8 l6 8 6 -8" fill="none" stroke="var(--aqua)" stroke-width="3"/>
+        <text x="210" y="112" font-size="12">feed down</text>
+        <g fill="var(--aqua)"><rect x="170" y="84" width="20" height="6"/><rect x="170" y="174" width="20" height="6"/><rect x="170" y="264" width="20" height="6"/></g>
+        <text x="40" y="180" font-size="12">supports at</text><text x="40" y="195" font-size="12">each floor</text>
+        <line x1="104" y1="184" x2="166" y2="178" stroke="var(--muted)"/>
+        <ellipse cx="218" cy="300" rx="38" ry="18" fill="none" stroke="var(--jacket)" stroke-width="5"/>
+        <text x="200" y="272" font-size="12">service loop</text>
+      </svg>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= TIES ================= -->
+<section id="ties">
+  <h2>Cable ties: snug is fine, tight is damage</h2>
+  <p>Fiber is sensitive to crushing. A plastic tie cinched with an installation tool can squeeze the cable enough to raise loss (attenuation) or even break fibers. If you use ties, tighten them by hand only until they're snug but can still be slid along the cable, then cut the tail so nobody tightens them later. Better still, use hook-and-loop (Velcro-type) straps, which physically can't apply a damaging crush load.</p>
+  <div class="grid3">
+    <figure>
+      <svg viewBox="0 0 240 110" role="img" aria-label="Tool-tightened tie pinching the cable">
+        <path d="M10 42 L100 42 Q120 52 140 42 L230 42 L230 68 L140 68 Q120 58 100 68 L10 68 Z" fill="var(--jacket)"/>
+        <rect x="114" y="34" width="12" height="42" rx="2" fill="var(--ink)"/>
+        <path d="M100 20 l10 10 m0 -10 l-10 10" stroke="var(--red)" stroke-width="3"/>
+        <text x="10" y="100" font-size="13">Tool-tight: jacket deformed</text>
+      </svg>
+      <figcaption style="color:var(--red)">Avoid — causes loss and breaks.</figcaption>
+    </figure>
+    <figure>
+      <svg viewBox="0 0 240 110" role="img" aria-label="Hand-snug tie that can slide">
+        <rect x="10" y="42" width="220" height="26" rx="13" fill="var(--jacket)"/>
+        <rect x="114" y="38" width="12" height="34" rx="2" fill="none" stroke="var(--ink)" stroke-width="3"/>
+        <path d="M90 26 L150 26 m-8 -6 l8 6 -8 6 M98 20 l-8 6 8 6" fill="none" stroke="var(--muted)" stroke-width="2"/>
+        <text x="10" y="100" font-size="13">Hand-snug, slides, tail cut</text>
+      </svg>
+      <figcaption>Acceptable if you must use ties.</figcaption>
+    </figure>
+    <figure>
+      <svg viewBox="0 0 240 110" role="img" aria-label="Hook and loop strap around cable">
+        <rect x="10" y="42" width="220" height="26" rx="13" fill="var(--jacket)"/>
+        <rect x="106" y="36" width="28" height="38" rx="5" fill="var(--aqua)" opacity=".85"/>
+        <g stroke="var(--panel)" stroke-width="1.5"><line x1="112" y1="42" x2="112" y2="68"/><line x1="120" y1="42" x2="120" y2="68"/><line x1="128" y1="42" x2="128" y2="68"/></g>
+        <path d="M150 22 l6 6 12 -12" fill="none" stroke="var(--green)" stroke-width="3"/>
+        <text x="10" y="100" font-size="13">Hook-and-loop strap</text>
+      </svg>
+      <figcaption style="color:var(--green)">Preferred for fiber.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section id="summary">
+  <h2>Cheat sheet</h2>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Topic</th><th>Do</th><th>Don't</th></tr></thead>
+    <tbody>
+      <tr><td>Planning</td><td>Follow the maker's instructions; verify length; survey route; one pull</td><td>Start without knowing the obstacles or the cable's specs</td></tr>
+      <tr><td>Tension</td><td>Pull by the aramid strength members; stay under rated max; use tension-controlled puller or breakaway eye</td><td>Pull by the jacket unless approved, with an approved grip</td></tr>
+      <tr><td>Long pulls</td><td>Use jacket-compatible lubricant; pull middle-out or add intermediate pullers beyond ~4 km</td><td>Force one huge pull from a single end</td></tr>
+      <tr><td>Bend radius</td><td>≥ 20× OD while pulling, ≥ 10× OD installed; check datasheet</td><td>Confuse pulley diameter with radius; kink the cable</td></tr>
+      <tr><td>Twist</td><td>Swivel eye; roll off spool; figure-8 layouts</td><td>Spin cable off the end of a spool; lay plain coils</td></tr>
+      <tr><td>Vertical</td><td>Drop down from the top; support often; leave service loops</td><td>Hang long lengths from the jacket unsupported</td></tr>
+      <tr><td>Fastening</td><td>Hook-and-loop straps, or hand-snug ties with tails cut</td><td>Tool-tighten plastic ties</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+</div>
+
+<footer>
+  <div class="wrap">Explainer based on <a href="https://www.foa.org/tech/ref/install/installcbl.html">The FOA Reference for Fiber Optics — Installing Fiber Optic Cable</a> (© The Fiber Optic Association). Diagrams are simplified illustrations; always follow the specific cable manufacturer's specifications.</div>
+</footer>
+
+<script>
+(function(){
+  const od=document.getElementById('od'), odv=document.getElementById('odv');
+  const mPull=document.getElementById('mPull'), mInst=document.getElementById('mInst');
+  const rOut=document.getElementById('rOut'), rIn=document.getElementById('rIn'), dOut=document.getElementById('dOut');
+  const have=document.getElementById('have'), verdict=document.getElementById('verdict');
+  const arc=document.getElementById('cableArc'), haveCirc=document.getElementById('haveCirc');
+  let mult=20;
+  const cx=160, cy=170, R=120;
+  function fmt(n){return n>=100?Math.round(n).toString():(Math.round(n*10)/10).toString();}
+  function update(){
+    const d=parseFloat(od.value); odv.textContent=d;
+    const r=d*mult;
+    rOut.textContent=fmt(r);
+    rIn.textContent=(r/25.4).toFixed(1)+' in';
+    dOut.textContent=fmt(2*r)+' mm ('+(2*r/25.4).toFixed(1)+' in)';
+    // drawing: bend radius fixed at R px, cable thickness proportional
+    const t=R/mult*2*0.5; // cable diameter in px = R/mult
+    const th=R/mult;
+    arc.setAttribute('stroke-width', th);
+    // quarter arc on the circle centreline, plus straight lead-in
+    arc.setAttribute('d', `M20 ${cy-R} L${cx} ${cy-R} A${R} ${R} 0 0 1 ${cx+R} ${cy} L${cx+R} 300`);
+    const h=parseFloat(have.value);
+    if(!isNaN(h) && h>0){
+      const ok=h>=r;
+      verdict.textContent= ok ? `OK — ${fmt(h)} mm is at or above the ${fmt(r)} mm minimum.` : `Too tight — ${fmt(h)} mm is below the ${fmt(r)} mm minimum.`;
+      verdict.style.background= ok ? 'var(--green)' : 'var(--red)';
+      verdict.style.color='#fff';
+      haveCirc.setAttribute('r', Math.min(R*1.25, R*h/r));
+      haveCirc.setAttribute('stroke', ok ? 'var(--green)' : 'var(--red)');
+    } else {
+      verdict.textContent=''; verdict.style.background='transparent'; haveCirc.setAttribute('r',0);
+    }
+  }
+  function setMode(m){mult=m; mPull.setAttribute('aria-pressed',m===20); mInst.setAttribute('aria-pressed',m===10); update();}
+  mPull.addEventListener('click',()=>setMode(20));
+  mInst.addEventListener('click',()=>setMode(10));
+  od.addEventListener('input',update); have.addEventListener('input',update);
+  update();
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>
