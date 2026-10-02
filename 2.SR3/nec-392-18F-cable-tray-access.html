@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEC 392.18(F) Cable Tray Access, explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF1F2; --panel:#FFFFFF; --ink:#1E2A33; --muted:#566570; --line:#C7D0D6;
+  --steel:#8F9CA6; --steel-dark:#5F6D78; --cable-a:#2B3A45; --cable-b:#3F6E8C; --cable-c:#7A8A2E;
+  --yellow:#E3A400; --zone:#F2C230; --red:#C2372B; --green:#2F7D52; --amber:#A96A00;
+  --deck:#B9C1C6; --duct:#D5DBDF; --pipe:#C9573A;
+  --radius:6px;
+  --display:"Barlow Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow","Segoe UI",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#12191E; --panel:#1A242B; --ink:#E4EAEE; --muted:#9BACB7; --line:#33424C;
+    --steel:#7C8B96; --steel-dark:#A7B4BD; --cable-a:#C9D3D9; --cable-b:#6FA6C8; --cable-c:#B3C45A;
+    --yellow:#F2C230; --zone:#F2C230; --red:#EC5E50; --green:#52B47D; --amber:#E0A23A;
+    --deck:#3A474F; --duct:#4A5760; --pipe:#D86E50;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55}
+main{max-width:980px;margin:0 auto;padding:40px 20px 64px}
+h1,h2,h3{font-family:var(--display);line-height:1.08;margin:0}
+h1{font-size:clamp(2.4rem,6vw,3.9rem);font-weight:700;letter-spacing:-.01em;max-width:16ch}
+h2{font-size:clamp(1.7rem,3.6vw,2.3rem);font-weight:700;margin-bottom:12px}
+h3{font-size:1.3rem;font-weight:600;margin-bottom:6px}
+p{margin:0 0 14px;max-width:68ch}
+a{color:inherit;text-decoration-color:var(--yellow);text-decoration-thickness:2px;text-underline-offset:3px}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.code-ref{font-family:var(--display);font-weight:600;font-size:1.15rem;color:var(--muted);margin-bottom:10px}
+.lede{font-size:1.15rem;color:var(--muted);margin-top:14px}
+section{margin-top:64px}
+
+/* Hero drawing */
+.sheet{margin-top:32px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.sheet svg{display:block;width:100%;height:auto}
+.controls{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:20px;padding:18px 20px;border-top:1px solid var(--line)}
+.control label,.control legend{display:block;font-weight:600;font-size:.95rem;margin-bottom:6px;padding:0}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+input[type=range]{width:100%;accent-color:var(--yellow)}
+.range-row{display:flex;align-items:center;gap:12px}
+.range-row output{font-family:var(--display);font-size:1.6rem;font-weight:700;min-width:3.4ch;text-align:right}
+.seg{display:flex;flex-direction:column;gap:6px}
+.seg label{display:flex;align-items:center;gap:8px;font-weight:400;margin:0;cursor:pointer}
+.seg input{accent-color:var(--yellow)}
+select{width:100%;font:inherit;font-size:.95rem;padding:8px 10px;border-radius:4px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+.status{padding:14px 20px;font-weight:600;border-top:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+.status .dot{flex:none;width:14px;height:14px;border-radius:50%;margin-top:5px;background:var(--green)}
+.status[data-state=bad] .dot{background:var(--red)}
+.status[data-state=warn] .dot{background:var(--amber)}
+.status small{display:block;font-weight:400;color:var(--muted)}
+.fig-note{font-size:.88rem;color:var(--muted);margin:10px 0 0}
+
+/* SVG classes */
+.s-steel{fill:var(--steel)} .s-steel-dark{fill:var(--steel-dark)}
+.s-rod{stroke:var(--steel);stroke-width:3}
+.s-ca{fill:var(--cable-a)} .s-cb{fill:var(--cable-b)} .s-cc{fill:var(--cable-c)}
+.s-deck{fill:var(--deck)} .s-duct{fill:var(--duct);stroke:var(--steel-dark);stroke-width:1.5}
+.s-pipe{fill:var(--pipe)}
+.s-hatch{color:var(--steel-dark)}
+.s-zone{fill:url(#zoneHatch);opacity:.8}
+.s-overlap{fill:var(--red);opacity:.38}
+.s-zone-edge{fill:none;stroke:var(--zone);stroke-width:2;stroke-dasharray:6 5}
+.s-zone-edge.bad{stroke:var(--red)} .s-zone-edge.warn{stroke:var(--amber)} .s-zone-edge.ok{stroke:var(--green)}
+.s-dim{stroke:var(--ink);stroke-width:1.5;fill:none}
+.s-ext{stroke:var(--muted);stroke-width:1}
+.s-text{fill:var(--ink);font-family:var(--display);font-weight:600}
+.s-muted{fill:var(--muted);font-family:var(--body);font-size:13px}
+.s-req{stroke:var(--zone);stroke-width:2;stroke-dasharray:8 6}
+.s-arrow{fill:var(--ink)}
+.s-line{stroke:var(--line)}
+.s-ink{fill:var(--ink)} .s-panel{fill:var(--panel)}
+.s-red{fill:var(--red)} .s-green{fill:var(--green)} .s-yellow{fill:var(--yellow)}
+
+/* Comparison */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:20px}
+.edition{padding:20px;border-radius:var(--radius);background:var(--panel);border:1px solid var(--line)}
+.edition.new{border-left:6px solid var(--yellow)}
+.edition h3 span{font-weight:500;color:var(--muted)}
+.edition blockquote{margin:0 0 12px;padding-left:12px;border-left:3px solid var(--line);font-style:italic}
+.scale-wrap{margin-top:24px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 12px 8px}
+
+/* Exceptions */
+.exceptions{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:20px}
+.exc{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.exc svg{width:100%;height:auto;display:block;margin-bottom:12px;background:var(--paper);border-radius:4px}
+.exc h3 .no{color:var(--muted);font-weight:500}
+.exc p{font-size:.97rem;margin-bottom:0}
+
+/* Field notes */
+.phases{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:16px}
+.phases h3{border-top:3px solid var(--yellow);padding-top:10px}
+.phases p{font-size:.97rem}
+
+/* Quiz */
+.q{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
+.q p.prompt{font-weight:600;margin-bottom:12px}
+.opts{display:grid;gap:8px}
+.opts button{font:inherit;text-align:left;padding:10px 14px;border-radius:4px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.opts button:hover{border-color:var(--steel)}
+.opts button.right{border-color:var(--green);background:color-mix(in srgb,var(--green) 14%,var(--paper))}
+.opts button.wrong{border-color:var(--red);background:color-mix(in srgb,var(--red) 12%,var(--paper))}
+.opts button:disabled{cursor:default}
+.explain{margin-top:12px;color:var(--muted);display:none}
+.explain.show{display:block}
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--line);font-size:.92rem;color:var(--muted)}
+
+@media (max-width:760px){
+  .controls{grid-template-columns:1fr}
+  .compare,.exceptions,.phases{grid-template-columns:1fr}
+  main{padding-top:28px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .s-zone-edge{transition:stroke .2s}
+}
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <div class="code-ref">NEC 2026, Article 392 Cable Trays, Section 392.18(F)</div>
+  <h1>Keep 12 inches clear above every cable tray.</h1>
+  <p class="lede">The 2026 NEC replaces a vague "adequate access" rule with a measured minimum. Drag the obstruction below to see when an installation passes, fails, or leans on one of the four exceptions.</p>
+</header>
+
+<!-- HERO: interactive elevation -->
+<div class="sheet" role="group" aria-label="Interactive cable tray clearance diagram">
+  <svg viewBox="0 40 720 360" aria-hidden="true">
+    <defs>
+      <pattern id="zoneHatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <rect width="10" height="10" style="fill:var(--zone)" opacity=".25"/>
+        <line x1="0" y1="0" x2="0" y2="10" style="stroke:var(--zone)" stroke-width="3"/>
+      </pattern>
+      <pattern id="concrete" width="14" height="14" patternUnits="userSpaceOnUse">
+        <g style="fill:var(--steel-dark)"><circle cx="3" cy="4" r="1.2"/><circle cx="10" cy="9" r="1"/><path d="M6 12 l2 -3 l2 3z"/></g>
+      </pattern>
+      <marker id="arr" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10z" class="s-arrow"/>
+      </marker>
+    </defs>
+
+    <!-- trapeze rods -->
+    <line x1="185" y1="0" x2="185" y2="376" class="s-rod"/>
+    <line x1="455" y1="0" x2="455" y2="376" class="s-rod"/>
+
+    <!-- clearance zone fill -->
+    <rect id="zoneFill" x="200" y="200" width="240" height="120" class="s-zone"/>
+
+    <!-- obstructions (bottom edge at y=0, translated) -->
+    <g id="obs-deck">
+      <rect x="0" y="-420" width="720" height="420" class="s-deck"/>
+      <rect x="0" y="-420" width="720" height="420" fill="url(#concrete)" class="s-hatch" opacity=".45"/>
+      <line x1="0" y1="0" x2="720" y2="0" stroke="var(--steel-dark)" stroke-width="2"/>
+      <text x="560" y="-14" class="s-text" font-size="16">Concrete deck</text>
+    </g>
+    <g id="obs-duct" style="display:none">
+      <rect x="230" y="-80" width="180" height="80" class="s-duct" rx="2"/>
+      <line x1="230" y1="-40" x2="410" y2="-40" stroke="var(--steel-dark)" stroke-width="1" stroke-dasharray="3 3"/>
+      <text x="420" y="-50" class="s-text" font-size="16">HVAC duct</text>
+      <text x="420" y="-32" class="s-muted">running alongside the tray</text>
+    </g>
+    <g id="obs-pipe" style="display:none">
+      <rect x="20" y="-26" width="680" height="26" class="s-pipe" rx="3"/>
+      <rect x="20" y="-22" width="680" height="5" fill="#fff" opacity=".25"/>
+      <rect x="120" y="-30" width="10" height="34" class="s-steel-dark"/>
+      <rect x="560" y="-30" width="10" height="34" class="s-steel-dark"/>
+      <text x="24" y="-36" class="s-text" font-size="16">Sprinkler pipe crossing over the tray</text>
+    </g>
+
+    <rect id="overlap" x="200" y="200" width="240" height="0" class="s-overlap"/>
+    <!-- clearance zone outline + required line (drawn above obstruction) -->
+    <rect id="zoneEdge" x="200" y="200" width="240" height="120" class="s-zone-edge"/>
+    <line x1="30" y1="200" x2="200" y2="200" class="s-req"/>
+    <text x="32" y="192" class="s-text" font-size="15">12 in. required</text>
+
+    <!-- tray: trapeze support -->
+    <rect x="170" y="362" width="300" height="12" class="s-steel-dark" rx="1"/>
+    <!-- side rails (C-shape) -->
+    <path d="M200 320 h10 v4 h-5 v34 h5 v4 h-10z" class="s-steel"/>
+    <path d="M440 320 h-10 v4 h5 v34 h-5 v4 h10z" class="s-steel"/>
+    <!-- rung -->
+    <rect x="200" y="356" width="240" height="6" class="s-steel"/>
+    <!-- cables -->
+    <g>
+      <circle cx="222" cy="347" r="9" class="s-ca"/><circle cx="241" cy="347" r="9" class="s-cb"/>
+      <circle cx="260" cy="347" r="9" class="s-ca"/><circle cx="279" cy="347" r="9" class="s-cc"/>
+      <circle cx="298" cy="347" r="9" class="s-ca"/><circle cx="317" cy="347" r="9" class="s-cb"/>
+      <circle cx="336" cy="347" r="9" class="s-ca"/><circle cx="355" cy="347" r="9" class="s-cc"/>
+      <circle cx="374" cy="347" r="9" class="s-ca"/><circle cx="393" cy="347" r="9" class="s-cb"/>
+      <circle cx="412" cy="349" r="7" class="s-cc"/>
+      <circle cx="231" cy="331" r="7" class="s-cb"/><circle cx="250" cy="331" r="7" class="s-ca"/>
+      <circle cx="288" cy="331" r="7" class="s-cc"/><circle cx="326" cy="332" r="7" class="s-ca"/>
+      <circle cx="364" cy="332" r="7" class="s-cb"/>
+    </g>
+    <text x="210" y="392" class="s-muted">24 in. ladder tray on trapeze hanger (section view)</text>
+
+    <!-- dimension -->
+    <line id="extTop" x1="445" y1="200" x2="486" y2="200" class="s-ext"/>
+    <line x1="445" y1="320" x2="486" y2="320" class="s-ext"/>
+    <line id="dimLine" x1="480" y1="200" x2="480" y2="320" class="s-dim" marker-start="url(#arr)" marker-end="url(#arr)"/>
+    <text id="dimText" x="492" y="266" class="s-text" font-size="26">12 in.</text>
+  </svg>
+
+  <div class="controls">
+    <div class="control">
+      <label for="gap">Space from top of tray to obstruction</label>
+      <div class="range-row">
+        <input id="gap" type="range" min="3" max="24" step="1" value="9">
+        <output id="gapOut" for="gap">9"</output>
+      </div>
+    </div>
+    <fieldset class="control">
+      <legend>What's above the tray?</legend>
+      <div class="seg">
+        <label><input type="radio" name="obs" value="deck" checked> Concrete deck</label>
+        <label><input type="radio" name="obs" value="duct"> Duct running alongside</label>
+        <label><input type="radio" name="obs" value="pipe"> Pipe crossing over</label>
+      </div>
+    </fieldset>
+    <div class="control">
+      <label for="site">Site condition</label>
+      <select id="site">
+        <option value="none">General installation</option>
+        <option value="1">IT equipment room built to 645.5</option>
+        <option value="2">Industrial, qualified persons only</option>
+        <option value="3">AHJ granted special permission</option>
+      </select>
+    </div>
+  </div>
+  <div class="status" id="status" data-state="bad" aria-live="polite">
+    <span class="dot"></span>
+    <div><span id="statusMain"></span><small id="statusSub"></small></div>
+  </div>
+</div>
+<p class="fig-note">Drawing is to scale (10 px per inch). The code text doesn't name a reference point, so this diagram measures from the top of the tray side rails; confirm your AHJ's method.</p>
+
+<!-- WHAT CHANGED -->
+<section>
+  <h2>What changed from 2023 to 2026</h2>
+  <p>Earlier editions asked for enough room to work on the cables but never said how much. That left the call to each installer and inspector, which led to uneven enforcement and occasional rework. The 2026 edition swaps the judgment call for a number.</p>
+  <div class="compare">
+    <div class="edition">
+      <h3>2023 NEC <span>"Adequate Access"</span></h3>
+      <blockquote>"Sufficient space shall be provided and maintained about cable trays"</blockquote>
+      <p>The rest of the sentence asked for adequate access to install and maintain cables. No dimension, no exceptions.</p>
+    </div>
+    <div class="edition new">
+      <h3>2026 NEC <span>"Access"</span></h3>
+      <p>A minimum of 12 inches above the tray must be provided and kept clear for installing and maintaining cables, with four exceptions that allow less.</p>
+      <p>Also notice the wording shifts from space "about" the tray to space "above" it.</p>
+    </div>
+  </div>
+
+  <div class="scale-wrap">
+    <svg viewBox="0 0 900 230" role="img" aria-label="Illustration: under 2023 rules different people judged adequate space differently, from 6 to 18 inches; under 2026 rules the minimum is 12 inches for everyone.">
+      <!-- ruler -->
+      <g transform="translate(120,0)">
+        <line x1="0" y1="112" x2="720" y2="112" class="s-line" stroke-width="2"/>
+        <g id="ticks"></g>
+      </g>
+      <text x="10" y="58" class="s-text" font-size="18">2023</text>
+      <text x="10" y="76" class="s-muted">judgment call</text>
+      <text x="10" y="172" class="s-text" font-size="18">2026</text>
+      <text x="10" y="190" class="s-muted">fixed minimum</text>
+      <!-- 2023 fuzzy band -->
+      <rect x="270" y="40" width="420" height="40" rx="20" fill="var(--steel)" opacity=".18"/>
+      <g font-size="13">
+        <circle cx="300" cy="60" r="7" class="s-ink"/><text x="276" y="32" class="s-muted">Installer: 6"</text>
+        <circle cx="360" cy="60" r="7" class="s-ink"/><text x="345" y="98" class="s-muted">Designer: 8"</text>
+        <circle cx="480" cy="60" r="7" class="s-ink"/><text x="450" y="32" class="s-muted">Inspector A: 12"</text>
+        <circle cx="660" cy="60" r="7" class="s-ink"/><text x="610" y="98" class="s-muted">Inspector B: 18"</text>
+      </g>
+      <!-- 2026 crisp line -->
+      <rect x="480" y="150" width="360" height="40" fill="var(--green)" opacity=".16"/>
+      <rect x="120" y="150" width="360" height="40" fill="var(--red)" opacity=".12"/>
+      <line x1="480" y1="140" x2="480" y2="200" stroke="var(--yellow)" stroke-width="4"/>
+      <text x="490" y="176" class="s-text" font-size="17">12" minimum, same for everyone</text>
+      <text x="130" y="176" class="s-muted">below 12": exception needed</text>
+    </svg>
+    <p class="fig-note" style="padding:0 8px">Opinions in the 2023 row are illustrative, not from the source.</p>
+  </div>
+
+  <h3 style="margin-top:28px">Why 12 inches</h3>
+  <p>The reasoning behind the change pointed out that what feels like enough room to a tall, slim installer may not work for someone shorter or larger, so a personal judgment is a poor test. Twelve inches also matches the clearance used in ANSI/TIA/EIA-569-A, the telecommunications pathways and spaces standard, so power and communications trays now follow the same benchmark.</p>
+</section>
+
+<!-- EXCEPTIONS -->
+<section>
+  <h2>The four exceptions</h2>
+  <p>Less than 12 inches is allowed in any of these situations. They are numbered here as they are in the Code.</p>
+  <div class="exceptions">
+
+    <article class="exc">
+      <svg viewBox="0 0 320 150" aria-hidden="true">
+        <rect x="0" y="126" width="320" height="24" class="s-steel" opacity=".4"/>
+        <g class="s-line"><line x1="40" y1="126" x2="40" y2="150" stroke="var(--steel-dark)"/><line x1="160" y1="126" x2="160" y2="150" stroke="var(--steel-dark)"/><line x1="280" y1="126" x2="280" y2="150" stroke="var(--steel-dark)"/></g>
+        <g>
+          <rect x="60" y="56" width="50" height="70" class="s-ink" rx="2"/>
+          <rect x="120" y="56" width="50" height="70" class="s-ink" rx="2"/>
+          <rect x="180" y="56" width="50" height="70" class="s-ink" rx="2"/>
+          <g fill="var(--green)"><circle cx="70" cy="68" r="2"/><circle cx="70" cy="80" r="2"/><circle cx="130" cy="68" r="2"/><circle cx="190" cy="68" r="2"/><circle cx="190" cy="80" r="2"/></g>
+        </g>
+        <rect x="50" y="26" width="200" height="12" class="s-steel"/>
+        <rect x="50" y="10" width="200" height="4" class="s-deck"/>
+        <rect x="0" y="0" width="320" height="10" class="s-deck"/>
+        <text x="258" y="36" class="s-muted">tray</text>
+        <text x="236" y="100" class="s-muted">racks</text>
+      </svg>
+      <h3><span class="no">No. 1</span> IT equipment rooms</h3>
+      <p>Where the installation complies with 645.5 for an information technology equipment room. These rooms have controlled access and purpose-built layouts.</p>
+    </article>
+
+    <article class="exc">
+      <svg viewBox="0 0 320 150" aria-hidden="true">
+        <rect x="0" y="0" width="320" height="16" class="s-deck"/>
+        <rect x="30" y="34" width="260" height="12" class="s-steel"/>
+        <line x1="36" y1="16" x2="36" y2="50" class="s-rod"/><line x1="284" y1="16" x2="284" y2="50" class="s-rod"/>
+        <!-- hard hat -->
+        <path d="M130 118 a30 30 0 0 1 60 0z" class="s-yellow"/>
+        <rect x="120" y="116" width="80" height="8" rx="3" class="s-yellow"/>
+        <rect x="157" y="90" width="6" height="26" fill="var(--amber)" opacity=".6"/>
+        <!-- check badge -->
+        <circle cx="228" cy="104" r="16" class="s-green"/>
+        <path d="M220 104 l6 6 l10 -12" stroke="#fff" stroke-width="3" fill="none"/>
+        <text x="60" y="144" class="s-muted">qualified persons only</text>
+      </svg>
+      <h3><span class="no">No. 2</span> Industrial establishments</h3>
+      <p>Where maintenance and supervision conditions ensure that only qualified persons service the cable tray.</p>
+    </article>
+
+    <article class="exc">
+      <svg viewBox="0 0 320 150" aria-hidden="true">
+        <rect x="90" y="14" width="140" height="124" class="s-panel" stroke="var(--line)" stroke-width="2" rx="3"/>
+        <g stroke="var(--line)" stroke-width="4"><line x1="108" y1="38" x2="212" y2="38"/><line x1="108" y1="54" x2="200" y2="54"/><line x1="108" y1="70" x2="206" y2="70"/></g>
+        <g transform="rotate(-12 180 104)">
+          <rect x="136" y="84" width="92" height="40" rx="4" fill="none" stroke="var(--green)" stroke-width="3"/>
+          <text x="182" y="104" text-anchor="middle" class="s-text" font-size="15" fill="var(--green)" style="fill:var(--green)">APPROVED</text>
+          <text x="182" y="119" text-anchor="middle" class="s-muted" style="fill:var(--green)">by AHJ</text>
+        </g>
+      </svg>
+      <h3><span class="no">No. 3</span> Special permission</h3>
+      <p>The authority having jurisdiction can grant written permission for a smaller space, typically where site constraints make 12 inches impractical.</p>
+    </article>
+
+    <article class="exc">
+      <svg viewBox="0 0 320 150" aria-hidden="true">
+        <!-- plan view: tray horizontal, duct crossing at an angle -->
+        <rect x="0" y="58" width="320" height="36" class="s-steel" opacity=".45"/>
+        <g stroke="var(--steel-dark)" stroke-width="2">
+          <line x1="0" y1="58" x2="320" y2="58"/><line x1="0" y1="94" x2="320" y2="94"/>
+        </g>
+        <g stroke="var(--steel-dark)" stroke-width="1" opacity=".6" id="rungs"></g>
+        <rect x="60" y="54" width="200" height="44" fill="none" stroke="var(--zone)" stroke-width="2" stroke-dasharray="5 4"/>
+        <g transform="rotate(-35 160 76)">
+          <rect x="130" y="-40" width="60" height="232" class="s-duct" opacity=".95"/>
+        </g>
+        <text x="8" y="50" class="s-muted">tray (plan view)</text>
+        <text x="206" y="136" class="s-muted">duct crossing</text>
+      </svg>
+      <h3><span class="no">No. 4</span> Equipment crossing at any angle</h3>
+      <p>Equipment that crosses over the tray, at a right angle or any other angle, may pass through the 12-inch space. The short crossing leaves the rest of the run reachable.</p>
+    </article>
+
+  </div>
+</section>
+
+<!-- FIELD NOTES -->
+<section>
+  <h2>What it means on the job</h2>
+  <p>The rule says the space must be "provided and maintained," so it matters at every stage of a building's life, not only at rough-in.</p>
+  <div class="phases">
+    <div>
+      <h3>Design and coordination</h3>
+      <p>Reserve a 12-inch envelope above each tray in the coordination model so ducts, pipes and other trays are kept out, or routed to cross rather than run parallel.</p>
+    </div>
+    <div>
+      <h3>Installation</h3>
+      <p>Measure the space before the tray is loaded. Hanger drops are much easier to adjust than a finished run. If you need less than 12 inches, get the AHJ's special permission in writing first.</p>
+    </div>
+    <div>
+      <h3>Later work</h3>
+      <p>Other trades that add equipment later can't park it in the clearance space. Crossings are allowed under Exception No. 4; running along the top of the tray is not.</p>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section>
+  <h2>Check yourself</h2>
+  <div id="quiz"></div>
+</section>
+
+<footer>
+  <p>Explained from <a href="https://www.electricallicenserenewal.com/Electrical-Continuing-Education-Courses/NEC-Content.php?sectionID=1927">ElectricalLicenseRenewal.com, 392.18(F) Cable Tray Access</a> (updated 01/16/26). This page paraphrases the requirement; read the official text through NFPA's free access to <a href="https://www.nfpa.org/codes-and-standards/all-codes-and-standards/list-of-codes-and-standards/detail?code=70">NFPA 70</a>, and check which NEC edition your jurisdiction has adopted.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+  // ---- Ruler ticks for comparison figure (0..24 in, 30px/in)
+  var ticks = document.getElementById('ticks');
+  for (var i=0;i<=24;i++){
+    var x = i*30, big = i%6===0;
+    var l = document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1',x);l.setAttribute('x2',x);
+    l.setAttribute('y1',big?100:106);l.setAttribute('y2',118);
+    l.setAttribute('stroke','var(--steel-dark)');l.setAttribute('stroke-width',big?2:1);
+    ticks.appendChild(l);
+    if(big){
+      var t=document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x',x);t.setAttribute('y',136);t.setAttribute('text-anchor','middle');
+      t.setAttribute('class','s-muted');t.textContent=i+'"';ticks.appendChild(t);
+    }
+  }
+  // rungs for plan view
+  var rungs=document.getElementById('rungs');
+  for (var r=8;r<320;r+=18){
+    var rl=document.createElementNS('http://www.w3.org/2000/svg','line');
+    rl.setAttribute('x1',r);rl.setAttribute('x2',r);rl.setAttribute('y1',58);rl.setAttribute('y2',94);
+    rungs.appendChild(rl);
+  }
+
+  // ---- Interactive hero
+  var PX = 10, TRAY_TOP = 320;
+  var gap = document.getElementById('gap'), out = document.getElementById('gapOut');
+  var site = document.getElementById('site');
+  var groups = {deck:document.getElementById('obs-deck'),duct:document.getElementById('obs-duct'),pipe:document.getElementById('obs-pipe')};
+  var dimLine=document.getElementById('dimLine'), dimText=document.getElementById('dimText'), extTop=document.getElementById('extTop');
+  var zoneEdge=document.getElementById('zoneEdge');
+  var status=document.getElementById('status'), sMain=document.getElementById('statusMain'), sSub=document.getElementById('statusSub');
+  var excText = {
+    '1':['Exception No. 1','The installation complies with 645.5 for an IT equipment room.'],
+    '2':['Exception No. 2','Industrial site where only qualified persons service the tray.'],
+    '3':['Exception No. 3','The AHJ has granted special permission for a smaller space.']
+  };
+
+  function obsType(){ return document.querySelector('input[name=obs]:checked').value; }
+
+  function update(){
+    var inches = +gap.value, type = obsType();
+    var y = TRAY_TOP - inches*PX;
+    out.textContent = inches + '"';
+    for (var k in groups){
+      groups[k].style.display = (k===type)?'':'none';
+      groups[k].setAttribute('transform','translate(0,'+y+')');
+    }
+    dimLine.setAttribute('y1',y);
+    extTop.setAttribute('y1',y); extTop.setAttribute('y2',y);
+    extTop.setAttribute('x1', type==='duct'?415:445);
+    dimText.setAttribute('y', Math.max(y+ (TRAY_TOP-y)/2 + 9, y+20));
+    dimText.textContent = inches + ' in.';
+
+    var ov=document.getElementById('overlap');
+    var ovX = type==='duct'?230:200, ovW = type==='duct'?180:240;
+    ov.setAttribute('x',ovX); ov.setAttribute('width',ovW);
+    ov.setAttribute('height', inches<12 ? (12-inches)*PX : 0);
+    ov.style.opacity = (inches<12 && (type==='pipe' || site.value!=='none')) ? '.18' : '';
+    var state, main, sub;
+    if (inches >= 12){
+      state='ok'; main='Meets 392.18(F): '+inches+' in. of access above the tray.';
+      sub='The 12-inch minimum is satisfied, so no exception is needed.';
+    } else if (type==='pipe'){
+      state='warn'; main='Permitted under Exception No. 4: equipment crossing the tray.';
+      sub='A crossing at any angle may pass through the 12-inch space. Only '+inches+' in. here, but the rest of the run stays open.';
+    } else if (site.value!=='none'){
+      var e=excText[site.value];
+      state='warn'; main='Reduced space may be allowed under '+e[0]+'.';
+      sub=e[1]+' Document it; the default is still 12 in.';
+    } else {
+      state='bad'; main='Violation: '+(12-inches)+' in. short of the 12-inch minimum.';
+      sub=(type==='duct'?'A duct running alongside above the tray is not a crossing, so Exception No. 4 does not apply. ':'')+'Raise the obstruction, lower the tray, or qualify for an exception.';
+    }
+    status.dataset.state=state; sMain.textContent=main; sSub.textContent=sub;
+    zoneEdge.setAttribute('class','s-zone-edge '+state);
+  }
+  gap.addEventListener('input',update);
+  site.addEventListener('change',update);
+  document.querySelectorAll('input[name=obs]').forEach(function(r){r.addEventListener('change',update);});
+  update();
+
+  // ---- Quiz
+  var Q = [
+    {p:'In a commercial office, a supply duct runs directly above and parallel to a cable tray with 8 inches of space. No special permission was granted. Under the 2026 NEC, is this acceptable?',
+     o:['Yes, 8 inches is adequate access','No, it falls short of the 12-inch minimum','Yes, ducts are covered by Exception No. 4','Only if the tray is less than 50% full'],a:1,
+     e:'A duct running along the tray isn\'t a crossing, and none of the other exceptions apply to a general office. The minimum is 12 inches.'},
+    {p:'A sprinkler main passes over a tray at a 45° angle with 5 inches of space. What applies?',
+     o:['Violation, since it is under 12 inches','Allowed only at a 90° crossing','Allowed under Exception No. 4, equipment crossing at any angle','Allowed only with AHJ special permission'],a:2,
+     e:'Exception No. 4 covers equipment crossing the tray at any angle, not just at right angles.'},
+    {p:'What did the 2023 NEC require for space around cable trays?',
+     o:['6 inches above the tray','12 inches above and 6 inches to the sides','Sufficient space for adequate access, with no specific dimension','Whatever ANSI/TIA/EIA-569-A specified'],a:2,
+     e:'The 2023 wording asked for sufficient space and adequate access but gave no number, which is what the 2026 revision fixes.'},
+    {p:'The 12-inch figure lines up with which other standard?',
+     o:['NFPA 70E','ANSI/TIA/EIA-569-A (telecommunications pathways and spaces)','IEEE 1584','UL 568'],a:1,
+     e:'Aligning with ANSI/TIA/EIA-569-A gives electrical and communications trays the same clearance benchmark.'}
+  ];
+  var quiz=document.getElementById('quiz');
+  Q.forEach(function(q,qi){
+    var box=document.createElement('div'); box.className='q';
+    var p=document.createElement('p'); p.className='prompt'; p.textContent=(qi+1)+'. '+q.p; box.appendChild(p);
+    var opts=document.createElement('div'); opts.className='opts';
+    var ex=document.createElement('p'); ex.className='explain'; ex.setAttribute('aria-live','polite');
+    q.o.forEach(function(t,oi){
+      var b=document.createElement('button'); b.type='button'; b.textContent=t;
+      b.addEventListener('click',function(){
+        var all=opts.querySelectorAll('button');
+        all.forEach(function(x,xi){x.disabled=true; if(xi===q.a) x.classList.add('right');});
+        if(oi!==q.a) b.classList.add('wrong');
+        ex.textContent=(oi===q.a?'Correct. ':'Not quite. ')+q.e; ex.classList.add('show');
+      });
+      opts.appendChild(b);
+    });
+    box.appendChild(opts); box.appendChild(ex); quiz.appendChild(box);
+  });
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

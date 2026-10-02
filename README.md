@@ -95,20 +95,26 @@ This exam section covers pre-deployment planning, including physical network doc
 ### Suggested Readings
 
 **SR1** ANSI/TIA-606-B Explained: The Data Center Cable Labeling Standard That Keeps Chaos in Check
+- [TIA-606-B cable labeling, explained visually](2.SR1/tia-606b-cable-labeling-explained.html)
 
 **SR2** Enhanced Efficiency in Data Center With Elevated Return Air Temperature
+- [Elevated return air temperature, explained](2.SR2/elevated_return_air_explainer.html)
 
 **SR3** 392.18(F) Cable Tray Access
+- [NEC 392.18(F) cable tray access, explained](2.SR3/nec-392-18F-cable-tray-access.html)
 
 **SR4** What Is the Difference Between an 80% Rated Breaker and a 100% Rated Breaker?
+- [80% vs 100% rated breakers, explained](2.SR4/breaker-80-vs-100-explained.html)
 
 **SR5** Manage Airflow for Cooling Efficiency | ENERGY STAR
 
 **SR6** Implementing Data Center Cooling Best Practices
 
 **SR7** Move to a Hot Aisle/Cold Aisle Layout | ENERGY STAR
+- [Hot aisle / cold aisle layout, explained](2.SR7/hot-aisle-cold-aisle-explained.html)
 
 **SR8** Networking Solutions for the Era of AI | NVIDIA
+- [NVIDIA networking, explained](2.SR8/nvidia-networking-explained.html)
 
 
 
@@ -124,20 +130,30 @@ This section covers preparing rack infrastructure for AI platforms, focusing on 
 ### Suggested Readings
 
 **SR1** Best Practices Guide for Energy-Efficient Data Center Design
+- [Energy-efficient data center design (NREL guide), explained](3.SR1/data-center-design-explained.html)
 
 **SR2** NVIDIA DGX™ H100/H200 System User Guide
+- [DGX H100/H200 user guide, explained](3.SR2/dgx-h100-h200-guide-explained.html)
 
 **SR3** InfiniBand Cables Explained: HDR vs NDR, QSFP56 vs OSFP, DAC vs AOC
+- [InfiniBand cables, explained visually](3.SR3/infiniband-cables-explained.html)
 
 **SR4** Wyr-Grid Overhead Cable Tray Routing System
+- [Wyr-Grid overhead cable tray, explained](3.SR4/wyr-grid-explained.html)
 
 **SR5** NFPA 70 (NEC) Code Development
+- [NFPA 70 (NEC) code development, explained](3.SR5/nfpa70-explained.html)
 
 **SR6** Cisco Nexus Installation Guide
+- [Nexus 93180YC-FX: preparing the site](3.SR6/n93180ycfx-site-prep.html)
 
 **SR7** Rack Cooling Systems | Vertiv Thermal Management
+- [Vertiv rack cooling, explained](3.SR7/vertiv-rack-cooling-explained.html)
+- [Vertiv rack cooling, explained (v2)](3.SR7/vertiv-rack-cooling-explained2.html)
 
 **SR8** Server Rack Cabinet Compatibility Guide
+- [Will this server fit this rack? Intel guide, explained](3.SR8/intel-rack-compatibility-explained.html)
+- [Intel rack cabinet compatibility guide, explained](3.SR8/intel_rack_compatibility_explained.html)
 
 
 

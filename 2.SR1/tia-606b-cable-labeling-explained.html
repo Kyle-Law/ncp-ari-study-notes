@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TIA-606-B cable labeling, explained visually</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --floor:#EDF0F1; --paper:#FFFFFF; --ink:#17222E; --muted:#56636E; --line:#C5CED4;
+  --hi:#F4E04D; --link:#1D5E96; --rack:#2B3945; --rack-face:#D9E0E5; --tape:#FBFBF8; --tape-ink:#1E1E1E;
+  --grid:rgba(23,34,46,.07);
+  --display:"Barlow Condensed","Arial Narrow","Roboto Condensed",sans-serif;
+  --body:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --floor:#141C23; --paper:#1C2630; --ink:#E4EAEE; --muted:#9AA7B1; --line:#34434F;
+    --hi:#E9D54A; --link:#86BCEB; --rack:#0D141A; --rack-face:#2B3844; --grid:rgba(228,234,238,.06);
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--floor);color:var(--ink);font:400 17px/1.6 var(--body);
+  padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+a{color:var(--link)}
+:focus-visible{outline:3px solid var(--link);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+.text{max-width:68ch}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.05;margin:0}
+h1{font-size:clamp(2.6rem,6vw,4.4rem);letter-spacing:-.01em}
+h2{font-size:clamp(2rem,4vw,2.8rem);margin-bottom:.5rem}
+h3{font-size:1.55rem;margin:0 0 .35rem}
+p{margin:.5rem 0 1rem}
+.muted{color:var(--muted)}
+small,.small{font-size:.86rem}
+
+/* masthead */
+.mast{border-bottom:1px solid var(--line);background:var(--paper)}
+.mast .wrap{padding-top:12px;padding-bottom:12px;font-size:.9rem;color:var(--muted)}
+
+/* hero: raised-floor tile grid */
+.hero{background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:48px 48px;border-bottom:1px solid var(--line);padding:48px 0 40px}
+.hero .lede{font-size:1.15rem;max-width:60ch}
+
+/* the printed label */
+.tape{display:inline-flex;align-items:stretch;background:var(--tape);color:var(--tape-ink);
+  border:1px solid #cfcfc6;border-radius:3px;box-shadow:0 2px 0 rgba(0,0,0,.12);padding:6px 14px;margin:18px 0 6px;
+  font-family:var(--display);font-weight:600;font-size:clamp(2.3rem,7vw,4.6rem);line-height:1;position:relative;max-width:100%;flex-wrap:wrap}
+.tape::before,.tape::after{content:"";position:absolute;top:0;bottom:0;width:8px;
+  background:repeating-linear-gradient(180deg,transparent 0 6px,rgba(0,0,0,.06) 6px 8px)}
+.tape::before{left:0}.tape::after{right:0}
+.tape button{font:inherit;color:inherit;background:transparent;border:0;border-bottom:4px solid transparent;
+  padding:4px 3px 0;cursor:pointer;border-radius:2px}
+.tape button:hover{background:rgba(244,224,77,.45)}
+.tape button[aria-pressed="true"]{background:var(--hi);border-bottom-color:var(--tape-ink);color:#1E1E1E}
+.tape .p{padding:4px 1px 0;opacity:.55}
+@media (prefers-reduced-motion:no-preference){
+  .tape.print{animation:print 900ms cubic-bezier(.2,.7,.2,1) both;clip-path:inset(0 0 0 0)}
+  @keyframes print{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+}
+.seghelp{font-size:.92rem;color:var(--muted);margin:0 0 20px}
+
+.views{display:grid;grid-template-columns:1.15fr .8fr 1.25fr;gap:14px;margin-top:8px}
+.view{display:flex;flex-direction:column;justify-content:flex-start;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px 12px 6px;cursor:pointer;text-align:left;
+  font:inherit;color:inherit}
+.view:hover{border-color:var(--ink)}
+.view.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.view h3{font-size:1.15rem;margin:0 0 4px}
+.view svg{width:100%;height:auto;display:block}
+.explain{margin-top:16px;background:var(--paper);border-left:6px solid var(--hi);padding:14px 18px;border-radius:0 6px 6px 0}
+.explain strong{font-family:var(--display);font-size:1.45rem;font-weight:700}
+.try{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:18px}
+.try label{font-weight:600}
+.try input{font:600 1.15rem var(--display);padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);width:17ch}
+.btn{font:600 .95rem var(--body);padding:9px 14px;border-radius:4px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink)}
+.err{color:#B3261E;font-size:.9rem;width:100%}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .err{color:#FF8A80}}
+
+/* SVG shared */
+svg text{font-family:var(--body);fill:var(--ink);font-size:12px}
+svg .dt{font-family:var(--display);font-weight:600}
+svg .mut{fill:var(--muted)}
+svg .ln{stroke:var(--ink);fill:none;stroke-width:1.5}
+svg .bx{fill:var(--paper);stroke:var(--ink);stroke-width:1.5}
+svg .tile{fill:transparent;stroke:var(--line);stroke-width:1}
+svg .cab{fill:var(--rack-face);stroke:var(--muted);stroke-width:1}
+svg .tgt{fill:var(--rack-face);stroke:var(--ink);stroke-width:2}
+svg .hl{fill:var(--hi)!important;stroke:var(--ink);stroke-width:2}
+svg .hltext{fill:#1E1E1E}
+svg .rackbody{fill:var(--rack)}
+svg .unit{fill:var(--rack-face);stroke:var(--rack);stroke-width:.6}
+svg .equip{fill:#6D7B87;stroke:var(--rack);stroke-width:.6}
+svg .port{fill:var(--rack);stroke:var(--muted);stroke-width:1}
+svg .panel{fill:var(--rack-face);stroke:var(--ink);stroke-width:1.5}
+svg .tapebox{fill:var(--tape);stroke:#bdbdb4;stroke-width:1}
+svg .tapetx{fill:var(--tape-ink);font-family:var(--display);font-weight:600}
+svg .hiline{stroke:var(--hi);stroke-width:5;fill:none}
+svg .inkline{stroke:var(--ink);stroke-width:8;fill:none}
+svg .cable{stroke:#3C7FC0;stroke-width:5;fill:none;stroke-linecap:round}
+svg .fl{fill:#1E1E1E;font-weight:600}
+
+/* sections */
+section{padding:56px 0;border-bottom:1px solid var(--line)}
+section.alt{background:var(--paper)}
+.toc{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:26px;font-size:.95rem}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:16px;margin:18px 0}
+section.alt .fig{background:var(--floor)}
+.fig svg{width:100%;height:auto;display:block}
+.fig figcaption{font-size:.9rem;color:var(--muted);margin-top:8px}
+.scroll{overflow-x:auto}
+.scroll svg{min-width:640px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0;padding:0;list-style:none}
+.tags li{border:1px solid var(--line);background:var(--paper);padding:5px 11px;border-radius:999px;font-size:.93rem}
+section.alt .tags li{background:var(--floor)}
+
+.classes{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+.classes figure{margin:0;background:var(--floor);border:1px solid var(--line);border-radius:6px;padding:12px}
+.classes h3{font-size:1.3rem}
+.classes p{font-size:.92rem;margin:.2rem 0 0}
+.matrix{width:100%;border-collapse:collapse;margin-top:14px;font-size:.93rem}
+.matrix th,.matrix td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+.matrix th{font-family:var(--display);font-size:1.1rem;font-weight:600}
+.matrix td.c{text-align:center;width:13%}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--ink)}
+.dot.new{background:var(--hi);box-shadow:0 0 0 2px var(--ink)}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:.88rem;color:var(--muted);margin-top:8px;align-items:center}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+
+/* procedure */
+.step{display:grid;grid-template-columns:64px 1fr;gap:18px;padding:30px 0;border-top:1px solid var(--line)}
+.step:first-of-type{border-top:0}
+.letter{font-family:var(--display);font-weight:700;font-size:3rem;line-height:1;width:56px;height:56px;border:2px solid var(--ink);
+  display:flex;align-items:center;justify-content:center;border-radius:4px}
+.step ul{padding-left:1.2rem;margin:.3rem 0 .6rem}
+.step li{margin:.25rem 0}
+
+/* decoded identifier chips */
+.decode{display:inline-flex;flex-wrap:wrap;align-items:flex-start;background:var(--tape);color:var(--tape-ink);border:1px solid #cfcfc6;
+  border-radius:3px;padding:8px 12px 6px;margin:8px 0 14px;box-shadow:0 2px 0 rgba(0,0,0,.1);max-width:100%}
+.decode .s{display:flex;flex-direction:column;align-items:center;padding:0 3px}
+.decode .s b{font:600 1.9rem/1.1 var(--display);padding:0 3px;border-bottom:3px solid #1E1E1E}
+.decode .s i{font-style:normal;font-size:.74rem;color:#4b5560;margin-top:4px;text-align:center;max-width:12ch;line-height:1.2}
+.decode .x{font:600 1.9rem/1.1 var(--display);opacity:.45;padding:0 1px}
+.letters{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+.letters span{font:600 1.2rem var(--display);width:30px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:3px;background:var(--paper)}
+.letters span.no{text-decoration:line-through;color:#B3261E;border-color:#B3261E;background:transparent}
+
+/* color code */
+.cc{display:block}
+.cclist{display:grid!important;grid-template-columns:repeat(4,1fr);gap:0 14px;margin-bottom:16px!important}
+@media (max-width:900px){.cclist{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.cclist{grid-template-columns:1fr}}
+.cclist{list-style:none;padding:0;margin:0}
+.cclist button{width:100%;display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:center;text-align:left;
+  background:transparent;border:0;border-bottom:1px solid var(--line);padding:8px 6px;font:inherit;color:inherit;cursor:pointer}
+.cclist button:hover,.cclist button[aria-pressed="true"]{background:var(--floor)}
+.cclist button[aria-pressed="true"]{box-shadow:inset 4px 0 0 var(--ink)}
+.sw{width:30px;height:30px;border-radius:3px;border:1.5px solid var(--ink)}
+.cclist b{display:block;font-size:.98rem}
+.cclist span.d{font-size:.85rem;color:var(--muted)}
+#ccsvg [data-c]{transition:opacity .2s}
+#ccsvg.focus [data-c]:not(.on){opacity:.18}
+
+/* record */
+.record{display:grid;grid-template-columns:.9fr 1.1fr;gap:18px;align-items:center}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+section.alt .card{background:var(--floor)}
+.card header{background:var(--ink);color:var(--paper);padding:10px 14px;font:600 1.4rem var(--display)}
+.card dl{margin:0;display:grid;grid-template-columns:auto 1fr}
+.card dt,.card dd{padding:7px 14px;border-top:1px solid var(--line);margin:0;font-size:.93rem}
+.card dt{color:var(--muted)}
+.card dd{font-weight:600}
+
+.checks{list-style:none;padding:0;margin:10px 0}
+.checks li{padding:8px 0 8px 34px;position:relative;border-bottom:1px solid var(--line)}
+.checks li::before{content:"";position:absolute;left:4px;top:12px;width:16px;height:9px;border-left:3px solid var(--ink);border-bottom:3px solid var(--ink);transform:rotate(-45deg)}
+.why{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:14px}
+.why div{border-top:4px solid var(--ink);padding-top:10px}
+.why b{font-family:var(--display);font-size:1.3rem;display:block;line-height:1.1;margin-bottom:4px}
+.note{background:var(--floor);border:1px dashed var(--muted);border-radius:6px;padding:14px 18px;margin:16px 0}
+section.alt .note{background:var(--paper)}
+footer{padding:30px 0 50px;font-size:.9rem;color:var(--muted)}
+
+@media (max-width:900px){
+  .views{grid-template-columns:1fr 1fr}
+  .views .view:first-child{grid-column:1/-1}
+  .classes{grid-template-columns:1fr 1fr}
+  .cc,.record,.two{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  body{font-size:16px}
+  .views{grid-template-columns:1fr}
+  .classes{grid-template-columns:1fr}
+  .step{grid-template-columns:1fr;gap:8px}
+  .matrix td.c{width:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="mast"><div class="wrap">
+  Visual explainer of <a href="https://andcable.com/cable-management/data-center-cable-labeling-standard/">"ANSI/TIA-606-B Explained: The Data Center Cable Labeling Standard That Keeps Chaos in Check"</a>, AnD Cable Products blog, John Lester, 7 Oct 2025
+</div></div>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <h1>How to read a TIA-606-B cable label</h1>
+    <p class="lede">ANSI/TIA-606-B gives every room, cabinet, patch panel, port and cable in a facility one unique, structured name, so anyone can trace a connection in seconds. Pick a part of the label to see what it points to.</p>
+
+    <div class="tape print" id="tape" role="group" aria-label="Example identifier, select a part"></div>
+    <p class="seghelp">The full form is <em>floor + room . grid location - rack unit : port</em>. Inside a single room the space prefix is often dropped, giving the short form <strong>AD02-40:02</strong>.</p>
+
+    <div class="views">
+      <button class="view" data-seg="grid" id="v-floor" aria-label="Floor plan view">
+        <h3>Where in the room</h3>
+        <svg id="svg-floor" viewBox="0 0 380 322" role="img" aria-label="Floor grid showing cabinet position"></svg>
+      </button>
+      <button class="view" data-seg="ru" id="v-rack" aria-label="Rack elevation view">
+        <h3>Height in the cabinet</h3>
+        <svg id="svg-rack" viewBox="0 0 240 334" role="img" aria-label="Rack elevation showing rack unit"></svg>
+      </button>
+      <button class="view" data-seg="port" id="v-panel" aria-label="Patch panel view">
+        <h3>Which port on the panel</h3>
+        <svg id="svg-panel" viewBox="0 0 440 180" role="img" aria-label="Patch panel showing port"></svg>
+      </button>
+    </div>
+
+    <div class="explain" id="explain" aria-live="polite"></div>
+
+    <div class="try">
+      <label for="idin">Decode another identifier</label>
+      <input id="idin" value="1A.AD02-40:02" spellcheck="false" autocomplete="off" aria-describedby="iderr">
+      <button class="btn" id="decode">Decode</button>
+      <button class="btn ghost" id="reset">Reset example</button>
+      <div class="err" id="iderr" role="alert"></div>
+    </div>
+
+    <nav class="toc" aria-label="Sections">
+      <a href="#what">What the standard is</a>
+      <a href="#classes">Four administration classes</a>
+      <a href="#how">Labeling procedure</a>
+      <a href="#color">Color code</a>
+      <a href="#records">Records</a>
+      <a href="#practice">Best practices</a>
+      <a href="#article">About the article</a>
+    </nav>
+  </div>
+</header>
+
+<!-- WHAT -->
+<section id="what" class="alt">
+  <div class="wrap">
+    <h2>What ANSI/TIA-606-B is</h2>
+    <div class="text">
+      <p>It is the telecommunications industry's rulebook for naming and documenting physical network infrastructure: fiber and copper cabling, racks, outlets, grounding and even firestops. It was developed by the Telecommunications Industry Association (TIA) under the American National Standards Institute (ANSI). The article likens it to grammar rules for your cabling's language.</p>
+      <p>The goal is that every part of the <em>information transport system</em> can be traced, documented and maintained over its whole life, no matter which contractor or technician touches it next.</p>
+    </div>
+
+    <figure class="fig scroll">
+      <svg viewBox="0 0 784 190" role="img" aria-label="Lineage: 606-A, TIA-942 and ISO/IEC TR 14763-2-1 merge into 606-B, later revised as 606-C and 606-D">
+        <rect class="bx" x="10" y="14" width="230" height="40" rx="4"/><text x="24" y="39">TIA-606-A (the predecessor)</text>
+        <rect class="bx" x="10" y="74" width="230" height="40" rx="4"/><text x="24" y="99">TIA-942 data-center requirements</text>
+        <rect class="bx" x="10" y="134" width="230" height="40" rx="4"/><text x="24" y="159">ISO/IEC TR 14763-2-1 (global)</text>
+        <path class="ln" d="M240 34 C 280 34, 280 88, 318 88"/>
+        <path class="ln" d="M240 94 L318 94"/>
+        <path class="ln" d="M240 154 C 280 154, 280 100, 318 100"/>
+        <path class="ln" d="M312 82 L320 94 L312 106"/>
+        <rect class="hl" x="322" y="62" width="220" height="64" rx="4"/>
+        <text class="dt hltext" x="340" y="92" font-size="22">ANSI/TIA-606-B</text>
+        <text class="hltext" x="340" y="113">one unified framework (2012)</text>
+        <path class="ln" d="M542 94 L564 94" stroke-dasharray="4 4"/>
+        <rect class="bx" x="564" y="74" width="100" height="40" rx="4"/><text x="576" y="99">606-C (2017)</text>
+        <path class="ln" d="M664 94 L676 94" stroke-dasharray="4 4"/>
+        <rect class="bx" x="676" y="74" width="100" height="40" rx="4"/><text x="688" y="99">606-D (2021)</text>
+        <text class="mut" x="564" y="140" font-size="11">later revisions, see note below</text>
+      </svg>
+      <figcaption>606-B built on 606-A, folded in the data-center rules from TIA-942 and aligned with the international ISO/IEC cable-administration report. One framework now covers every kind of site.</figcaption>
+    </figure>
+
+    <h3>Where it applies</h3>
+    <ul class="tags">
+      <li>Data centers</li><li>Commercial buildings</li><li>Industrial sites</li><li>Healthcare facilities</li><li>Residential networks</li><li>Campus networks</li>
+    </ul>
+    <p class="muted small" style="margin-top:14px">Within those sites it covers equipment rooms and telecom spaces, cabling subsystems 1 to 3, racks, cabinets and patch panels, grounding and bonding, firestopping, and outdoor or inter-building pathways.</p>
+  </div>
+</section>
+
+<!-- CLASSES -->
+<section id="classes">
+  <div class="wrap">
+    <h2>Four administration classes</h2>
+    <p class="text">The standard scales with the size of your facility. Pick the class that matches your footprint; each higher class keeps everything from the one below and adds identifiers for the new layer of cabling. In the drawings, yellow marks what that class adds.</p>
+
+    <div class="classes">
+      <figure>
+        <svg viewBox="0 0 220 150" role="img" aria-label="Class 1: a single equipment room">
+          <rect class="bx" x="30" y="22" width="160" height="108" rx="3"/>
+          <text x="40" y="40" font-size="11" class="mut">One equipment room</text>
+          <rect class="hl" x="55" y="58" width="26" height="56"/><rect class="hl" x="97" y="58" width="26" height="56"/><rect class="hl" x="139" y="58" width="26" height="56"/>
+        </svg>
+        <h3>Class 1</h3>
+        <p>A single equipment room. Simple setups with no backbone cabling.</p>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 220 150" role="img" aria-label="Class 2: one building with several telecom rooms and a backbone">
+          <rect class="bx" x="60" y="12" width="100" height="128" rx="2"/>
+          <line class="ln" x1="60" y1="55" x2="160" y2="55"/><line class="ln" x1="60" y1="98" x2="160" y2="98"/>
+          <line class="inkline" x1="85" y1="40" x2="85" y2="120"/><line class="hiline" x1="85" y1="40" x2="85" y2="120"/>
+          <rect class="bx" x="73" y="24" width="26" height="18"/><text x="78" y="37" font-size="10">TR</text>
+          <rect class="bx" x="73" y="67" width="26" height="18"/><text x="78" y="80" font-size="10">TR</text>
+          <rect class="bx" x="73" y="110" width="26" height="18"/><text x="78" y="123" font-size="10">TR</text>
+          <text x="165" y="80" font-size="10" class="mut">backbone</text>
+        </svg>
+        <h3>Class 2</h3>
+        <p>One building with several telecom rooms joined by backbone cabling.</p>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 220 150" role="img" aria-label="Class 3: a campus of buildings with inter-building cables">
+          <rect class="bx" x="18" y="58" width="50" height="72"/><rect class="bx" x="88" y="34" width="50" height="96"/><rect class="bx" x="160" y="70" width="44" height="60"/>
+          <line class="ln" x1="8" y1="130" x2="212" y2="130"/>
+          <path class="inkline" d="M43 130 L43 140 L113 140 L113 130 M113 140 L182 140 L182 130"/>
+          <path class="hiline" d="M43 130 L43 140 L113 140 L113 130 M113 140 L182 140 L182 130"/>
+          <text x="70" y="24" font-size="10" class="mut">campus</text>
+        </svg>
+        <h3>Class 3</h3>
+        <p>A multi-building campus with cabling and pathways between buildings.</p>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 220 150" role="img" aria-label="Class 4: several campuses linked across sites">
+          <rect class="bx" x="12" y="84" width="26" height="46"/><rect class="bx" x="44" y="70" width="26" height="60"/><rect class="bx" x="76" y="92" width="22" height="38"/>
+          <rect class="bx" x="124" y="78" width="26" height="52"/><rect class="bx" x="156" y="92" width="22" height="38"/><rect class="bx" x="184" y="66" width="26" height="64"/>
+          <path class="inkline" d="M57 70 C 70 16, 150 16, 167 66"/>
+          <path class="hiline" d="M57 70 C 70 16, 150 16, 167 66" stroke-dasharray="7 5"/>
+          <text x="86" y="12" font-size="10" class="mut">site to site</text>
+          <line class="ln" x1="6" y1="130" x2="104" y2="130"/><line class="ln" x1="118" y1="130" x2="214" y2="130"/>
+        </svg>
+        <h3>Class 4</h3>
+        <p>Multi-site or multi-campus enterprises with external connections.</p>
+      </figure>
+    </div>
+
+    <h3 style="margin-top:34px">What gets its own identifier at each class</h3>
+    <div class="scroll">
+    <table class="matrix">
+      <thead><tr><th>Element</th><th>Class 1</th><th>Class 2</th><th>Class 3</th><th>Class 4</th></tr></thead>
+      <tbody id="matrix"></tbody>
+    </table>
+    </div>
+    <div class="legend"><span><i class="dot new"></i> first required at this class</span><span><i class="dot"></i> carried forward</span></div>
+    <p class="muted small">This is a general summary of how the classes stack up; the article itself only states that each level adds identifiers and records as complexity grows. Check the standard for the full required list.</p>
+  </div>
+</section>
+
+<!-- HOW -->
+<section id="how" class="alt">
+  <div class="wrap">
+    <h2>The labeling procedure</h2>
+    <p class="text">The article condenses the standard into lettered steps. Here they are with a drawing for each. Color coding, records and best practices follow in their own sections.</p>
+
+    <!-- A -->
+    <div class="step">
+      <div class="letter" aria-hidden="true">A</div>
+      <div>
+        <h3>Spaces and racks</h3>
+        <ul>
+          <li>Give every telecom space a floor + room ID, such as <strong>1A</strong> for floor 1, room A.</li>
+          <li>Name each rack or cabinet by the floor-grid coordinate it sits on, such as <strong>AD02</strong>. Without a floor grid, use row and rack number.</li>
+          <li>Put machine-printed labels at the top and bottom, on both the front and the rear.</li>
+        </ul>
+        <figure class="fig">
+          <svg viewBox="0 0 460 250" role="img" aria-label="Cabinet front and rear, each with labels at top and bottom">
+            <g id="cabF"></g>
+            <text x="110" y="244" text-anchor="middle" class="dt" font-size="16">Front</text>
+            <text x="330" y="244" text-anchor="middle" class="dt" font-size="16">Rear</text>
+          </svg>
+          <figcaption>Four labels per cabinet, so it can be identified from either aisle whether you're kneeling or standing.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <!-- B -->
+    <div class="step">
+      <div class="letter" aria-hidden="true">B</div>
+      <div>
+        <h3>Patch panels</h3>
+        <ul>
+          <li>Label each panel with its cabinet and its rack-unit height from the bottom: <strong>AD02-35</strong> sits 35 U up in cabinet AD02.</li>
+          <li>Where it helps, add where the panel's ports lead, as in <strong>AD02-35 p 01-06 to AG03-35 p 01-06</strong>.</li>
+          <li>Label ports at both the near and far ends whenever you can.</li>
+        </ul>
+        <figure class="fig scroll">
+          <svg viewBox="0 0 660 216" role="img" aria-label="Six ports on panel AD02-35 linked by a trunk to six ports on AG03-35" id="trunk"></svg>
+          <figcaption>A panel label that names both ends tells a technician where a trunk goes without opening the records.</figcaption>
+        </figure>
+        <p style="margin-bottom:4px"><strong>Sub-panels</strong> get letters A, B, C and so on, skipping I, O and Q because they are easily misread as 1, 0 and O.</p>
+        <div class="letters" aria-label="Sub-panel letters with I, O and Q skipped" id="letters"></div>
+      </div>
+    </div>
+
+    <!-- C -->
+    <div class="step">
+      <div class="letter" aria-hidden="true">C</div>
+      <div>
+        <h3>Ports and cables</h3>
+        <p>Use the full format <strong>floor/space . grid location - rack unit : port</strong> (the hero at the top of this page decodes it). Every link gets a unique identifier, and both ends of every cable are labeled, including connectors, faceplates and multi-user outlet assemblies (MUTOAs).</p>
+        <figure class="fig scroll">
+          <svg viewBox="0 0 680 270" role="img" aria-label="Horizontal link between AG09 and AJ06; each end's label lists its own location first" id="hlink"></svg>
+          <figcaption>On a horizontal (subsystem 1) link each end names itself first and the far end second, so the label you're holding always starts with where you're standing.</figcaption>
+        </figure>
+        <p><strong>Optional ISO-style markers</strong> make records readable internationally: a <strong>+</strong> prefix marks a location aspect and an <strong>=</strong> prefix marks a function aspect, for example <strong>=XO</strong> for an outlet.</p>
+      </div>
+    </div>
+
+    <!-- D -->
+    <div class="step">
+      <div class="letter" aria-hidden="true">D</div>
+      <div>
+        <h3>Backbone cabling (subsystems 2 and 3)</h3>
+        <p>Name both termination spaces and the port range. Within a building:</p>
+        <div class="decode" aria-label="1A.AJ06-27:01 / 2A.AJ09-27:01">
+          <span class="s"><b>1A.AJ06-27:01</b><i>this end: floor 1 room A, cabinet AJ06, 27 U, port 01</i></span>
+          <span class="x">/</span>
+          <span class="s"><b>2A.AJ09-27:01</b><i>far end: floor 2 room A, cabinet AJ09</i></span>
+        </div>
+        <p>On a campus, prefix each end with campus and building codes:</p>
+        <div class="decode" aria-label="A-ENG-1A.AJ06-27:01-06">
+          <span class="s"><b>A</b><i>campus</i></span><span class="x">-</span>
+          <span class="s"><b>ENG</b><i>building</i></span><span class="x">-</span>
+          <span class="s"><b>1A</b><i>floor + room</i></span><span class="x">.</span>
+          <span class="s"><b>AJ06</b><i>cabinet grid</i></span><span class="x">-</span>
+          <span class="s"><b>27</b><i>rack unit</i></span><span class="x">:</span>
+          <span class="s"><b>01-06</b><i>port range</i></span>
+        </div>
+        <p class="muted small">Paired with <strong>B-ADM-1A.AJ09-27:01-06</strong> at the far end: campus B, building ADM. Each fiber or pair group still needs its own unique identifier.</p>
+      </div>
+    </div>
+
+    <!-- E -->
+    <div class="step">
+      <div class="letter" aria-hidden="true">E</div>
+      <div>
+        <h3>Special components</h3>
+        <p>Grounding points:</p>
+        <div class="decode" aria-label="2A=RGB1/AJ05">
+          <span class="s"><b>2A</b><i>floor 2 room A</i></span><span class="x">=</span>
+          <span class="s"><b>RGB1</b><i>grounding busbar 1</i></span><span class="x">/</span>
+          <span class="s"><b>AJ05</b><i>location</i></span>
+        </div>
+        <p>Firestops:</p>
+        <div class="decode" aria-label="2-FSL01(6)">
+          <span class="s"><b>2</b><i>floor 2</i></span><span class="x">-</span>
+          <span class="s"><b>FSL01</b><i>firestop no. 01</i></span>
+          <span class="s"><b>(6)</b><i>6-hour rating</i></span>
+        </div>
+        <p>Outside plant, such as maintenance holes and pedestals:</p>
+        <div class="decode" aria-label="LAX1-MH101 with GPS coordinates">
+          <span class="s"><b>LAX1</b><i>campus code</i></span><span class="x">-</span>
+          <span class="s"><b>MH101</b><i>maintenance hole 101</i></span>
+          <span class="s"><b>(37.797413, -122.414925)</b><i>GPS position</i></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COLOR -->
+<section id="color">
+  <div class="wrap">
+    <h2>The color code (optional)</h2>
+    <p class="text">Colors are not required, but if you use them, each color marks a kind of termination field. Select a color to see where it sits in a typical building.</p>
+    <div class="cc">
+      <ul class="cclist" id="cclist"></ul>
+      <figure class="fig scroll" style="margin-top:0">
+        <svg id="ccsvg" style="min-width:720px" viewBox="0 0 1000 470" role="img" aria-label="Building topology with colored termination fields"></svg>
+        <figcaption>Swatches are screen approximations of the Pantone references. MC, IC and HC are the main, intermediate and horizontal cross-connects.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- RECORDS -->
+<section id="records" class="alt">
+  <div class="wrap">
+    <h2>Records: the label is only half the job</h2>
+    <p class="text">The article compares labels without documentation to a map without a legend. Every identifier must match a record in a spreadsheet, DCIM tool or other database, and that record is updated right after every move, add or change.</p>
+    <div class="record">
+      <figure class="fig" style="margin:0">
+        <svg viewBox="0 0 360 200" role="img" aria-label="A labeled cable linked to its record">
+          <path class="cable" d="M10 150 C 90 150, 110 70, 200 70 L 350 70"/>
+          <rect x="332" y="58" width="22" height="24" rx="2" fill="#8A96A0" stroke="var(--ink)"/>
+          <rect class="tapebox" x="175" y="48" width="130" height="44" rx="3"/>
+          <text class="tapetx" x="240" y="77" text-anchor="middle" font-size="19">1A.AD02-40:02</text>
+          <path class="ln" d="M240 92 L240 150 L340 150" stroke-dasharray="4 4"/>
+          <path class="ln" d="M333 144 L342 150 L333 156"/>
+          <text x="345" y="180" text-anchor="end" class="mut" font-size="12">same ID in the record</text>
+        </svg>
+      </figure>
+      <div class="card" aria-label="Example record">
+        <header>1A.AD02-40:02</header>
+        <dl>
+          <dt>Cable type</dt><dd>Cat 6A U/UTP</dd>
+          <dt>Length</dt><dd>7 m</dd>
+          <dt>Source</dt><dd>1A.AD02-40:02</dd>
+          <dt>Destination</dt><dd>1A.AG09-35:02</dd>
+          <dt>Connector / panel</dt><dd>RJ45, 24-port panel at 40 U</dd>
+          <dt>Wiring scheme</dt><dd>T568B</dd>
+          <dt>Service notes</dt><dd>Installed and tested; last change logged</dd>
+        </dl>
+      </div>
+    </div>
+    <p class="muted small" style="margin-top:12px">Field names follow the article; the values are illustrative.</p>
+  </div>
+</section>
+
+<!-- PRACTICE -->
+<section id="practice">
+  <div class="wrap">
+    <div class="two">
+      <div>
+        <h2>Best practices</h2>
+        <ul class="checks">
+          <li>Use durable, machine-printed labels. No handwriting.</li>
+          <li>Label both ends of every connection.</li>
+          <li>Place labels where they're visible and protected from rubbing.</li>
+          <li>Keep every physical label matched to its digital record.</li>
+          <li>Review regularly so identifiers stay accurate.</li>
+        </ul>
+      </div>
+      <div>
+        <h2>Why it's worth it</h2>
+        <div class="why">
+          <div><b>Faster troubleshooting</b>Faults are found in seconds rather than hours.</div>
+          <div><b>Less downtime</b>Fewer mistakes during maintenance.</div>
+          <div><b>Scales with you</b>Stays traceable as the facility grows.</div>
+          <div><b>Readable by anyone</b>New staff and contractors understand the layout fast.</div>
+          <div><b>Long-term savings</b>Set up once; it pays off on every change.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARTICLE -->
+<section id="article" class="alt">
+  <div class="wrap text">
+    <h2>About the article</h2>
+    <p>The piece is published by AnD Cable Products, a vendor of rack and cable-management gear, and written by its general manager, John Lester. Its FAQ adds a few useful points: 606-B is not legally mandatory but is the accepted industry standard for professional installations, and the later 606-D revision extends it to automated infrastructure management (AIM) systems and more building types while keeping 606-B's structure as the foundation.</p>
+    <p>The final third promotes the company's own "Ultimate Data Center Cable Labeling System": reusable UniTag snap-on labels paired with Epson LabelWorks PX printers and tapes sized to fit them. It is one way to produce compliant labels, not something the standard requires.</p>
+    <div class="note">
+      <strong>Reading it in October 2026:</strong> the article's "buy 5 tapes, get 1 free" offer ended on 19 December 2025. 606-B itself has since been revised (606-C, then 606-D), so for a new project check which edition your client or contract specifies. The core identifier scheme shown here carries through.
+    </div>
+    <p>The article also links a PDF version of the standard summary on the vendor's site.</p>
+  </div>
+</section>
+
+<footer><div class="wrap">
+  Source: <a href="https://andcable.com/cable-management/data-center-cable-labeling-standard/">andcable.com</a>. This page paraphrases and illustrates the article; diagrams are schematic, not to scale.
+</div></footer>
+
+<script>
+(function(){
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  const $ = s => document.querySelector(s);
+  const DEF = {floor:'1', room:'A', col:'AD', row:'02', ru:40, port:'02'};
+  let st = Object.assign({}, DEF);
+  let active = 'grid';
+
+  /* ---------- helpers ---------- */
+  const colToIdx = s => [...s].reduce((n,c)=>n*26+(c.charCodeAt(0)-64),0);
+  function idxToCol(n,len){let s='';while(n>0){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}while(s.length<len)s='A'+s;return s;}
+  const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  /* ---------- tape ---------- */
+  function renderTape(){
+    const t = $('#tape');
+    const segs = [
+      ['space', st.floor+st.room, 'Floor and room'],
+      ['.', '.'],
+      ['grid', st.col+st.row, 'Cabinet grid location'],
+      ['-', '-'],
+      ['ru', String(st.ru), 'Rack unit'],
+      [':', ':'],
+      ['port', st.port, 'Port']
+    ];
+    t.innerHTML = segs.map(s => s.length===2
+      ? `<span class="p" aria-hidden="true">${esc(s[1])}</span>`
+      : `<button data-seg="${s[0]}" aria-pressed="${active===s[0]}" aria-label="${s[2]}: ${esc(s[1])}">${esc(s[1])}</button>`).join('');
+    t.querySelectorAll('button').forEach(b=>{
+      b.addEventListener('click',()=>setActive(b.dataset.seg));
+      b.addEventListener('mouseenter',()=>setActive(b.dataset.seg));
+      b.addEventListener('focus',()=>setActive(b.dataset.seg));
+    });
+  }
+
+  /* ---------- floor plan ---------- */
+  function renderFloor(){
+    const len = st.col.length, idx = colToIdx(st.col);
+    const minIdx = len===2 ? 27 : 1;
+    const c0 = Math.max(minIdx, idx-3);
+    const rowN = parseInt(st.row,10), r0 = Math.max(1,rowN-2);
+    const T=40, X0=40, Y0=58, C=8, R=6;
+    const tc = idx-c0, tr = rowN-r0;
+    const other = tr+3 < R ? tr+3 : tr-3;
+    const gOn = active==='grid', sOn = active==='space';
+    let h = '';
+    // room outline + name
+    h += `<rect x="${X0-6}" y="${Y0-6}" width="${C*T+12}" height="${R*T+12}" rx="3" fill="none" stroke="var(--ink)" stroke-width="${sOn?5:2}" ${sOn?'style="stroke:var(--hi)"':''}/>`;
+    if(sOn) h += `<rect x="${X0-9}" y="${Y0-9}" width="${C*T+18}" height="${R*T+18}" rx="4" fill="none" stroke="var(--ink)" stroke-width="1.5"/>`;
+    h += `<rect x="${X0-6}" y="4" width="${sOn?150:130}" height="24" rx="3" class="${sOn?'hl':'bx'}"/>`;
+    h += `<text x="${X0+2}" y="21" class="dt ${sOn?'hltext':''}" font-size="15">Floor ${esc(st.floor)}, room ${esc(st.room)}</text>`;
+    // headers
+    for(let c=0;c<C;c++){
+      const lab = idxToCol(c0+c,len), on = gOn && c===tc;
+      if(on) h += `<rect x="${X0+c*T+4}" y="${Y0-26}" width="${T-8}" height="18" rx="2" class="hl"/>`;
+      h += `<text x="${X0+c*T+T/2}" y="${Y0-13}" text-anchor="middle" class="dt ${on?'hltext':'mut'}" font-size="13">${lab}</text>`;
+    }
+    for(let r=0;r<R;r++){
+      const lab = String(r0+r).padStart(st.row.length,'0'), on = gOn && r===tr;
+      if(on) h += `<rect x="4" y="${Y0+r*T+T/2-10}" width="28" height="18" rx="2" class="hl"/>`;
+      h += `<text x="18" y="${Y0+r*T+T/2+4}" text-anchor="middle" class="dt ${on?'hltext':'mut'}" font-size="13">${lab}</text>`;
+    }
+    // tiles
+    for(let r=0;r<R;r++)for(let c=0;c<C;c++)
+      h += `<rect class="tile" x="${X0+c*T}" y="${Y0+r*T}" width="${T}" height="${T}"/>`;
+    // guide lines
+    if(gOn){
+      h += `<line x1="${X0+tc*T+T/2}" y1="${Y0}" x2="${X0+tc*T+T/2}" y2="${Y0+tr*T}" stroke="var(--ink)" stroke-dasharray="3 3"/>`;
+      h += `<line x1="${X0}" y1="${Y0+tr*T+T/2}" x2="${X0+tc*T}" y2="${Y0+tr*T+T/2}" stroke="var(--ink)" stroke-dasharray="3 3"/>`;
+    }
+    // cabinet rows
+    const drawRow = (r,isT) => {
+      for(let c=0;c<C;c++){
+        if(!isT && (c===0||c===C-1)) continue;
+        if(isT && (c===0||c===C-1) && c!==tc) continue;
+        const tgt = isT && c===tc;
+        const cls = tgt ? (gOn?'hl':'tgt') : 'cab';
+        h += `<rect class="${cls}" x="${X0+c*T+5}" y="${Y0+r*T+5}" width="${T-10}" height="${T-10}" rx="1"/>`;
+      }
+    };
+    drawRow(tr,true); if(other>=0) drawRow(other,false);
+    const tx = X0+tc*T+T/2, ty = Y0+tr*T+T/2;
+    h += `<text x="${tx}" y="${ty+4}" text-anchor="middle" class="dt ${gOn?'hltext':''}" font-size="11">${esc(st.col+st.row)}</text>`;
+    const aisleY = Y0 + (Math.min(tr,other)+ (Math.abs(tr-other)/2) + .5)*T + 4;
+    if(other>=0) h += `<text x="${X0+C*T/2}" y="${aisleY}" text-anchor="middle" class="mut" font-size="11">aisle</text>`;
+    $('#svg-floor').innerHTML = h;
+  }
+
+  /* ---------- rack elevation ---------- */
+  function renderRack(){
+    const U = st.ru>48?Math.max(52,st.ru):(st.ru>42?48:42);
+    const top=34, H=270, uh=H/U, x=50, w=104, on = active==='ru', gOn = active==='grid';
+    let h='';
+    h += `<rect x="${x+w/2-34}" y="4" width="68" height="22" rx="3" class="${gOn?'hl':'tapebox'}"/>`;
+    h += `<text x="${x+w/2}" y="20" text-anchor="middle" class="${gOn?'dt hltext':'tapetx'}" font-size="15">${esc(st.col+st.row)}</text>`;
+    h += `<rect class="rackbody" x="${x-10}" y="${top-6}" width="${w+20}" height="${H+12}" rx="3"/>`;
+    for(let u=1;u<=U;u++){
+      const y = top+(U-u)*uh;
+      h += `<rect class="unit" x="${x}" y="${y}" width="${w}" height="${uh}"/>`;
+    }
+    // context equipment
+    const eq = [[2,2],[5,1],[8,2],[12,4],[20,1],[22,1],[30,2]].filter(e=>e[0]+e[1]-1<U);
+    eq.forEach(([u,n])=>{ if(st.ru>=u && st.ru<u+n) return;
+      h += `<rect class="equip" x="${x+2}" y="${top+(U-u-n+1)*uh+.5}" width="${w-4}" height="${n*uh-1}" rx="1"/>`; });
+    // numbers
+    for(let u=1;u<=U;u++) if(u===1||u%10===0)
+      h += `<text x="${x-16}" y="${top+(U-u)*uh+uh-1}" text-anchor="end" class="mut" font-size="10">${u}</text>`;
+    // target
+    const ty = top+(U-st.ru)*uh;
+    h += `<rect class="${on?'hl':'tgt'}" x="${x-2}" y="${ty-1}" width="${w+4}" height="${uh+2}"/>`;
+    h += `<path class="ln" d="M${x+w+12} ${ty+uh/2} L${x+w+30} ${ty+uh/2}"/>`;
+    h += `<rect x="${x+w+30}" y="${ty+uh/2-11}" width="40" height="22" rx="3" class="${on?'hl':'bx'}"/>`;
+    h += `<text x="${x+w+50}" y="${ty+uh/2+5}" text-anchor="middle" class="dt ${on?'hltext':''}" font-size="14">U${st.ru}</text>`;
+    // bottom arrow: counted from bottom
+    h += `<path class="ln" d="M${x+w+22} ${top+H} L${x+w+22} ${Math.min(top+H-8, ty+uh+10)}" stroke-dasharray="3 3"/>`;
+    h += `<text x="${x+w/2}" y="${top+H+22}" text-anchor="middle" class="mut" font-size="11">counted up from the bottom</text>`;
+    $('#svg-rack').innerHTML = h;
+  }
+
+  /* ---------- patch panel ---------- */
+  function renderPanel(){
+    const p = parseInt(st.port,10), N = p>24?48:24, per=N/2, on = active==='port', ruOn = active==='ru';
+    const X=16, W=408, pitch=(W-24)/per, pw=pitch*.7, ph=24;
+    let h='';
+    h += `<rect x="${X}" y="6" width="${ruOn?120:112}" height="22" rx="3" class="${ruOn?'hl':'tapebox'}"/>`;
+    h += `<text x="${X+8}" y="22" class="${ruOn?'dt hltext':'tapetx'}" font-size="15">${esc(st.col+st.row)}-${st.ru}</text>`;
+    h += `<text x="${X+W}" y="22" text-anchor="end" class="mut" font-size="11">${N}-port panel</text>`;
+    h += `<rect class="panel" x="${X}" y="36" width="${W}" height="118" rx="4"/>`;
+    for(let row=0;row<2;row++){
+      for(let i=0;i<per;i++){
+        const n = row*per+i+1, cx = X+12+i*pitch+(pitch-pw)/2, cy = row? 108:64, tgt = n===p;
+        h += `<rect class="${tgt?(on?'hl':'tgt'):'port'}" x="${cx}" y="${cy}" width="${pw}" height="${ph}" rx="2"/>`;
+        const ly = row? cy+ph+13 : cy-6;
+        if(per<=12 || tgt || n%4===1 || n===per || n===N)
+          h += `<text x="${cx+pw/2}" y="${ly}" text-anchor="middle" class="${tgt?'dt':'mut'}" font-size="${tgt?13:10}">${String(n).padStart(2,'0')}</text>`;
+      }
+    }
+    $('#svg-panel').innerHTML = h;
+  }
+
+  /* ---------- explanation ---------- */
+  function renderExplain(){
+    const full = `${st.floor}${st.room}.${st.col}${st.row}-${st.ru}:${st.port}`;
+    const txt = {
+      space:[`${st.floor}${st.room}`, `The telecommunications space: floor ${st.floor}, room ${st.room}. Every room that holds cabling gets a floor + room ID so identifiers stay unique across the whole building.`],
+      grid:[`${st.col}${st.row}`, `The cabinet's floor-grid coordinate: column ${st.col}, row ${st.row} of the room's floor grid. It is also the name printed on the cabinet itself.`],
+      ru:[String(st.ru), `The patch panel's height in the cabinet, measured in rack units (1 U = 1.75 in) from the bottom. The panel's own label is ${st.col}${st.row}-${st.ru}.`],
+      port:[st.port, `The port number on that panel. The cable plugged in here carries the full identifier ${full} on both ends.`]
+    }[active];
+    $('#explain').innerHTML = `<strong>${esc(txt[0])}</strong><br>${esc(txt[1])}<br><span class="muted small">Read as a whole: floor ${esc(st.floor)}, room ${esc(st.room)}, cabinet ${esc(st.col+st.row)}, panel at ${st.ru} U, port ${esc(st.port)}.</span>`;
+  }
+
+  function renderAll(){
+    renderTape(); renderFloor(); renderRack(); renderPanel(); renderExplain();
+    document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on', v.dataset.seg===active));
+  }
+  function setActive(seg){ if(seg===active) return; active=seg;
+    renderFloor(); renderRack(); renderPanel(); renderExplain();
+    $('#tape').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.seg===active));
+    document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on', v.dataset.seg===active));
+  }
+  document.querySelectorAll('.view').forEach(v=>v.addEventListener('click',()=>setActive(v.dataset.seg)));
+  $('#svg-floor').addEventListener('dblclick',()=>setActive('space'));
+
+  function decode(){
+    const v = $('#idin').value.trim().toUpperCase();
+    const m = v.match(/^(\d{1,2})([A-Z])\.([A-Z]{1,2})(\d{1,3})-(\d{1,2}):(\d{1,3})$/);
+    if(!m){ $('#iderr').textContent = 'Use the format floor+room.grid-rackunit:port, for example 2B.AF07-22:14.'; return; }
+    const ru = parseInt(m[5],10), port = parseInt(m[6],10);
+    if(ru<1||ru>52){ $('#iderr').textContent = 'Rack unit should be between 1 and 52.'; return; }
+    if(port<1||port>48){ $('#iderr').textContent = 'This demo draws panels up to 48 ports; use a port from 01 to 48.'; return; }
+    $('#iderr').textContent='';
+    st = {floor:m[1], room:m[2], col:m[3], row:m[4], ru, port:m[6].padStart(2,'0')};
+    renderAll();
+  }
+  $('#decode').addEventListener('click',decode);
+  $('#idin').addEventListener('keydown',e=>{ if(e.key==='Enter') decode(); });
+  $('#reset').addEventListener('click',()=>{ st=Object.assign({},DEF); active='grid'; $('#idin').value='1A.AD02-40:02'; $('#iderr').textContent=''; renderAll(); });
+  renderAll();
+
+  /* ---------- class matrix ---------- */
+  const rows = [
+    ['Telecom spaces (rooms)',1],['Horizontal links',1],['Main grounding busbar',1],
+    ['Other grounding busbars',2],['Building backbone cables, pairs and fibers',2],['Firestop locations',2],
+    ['Building identifiers',3],['Campus backbone and outside-plant pathways',3],['Campus or site identifiers',4]
+  ];
+  $('#matrix').innerHTML = rows.map(([n,k])=>`<tr><td>${n}</td>${[1,2,3,4].map(c=>`<td class="c">${c<k?'':`<i class="dot${c===k?' new':''}" aria-label="${c===k?'added':'required'}"></i>`}</td>`).join('')}</tr>`).join('');
+
+  /* ---------- cabinet labels (A) ---------- */
+  (function(){
+    let h='';
+    [[40,'front'],[260,'rear']].forEach(([x])=>{
+      h += `<rect x="${x}" y="30" width="140" height="190" rx="4" fill="var(--rack)"/>`;
+      h += `<rect x="${x+10}" y="60" width="120" height="130" rx="2" fill="none" stroke="var(--rack-face)" stroke-width="1"/>`;
+      for(let i=0;i<12;i++) h += `<line x1="${x+18}" y1="${68+i*10}" x2="${x+122}" y2="${68+i*10}" stroke="var(--rack-face)" stroke-opacity=".35"/>`;
+      [38,196].forEach(y=>{
+        h += `<rect class="tapebox" x="${x+35}" y="${y}" width="70" height="18" rx="2"/>`;
+        h += `<text class="tapetx" x="${x+70}" y="${y+14}" text-anchor="middle" font-size="14">AD02</text>`;
+      });
+    });
+    h += `<text x="220" y="52" text-anchor="middle" class="mut" font-size="11">top</text>`;
+    h += `<text x="220" y="210" text-anchor="middle" class="mut" font-size="11">bottom</text>`;
+    $('#cabF').innerHTML = h;
+  })();
+
+  /* ---------- trunk (B) ---------- */
+  (function(){
+    let h='';
+    const panel=(x,id)=>{
+      let s = `<rect class="tapebox" x="${x}" y="22" width="82" height="22" rx="3"/><text class="tapetx" x="${x+41}" y="38" text-anchor="middle" font-size="15">${id}</text>`;
+      s += `<rect class="panel" x="${x}" y="52" width="230" height="62" rx="3"/>`;
+      for(let i=0;i<12;i++){ const cx=x+10+i*18; const on=i<6;
+        s += `<rect class="${on?'hl':'port'}" x="${cx}" y="62" width="13" height="16" rx="1.5"/>`;
+        if(on) s += `<text x="${cx+6.5}" y="94" text-anchor="middle" font-size="9">${String(i+1).padStart(2,'0')}</text>`; }
+      return s;
+    };
+    h += panel(20,'AD02-35') + panel(410,'AG03-35');
+    h += `<path d="M84 120 C 84 160, 200 160, 330 160 C 460 160, 474 160, 474 120" stroke="var(--ink)" stroke-width="12" fill="none" stroke-linecap="round"/>`;
+    h += `<path d="M84 120 C 84 160, 200 160, 330 160 C 460 160, 474 160, 474 120" stroke="#8A96A0" stroke-width="8" fill="none" stroke-linecap="round"/>`;
+    h += `<text x="330" y="150" text-anchor="middle" class="mut" font-size="11">6-fiber trunk</text>`;
+    h += `<rect class="tapebox" x="150" y="176" width="360" height="30" rx="3"/>`;
+    h += `<text class="tapetx" x="330" y="197" text-anchor="middle" font-size="17">AD02-35 p 01-06 to AG03-35 p 01-06</text>`;
+    $('#trunk').innerHTML = h;
+    $('#letters').innerHTML = 'ABCDEFGHIJKLMNOPQRS'.split('').map(l=>`<span class="${'IOQ'.includes(l)?'no':''}" ${'IOQ'.includes(l)?'title="skipped"':''}>${l}</span>`).join('');
+  })();
+
+  /* ---------- horizontal link (C) ---------- */
+  (function(){
+    let h='';
+    const cab=(x,id)=>{
+      let s=`<rect class="tapebox" x="${x+25}" y="42" width="70" height="20" rx="2"/><text class="tapetx" x="${x+60}" y="57" text-anchor="middle" font-size="14">${id}</text>`;
+      s+=`<rect x="${x}" y="68" width="120" height="180" rx="3" fill="var(--rack)"/>`;
+      s+=`<rect class="panel" x="${x+8}" y="112" width="104" height="14" rx="1"/>`;
+      s+=`<rect class="hl" x="${x+12}" y="115" width="9" height="8"/>`;
+      s+=`<text x="${x+118}" y="140" text-anchor="end" fill="var(--rack-face)" style="fill:var(--rack-face)" font-size="10">panel at 35 U</text>`;
+      return s;
+    };
+    h += cab(30,'AG09') + cab(530,'AJ06');
+    h += `<rect x="150" y="10" width="380" height="16" rx="2" fill="none" stroke="var(--muted)" stroke-dasharray="4 3"/><text x="340" y="22" text-anchor="middle" class="mut" font-size="10">overhead cable tray</text>`;
+    h += `<path class="cable" d="M46 119 C 20 119, 20 30, 100 30 L 580 30 C 660 30, 660 119, 546 119"/>`;
+    // near-end label
+    h += `<path class="ln" d="M150 150 L205 150" stroke-dasharray="3 3"/>`;
+    h += `<rect class="tapebox" x="205" y="136" width="196" height="28" rx="3"/><text class="tapetx" x="303" y="156" text-anchor="middle" font-size="16">AG09-35:01 / AJ06-35:01</text>`;
+    h += `<text x="303" y="180" text-anchor="middle" class="dt" font-size="14">Near end, at AG09</text>`;
+    // far-end label
+    h += `<path class="ln" d="M530 205 L475 205" stroke-dasharray="3 3"/>`;
+    h += `<rect class="tapebox" x="279" y="191" width="196" height="28" rx="3"/><text class="tapetx" x="377" y="211" text-anchor="middle" font-size="16">AJ06-35:01 / AG09-35:01</text>`;
+    h += `<text x="377" y="236" text-anchor="middle" class="dt" font-size="14">Far end, at AJ06</text>`;
+    $('#hlink').innerHTML = h;
+  })();
+
+  /* ---------- color code ---------- */
+  const colors = [
+    {k:'orange', hex:'#FF9E3D', name:'Orange', pms:'Pantone 150 C', fn:'Demarcation point', use:'Central office connection'},
+    {k:'green',  hex:'#6DD29A', name:'Green',  pms:'Pantone 353 C', fn:'Network connection', use:'User side of the CO connection'},
+    {k:'purple', hex:'#B79BDB', name:'Purple', pms:'Pantone 264 C', fn:'Common equipment', use:'PBX, LAN, mainframe'},
+    {k:'white',  hex:'#FFFFFF', name:'White',  pms:'No Pantone reference', fn:'Subsystem 3 terminations', use:'Building MC to IC'},
+    {k:'gray',   hex:'#9EA2A2', name:'Gray',   pms:'Pantone 422 C', fn:'Subsystem 2 terminations', use:'IC to HC'},
+    {k:'brown',  hex:'#B38F57', name:'Brown',  pms:'Pantone 465 C', fn:'Campus cabling', use:'Between buildings'},
+    {k:'blue',   hex:'#8FC3E8', name:'Blue',   pms:'Pantone 291 C', fn:'Subsystem 1 terminations', use:'Horizontal cabling in telecom spaces'},
+    {k:'yellow', hex:'#F6E14B', name:'Yellow', pms:'Pantone 101 C', fn:'Miscellaneous', use:'Security, alarms'}
+  ];
+  const C = Object.fromEntries(colors.map(c=>[c.k,c.hex]));
+  $('#cclist').innerHTML = colors.map(c=>`<li><button data-c="${c.k}" aria-pressed="false"><span class="sw" style="background:${c.hex}"></span><span><b>${c.name}: ${c.fn}</b><span class="d">${c.use}. ${c.pms}</span></span></button></li>`).join('');
+
+  (function(){
+    const room=(x,y,w,hh,label)=>`<rect class="bx" x="${x}" y="${y}" width="${w}" height="${hh}" rx="4"/><text x="${x+12}" y="${y+22}" class="dt" font-size="16">${label}</text>`;
+    const field=(k,x,y,w,hh,t)=>`<g data-c="${k}"><rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="3" fill="${C[k]}" stroke="var(--ink)" stroke-width="1.5"/><text class="fl" x="${x+w/2}" y="${y+hh/2+5}" text-anchor="middle" font-size="13">${t}</text></g>`;
+    let h='';
+    h += room(20,40,130,80,'Carrier');
+    h += `<text x="32" y="84" class="mut" font-size="12">central office</text>`;
+    h += room(190,20,190,130,'Entrance room');
+    h += room(430,20,330,130,'Equipment room');
+    h += room(810,20,170,130,'Building 2');
+    h += room(430,200,330,100,'Intermediate cross-connect');
+    h += room(430,340,330,110,'Telecom room (HC)');
+    h += room(820,360,150,86,'Work area');
+    h += room(20,340,300,110,'Anywhere in the site');
+    // connections
+    h += `<g data-c="orange"><path class="ln" d="M150 87 L205 87" stroke-width="2.5"/></g>`;
+    h += `<path class="ln" d="M365 87 L445 87" stroke-width="2.5"/>`;
+    h += `<g data-c="white"><path class="ln" d="M597 115 L597 170 L492 170 L492 235" stroke-width="2.5"/><text x="605" y="165" class="mut" font-size="11">backbone, subsystem 3</text></g>`;
+    h += `<g data-c="gray"><path class="ln" d="M597 285 L597 320 L492 320 L492 378" stroke-width="2.5"/><text x="605" y="316" class="mut" font-size="11">backbone, subsystem 2</text></g>`;
+    h += `<g data-c="blue"><path class="ln" d="M645 405 L840 405" stroke-width="2.5"/><text x="660" y="397" class="mut" font-size="11">horizontal, subsystem 1</text>
+      <rect x="840" y="392" width="30" height="30" rx="3" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5"/><rect x="848" y="400" width="14" height="10" rx="1" fill="var(--ink)"/><text x="880" y="412" font-size="12">outlet</text></g>`;
+    h += `<g data-c="brown"><path class="ln" d="M745 87 L825 87" stroke-width="2.5" stroke-dasharray="6 4"/><text x="785" y="186" text-anchor="middle" class="mut" font-size="11">campus cable</text></g>`;
+    // fields
+    h += field('orange',205,60,75,55,'Demarc');
+    h += field('green',290,60,75,55,'Network');
+    h += field('purple',445,60,95,55,'PBX / LAN');
+    h += field('white',550,60,95,55,'MC');
+    h += field('brown',655,60,90,55,'Campus');
+    h += field('brown',825,60,75,55,'Campus');
+    h += field('white',445,235,95,50,'from MC');
+    h += field('gray',550,235,95,50,'to HC');
+    h += field('gray',445,378,95,55,'from IC');
+    h += field('blue',550,378,95,55,'Horizontal');
+    h += field('yellow',35,378,120,55,'Alarm / security');
+    h += `<text x="170" y="400" class="mut" font-size="12">Yellow marks auxiliary</text><text x="170" y="416" class="mut" font-size="12">circuits wherever they are.</text>`;
+    $('#ccsvg').innerHTML = h;
+  })();
+
+  let ccActive=null;
+  function setCC(k){
+    ccActive = (ccActive===k)?null:k;
+    const svg=$('#ccsvg');
+    svg.classList.toggle('focus', !!ccActive);
+    svg.querySelectorAll('[data-c]').forEach(g=>g.classList.toggle('on', g.dataset.c===ccActive));
+    document.querySelectorAll('#cclist button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.c===ccActive));
+  }
+  document.querySelectorAll('#cclist button').forEach(b=>b.addEventListener('click',()=>setCC(b.dataset.c)));
+  $('#ccsvg').addEventListener('click',e=>{ const g=e.target.closest('[data-c]'); if(g) setCC(g.dataset.c); });
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

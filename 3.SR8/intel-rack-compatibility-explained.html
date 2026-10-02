@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Will this server fit this rack? Intel's rack compatibility guide, explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF0F2; --sheet:#FBFCFC; --ink:#1C2630; --muted:#56636E; --rule:#C5CDD3;
+  --dim:#2E5E8C; --dim-soft:#D7E3EE; --amber:#B97F05; --amber-soft:#F5E2B3;
+  --red:#B23A2B; --red-soft:#F3D6D1; --green:#2F7D4F; --green-soft:#D3EADB;
+  --steel:#7F8C96; --steel-soft:#DCE2E6; --box:#C9D1D7;
+  --sans:"Barlow", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --cond:"Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#151B21; --sheet:#1C242C; --ink:#E3E8EC; --muted:#9AA7B1; --rule:#36424C;
+    --dim:#82B2DE; --dim-soft:#22374A; --amber:#EDB43A; --amber-soft:#43361A;
+    --red:#E3705F; --red-soft:#4A2722; --green:#62BE88; --green-soft:#1F3A2A;
+    --steel:#8996A0; --steel-soft:#2A343D; --box:#34414B;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#151B21; --sheet:#1C242C; --ink:#E3E8EC; --muted:#9AA7B1; --rule:#36424C;
+  --dim:#82B2DE; --dim-soft:#22374A; --amber:#EDB43A; --amber-soft:#43361A;
+  --red:#E3705F; --red-soft:#4A2722; --green:#62BE88; --green-soft:#1F3A2A;
+  --steel:#8996A0; --steel-soft:#2A343D; --box:#34414B;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.55;-webkit-text-size-adjust:100%}
+a{color:var(--dim);text-underline-offset:3px}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+img,svg{max-width:100%}
+.wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+.prose{max-width:720px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:40px;align-items:center;padding:56px 0 40px;border-bottom:2px solid var(--ink)}
+.hero h1{font-family:var(--cond);font-weight:700;font-size:clamp(44px,7vw,82px);line-height:.95;letter-spacing:-.01em;margin:0 0 20px}
+.hero .sub{font-size:20px;color:var(--muted);margin:0 0 18px;max-width:34em}
+.hero p{margin:0 0 14px;max-width:36em}
+.source{font-size:15px;color:var(--muted)}
+.hero svg{width:100%;height:auto;display:block}
+
+/* sections */
+section{padding:48px 0 8px}
+h2{font-family:var(--cond);font-weight:600;font-size:36px;line-height:1.1;margin:0 0 6px}
+h3{font-family:var(--cond);font-weight:600;font-size:24px;margin:28px 0 6px}
+.secnum{color:var(--muted);font-weight:500;margin-right:.35em}
+.statusline{margin:0 0 16px}
+p{margin:0 0 14px}
+
+/* status tags */
+.tag{display:inline-block;font-family:var(--cond);font-weight:600;font-size:15px;line-height:1;padding:5px 9px 4px;border-radius:3px;border:1.5px solid currentColor;white-space:nowrap}
+.tag.req{color:var(--red);background:var(--red-soft)}
+.tag.rec{color:var(--amber);background:var(--amber-soft)}
+.tag.opt{color:var(--muted);background:var(--steel-soft)}
+.tag.info{color:var(--dim);background:var(--dim-soft)}
+
+/* glance table */
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:16px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--cond);font-weight:600;font-size:17px;border-bottom:2px solid var(--ink)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.glance td:first-child{width:46px;color:var(--muted);font-family:var(--cond);font-weight:600;font-size:18px}
+.legend{display:flex;flex-wrap:wrap;gap:10px 22px;margin:18px 0 0;font-size:15px;color:var(--muted)}
+.legend span.tag{margin-right:6px}
+
+/* drawings */
+figure.drawing{margin:22px 0 26px;background:var(--sheet);border:1px solid var(--rule);padding:18px 18px 12px}
+figure.drawing svg{display:block;width:100%;height:auto}
+figcaption{font-size:14.5px;color:var(--muted);margin-top:10px;max-width:60em}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.pair figure.drawing{margin:0}
+
+/* svg vocabulary */
+.ln{stroke:var(--ink);stroke-width:1.6;fill:none}
+.ln-thin{stroke:var(--ink);stroke-width:1;fill:none}
+.ln-hidden{stroke:var(--steel);stroke-width:1.2;fill:none;stroke-dasharray:5 4}
+.post{fill:var(--steel-soft);stroke:var(--ink);stroke-width:1.4}
+.hole{fill:var(--sheet);stroke:var(--ink);stroke-width:1}
+.box{fill:var(--box);stroke:var(--ink);stroke-width:1.4}
+.bay{fill:var(--sheet);stroke:var(--ink);stroke-width:.8}
+.dimln{stroke:var(--dim);stroke-width:1.2;fill:none}
+.dimtx{fill:var(--dim);font-family:var(--cond);font-weight:600;font-size:15px}
+.lbl{fill:var(--ink);font-family:var(--sans);font-size:14px}
+.lbl-m{fill:var(--muted);font-family:var(--sans);font-size:13px}
+.lbl-b{fill:var(--ink);font-family:var(--cond);font-weight:600;font-size:17px}
+.good{fill:var(--green-soft);stroke:var(--green);stroke-width:1.4}
+.bad{fill:var(--red-soft);stroke:var(--red);stroke-width:1.4}
+.warn{fill:var(--amber-soft);stroke:var(--amber);stroke-width:1.4}
+.tx-good{fill:var(--green);font-family:var(--cond);font-weight:600;font-size:15px}
+.tx-bad{fill:var(--red);font-family:var(--cond);font-weight:600;font-size:15px}
+.cool{stroke:var(--dim);stroke-width:2.5;fill:none}
+.hot{stroke:var(--red);stroke-width:2.5;fill:none}
+
+/* terms */
+dl.terms{display:grid;grid-template-columns:minmax(140px,200px) 1fr;gap:0;margin:16px 0 0;max-width:820px}
+dl.terms dt,dl.terms dd{padding:10px 0;border-bottom:1px solid var(--rule);margin:0}
+dl.terms dt{font-family:var(--cond);font-weight:600;font-size:18px;padding-right:16px}
+
+/* controls */
+.panel{background:var(--sheet);border:1px solid var(--rule);border-top:3px solid var(--amber);padding:18px;margin:22px 0 26px}
+.controls{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end;margin-bottom:14px}
+.ctl{display:flex;flex-direction:column;gap:6px;font-size:15px;color:var(--muted);min-width:0}
+.ctl strong{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:4px;overflow:hidden}
+.seg button{font:600 16px var(--cond);background:transparent;color:var(--ink);border:0;padding:7px 14px;cursor:pointer;border-left:1.5px solid var(--ink)}
+.seg button:first-child{border-left:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
+input[type=range]{width:min(320px,70vw);accent-color:var(--amber)}
+select,input[type=number]{font:16px var(--sans);padding:6px 8px;border:1.5px solid var(--ink);border-radius:4px;background:var(--sheet);color:var(--ink)}
+input[type=number]{width:80px}
+.verdict{font-size:17px;margin:12px 0 0;padding:10px 14px;border-left:4px solid var(--steel);background:var(--paper)}
+.verdict.ok{border-color:var(--green)} .verdict.tight{border-color:var(--amber)} .verdict.no{border-color:var(--red)}
+
+#depthSvg,#railSvg{display:block;width:100%;min-width:640px;height:auto}
+.note{border-left:4px solid var(--amber);padding:6px 0 6px 16px;margin:18px 0;max-width:720px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0;padding:0;list-style:none}
+.chips li{border:1px solid var(--rule);background:var(--sheet);padding:4px 10px;border-radius:3px;font-size:15px}
+footer{margin-top:56px;padding:28px 0 48px;border-top:2px solid var(--ink);color:var(--muted);font-size:15px}
+footer p{max-width:720px}
+
+@media (max-width:820px){
+  .hero{grid-template-columns:1fr;padding-top:36px}
+  .hero svg{max-width:340px;margin:0 auto}
+  .pair{grid-template-columns:1fr}
+  dl.terms{grid-template-columns:1fr}
+  dl.terms dt{border-bottom:0;padding-bottom:0}
+}
+@media (prefers-reduced-motion:no-preference){
+  .flow{stroke-dasharray:8 7;animation:flow 1.6s linear infinite}
+  @keyframes flow{to{stroke-dashoffset:-30}}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div>
+    <h1>Will this server fit this rack?</h1>
+    <p class="sub">A visual walkthrough of Intel's <em>Server Rack Cabinet Compatibility Guide</em>, revision 2.4 (September 2005).</p>
+    <p>The guide is an 18-page checklist for anyone buying a rack cabinet to hold Intel server chassis. It boils down to four questions: is the rack built to the 19-inch EIA-310-D standard, is there room at the mounting posts for Intel's slide rails, is the cabinet deep enough for the server plus its cables, and can enough air flow through it front to back.</p>
+    <p class="source">Source: <a href="http://www.intel.com/content/dam/support/us/en/documents/motherboards/server/sb/server_rack_cabinet_compatibility_guide_24.pdf">intel.com, server_rack_cabinet_compatibility_guide_24.pdf</a>. Figures on this page are redrawn and simplified.</p>
+  </div>
+  <svg id="heroRack" viewBox="0 0 400 450" role="img" aria-label="Front view of a 19-inch rack with 1U, 2U and 4U servers mounted between two posts; one rack unit equals 44.45 mm"></svg>
+</header>
+
+<section id="glance">
+  <h2>The checklist at a glance</h2>
+  <p class="prose">Every section of the guide is tagged with a status. Here are the seven checks it asks you to make, with the number that matters for each.</p>
+  <div class="scroll">
+  <table class="glance">
+    <thead><tr><th></th><th>Check</th><th class="num">Key number</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><a href="#eia">Rack is built to the EIA-310-D standard</a></td><td class="num">19 in</td><td><span class="tag req">Required</span></td></tr>
+      <tr><td>2</td><td><a href="#eia">Mounting holes are square or round, not threaded</a></td><td class="num">square is best</td><td><span class="tag rec">Recommended</span></td></tr>
+      <tr><td>3</td><td><a href="#flange">Enough space at the mounting flange for the slide rail</a></td><td class="num">≥ 16.77 mm</td><td><span class="tag req">Required</span></td></tr>
+      <tr><td>4</td><td><a href="#depth">Gap between front flange and front door for handles and bezel</a></td><td class="num">≥ 51 mm</td><td><span class="tag req">Required</span></td></tr>
+      <tr><td>5</td><td><a href="#rails">Front-to-rear flange spacing (F) within the rail kit's travel</a></td><td class="num">610–850 mm</td><td><span class="tag req">Required</span></td></tr>
+      <tr><td>6</td><td><a href="#depth">Cabinet depth</a></td><td class="num">900–1000 mm</td><td><span class="tag rec">Recommended</span></td></tr>
+      <tr><td>7</td><td><a href="#thermal">Front-to-back airflow through perforated doors</a></td><td class="num">≈ 63% open</td><td><span class="tag rec">Recommended</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="legend">
+    <div><span class="tag req">Required</span>must be followed exactly</div>
+    <div><span class="tag rec">Recommended</span>advised, not strictly needed</div>
+    <div><span class="tag opt">Optional</span>your call</div>
+    <div><span class="tag info">Information</span>background only</div>
+  </div>
+</section>
+
+<section id="basics">
+  <h2>The vocabulary</h2>
+  <p class="prose">Rack equipment is measured in <strong>rack units (U)</strong>. One U is 44.45 mm (1.75 in) of vertical space, so a "2U server" is 88.9 mm tall. The guide works in millimetres first, inches second, and assumes a standard 19-inch rack throughout.</p>
+  <figure class="drawing">
+    <svg id="uDetail" style="max-width:560px" viewBox="0 0 520 300" role="img" aria-label="Close-up of a mounting rail showing two rack units with three holes each. Holes within a unit are 15.9 mm apart; the gap across a unit boundary is 12.7 mm."></svg>
+    <figcaption>Two rack units on a mounting post. Each U carries three holes in a repeating 15.9 / 15.9 / 12.7 mm pattern, which is how you find the U boundaries by eye. The hole pattern comes from the EIA-310 standard itself; the guide shows it in a drawing rather than in its text.</figcaption>
+  </figure>
+
+  <dl class="terms">
+    <dt>Rack</dt><dd>An open frame for mounting equipment. Comes in 2-post and 4-post forms.</dd>
+    <dt>Cabinet</dt><dd>A free-standing 4-post enclosure, usually with doors and side panels.</dd>
+    <dt>Chassis</dt><dd>The metal box that holds a server's electronics.</dd>
+    <dt>Bezel</dt><dd>The cosmetic plastic or metal cover on the front of a server.</dd>
+    <dt>Mounting flange</dt><dd>The vertical strips with holes, front and rear, that servers and rails bolt to. The front one is the "EIA-310-D mounting flange".</dd>
+    <dt>Slide rails</dt><dd>Telescoping rails that let a server slide out of the rack like a drawer while staying supported.</dd>
+    <dt>PCI card bulkhead</dt><dd>The rear wall inside a server where expansion-card brackets attach. The guide measures server length to this point (see the <a href="#appendix">appendix</a>).</dd>
+    <dt>CFM</dt><dd>Cubic feet per minute, a measure of airflow volume.</dd>
+    <dt>IHV</dt><dd>Independent hardware vendor; here, the companies that make rack cabinets.</dd>
+  </dl>
+</section>
+
+<section id="types">
+  <h2>Two kinds of rack</h2>
+  <p class="statusline"><span class="tag info">Information</span></p>
+  <p class="prose">The guide distinguishes enclosed 4-post cabinets, typical of data centres, from open 2-post racks, which it describes as common in US telecom rooms. Everything that follows about depth, doors and airflow applies to 4-post cabinets.</p>
+  <figure class="drawing">
+    <svg style="max-width:640px" viewBox="0 0 680 300" role="img" aria-label="Left: a 4-post enclosed rack frame with a server held at front and back. Right: a 2-post open rack with a server held at its middle.">
+      <!-- 4-post -->
+      <g>
+        <polyline class="ln-hidden" points="40,270 110,230 240,230"/>
+        <line class="ln-hidden" x1="110" y1="20" x2="110" y2="230"/>
+        <rect class="ln" x="40" y="60" width="130" height="210"/>
+        <polyline class="ln" points="40,60 110,20 240,20 170,60"/>
+        <polyline class="ln" points="240,20 240,230 170,270"/>
+        <rect class="post" x="40" y="60" width="9" height="210"/>
+        <rect class="post" x="161" y="60" width="9" height="210"/>
+        <rect class="post" x="231" y="20" width="9" height="210"/>
+        <polygon class="box" points="49,140 161,140 231,100 119,100"/>
+        <polygon class="box" points="49,140 161,140 161,164 49,164"/>
+        <polygon class="box" points="161,140 231,100 231,124 161,164"/>
+        <text class="lbl-b" x="40" y="296">4-post enclosed cabinet</text>
+      </g>
+      <!-- 2-post -->
+      <g>
+        <rect class="post" x="430" y="40" width="12" height="220"/>
+        <rect class="post" x="570" y="40" width="12" height="220"/>
+        <rect class="ln" x="430" y="32" width="152" height="8" style="fill:var(--steel-soft)"/>
+        <polygon class="post" points="410,260 462,260 462,272 410,272"/>
+        <polygon class="post" points="550,260 602,260 602,272 550,272"/>
+        <polygon class="box" points="400,150 552,150 612,118 460,118"/>
+        <polygon class="box" points="400,150 552,150 552,172 400,172"/>
+        <polygon class="box" points="552,150 612,118 612,140 552,172"/>
+        <rect class="post" x="430" y="140" width="12" height="40"/>
+        <rect class="post" x="570" y="130" width="12" height="40"/>
+        <text class="lbl-b" x="410" y="296">2-post open rack</text>
+      </g>
+    </svg>
+    <figcaption>Simplified. In a 4-post cabinet a server is supported at the front and rear flanges, usually on slide rails. A 2-post rack holds equipment from two uprights, usually near its middle.</figcaption>
+  </figure>
+</section>
+
+<section id="eia">
+  <h2><span class="secnum">5.1</span>Built to EIA-310-D</h2>
+  <p class="statusline"><span class="tag req">Required</span></p>
+  <div class="prose">
+    <p>EIA-310-D is the 1992 Electronic Industries Association standard for 19-inch cabinets, racks and panels. It fixes the spacing, mounting and bezel clearances that let any compliant server bolt into any compliant rack. Intel designs its chassis to it, and warns that not every cabinet vendor builds to it, so you should ask. A non-compliant rack may not accept Intel's rail kits at all.</p>
+    <p>The standard allows three kinds of mounting hole. Intel's rail hardware handles two of them.</p>
+  </div>
+  <figure class="drawing">
+    <svg viewBox="0 0 660 210" role="img" aria-label="Three hole types: square holes work best with Intel brackets, round holes also work, threaded holes are not supported.">
+      <g transform="translate(30,10)">
+        <rect class="post" x="40" y="0" width="80" height="150"/>
+        <rect class="hole" x="66" y="20" width="28" height="28"/>
+        <rect class="hole" x="66" y="61" width="28" height="28"/>
+        <rect class="hole" x="66" y="102" width="28" height="28"/>
+        <circle class="good" cx="140" cy="10" r="14"/><path d="M133 10 l5 5 l9 -10" stroke="var(--green)" stroke-width="2.4" fill="none"/>
+        <text class="lbl-b" x="0" y="178">Square</text>
+        <text class="lbl-m" x="0" y="196">Works best with Intel brackets</text>
+      </g>
+      <g transform="translate(250,10)">
+        <rect class="post" x="40" y="0" width="80" height="150"/>
+        <circle class="hole" cx="80" cy="34" r="12"/><circle class="hole" cx="80" cy="75" r="12"/><circle class="hole" cx="80" cy="116" r="12"/>
+        <circle class="good" cx="140" cy="10" r="14"/><path d="M133 10 l5 5 l9 -10" stroke="var(--green)" stroke-width="2.4" fill="none"/>
+        <text class="lbl-b" x="0" y="178">Round</text>
+        <text class="lbl-m" x="0" y="196">Supported by Intel rail kits</text>
+      </g>
+      <g transform="translate(470,10)">
+        <rect class="post" x="40" y="0" width="80" height="150"/>
+        <g id="threaded">
+          <circle class="hole" cx="80" cy="34" r="8"/><path d="M73 30 l14 8 M73 34 l14 8 M74 27 l12 7" stroke="var(--ink)" stroke-width=".9"/>
+          <circle class="hole" cx="80" cy="75" r="8"/><path d="M73 71 l14 8 M73 75 l14 8 M74 68 l12 7" stroke="var(--ink)" stroke-width=".9"/>
+          <circle class="hole" cx="80" cy="116" r="8"/><path d="M73 112 l14 8 M73 116 l14 8 M74 109 l12 7" stroke="var(--ink)" stroke-width=".9"/>
+        </g>
+        <circle class="bad" cx="140" cy="10" r="14"/><path d="M134 4 l12 12 M146 4 l-12 12" stroke="var(--red)" stroke-width="2.4"/>
+        <text class="lbl-b" x="0" y="178">Tapped (threaded)</text>
+        <text class="lbl-m" x="0" y="196">Allowed by EIA, not by Intel kits</text>
+      </g>
+    </svg>
+    <figcaption>Mounting hole options under EIA-310-D and how Intel's rail kits get on with each (guide section 5.1.2, Recommended).</figcaption>
+  </figure>
+</section>
+
+<section id="flange">
+  <h2><span class="secnum">5.1.3</span>Room for the rail at the flange</h2>
+  <p class="statusline"><span class="tag req">Required</span></p>
+  <div class="prose">
+    <p>This is the check the EIA standard does <em>not</em> cover, and the one the guide calls absolutely critical. Intel's slide rails need at least <strong>16.77 mm</strong> of clearance at the front mounting flange to attach properly.</p>
+    <p>The shape of the flange decides whether you get it. Many cabinets ship with <strong>U-shaped</strong> flanges whose offset distance is often under the limit, 15 mm being typical. <strong>L-shaped</strong> flanges typically leave about 22 mm. If in doubt, the guide's advice is simple: order the cabinet with L-shaped flanges.</p>
+  </div>
+  <figure class="drawing">
+    <svg viewBox="0 0 720 250" role="img" aria-label="Flange profiles and clearance comparison. A U-shaped flange typically offers 15 mm, below the 16.77 mm minimum. An L-shaped flange typically offers 22 mm, which passes.">
+      <!-- profiles -->
+      <text class="lbl-b" x="20" y="24">Flange profile (simplified)</text>
+      <g transform="translate(30,50)">
+        <path d="M0 0 V70 H90" class="ln" style="stroke-width:7;stroke-linejoin:miter"/>
+        <text class="lbl" x="0" y="100">L-shaped</text>
+      </g>
+      <g transform="translate(160,50)">
+        <path d="M0 0 V70 H90 V40" class="ln" style="stroke-width:7;stroke-linejoin:miter"/>
+        <text class="lbl" x="0" y="100">U-shaped</text>
+      </g>
+      <text class="lbl-m" x="20" y="190">The extra return on a U-shaped flange</text>
+      <text class="lbl-m" x="20" y="207">eats into the space the rail bracket needs.</text>
+
+      <!-- gauge -->
+      <g transform="translate(320,0)">
+        <text class="lbl-b" x="0" y="24">Clearance available for the slide rail</text>
+        <line class="ln-thin" x1="80" y1="210" x2="380" y2="210"/>
+        <!-- scale: 0..25mm over 80..380 => 12 px/mm -->
+        <g id="flangeTicks"></g>
+        <rect class="bad" x="80" y="68" width="180" height="34"/>
+        <text class="lbl" x="88" y="90">U-shaped, typical</text>
+        <text class="tx-bad" x="252" y="90" text-anchor="end">15 mm</text>
+        <rect class="good" x="80" y="128" width="264" height="34"/>
+        <text class="lbl" x="88" y="150">L-shaped, typical</text>
+        <text class="tx-good" x="350" y="150">22 mm</text>
+        <line x1="281.2" y1="58" x2="281.2" y2="214" stroke="var(--ink)" stroke-width="2" stroke-dasharray="6 4"/>
+        <text class="lbl-b" x="281.2" y="52" text-anchor="middle">16.77 mm minimum</text>
+        <text class="lbl-m" x="0" y="90">fails</text>
+        <text class="lbl-m" x="0" y="150">passes</text>
+      </g>
+    </svg>
+    <figcaption>Ask the cabinet vendor for the flange offset distance before ordering. Anything under 16.77 mm will not take Intel's slide rails.</figcaption>
+  </figure>
+</section>
+
+<section id="depth">
+  <h2><span class="secnum">5.2</span>Cabinet depth and front clearance</h2>
+  <p class="statusline"><span class="tag rec">Recommended</span> depth &nbsp; <span class="tag req">Required</span> 51 mm front clearance</p>
+  <div class="prose">
+    <p>A cabinet has to hold more than the server. The guide splits the depth into pieces, viewed from above:</p>
+    <p><strong>D</strong> is the gap between the front door and the front mounting flange. It must be at least <strong>51 mm</strong> (2 in), because the bezel and pull handles stick out in front of the flange and air has to get in. <strong>E</strong> is the server's length from the front flange to its PCI card bulkhead. <strong>G</strong> is the space left behind the server for cables: about 152 mm (6 in) for fibre, and roughly 4 in (the guide prints this as 112 mm, though 4 in is 102 mm) for copper Ethernet and power. <strong>L</strong> is the cabinet's depth.</p>
+    <p>Intel chassis are designed for <strong>900–1000 mm</strong> cabinets. Some fit an 800 mm cabinet but may poke out the back and stop the rear door closing. Try it below.</p>
+  </div>
+
+  <div class="panel" id="depthTool">
+    <div class="controls">
+      <div class="ctl">Cabinet depth (L)
+        <div class="seg" role="group" aria-label="Cabinet depth">
+          <button type="button" data-l="800" aria-pressed="false">800 mm</button>
+          <button type="button" data-l="900" aria-pressed="true">900 mm</button>
+          <button type="button" data-l="1000" aria-pressed="false">1000 mm</button>
+        </div>
+      </div>
+      <label class="ctl" for="eSlider">Server length to PCI bulkhead (E): <strong id="eVal">697 mm</strong>
+        <input id="eSlider" type="range" min="500" max="900" step="1" value="697">
+      </label>
+      <div class="ctl">Cables at the back
+        <div class="seg" role="group" aria-label="Cable type">
+          <button type="button" data-g="152" aria-pressed="true">Fibre</button>
+          <button type="button" data-g="112" aria-pressed="false">Copper</button>
+        </div>
+      </div>
+    </div>
+    <div class="scroll"><svg id="depthSvg" viewBox="0 0 900 270" role="img" aria-label="Top view of the cabinet showing front clearance D, server length E, cable space G and cabinet depth L"></svg></div>
+    <p class="verdict" id="depthVerdict" aria-live="polite"></p>
+  </div>
+
+  <h3>The guide's depth table</h3>
+  <p class="prose">With fibre cabling (G ≈ 152 mm), these are the longest servers each standard cabinet takes. Each row is just D + E + G ≈ L.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th class="num">Flange to PCI bulkhead (E)</th><th class="num">Total system depth (D+E)</th><th class="num">Installed depth (D+E+G)</th><th class="num">Cabinet depth (L)</th></tr></thead>
+    <tbody>
+      <tr><td class="num">597 mm [23.5 in]</td><td class="num">648 mm [25.5 in]</td><td class="num">800.2 mm [31.5 in]</td><td class="num">800 mm</td></tr>
+      <tr><td class="num">697 mm [27.4 in]</td><td class="num">748 mm [29.4 in]</td><td class="num">900.2 mm [35.4 in]</td><td class="num">900 mm</td></tr>
+      <tr><td class="num">797 mm [31.4 in]</td><td class="num">848 mm [33.4 in]</td><td class="num">1000.2 mm [39.4 in]</td><td class="num">1000 mm</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 id="handles">Why the 51 mm matters</h3>
+  <figure class="drawing">
+    <svg style="max-width:640px" viewBox="0 0 560 200" role="img" aria-label="Side view: the server's bezel and pull handle project in front of the mounting flange, inside a 51 mm gap before the front door.">
+      <line x1="70" y1="20" x2="70" y2="180" stroke="var(--ink)" stroke-width="4" stroke-dasharray="10 5"/>
+      <text class="lbl" x="70" y="196" text-anchor="middle">Front door</text>
+      <rect class="post" x="192" y="30" width="8" height="140"/>
+      <text class="lbl" x="196" y="196" text-anchor="middle">Front flange</text>
+      <rect class="box" x="200" y="70" width="340" height="60"/>
+      <rect class="box" x="168" y="74" width="32" height="52" style="fill:var(--steel-soft)"/>
+      <path d="M168 84 h-26 v32 h26" class="ln" style="stroke-width:4"/>
+      <text class="lbl-m" x="128" y="66" text-anchor="middle">handle</text>
+      <text class="lbl-m" x="160" y="150" text-anchor="middle">bezel</text>
+      <text class="lbl" x="370" y="105" text-anchor="middle">Server chassis</text>
+      <line class="dimln" x1="70" y1="40" x2="192" y2="40"/>
+      <path class="dimln" d="M70 34 v12 M192 34 v12"/>
+      <text class="dimtx" x="131" y="33" text-anchor="middle">D ≥ 51 mm</text>
+      <path class="cool flow" d="M14 100 H62"/>
+      <text class="lbl-m" x="14" y="92">air in</text>
+    </svg>
+    <figcaption>Side view (simplified). The handles and bezel sit in front of the flange, so a door closer than 51 mm would hit them and choke the air intake.</figcaption>
+  </figure>
+  <p class="prose">Intel chassis also ship without cable-management arms. The guide points you to the cabinet vendor for those.</p>
+</section>
+
+<section id="rails">
+  <h2><span class="secnum">5.2.2</span>Slide rail travel (dimension F)</h2>
+  <p class="statusline"><span class="tag req">Required</span></p>
+  <div class="prose">
+    <p>Slide rails telescope to bridge the gap between the front and rear mounting flanges. That gap is <strong>F</strong>. Most cabinets fix the front flange and let you move the rear one, but each Intel rail kit only stretches over a certain range. If F falls outside it, the rail can't reach both flanges. The guide says this is often what stops an Intel chassis going into a cabinet shallower than 900 mm.</p>
+  </div>
+  <figure class="drawing">
+    <svg viewBox="0 0 720 190" role="img" aria-label="Slide rail spanning front and rear flanges. The outer rail is two overlapping pieces that telescope; F is the distance between flanges.">
+      <rect class="post" x="80" y="20" width="10" height="130"/>
+      <rect class="post" x="610" y="20" width="10" height="130"/>
+      <text class="lbl" x="85" y="14" text-anchor="middle">Front flange</text>
+      <text class="lbl" x="615" y="14" text-anchor="middle">Rear flange</text>
+      <rect class="ln" x="90" y="70" width="300" height="16" style="fill:var(--steel-soft)"/>
+      <rect class="ln" x="320" y="66" width="290" height="24" style="fill:var(--box)"/>
+      <rect class="ln" x="90" y="60" width="14" height="36" style="fill:var(--steel)"/>
+      <rect class="ln" x="596" y="60" width="14" height="36" style="fill:var(--steel)"/>
+      <path d="M330 52 h50 M370 46 l10 6 l-10 6 M330 52 l10 -6 M330 52 l10 6" stroke="var(--amber)" stroke-width="2" fill="none"/>
+      <text class="lbl-m" x="355" y="40" text-anchor="middle">telescopes</text>
+      <rect x="100" y="104" width="420" height="34" fill="none" stroke="var(--steel)" stroke-width="1.3" stroke-dasharray="5 4"/>
+      <text class="lbl-m" x="310" y="126" text-anchor="middle">server rides on an inner rail fixed to the chassis</text>
+      <line class="dimln" x1="85" y1="170" x2="615" y2="170"/>
+      <path class="dimln" d="M85 160 v20 M615 160 v20"/>
+      <text class="dimtx" x="350" y="164" text-anchor="middle">F = distance between front and rear flanges</text>
+    </svg>
+    <figcaption>Schematic of a telescoping rail, simplified. The rail's shortest and longest settings set the allowed range of F.</figcaption>
+  </figure>
+
+  <div class="panel" id="railTool">
+    <div class="controls">
+      <label class="ctl" for="fSlider">Your cabinet's flange spacing (F): <strong id="fVal">700 mm</strong>
+        <input id="fSlider" type="range" min="590" max="870" step="1" value="700">
+      </label>
+    </div>
+    <div class="scroll"><svg id="railSvg" viewBox="0 0 760 300" role="img" aria-label="Range of flange spacing each Intel rail kit supports, with a marker at the chosen spacing"></svg></div>
+    <p class="verdict" id="railVerdict" aria-live="polite"></p>
+  </div>
+  <p class="prose">The guide also notes that the kits for the SC5100 and SC5200 use identical rail hardware, which is why their ranges match. (It prints the first of those as "AH2RACK", which looks like a typo for AHD2RACK.)</p>
+</section>
+
+<section id="thermal">
+  <h2><span class="secnum">5.3</span>Cooling</h2>
+  <p class="statusline"><span class="tag rec">Recommended</span></p>
+  <div class="prose">
+    <p>Rack servers pull cool air in at the front and push hot air out the back, so the cabinet must let air through in the same direction. No doors at all is best for airflow, but most sites want lockable doors, so the doors have to be secure and breathe at the same time.</p>
+  </div>
+  <figure class="drawing">
+    <svg viewBox="0 0 680 300" role="img" aria-label="Side view of a cabinet: cool room air enters through the perforated front door, passes through the servers, and leaves as hot air through the rear door, helped by rear-door fans.">
+      <rect class="ln" x="150" y="30" width="380" height="240" style="fill:none"/>
+      <line x1="150" y1="30" x2="150" y2="270" stroke="var(--ink)" stroke-width="5" stroke-dasharray="7 5"/>
+      <line x1="530" y1="30" x2="530" y2="270" stroke="var(--ink)" stroke-width="5" stroke-dasharray="7 5"/>
+      <g id="airServers"></g>
+      <circle cx="530" cy="90" r="18" class="ln" style="fill:var(--sheet)"/><path d="M530 90 l0 -14 M530 90 l12 7 M530 90 l-12 7" stroke="var(--ink)" stroke-width="2"/>
+      <circle cx="530" cy="210" r="18" class="ln" style="fill:var(--sheet)"/><path d="M530 210 l0 -14 M530 210 l12 7 M530 210 l-12 7" stroke="var(--ink)" stroke-width="2"/>
+      <g>
+        <path class="cool flow" d="M20 80 H140"/><path class="cool flow" d="M20 150 H140"/><path class="cool flow" d="M20 220 H140"/>
+        <path d="M132 74 l10 6 l-10 6 M132 144 l10 6 l-10 6 M132 214 l10 6 l-10 6" stroke="var(--dim)" stroke-width="2.5" fill="none"/>
+        <path class="hot flow" d="M555 80 H660"/><path class="hot flow" d="M555 150 H660"/><path class="hot flow" d="M555 220 H660"/>
+        <path d="M652 74 l10 6 l-10 6 M652 144 l10 6 l-10 6 M652 214 l10 6 l-10 6" stroke="var(--red)" stroke-width="2.5" fill="none"/>
+      </g>
+      <text class="lbl" x="20" y="60">Cool room air</text>
+      <text class="lbl" x="660" y="60" text-anchor="end">Hot exhaust</text>
+      <text class="lbl-m" x="150" y="290" text-anchor="middle">perforated front door</text>
+      <text class="lbl-m" x="530" y="290" text-anchor="middle">rear door with fans</text>
+    </svg>
+    <figcaption>Front-to-back airflow. The guide prefers fans mounted on the rear door over fans on the cabinet roof, so air is pulled straight through the servers.</figcaption>
+  </figure>
+
+  <h3>How much air each server needs</h3>
+  <p class="prose">Intel's recommended airflow per rack unit, from historical product data:</p>
+  <figure class="drawing">
+    <svg id="cfmSvg" viewBox="0 0 680 250" role="img" aria-label="Airflow per rack unit: 1U 32 to 36 CFM, 2U 39 to 45, 4U 38 to 40, 5U 45 to 50, 7U 25 to 43"></svg>
+  </figure>
+  <div class="panel">
+    <div class="controls">
+      <label class="ctl" for="cfmSize">Server size
+        <select id="cfmSize"><option value="1">1U</option><option value="2" selected>2U</option><option value="4">4U</option><option value="5">5U</option><option value="7">7U</option></select>
+      </label>
+      <label class="ctl" for="cfmCount">How many
+        <input id="cfmCount" type="number" min="1" max="50" value="10">
+      </label>
+    </div>
+    <p class="verdict" id="cfmOut" aria-live="polite"></p>
+  </div>
+
+  <div class="pair">
+    <figure class="drawing">
+      <svg id="perfSvg" viewBox="0 0 300 260" role="img" aria-label="A 25 mm square of door mesh with 33 holes, about 63 percent open"></svg>
+      <figcaption>To reach those airflows, both doors need about <strong>63% open area</strong> (free area ratio). Quick test from the guide: count the holes in a 25 mm (1 in) square. About 33 means roughly 63%. Enlarged.</figcaption>
+    </figure>
+    <figure class="drawing">
+      <svg id="tempSvg" viewBox="0 0 300 260" role="img" aria-label="Room temperature: Intel servers operate from 10 to 35 degrees Celsius; 25 to 30 is suggested"></svg>
+      <figcaption>Intel servers run in a 10–35 °C room. The guide suggests 25–30 °C. With a controlled room and 63%-open doors, extra cabinet fans are usually unnecessary.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="matrix">
+  <h2><span class="secnum">6</span>Racks Intel tested</h2>
+  <p class="statusline"><span class="tag info">Information</span></p>
+  <p class="prose">Intel checked these cabinets for form and fit with its chassis. All three are 900 mm deep, the sweet spot from the depth section. Intel stresses this is not an endorsement or a complete list, and that cabinets come in many configurations, so confirm your exact order with the vendor.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Vendor</th><th>Model</th><th class="num">Depth</th></tr></thead>
+    <tbody>
+      <tr><td>Wright Line</td><td>Vantage series (ordering code "Intel 1")</td><td class="num">900 mm</td></tr>
+      <tr><td>Pentair / Schroff</td><td>Proline Server Cabinet (order no. 12192-297)</td><td class="num">900 mm</td></tr>
+      <tr><td>Rittal</td><td>PS Server Cabinet</td><td class="num">900 mm</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <h3>Intel chassis covered by the guide</h3>
+  <ul class="chips">
+    <li>SC5100</li><li>SC5200</li><li>SC5300</li><li>SR1200</li><li>SR1300</li><li>SR1325</li><li>SR1350</li><li>SR2200</li><li>SR2300</li><li>SPSH4 platform</li><li>SRSH4 platform</li>
+  </ul>
+</section>
+
+<section id="appendix">
+  <h2>Appendix: the PCI card bulkhead</h2>
+  <p class="prose">Server length in the depth table is measured to the PCI card bulkhead rather than to the very back of the chassis. The bulkhead is where expansion cards' metal brackets meet the chassis, which is also where the cards' cables plug in, so it's the right reference point for working out cable space behind the server.</p>
+  <figure class="drawing">
+    <svg viewBox="0 0 640 190" role="img" aria-label="Side view of a server: dimension E runs from the front mounting flange to the PCI card bulkhead at the rear where expansion card brackets attach.">
+      <rect class="post" x="60" y="20" width="8" height="150"/>
+      <text class="lbl" x="64" y="186" text-anchor="middle">Front flange</text>
+      <rect class="box" x="68" y="60" width="470" height="80"/>
+      <rect x="380" y="78" width="140" height="44" fill="var(--sheet)" stroke="var(--ink)" stroke-width="1"/>
+      <text class="lbl-m" x="450" y="104" text-anchor="middle">PCI card</text>
+      <rect x="520" y="70" width="6" height="60" fill="var(--amber)" stroke="var(--ink)" stroke-width="1"/>
+      <path d="M526 88 h22 M526 112 h22" stroke="var(--ink)" stroke-width="3"/>
+      <text class="lbl-m" x="560" y="104">cables</text>
+      <line class="dimln" x1="64" y1="40" x2="523" y2="40"/>
+      <path class="dimln" d="M64 32 v16 M523 32 v54"/>
+      <text class="dimtx" x="294" y="34" text-anchor="middle">E: front flange to PCI card bulkhead</text>
+      <text class="lbl" x="523" y="160" text-anchor="middle">Bulkhead</text>
+    </svg>
+    <figcaption>Simplified side view. The highlighted bracket line is the bulkhead datum the guide uses for dimension E.</figcaption>
+  </figure>
+</section>
+
+<footer>
+  <p><strong>Keep in mind.</strong> This guide dates from 2005 and its chassis, rail kits and vendor links are long retired. The underlying checks still hold for most rack purchases: confirm the rack follows EIA-310 (now revision E), check flange clearance for your rail kit, size the depth for the server plus cables, keep a gap for the front bezel, and match the door perforation to your cooling.</p>
+  <p>The guide also lists related standards: the EIA-310-D standard, SSI entry-level electronics-bay and thin power-supply specs, the PCI local bus spec, and IEC 917.</p>
+  <p>All figures are simplified redrawings to explain the concepts, not to scale for manufacturing. Numbers are from the guide except the EIA hole spacing, which comes from the standard.</p>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var r1 = function(n){ return Math.round(n*10)/10; };
+
+  /* ---------- hero rack ---------- */
+  (function(){
+    var U = 34, top = 56, n = 11, s = "";
+    var postL = 20, postR = 234, pw = 26;
+    s += '<line class="dimln" x1="20" y1="24" x2="260" y2="24"/>';
+    s += '<path class="dimln" d="M20 16 v16 M260 16 v16"/>';
+    s += '<text class="dimtx" x="140" y="16" text-anchor="middle">19 in panel width (482.6 mm)</text>';
+    s += '<rect class="post" x="'+postL+'" y="'+(top-12)+'" width="'+pw+'" height="'+(U*n+24)+'"/>';
+    s += '<rect class="post" x="'+postR+'" y="'+(top-12)+'" width="'+pw+'" height="'+(U*n+24)+'"/>';
+    var offs = [6.35, 22.225, 38.1].map(function(v){ return v/44.45*U; });
+    for (var u=0; u<n; u++){
+      offs.forEach(function(o){
+        var y = top + u*U + o;
+        s += '<rect class="hole" x="'+(postL+10)+'" y="'+(y-3)+'" width="6" height="6"/>';
+        s += '<rect class="hole" x="'+(postR+10)+'" y="'+(y-3)+'" width="6" height="6"/>';
+      });
+    }
+    var kit = [{u:0,h:1},{u:2,h:2},{u:5,h:4},{u:10,h:1}];
+    kit.forEach(function(k){
+      var y = top + k.u*U + 1, h = k.h*U - 2, x = 46, w = 188;
+      s += '<rect class="box" x="'+(x-8)+'" y="'+y+'" width="'+(w+16)+'" height="'+h+'"/>';
+      var rows = k.h >= 4 ? 1 : Math.min(k.h, 2), bh = Math.min(U*0.55, 20), cols = 6, bw = 18;
+      var gy = (h - rows*bh) / (rows+1);
+      for (var r=0; r<rows; r++){
+        for (var c=0; c<cols; c++){
+          s += '<rect class="bay" x="'+(x+8+c*(bw+4))+'" y="'+(y+gy+r*(bh+gy))+'" width="'+bw+'" height="'+bh+'"/>';
+        }
+      }
+      if (k.h >= 4){
+        for (var v=0; v<6; v++){
+          var vy = y + h*0.55 + v*7;
+          s += '<line class="ln-thin" x1="'+(x+8)+'" y1="'+vy+'" x2="'+(x+w-50)+'" y2="'+vy+'"/>';
+        }
+      }
+      s += '<circle cx="'+(x+w-16)+'" cy="'+(y+h/2)+'" r="4" fill="var(--amber)" stroke="var(--ink)"/>';
+      s += '<text class="lbl-b" x="'+(postR+pw+14)+'" y="'+(y+h/2+6)+'">'+k.h+'U</text>';
+    });
+    // 1U dimension on the empty unit (u=1)
+    var y0 = top + 1*U, y1 = top + 2*U;
+    s += '<line class="dimln" x1="300" y1="'+y0+'" x2="300" y2="'+y1+'"/>';
+    s += '<path class="dimln" d="M262 '+y0+' h46 M262 '+y1+' h46"/>';
+    s += '<text class="dimtx" x="308" y="'+(y0+14)+'">1U =</text>';
+    s += '<text class="dimtx" x="308" y="'+(y0+30)+'">44.45 mm</text>';
+    $('heroRack').innerHTML = s;
+  })();
+
+  /* ---------- U detail ---------- */
+  (function(){
+    var k = 3, y0 = 12, s = "", cx = 160;
+    var Uh = 44.45*k;
+    s += '<rect class="post" x="130" y="'+(y0-6)+'" width="60" height="'+(2*Uh+12)+'"/>';
+    for (var u=0; u<=2; u++){
+      var by = y0 + u*Uh;
+      s += '<line x1="40" y1="'+by+'" x2="230" y2="'+by+'" stroke="var(--steel)" stroke-dasharray="4 4"/>';
+    }
+    s += '<text class="lbl-b" x="70" y="'+(y0+Uh/2+6)+'" text-anchor="middle">1 U</text>';
+    s += '<text class="lbl-b" x="70" y="'+(y0+Uh*1.5+6)+'" text-anchor="middle">1 U</text>';
+    var centers = [];
+    for (var uu=0; uu<2; uu++){
+      [6.35, 22.225, 38.1].forEach(function(o){
+        var y = y0 + (uu*44.45 + o)*k; centers.push(y);
+        s += '<rect class="hole" x="'+(cx-14)+'" y="'+(y-14)+'" width="28" height="28"/>';
+        s += '<line x1="'+(cx-20)+'" y1="'+y+'" x2="'+(cx+20)+'" y2="'+y+'" stroke="var(--dim)" stroke-width=".8"/>';
+      });
+    }
+    var labels = ["15.9 mm (5/8 in)","15.9 mm (5/8 in)","12.7 mm (1/2 in)","15.9 mm","15.9 mm"];
+    for (var i=0; i<centers.length-1; i++){
+      var a = centers[i], b = centers[i+1], x = 250;
+      s += '<line class="dimln" x1="'+x+'" y1="'+a+'" x2="'+x+'" y2="'+b+'"/>';
+      s += '<path class="dimln" d="M'+(cx+22)+' '+a+' H'+(x+6)+' M'+(cx+22)+' '+b+' H'+(x+6)+'"/>';
+      s += '<text class="dimtx" x="'+(x+10)+'" y="'+((a+b)/2+5)+'">'+labels[i]+'</text>';
+    }
+    var xa = 430;
+    s += '<line class="dimln" x1="'+xa+'" y1="'+y0+'" x2="'+xa+'" y2="'+(y0+Uh)+'"/>';
+    s += '<path class="dimln" d="M'+(xa-8)+' '+y0+' h16 M'+(xa-8)+' '+(y0+Uh)+' h16"/>';
+    s += '<text class="dimtx" x="'+(xa+8)+'" y="'+(y0+Uh/2-4)+'">1U =</text>';
+    s += '<text class="dimtx" x="'+(xa+8)+'" y="'+(y0+Uh/2+14)+'">44.45 mm</text>';
+    $('uDetail').innerHTML = s;
+  })();
+
+  /* ---------- flange gauge ticks ---------- */
+  (function(){
+    var s = "";
+    for (var mm=0; mm<=25; mm+=5){
+      var x = 80 + mm*12;
+      s += '<line class="ln-thin" x1="'+x+'" y1="210" x2="'+x+'" y2="216"/>';
+      s += '<text class="lbl-m" x="'+x+'" y="232" text-anchor="middle">'+mm+'</text>';
+    }
+    s += '<text class="lbl-m" x="380" y="246" text-anchor="end">mm</text>';
+    $('flangeTicks').innerHTML = s;
+  })();
+
+  /* ---------- depth tool ---------- */
+  (function(){
+    var st = {L:900, E:697, G:152};
+    var D = 51, sc = 760/1150, x0 = 60;
+    var tool = $('depthTool');
+    function setPressed(attr, val){
+      tool.querySelectorAll('button['+attr+']').forEach(function(b){
+        b.setAttribute('aria-pressed', String(b.getAttribute(attr) === String(val)));
+      });
+    }
+    tool.querySelectorAll('button[data-l]').forEach(function(b){
+      b.addEventListener('click', function(){ st.L = +b.dataset.l; setPressed('data-l', st.L); draw(); });
+    });
+    tool.querySelectorAll('button[data-g]').forEach(function(b){
+      b.addEventListener('click', function(){ st.G = +b.dataset.g; setPressed('data-g', st.G); draw(); });
+    });
+    $('eSlider').addEventListener('input', function(e){ st.E = +e.target.value; draw(); });
+
+    function dim(xa, xb, y, label, cls){
+      if (xb - xa < 2) return "";
+      var t = '<line class="dimln" x1="'+xa+'" y1="'+y+'" x2="'+xb+'" y2="'+y+'"/>';
+      t += '<path class="dimln" d="M'+xa+' '+(y-7)+' v14 M'+xb+' '+(y-7)+' v14"/>';
+      t += '<text class="'+(cls||'dimtx')+'" x="'+((xa+xb)/2)+'" y="'+(y-6)+'" text-anchor="middle">'+label+'</text>';
+      return t;
+    }
+    function draw(){
+      var L = st.L, E = st.E, G = st.G;
+      var avail = L - D - E;
+      var xF = x0 + D*sc, xS = xF + E*sc, xR = x0 + L*sc;
+      var s = "";
+      // cabinet outline: side panels top & bottom
+      s += '<line x1="'+x0+'" y1="74" x2="'+xR+'" y2="74" stroke="var(--ink)" stroke-width="4"/>';
+      s += '<line x1="'+x0+'" y1="196" x2="'+xR+'" y2="196" stroke="var(--ink)" stroke-width="4"/>';
+      s += '<line x1="'+x0+'" y1="74" x2="'+x0+'" y2="196" stroke="var(--ink)" stroke-width="5" stroke-dasharray="7 5"/>';
+      s += '<line x1="'+xR+'" y1="74" x2="'+xR+'" y2="196" stroke="var(--ink)" stroke-width="5" stroke-dasharray="7 5"/>';
+      // flanges
+      s += '<rect class="post" x="'+(xF-4)+'" y="76" width="8" height="16"/><rect class="post" x="'+(xF-4)+'" y="178" width="8" height="16"/>';
+      // cable zone needed
+      var cablesCls = avail >= G ? 'good' : (avail >= 0 ? 'warn' : 'bad');
+      s += '<rect class="'+cablesCls+'" x="'+xS+'" y="104" width="'+(G*sc)+'" height="62" style="stroke-dasharray:4 3"/>';
+      for (var i=0; i<4; i++){
+        var cy = 114 + i*14;
+        s += '<path d="M'+xS+' '+cy+' c'+(G*sc*0.3)+' -6 '+(G*sc*0.6)+' 8 '+(G*sc*0.95)+' 2" stroke="var(--ink)" stroke-width="1.6" fill="none"/>';
+      }
+      // server
+      s += '<rect class="box" x="'+xF+'" y="96" width="'+(E*sc)+'" height="78"/>';
+      s += '<text class="lbl" x="'+((xF+xS)/2)+'" y="140" text-anchor="middle">Server chassis</text>';
+      // bezel + handles in D zone
+      s += '<rect x="'+(xF-22*sc)+'" y="100" width="'+(22*sc)+'" height="70" fill="var(--steel-soft)" stroke="var(--ink)"/>';
+      s += '<path d="M'+(xF-22*sc)+' 104 h-'+(16*sc)+' v14 h'+(16*sc)+' M'+(xF-22*sc)+' 152 h-'+(16*sc)+' v14 h'+(16*sc)+'" stroke="var(--ink)" stroke-width="2.5" fill="none"/>';
+      // dims above
+      s += dim(x0, xF, 46, 'D 51');
+      s += dim(xF, xS, 46, 'E '+E);
+      if (avail > 0) s += dim(xS, xR, 46, 'G '+avail, avail >= G ? 'tx-good' : 'tx-bad');
+      // L below
+      s += dim(x0, xR, 236, 'L '+L+' mm cabinet');
+      s += '<text class="lbl-m" x="'+x0+'" y="214" text-anchor="middle">front door</text>';
+      s += '<text class="lbl-m" x="'+xR+'" y="214" text-anchor="middle">rear door</text>';
+      s += '<text class="lbl-m" x="'+(xS+G*sc/2)+'" y="186" text-anchor="middle">cables need '+G+'</text>';
+      s += '<text class="lbl-m" x="12" y="20">Top view, millimetres, roughly to scale</text>';
+      $('depthSvg').innerHTML = s;
+      $('eVal').textContent = E + ' mm';
+
+      var cable = G === 152 ? 'fibre cables' : 'copper cables';
+      var maxE = L - D - G;
+      var v = $('depthVerdict');
+      if (avail >= G){
+        v.className = 'verdict ok';
+        v.textContent = 'Fits. ' + avail + ' mm is left behind the server and ' + cable + ' need about ' + G + ' mm. The longest server this cabinet takes with ' + cable + ' is about ' + maxE + ' mm.';
+      } else if (avail >= 0){
+        v.className = 'verdict tight';
+        v.textContent = 'Tight. Only ' + avail + ' mm is left behind the server, but ' + cable + ' need about ' + G + ' mm, so the rear door may not close. Keep E under about ' + maxE + ' mm or choose a deeper cabinet.';
+      } else {
+        v.className = 'verdict no';
+        v.textContent = "Doesn't fit. The server would stick out " + (-avail) + ' mm past the rear door before any cables. Choose a deeper cabinet.';
+      }
+    }
+    draw();
+  })();
+
+  /* ---------- rail tool ---------- */
+  (function(){
+    var kits = [
+      ['SC5000','AHDRACK',689,805],
+      ['SC5100','AHD2RACK',721,849.5],
+      ['SC5200','AHD3RACK',721,849.5],
+      ['SC5300','ARIGRACK',610,762],
+      ['SR1325','AXX1U2URAIL',660,812],
+      ['SR1350','AXX1U2URAIL',660,812]
+    ];
+    var xmin = 580, xmax = 880, px0 = 190, px1 = 740;
+    var X = function(mm){ return px0 + (mm - xmin)/(xmax - xmin)*(px1 - px0); };
+    function draw(F){
+      var s = "", fits = [];
+      for (var t=600; t<=xmax; t+=50){
+        s += '<line x1="'+X(t)+'" y1="34" x2="'+X(t)+'" y2="258" stroke="var(--rule)"/>';
+        s += '<text class="lbl-m" x="'+X(t)+'" y="276" text-anchor="middle">'+t+'</text>';
+      }
+      s += '<text class="lbl-m" x="'+px1+'" y="294" text-anchor="end">F, mm</text>';
+      kits.forEach(function(k, i){
+        var y = 44 + i*36, ok = F >= k[2] && F <= k[3];
+        if (ok) fits.push(k[0]);
+        s += '<text class="lbl-b" x="10" y="'+(y+14)+'">'+k[0]+'</text>';
+        s += '<text class="lbl-m" x="82" y="'+(y+14)+'">'+k[1]+'</text>';
+        s += '<rect class="'+(ok?'good':'post')+'" x="'+X(k[2])+'" y="'+y+'" width="'+(X(k[3])-X(k[2]))+'" height="20"/>';
+        s += '<text class="lbl-m" x="'+(X(k[2])-6)+'" y="'+(y+15)+'" text-anchor="end">'+k[2]+'</text>';
+        s += '<text class="lbl-m" x="'+(X(k[3])+6)+'" y="'+(y+15)+'">'+k[3]+'</text>';
+      });
+      s += '<line x1="'+X(F)+'" y1="28" x2="'+X(F)+'" y2="262" stroke="var(--amber)" stroke-width="3"/>';
+      s += '<text class="lbl-b" x="'+X(F)+'" y="20" text-anchor="middle">F = '+F+'</text>';
+      $('railSvg').innerHTML = s;
+      $('fVal').textContent = F + ' mm';
+      var v = $('railVerdict');
+      if (fits.length === kits.length){ v.className='verdict ok'; v.textContent = 'All six rail kits can span ' + F + ' mm.'; }
+      else if (fits.length){ v.className='verdict tight'; v.textContent = 'At ' + F + ' mm, rails fit: ' + fits.join(', ') + '. The others cannot reach both flanges.'; }
+      else { v.className='verdict no'; v.textContent = 'No Intel rail kit in the guide can span ' + F + ' mm. Move the rear flange if your cabinet allows it.'; }
+    }
+    $('fSlider').addEventListener('input', function(e){ draw(+e.target.value); });
+    draw(700);
+  })();
+
+  /* ---------- cooling: servers in side view ---------- */
+  (function(){
+    var s = "", y = 44, sizes = [1,2,1,4,2];
+    sizes.forEach(function(h){
+      var hh = h*20;
+      s += '<rect class="box" x="190" y="'+y+'" width="300" height="'+(hh-3)+'"/>';
+      y += hh + 4;
+    });
+    $('airServers').innerHTML = s;
+  })();
+
+  /* ---------- CFM chart + calculator ---------- */
+  var cfm = {1:[32,36],2:[39,45],4:[38,40],5:[45,50],7:[25,43]};
+  (function(){
+    var s = "", px0 = 80, px1 = 640, max = 55;
+    var X = function(v){ return px0 + v/max*(px1-px0); };
+    for (var t=0; t<=50; t+=10){
+      s += '<line x1="'+X(t)+'" y1="16" x2="'+X(t)+'" y2="206" stroke="var(--rule)"/>';
+      s += '<text class="lbl-m" x="'+X(t)+'" y="224" text-anchor="middle">'+t+'</text>';
+    }
+    s += '<text class="lbl-m" x="'+px1+'" y="244" text-anchor="end">CFM per U</text>';
+    [1,2,4,5,7].forEach(function(u, i){
+      var y = 24 + i*36, r = cfm[u];
+      s += '<text class="lbl-b" x="20" y="'+(y+15)+'">'+u+'U</text>';
+      s += '<rect x="'+X(0)+'" y="'+(y+8)+'" width="'+(X(r[0])-X(0))+'" height="4" fill="var(--steel-soft)"/>';
+      s += '<rect class="dimln" x="'+X(r[0])+'" y="'+y+'" width="'+(X(r[1])-X(r[0]))+'" height="20" style="fill:var(--dim-soft)"/>';
+      s += '<text class="dimtx" x="'+(X(r[1])+8)+'" y="'+(y+15)+'">'+r[0]+'–'+r[1]+'</text>';
+    });
+    $('cfmSvg').innerHTML = s;
+  })();
+  function calc(){
+    var u = +$('cfmSize').value;
+    var n = Math.max(1, Math.min(50, Math.round(+$('cfmCount').value || 1)));
+    var r = cfm[u];
+    $('cfmOut').className = 'verdict';
+    $('cfmOut').textContent = n + ' × ' + u + 'U servers use ' + (n*u) + 'U of rack space and need roughly ' +
+      (r[0]*u*n).toLocaleString() + '–' + (r[1]*u*n).toLocaleString() + ' CFM moving through the cabinet.';
+  }
+  $('cfmSize').addEventListener('change', calc);
+  $('cfmCount').addEventListener('input', calc);
+  calc();
+
+  /* ---------- perforation swatch ---------- */
+  (function(){
+    var s = "", ox = 40, oy = 20, size = 200, p = size/6, r = 15.6, count = 0;
+    s += '<rect x="'+ox+'" y="'+oy+'" width="'+size+'" height="'+size+'" fill="var(--steel)" stroke="var(--ink)" stroke-width="1.5"/>';
+    for (var row=0; row<6; row++){
+      var even = row % 2 === 0, cols = even ? 6 : 5;
+      for (var c=0; c<cols; c++){
+        var cx = ox + (even ? p/2 : p) + c*p, cy = oy + p/2 + row*p;
+        s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="var(--sheet)"/>';
+        count++;
+      }
+    }
+    s += '<line class="dimln" x1="'+ox+'" y1="'+(oy+size+16)+'" x2="'+(ox+size)+'" y2="'+(oy+size+16)+'"/>';
+    s += '<path class="dimln" d="M'+ox+' '+(oy+size+9)+' v14 M'+(ox+size)+' '+(oy+size+9)+' v14"/>';
+    s += '<text class="dimtx" x="'+(ox+size/2)+'" y="'+(oy+size+36)+'" text-anchor="middle">25 mm (1 in), '+count+' holes</text>';
+    $('perfSvg').innerHTML = s;
+  })();
+
+  /* ---------- temperature band ---------- */
+  (function(){
+    var s = "", x = 90, top = 20, bot = 220, tmin = 0, tmax = 40;
+    var Y = function(t){ return bot - (t - tmin)/(tmax - tmin)*(bot - top); };
+    s += '<rect x="'+x+'" y="'+top+'" width="40" height="'+(bot-top)+'" fill="var(--steel-soft)" stroke="var(--ink)"/>';
+    s += '<rect x="'+x+'" y="'+Y(35)+'" width="40" height="'+(Y(10)-Y(35))+'" fill="var(--dim-soft)" stroke="var(--dim)"/>';
+    s += '<rect x="'+x+'" y="'+Y(30)+'" width="40" height="'+(Y(25)-Y(30))+'" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2"/>';
+    for (var t=0; t<=40; t+=5){
+      s += '<line class="ln-thin" x1="'+(x-6)+'" y1="'+Y(t)+'" x2="'+x+'" y2="'+Y(t)+'"/>';
+      s += '<text class="lbl-m" x="'+(x-10)+'" y="'+(Y(t)+4)+'" text-anchor="end">'+t+' °C</text>';
+    }
+    s += '<text class="lbl" x="'+(x+52)+'" y="'+(Y(18)+4)+'">operating</text>';
+    s += '<text class="lbl-m" x="'+(x+52)+'" y="'+(Y(18)+20)+'">10–35 °C</text>';
+    s += '<text class="tx-good" x="'+(x+52)+'" y="'+(Y(27.5)+5)+'">suggested 25–30</text>';
+    $('tempSvg').innerHTML = s;
+  })();
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

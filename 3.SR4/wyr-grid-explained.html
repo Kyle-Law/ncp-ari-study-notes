@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wyr-Grid Overhead Cable Tray — explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F4F5; --panel:#FFFFFF; --ink:#1A2127; --muted:#5B666F; --rule:#D5DADE;
+  --mesh:#2B3339; --steel:#9AA3AA; --cat6:#2F6FB8; --cat6a:#2E8B6F; --hi:#F2B705; --hi-soft:rgba(242,183,5,.22);
+  --wall:#C9CED2; --liner:rgba(47,111,184,.14);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#151A1E; --panel:#1D2429; --ink:#E7EBEE; --muted:#9AA6AF; --rule:#2F383F;
+    --mesh:#C4CDD4; --steel:#6F7A82; --cat6:#5B9BE6; --cat6a:#4FC29C; --hi:#F5C33B; --hi-soft:rgba(245,195,59,.2);
+    --wall:#3A444B; --liner:rgba(91,155,230,.16);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#151A1E; --panel:#1D2429; --ink:#E7EBEE; --muted:#9AA6AF; --rule:#2F383F;
+  --mesh:#C4CDD4; --steel:#6F7A82; --cat6:#5B9BE6; --cat6a:#4FC29C; --hi:#F5C33B; --hi-soft:rgba(245,195,59,.2);
+  --wall:#3A444B; --liner:rgba(91,155,230,.16);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.55 "Barlow",system-ui,"Segoe UI",Arial,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-weight:600;line-height:1.05;margin:0}
+h1{font-size:clamp(44px,7vw,84px);letter-spacing:-.01em}
+h2{font-size:clamp(30px,4vw,42px);margin-bottom:12px}
+h3{font-size:22px;margin-bottom:6px}
+p{margin:0 0 14px;max-width:68ch}
+.lede{font-size:20px;color:var(--muted);max-width:56ch}
+section{padding:56px 0;border-top:1px solid var(--rule)}
+img,svg{max-width:100%;height:auto;display:block}
+.scroll{overflow-x:auto}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+code,.pn{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:600;letter-spacing:.02em}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1fr 1.15fr;gap:24px;align-items:center;padding:48px 0 40px}
+.hero .src{font-size:14px;color:var(--muted);margin-top:18px}
+.hero .src a{color:inherit}
+@media (max-width:820px){.hero{grid-template-columns:1fr}}
+
+/* segmented controls */
+.seg{display:inline-flex;border:1.5px solid var(--mesh);border-radius:6px;overflow:hidden;margin:0 12px 10px 0}
+.seg button{font:600 16px "Barlow Condensed","Arial Narrow",sans-serif;background:transparent;color:var(--ink);border:0;padding:7px 14px;cursor:pointer;border-right:1.5px solid var(--mesh)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--mesh);color:var(--paper)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+.ctl-label{font-size:14px;color:var(--muted);display:block;margin-bottom:4px}
+
+/* anatomy */
+.anat{display:grid;grid-template-columns:1fr 290px;gap:28px;align-items:start}
+@media (max-width:900px){.anat{grid-template-columns:1fr}}
+.legend{list-style:none;margin:0;padding:0}
+.legend button{width:100%;text-align:left;display:flex;justify-content:space-between;gap:10px;background:none;border:0;border-bottom:1px solid var(--rule);padding:8px 4px;color:var(--ink);font:inherit;font-size:16px;cursor:pointer}
+.legend button .pn{color:var(--muted);font-size:15px}
+.legend button[aria-pressed="true"]{background:var(--hi-soft)}
+.note{background:var(--panel);border-left:4px solid var(--hi);padding:12px 16px;margin-top:14px;font-size:15px;min-height:72px}
+[data-part]{transition:opacity .2s}
+svg.dim [data-part]:not(.on){opacity:.18}
+svg.dim .on .hl{stroke:var(--hi)!important}
+
+/* features */
+.feat{display:grid;grid-template-columns:1fr 1fr;gap:6px 40px}
+@media (max-width:760px){.feat{grid-template-columns:1fr}}
+.feat dl{margin:0}
+.feat dt{font:600 20px "Barlow Condensed","Arial Narrow",sans-serif;margin-top:16px}
+.feat dd{margin:2px 0 0;color:var(--muted)}
+
+/* fill */
+.fill-top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px 8px;margin-bottom:12px}
+.readout{display:flex;flex-wrap:wrap;gap:28px;margin:8px 0 12px}
+.readout div{min-width:120px}
+.readout b{display:block;font:700 40px/1 "Barlow Condensed","Arial Narrow",sans-serif}
+.readout span{font-size:14px;color:var(--muted)}
+.figure{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:14px}
+
+/* table */
+table{border-collapse:collapse;width:100%;font-size:15.5px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font:600 16px "Barlow Condensed","Arial Narrow",sans-serif;color:var(--muted)}
+td.pn{font-size:16px;white-space:nowrap}
+.chip{display:inline-block;font-size:12.5px;padding:1px 7px;border:1px solid var(--steel);border-radius:10px;margin-left:6px;color:var(--muted);font-family:"Barlow",sans-serif;font-weight:500;letter-spacing:0}
+.filters{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+select,input[type=search]{font:inherit;font-size:16px;padding:7px 10px;border:1.5px solid var(--steel);border-radius:5px;background:var(--panel);color:var(--ink)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+ul.plain{padding-left:18px;margin:0}
+ul.plain li{margin-bottom:6px}
+footer{padding:36px 0 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--muted)}
+footer a{color:inherit}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HERO -->
+<header class="hero">
+  <div>
+    <h1>Wyr-Grid overhead cable tray</h1>
+    <p class="lede" style="margin-top:16px">A plain-language walkthrough of Panduit's two-page specification sheet: what the system is, how the parts fit together, how many cables each size holds, and how to read the part numbers.</p>
+    <p class="src">Source: Panduit spec sheet FRSP13--WW-ENG, dated 8/2019 · <a href="https://www.panduit.com/content/dam/panduit/en/products/media/8/98/898/6898/109816898.pdf">original PDF</a></p>
+  </div>
+  <svg id="hero" viewBox="0 0 620 400" role="img" aria-label="Isometric drawing of a wire-mesh cable tray with cables running along it and dropping over a side waterfall"></svg>
+</header>
+
+<!-- WHAT -->
+<section>
+  <h2>What it is</h2>
+  <p>Wyr-Grid is a wire-mesh cable tray that hangs above equipment racks — typically from the ceiling, a wall, or the tops of cabinets — and carries copper data cable, fiber, or power cable from place to place. The sheet positions it for data centers, connected buildings, and industrial automation sites.</p>
+  <p>Think of it as a modular steel "shelf" made of 10-foot sections. You join sections end to end with splices, add low walls only where you need them, add curved guides where cables turn or drop down to equipment, and hang the whole thing on brackets. It can also sit alongside Panduit's FiberRunner (a separate plastic duct system for fiber), so copper and fiber run in separate pathways.</p>
+</section>
+
+<!-- ANATOMY -->
+<section>
+  <h2>How the parts fit together</h2>
+  <p>A top-down view of a short run with one branch. Select a part to highlight it and read what it does. Mesh is drawn at the true 4" × 5" grid spacing for a 24"-wide tray.</p>
+  <div class="anat">
+    <div>
+      <div class="scroll"><svg id="plan" viewBox="0 0 800 420" role="img" aria-label="Plan view of a cable tray run with a T-branch, splices, sidewalls, waterfalls and support brackets" style="min-width:560px"></svg></div>
+      <h3 style="margin-top:22px">Ways to hold it up (end views)</h3>
+      <div class="scroll"><svg id="mounts" viewBox="0 0 880 230" role="img" aria-label="End views of four mounting methods: trapeze, cantilever, wall, and cabinet-top" style="min-width:560px"></svg></div>
+    </div>
+    <div>
+      <ul class="legend" id="legend"></ul>
+      <div class="note" id="note" aria-live="polite">Select a part to see what it does.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section>
+  <h2>Why it's designed this way</h2>
+  <p>The sheet's list of "key features" is mostly about one thing: cutting installation time. Here is each one, translated.</p>
+  <div class="feat">
+    <dl>
+      <dt>Better strength-to-weight</dt>
+      <dd>Panduit says the sections are stronger for their weight than competing wire basket, so they are lighter to lift and quicker to hang.</dd>
+      <dt>Large 4" × 5" grid openings</dt>
+      <dd>Cables — and even Panduit's QuickNet pre-terminated cassettes — can pass straight through the floor of the tray without cutting wires out.</dd>
+      <dt>No built-in sidewalls</dt>
+      <dd>Ordinary wire basket has walls on both sides, which must be cut at every tee, cross, and drop. Wyr-Grid is a flat mesh, so there is far less cutting.</dd>
+      <dt>Snap-on sidewalls</dt>
+      <dd>Walls of 2", 4", or 6" are clipped on by hand only where cables need to be held in.</dd>
+    </dl>
+    <dl>
+      <dt>Bend-radius control at intersections</dt>
+      <dd>Curved wall pieces at tees and crossings stop cables from kinking around a sharp corner. They give a 3" (76 mm) bend radius and fit without fabrication.</dd>
+      <dt>Bonding splice</dt>
+      <dd>The splice's thread-cutting screw bites through the paint on both sections, so the run is electrically continuous end to end. That's what lets the tray serve as an equipment grounding conductor under the NEC.</dd>
+      <dt>Snap-on waterfalls</dt>
+      <dd>Curved guides where cables leave the tray and drop to equipment, again with a 3" bend radius and no cutting.</dd>
+    </dl>
+  </div>
+  <div class="figure" style="margin-top:28px;max-width:640px">
+    <svg id="opening" viewBox="0 0 600 220" role="img" aria-label="One 4 by 5 inch grid opening drawn to scale with Cat 6 and Cat 6A cable cross-sections for comparison"></svg>
+    <p class="small muted" style="margin:8px 0 0">One grid opening at true proportions, with Cat 6 and Cat 6A cable cross-sections at the same scale. The opening's area could hold the cross-sections of roughly 280 Cat 6A cables, so whole bundles can drop straight through.</p>
+  </div>
+</section>
+
+<!-- SIZES -->
+<section>
+  <h2>Sizes</h2>
+  <p>Every pathway section is 120" (10 ft) long. Five widths are offered, and the optional sidewalls come in three heights. Drawn to scale below.</p>
+  <div class="scroll figure"><svg id="sizes" viewBox="0 0 900 270" role="img" aria-label="Tray widths 8, 12, 18, 24 and 30 inches and sidewall heights 2, 4 and 6 inches drawn to scale" style="min-width:600px"></svg></div>
+</section>
+
+<!-- FILL -->
+<section>
+  <h2>How many cables fit</h2>
+  <p>The sheet's wire-fill table gives the usable cross-section for each width-and-sidewall combination and how many Cat 6 (0.240" / 6.1 mm) or Cat 6A (0.300" / 7.6 mm) cables that allows. Pick a combination to see it.</p>
+  <div class="fill-top">
+    <div><span class="ctl-label">Tray width</span><div class="seg" id="segW"></div></div>
+    <div><span class="ctl-label">Sidewall height</span><div class="seg" id="segH"></div></div>
+    <div><span class="ctl-label">Cable</span><div class="seg" id="segC"></div></div>
+  </div>
+  <div class="readout">
+    <div><b id="rCount">—</b><span>cables (Panduit rating)</span></div>
+    <div><b id="rArea">—</b><span>internal area, in²</span></div>
+    <div><b id="rDim">—</b><span>X × Y, inches</span></div>
+    <div><b id="rPct">—</b><span>of area filled by cable</span></div>
+  </div>
+  <div class="figure scroll"><svg id="xsec" viewBox="0 0 800 190" role="img" aria-label="Cross-section of the selected tray with the rated number of cables drawn to scale" style="min-width:560px"></svg></div>
+  <p class="small muted" style="margin-top:8px">Cross-section drawn to scale, all widths on the same scale. Cables are packed neatly here so you can see the count; in real trays they lie loosely and fill more of the height.</p>
+
+  <h3 style="margin-top:30px">All combinations</h3>
+  <div class="figure scroll"><svg id="chart" viewBox="0 0 820 320" role="img" aria-label="Grouped bar chart of rated cable counts for every width and sidewall height" style="min-width:560px"></svg></div>
+
+  <div class="two" style="margin-top:28px">
+    <div>
+      <h3>What the numbers assume</h3>
+      <p>The sheet doesn't state its fill rule, but the arithmetic reveals it: in every row, the cables' combined cross-sectional area is about 50% of the internal area. For example, 115 Cat 6A cables × 0.0707 in² each ≈ 8.1 in², which is half of the 8" × 2" tray's 16.3 in². A 50% fill is a common design ceiling that leaves room for air gaps between round cables and for future additions.</p>
+    </div>
+    <div>
+      <h3>One correction</h3>
+      <p>In the printed table, the 8" wide × 6" sidewall row lists 537 under Cat 6A and 344 under Cat 6 — the reverse of every other row. Scaling from the 2" and 4" rows shows the columns are swapped, so this page uses 344 Cat 6A and 537 Cat 6. Also note "X" is the actual inside width (e.g. 24.2" for the 24" tray) and "Y" is the sidewall height.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PART NUMBERS -->
+<section>
+  <h2>Reading a part number</h2>
+  <p>Most parts follow the same pattern: a WG prefix, a code for the part, a size, and a two-letter finish. In the sheet, ** means "insert the finish code here".</p>
+  <div class="figure scroll" style="margin-bottom:28px"><svg id="pnfig" viewBox="0 0 820 190" role="img" aria-label="Part number WG24BL10 broken into WG prefix, 24 inch width, BL finish, and 10 foot length" style="min-width:560px"></svg></div>
+
+  <div class="filters">
+    <label><span class="ctl-label">Category</span><select id="fCat"></select></label>
+    <label><span class="ctl-label">Search</span><input type="search" id="fQ" placeholder="e.g. 24 or splice"></label>
+  </div>
+  <div class="scroll"><table id="cat"><thead><tr><th>Part</th><th>Category</th><th>Part number</th></tr></thead><tbody></tbody></table></div>
+  <p class="small muted" style="margin-top:8px">"BL / EZ" means the part is offered in both black powder coat and electro-zinc. Tray liners and divider walls come only in pre-galvanized (PG). The 24" FiberRunner trapeze bracket is printed as WG24RFTBBL, which looks like a typo for WG24FRTBBL — confirm with Panduit before ordering.</p>
+</section>
+
+<!-- MATERIALS -->
+<section>
+  <h2>Materials and approvals</h2>
+  <div class="two">
+    <div>
+      <h3>Finishes</h3>
+      <table>
+        <tr><th>Code</th><th>Finish</th><th>Base material</th></tr>
+        <tr><td class="pn">BL</td><td>Black powder coat</td><td>Pre-galvanized steel wire and galvanized cold-rolled steel, painted</td></tr>
+        <tr><td class="pn">EZ</td><td>Electro-zinc plated</td><td>Steel wire and cold-rolled steel, zinc-plated to ASTM B633 SC3, Type III</td></tr>
+        <tr><td class="pn">PG</td><td>Pre-galvanized</td><td>Pre-galvanized steel wire and galvanized cold-rolled steel (liners and divider walls only)</td></tr>
+      </table>
+      <p class="small muted" style="margin-top:10px">The side waterfall is ABS plastic. All parts are RoHS compliant.</p>
+    </div>
+    <div>
+      <h3>Standards it meets</h3>
+      <ul class="plain">
+        <li><b>UL Classified</b> as an equipment grounding conductor under NEC sections 392.3(C) and 392.7(B) — the tray itself can carry fault current to ground.</li>
+        <li><b>CAN/CSA-C22.2 No.126.1-02</b> — Canadian metal cable tray standard.</li>
+        <li><b>NEMA VE 1-2002</b> and <b>NFPA 70 (NEC)</b> — US cable tray and electrical code requirements.</li>
+        <li><b>ASTM A653 / A641</b> — corrosion resistance of the galvanized steel and wire.</li>
+        <li><b>EN 61537:2007</b> — European cable tray and ladder standard.</li>
+      </ul>
+      <p class="small muted" style="margin-top:10px">An architect's CSI-format specification is available from Panduit as LP-CSISPEC-WG.</p>
+    </div>
+  </div>
+</section>
+
+</div>
+<footer>
+  <div class="wrap">
+    Summary of Panduit Corp. specification sheet FRSP13--WW-ENG (8/2019). Diagrams are explanatory redrawings, not manufacturer drawings; check the <a href="https://www.panduit.com/content/dam/panduit/en/products/media/8/98/898/6898/109816898.pdf">original sheet</a> and current Panduit data before specifying or ordering. Panduit customer service: cs@panduit.com, 800.777.3300.
+  </div>
+</footer>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function txt(s,attrs,parent){const t=el("text",Object.assign({"font-family":"Barlow, system-ui, sans-serif","font-size":14,fill:"var(--ink)"},attrs),parent);t.textContent=s;return t}
+
+/* ---------- HERO (isometric) ---------- */
+(function(){
+  const svg=document.getElementById("hero"),s=6,c=0.866,ox=190,oy=70;
+  const P=(x,y,z)=>[ox+(x-y)*c*s, oy+(x+y)*0.5*s - z*s];
+  const pt=(x,y,z)=>P(x,y,z).join(",");
+  const L=70,W=24;
+  // far sidewall (y=0), 4" high
+  for(let x=0;x<=L;x+=5) el("line",{x1:P(x,0,0)[0],y1:P(x,0,0)[1],x2:P(x,0,4)[0],y2:P(x,0,4)[1],stroke:"var(--steel)","stroke-width":1.4},svg);
+  el("polyline",{points:[pt(0,0,4),pt(L,0,4)].join(" "),stroke:"var(--steel)","stroke-width":2.2,fill:"none"},svg);
+  el("polyline",{points:[pt(0,0,2),pt(L,0,2)].join(" "),stroke:"var(--steel)","stroke-width":1.2,fill:"none"},svg);
+  // mesh floor
+  for(let y=0;y<=W;y+=4) el("polyline",{points:pt(0,y,0)+" "+pt(L,y,0),stroke:"var(--mesh)","stroke-width":y%W===0?2.4:1.6,fill:"none"},svg);
+  for(let x=0;x<=L;x+=5) el("polyline",{points:pt(x,0,0)+" "+pt(x,W,0),stroke:"var(--mesh)","stroke-width":1.6,fill:"none"},svg);
+  // highlighted opening
+  el("polygon",{points:[pt(10,8,0),pt(15,8,0),pt(15,12,0),pt(10,12,0)].join(" "),fill:"var(--hi-soft)",stroke:"var(--hi)","stroke-width":2},svg);
+  const a=P(12.5,12,0);
+  el("line",{x1:a[0],y1:a[1],x2:a[0]-70,y2:a[1]+70,stroke:"var(--hi)","stroke-width":1.5},svg);
+  txt("4\" × 5\" opening",{x:a[0]-160,y:a[1]+88,"font-size":16,"font-weight":600},svg);
+  // waterfall on near edge
+  el("path",{d:`M${pt(51,W,0)} L${pt(63,W,0)} Q${pt(63,W+3,0)} ${pt(63,W+3,-4)} L${pt(51,W+3,-4)} Q${pt(51,W+3,0)} ${pt(51,W,0)} Z`,fill:"var(--wall)",stroke:"var(--steel)","stroke-width":1.4},svg);
+  // cables
+  const cols=["var(--cat6)","var(--cat6a)","var(--cat6)","var(--cat6)","var(--cat6a)","var(--cat6)"];
+  for(let i=0;i<6;i++){
+    const y=9+i*1.6,z=0.6+(i%2)*0.7,xt=53+i*1.8;
+    const d=`M${pt(0,y,z)} L${pt(xt-6,y,z)} Q${pt(xt,y,z)} ${pt(xt,W,z)} Q${pt(xt,W+3,z)} ${pt(xt,W+3,z-5)} L${pt(xt,W+3,-16)}`;
+    el("path",{d,stroke:cols[i],"stroke-width":5,fill:"none","stroke-linecap":"round","stroke-linejoin":"round"},svg);
+  }
+  // straight-through cables (continue down run)
+  for(let i=0;i<4;i++){const y=15+i*1.6,z=0.6+(i%2)*0.6;
+    el("path",{d:`M${pt(0,y,z)} L${pt(L,y,z)}`,stroke:i%2?"var(--cat6a)":"var(--cat6)","stroke-width":5,fill:"none","stroke-linecap":"round"},svg);}
+  const w=P(57,W+3,-10);
+  txt("waterfall",{x:w[0]-100,y:w[1]+4,"font-size":15,fill:"var(--muted)"},svg);
+  const sw=P(30,0,4);
+  txt("snap-on sidewall",{x:sw[0]-20,y:sw[1]-16,"font-size":15,fill:"var(--muted)"},svg);
+})();
+
+/* ---------- ANATOMY ---------- */
+const parts=[
+ {id:"section",name:"Pathway section",pn:"WG8–WG30 …10",d:"The basic 10 ft (120\") length of wire mesh. Five widths: 8\", 12\", 18\", 24\", 30\". The 8\" width comes in black only."},
+ {id:"splice",name:"Splice connector",pn:"WGSPL1218 / 2430",d:"Joins two sections end to end. Its thread-cutting screw pierces the paint on both, bonding them electrically. Versions with a clip (WGESPL…) and an expansion splice (WGEXS…) are also listed."},
+ {id:"intsplice",name:"Intersection splice",pn:"WGINTSPL",d:"Joins the end of a branch to the side of a main run to make a tee or cross — no cutting of the main run needed."},
+ {id:"sidewall",name:"Snap-on sidewall",pn:"WGSW2 / 4 / 6",d:"Hand-installed wall, 2\", 4\" or 6\" high, clipped on anywhere along a section to keep cables in."},
+ {id:"bend",name:"Intersection bend-radius control",pn:"WGIBRC2 / 4 / 6",d:"Curved wall pieces for the inside corners of tees and crosses. They hold cables to at least a 3\" (76 mm) bend radius so they don't kink."},
+ {id:"sidewf",name:"Side waterfall",pn:"WGSWF4BL",d:"A 4\" curved ABS guide on the edge of the tray where cables turn down toward a rack. Black only."},
+ {id:"btmwf",name:"Bottom waterfall",pn:"WGBTMWF",d:"Fits in a grid opening so cables can drop straight down through the tray floor with a gentle curve."},
+ {id:"divider",name:"Divider wall",pn:"WGDW2 / 4 / 6 PG",d:"A wall running down the middle of a tray to segregate cable groups (for example, copper from power). Pre-galvanized only."},
+ {id:"liner",name:"Tray liner",pn:"WGTL8–30 PG",d:"A solid floor insert for when cables should not sag into or pass through the mesh. Pre-galvanized only."},
+ {id:"trapeze",name:"Support bracket",pn:"WGTBS, WGCB, WGWMTB …",d:"Holds the tray up. Shown here as trapeze brackets hung from threaded rod; the end views below show cantilever, wall and cabinet-top options."}
+];
+(function(){
+  const svg=document.getElementById("plan"),g=n=>el("g",{"data-part":n},svg);
+  const mx0=40,mx1=760,my0=120,my1=192,bx0=520,bx1=592,by1=392;
+  // trapeze (beneath, draw first)
+  const tg=g("trapeze");
+  [120,340,680].forEach(x=>{el("rect",{x:x-4,y:my0-22,width:8,height:my1-my0+44,fill:"none",stroke:"var(--muted)","stroke-width":2,"stroke-dasharray":"5 3",class:"hl"},tg);
+    [my0-16,my1+16].forEach(y=>el("circle",{cx:x,cy:y,r:5,fill:"var(--panel)",stroke:"var(--muted)","stroke-width":2,class:"hl"},tg));});
+  el("rect",{x:bx0-22,y:316,width:bx1-bx0+44,height:8,fill:"none",stroke:"var(--muted)","stroke-width":2,"stroke-dasharray":"5 3",class:"hl"},tg);
+  [bx0-16,bx1+16].forEach(x=>el("circle",{cx:x,cy:320,r:5,fill:"var(--panel)",stroke:"var(--muted)","stroke-width":2,class:"hl"},tg));
+  // liner
+  const lg=g("liner");el("rect",{x:bx0,y:236,width:bx1-bx0,height:by1-236,fill:"var(--liner)",stroke:"var(--cat6)","stroke-width":1.5,class:"hl"},lg);
+  // sections mesh
+  const sg=g("section");
+  for(let y=my0;y<=my1;y+=12)el("line",{x1:mx0,y1:y,x2:mx1,y2:y,stroke:"var(--mesh)","stroke-width":y===my0||y===my1?2.2:1.1,class:"hl"},sg);
+  for(let x=mx0;x<=mx1;x+=15)el("line",{x1:x,y1:my0,x2:x,y2:my1,stroke:"var(--mesh)","stroke-width":1.1,class:"hl"},sg);
+  for(let x=bx0;x<=bx1;x+=12)el("line",{x1:x,y1:my1,x2:x,y2:by1,stroke:"var(--mesh)","stroke-width":x===bx0||x===bx1?2.2:1.1,class:"hl"},sg);
+  for(let y=my1+15;y<=by1;y+=15)el("line",{x1:bx0,y1:y,x2:bx1,y2:y,stroke:"var(--mesh)","stroke-width":1.1,class:"hl"},sg);
+  // splice
+  const sp=g("splice");el("rect",{x:394,y:my0-3,width:12,height:my1-my0+6,fill:"var(--steel)",stroke:"var(--mesh)","stroke-width":1.5,class:"hl"},sp);
+  [my0+12,my1-12].forEach(y=>el("circle",{cx:400,cy:y,r:3,fill:"var(--mesh)"},sp));
+  // intersection splice
+  const is=g("intsplice");el("rect",{x:bx0-3,y:my1-6,width:bx1-bx0+6,height:12,fill:"var(--steel)",stroke:"var(--mesh)","stroke-width":1.5,class:"hl"},is);
+  // sidewalls
+  const sw=g("sidewall"),S={stroke:"var(--ink)","stroke-width":5,"stroke-linecap":"round",class:"hl"};
+  el("line",Object.assign({x1:mx0,y1:my0-4,x2:mx1,y2:my0-4},S),sw);
+  el("line",Object.assign({x1:mx0,y1:my1+4,x2:180,y2:my1+4},S),sw);
+  el("line",Object.assign({x1:260,y1:my1+4,x2:496,y2:my1+4},S),sw);
+  el("line",Object.assign({x1:616,y1:my1+4,x2:mx1,y2:my1+4},S),sw);
+  el("line",Object.assign({x1:bx0-4,y1:220,x2:bx0-4,y2:by1},S),sw);
+  el("line",Object.assign({x1:bx1+4,y1:220,x2:bx1+4,y2:by1},S),sw);
+  // bend radius
+  const br=g("bend"),B={fill:"none",stroke:"var(--cat6a)","stroke-width":5,"stroke-linecap":"round",class:"hl"};
+  el("path",Object.assign({d:`M496 ${my1+4} Q${bx0-4} ${my1+4} ${bx0-4} 220`},B),br);
+  el("path",Object.assign({d:`M616 ${my1+4} Q${bx1+4} ${my1+4} ${bx1+4} 220`},B),br);
+  // side waterfall
+  const wf=g("sidewf");el("path",{d:`M180 ${my1+2} L260 ${my1+2} Q268 ${my1+20} 260 ${my1+36} L180 ${my1+36} Q172 ${my1+20} 180 ${my1+2} Z`,fill:"var(--wall)",stroke:"var(--mesh)","stroke-width":2,class:"hl"},wf);
+  for(let x=195;x<=245;x+=12.5)el("line",{x1:x,y1:my1+8,x2:x,y2:my1+32,stroke:"var(--steel)","stroke-width":1.2},wf);
+  // bottom waterfall
+  const bw=g("btmwf");el("rect",{x:652,y:my0+12,width:45,height:48,rx:10,fill:"var(--wall)",stroke:"var(--mesh)","stroke-width":2,class:"hl"},bw);
+  el("path",{d:"M674 140 v20 m-6 -6 l6 6 l6 -6",stroke:"var(--mesh)","stroke-width":2,fill:"none"},bw);
+  // divider
+  const dv=g("divider");el("line",{x1:mx0,y1:156,x2:390,y2:156,stroke:"var(--cat6)","stroke-width":4,"stroke-dasharray":"10 5",class:"hl"},dv);
+  // labels
+  txt("Section 1 (120\")",{x:150,y:100,fill:"var(--muted)"},svg);
+  txt("Section 2 (120\")",{x:520,y:100,fill:"var(--muted)"},svg);
+  txt("Branch",{x:bx1+22,y:300,fill:"var(--muted)"},svg);
+  txt("Plan view — not every part would be used in one run",{x:40,y:410,"font-size":13,fill:"var(--muted)"},svg);
+
+  // legend
+  const ul=document.getElementById("legend"),note=document.getElementById("note");let cur=null;
+  parts.forEach(p=>{const li=document.createElement("li"),b=document.createElement("button");
+    b.setAttribute("aria-pressed","false");b.innerHTML=`<span>${p.name}</span><span class="pn">${p.pn}</span>`;
+    b.onclick=()=>select(cur===p.id?null:p.id);b.dataset.id=p.id;li.appendChild(b);ul.appendChild(li);});
+  function select(id){cur=id;svg.classList.toggle("dim",!!id);
+    svg.querySelectorAll("[data-part]").forEach(n=>n.classList.toggle("on",n.dataset.part===id));
+    ul.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.id===id));
+    const p=parts.find(x=>x.id===id);note.innerHTML=p?`<b>${p.name}</b><br>${p.d}`:"Select a part to see what it does.";}
+  svg.querySelectorAll("[data-part]").forEach(n=>{n.style.cursor="pointer";n.addEventListener("click",()=>select(n.dataset.part))});
+})();
+
+/* ---------- MOUNT END VIEWS ---------- */
+(function(){
+  const svg=document.getElementById("mounts");
+  function tray(g,x,y,w){ // cross-section: wire dots + sidewalls
+    el("line",{x1:x,y1:y,x2:x+w,y2:y,stroke:"var(--mesh)","stroke-width":2},g);
+    for(let i=0;i<=6;i++)el("circle",{cx:x+i*w/6,cy:y-2,r:2.6,fill:"var(--mesh)"},g);
+    [x,x+w].forEach(sx=>el("line",{x1:sx,y1:y,x2:sx,y2:y-26,stroke:"var(--steel)","stroke-width":3},g));
+    for(let i=0;i<9;i++)el("circle",{cx:x+18+i*9+(i%2)*2,cy:y-8-(i%3)*5,r:4.2,fill:i%3?"var(--cat6)":"var(--cat6a)"},g);
+  }
+  const panels=[
+    {t:"Trapeze",pn:"WGTBS…",f:(g,o)=>{el("line",{x1:o,y1:24,x2:o+200,y2:24,stroke:"var(--ink)","stroke-width":3},g);
+      [o+40,o+160].forEach(x=>el("line",{x1:x,y1:24,x2:x,y2:152,stroke:"var(--muted)","stroke-width":2.4,"stroke-dasharray":"2 2"},g));
+      el("rect",{x:o+32,y:144,width:136,height:8,fill:"var(--steel)"},g);tray(g,o+52,144,96);}},
+    {t:"Cantilever",pn:"WGCB…",f:(g,o)=>{el("rect",{x:o+30,y:20,width:14,height:170,fill:"var(--wall)",stroke:"var(--steel)"},g);
+      el("path",{d:`M${o+44} 150 h130 v-6 h-124 l-6 -22 z`,fill:"var(--steel)"},g);tray(g,o+66,144,100);}},
+    {t:"Wall",pn:"WGWMTB…",f:(g,o)=>{el("rect",{x:o+20,y:20,width:20,height:170,fill:"var(--wall)"},g);
+      for(let y=28;y<190;y+=14)el("line",{x1:o+20,y1:y,x2:o+40,y2:y-10,stroke:"var(--steel)"},g);
+      el("path",{d:`M${o+40} 120 v34 h120 v-6 h-114 v-28 z`,fill:"var(--steel)"},g);tray(g,o+54,148,100);}},
+    {t:"Cabinet top",pn:"WGCMB / WGCMK",f:(g,o)=>{el("rect",{x:o+20,y:150,width:170,height:44,fill:"var(--wall)",stroke:"var(--steel)"},g);
+      txt("cabinet",{x:o+82,y:178,"font-size":13,fill:"var(--muted)"},g);
+      [o+50,o+160].forEach(x=>el("rect",{x:x-4,y:92,width:8,height:58,fill:"var(--steel)"},g));
+      el("rect",{x:o+40,y:88,width:130,height:7,fill:"var(--steel)"},g);tray(g,o+57,88,96);}}
+  ];
+  panels.forEach((p,i)=>{const o=i*220,g=el("g",{},svg);p.f(g,o);
+    txt(p.t,{x:o+20,y:216,"font-size":17,"font-weight":600},g);txt(p.pn,{x:o+20+p.t.length*9+14,y:216,"font-size":13,fill:"var(--muted)"},g);});
+})();
+
+/* ---------- GRID OPENING FIGURE ---------- */
+(function(){
+  const svg=document.getElementById("opening"),k=36,x0=40,y0=20; // 36 px per inch
+  el("rect",{x:x0,y:y0,width:5*k,height:4*k,fill:"var(--hi-soft)",stroke:"var(--mesh)","stroke-width":5},svg);
+  txt("5\"",{x:x0+2.5*k-6,y:y0+4*k+26,"font-size":16,"font-weight":600},svg);
+  txt("4\"",{x:x0-26,y:y0+2*k+6,"font-size":16,"font-weight":600},svg);
+  el("circle",{cx:300,cy:y0+2*k,r:0.12*k,fill:"var(--cat6)"},svg);
+  el("circle",{cx:340,cy:y0+2*k,r:0.15*k,fill:"var(--cat6a)"},svg);
+  txt("Cat 6, 0.240\"",{x:375,y:y0+2*k-10,fill:"var(--cat6)","font-size":15},svg);
+  txt("Cat 6A, 0.300\"",{x:375,y:y0+2*k+14,fill:"var(--cat6a)","font-size":15},svg);
+  txt("same scale",{x:290,y:y0+2*k+50,fill:"var(--muted)","font-size":13},svg);
+})();
+
+/* ---------- SIZES ---------- */
+(function(){
+  const svg=document.getElementById("sizes"),k=7; // 7 px per inch
+  txt("Widths (top view of tray floor)",{x:20,y:24,"font-weight":600},svg);
+  let x=20;[8,12,18,24,30].forEach(w=>{
+    el("rect",{x,y:40,width:w*k,height:110,fill:"none",stroke:"var(--mesh)","stroke-width":2},svg);
+    for(let i=4;i<w;i+=4)el("line",{x1:x+i*k,y1:40,x2:x+i*k,y2:150,stroke:"var(--steel)","stroke-width":1},svg);
+    for(let j=5*k;j<110;j+=5*k)el("line",{x1:x,y1:40+j,x2:x+w*k,y2:40+j,stroke:"var(--steel)","stroke-width":1},svg);
+    txt(w+"\"",{x:x+w*k/2-10,y:172,"font-size":18,"font-weight":600},svg);
+    txt(Math.round(w*25.4/1)+"",{x:x+w*k/2-12,y:190,"font-size":13,fill:"var(--muted)"},svg);x+=w*k+22;});
+  txt("mm (nominal)",{x:20,y:206,"font-size":12,fill:"var(--muted)"},svg);
+  // sidewalls
+  const sx=20,base=258;txt("Sidewall heights",{x:745,y:24,"font-weight":600},svg);
+  [2,4,6].forEach((h,i)=>{const x=762+i*50;
+    el("line",{x1:x-8,y1:150,x2:x+26,y2:150,stroke:"var(--mesh)","stroke-width":2.4},svg);
+    el("rect",{x:x,y:150-h*k,width:5,height:h*k,fill:"var(--ink)"},svg);
+    txt(h+"\"",{x:x+9,y:150-h*k+14,"font-size":16,"font-weight":600},svg);
+    txt([50,102,152][i]+"mm",{x:x+3,y:172,"font-size":11.5,fill:"var(--muted)","text-anchor":"middle"},svg);});
+  txt("Section length: 120\" (10 ft) for every width",{x:20,y:250,"font-size":15,fill:"var(--muted)"},svg);
+})();
+
+/* ---------- FILL ---------- */
+const FILL={8:{x:8.2,2:[16.3,115,180],4:[32.4,229,358],6:[48.6,344,537]},
+ 12:{x:12.2,2:[24.3,172,269],4:[48.7,344,538],6:[73,516,807]},
+ 18:{x:18.2,2:[36.3,257,401],4:[72.7,514,804],6:[109,771,1205]},
+ 24:{x:24.2,2:[48.3,342,534],4:[96.7,684,1069],6:[145,1026,1603]},
+ 30:{x:30.2,2:[60.3,427,666],4:[120.7,854,1334],6:[181,1280,2000]}};
+const state={w:24,h:4,c:"6A"};
+function seg(id,opts,key,fmt){const box=document.getElementById(id);
+  opts.forEach(v=>{const b=document.createElement("button");b.textContent=fmt(v);b.onclick=()=>{state[key]=v;render()};b.dataset.v=v;box.appendChild(b)});}
+seg("segW",[8,12,18,24,30],"w",v=>v+"\"");seg("segH",[2,4,6],"h",v=>v+"\"");seg("segC",["6","6A"],"c",v=>"Cat "+v);
+function render(){
+  [["segW","w"],["segH","h"],["segC","c"]].forEach(([id,k])=>document.querySelectorAll("#"+id+" button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v==String(state[k]))));
+  const row=FILL[state.w],[area,n6a,n6]=row[state.h],n=state.c==="6A"?n6a:n6,dia=state.c==="6A"?0.3:0.24;
+  document.getElementById("rCount").textContent=n.toLocaleString();
+  document.getElementById("rArea").textContent=area;
+  document.getElementById("rDim").textContent=row.x+" × "+state.h;
+  document.getElementById("rPct").textContent=Math.round(n*Math.PI*(dia/2)**2/area*100)+"%";
+  // cross-section
+  const svg=document.getElementById("xsec");svg.innerHTML="";
+  const k=25,x0=20,base=170,W=row.x*k,H=state.h*k,r=dia*k/2,col=state.c==="6A"?"var(--cat6a)":"var(--cat6)";
+  el("rect",{x:x0,y:base-6*k,width:30.2*k,height:6*k,fill:"none",stroke:"var(--rule)","stroke-dasharray":"4 4"},svg);
+  el("rect",{x:x0,y:base-H,width:W,height:H,fill:"var(--hi-soft)"},svg);
+  el("path",{d:`M${x0} ${base-H} V${base} H${x0+W} V${base-H}`,fill:"none",stroke:"var(--mesh)","stroke-width":3},svg);
+  const g=el("g",{fill:col},svg),dy=2*r*0.866;let placed=0,row_i=0;
+  while(placed<n){const off=row_i%2?r:0,cy=base-r-1.5-row_i*dy;
+    for(let cx=x0+r+1.5+off;cx<=x0+W-r-1.5&&placed<n;cx+=2*r){el("circle",{cx,cy,r:r*0.94},g);placed++;}
+    row_i++;if(row_i>400)break;}
+  txt(row.x+"\" wide",{x:x0+W/2-26,y:base+18,"font-size":14,fill:"var(--muted)"},svg);
+  txt(state.h+"\"",{x:x0+W+8,y:base-H/2+5,"font-size":14,fill:"var(--muted)"},svg);
+  drawChart();
+}
+function drawChart(){
+  const svg=document.getElementById("chart");svg.innerHTML="";
+  const ci=state.c==="6A"?1:2,max=2000,L=70,B=262,Ht=222,gw=140,bw=34,cols={2:"var(--steel)",4:"var(--muted)",6:"var(--mesh)"};
+  for(let v=0;v<=max;v+=500){const y=B-v/max*Ht;el("line",{x1:L,y1:y,x2:800,y2:y,stroke:"var(--rule)"},svg);
+    txt(v.toLocaleString(),{x:L-10,y:y+5,"font-size":13,fill:"var(--muted)","text-anchor":"end"},svg);}
+  [8,12,18,24,30].forEach((w,i)=>{const gx=L+20+i*gw;
+    [2,4,6].forEach((h,j)=>{const v=FILL[w][h][ci],bh=v/max*Ht,x=gx+j*(bw+4),sel=w===state.w&&h===state.h;
+      const r=el("rect",{x,y:B-bh,width:bw,height:bh,fill:sel?(state.c==="6A"?"var(--cat6a)":"var(--cat6)"):cols[h],style:"cursor:pointer"},svg);
+      el("title",{},r).textContent=`${w}" × ${h}": ${v} Cat ${state.c}`;
+      r.onclick=()=>{state.w=w;state.h=h;render()};
+      txt(v,{x:x+bw/2,y:B-bh-5,"font-size":11.5,fill:"var(--muted)","text-anchor":"middle"},svg);});
+    txt(w+"\" tray",{x:gx+57,y:B+22,"font-size":15,"font-weight":600,"text-anchor":"middle"},svg);});
+  txt("Cat "+state.c+" cables",{x:L,y:18,"font-size":14,fill:"var(--muted)"},svg);
+  [2,4,6].forEach((h,j)=>{el("rect",{x:560+j*80,y:6,width:14,height:14,fill:cols[h]},svg);txt(h+"\" wall",{x:580+j*80,y:18,"font-size":13},svg);});
+  txt("Click a bar to load it above",{x:L,y:316,"font-size":13,fill:"var(--muted)"},svg);
+}
+render();
+
+/* ---------- PART NUMBER FIGURE ---------- */
+(function(){
+  const svg=document.getElementById("pnfig"),segs=[["WG","Wyr-Grid","product family"],["24","Width","8–30 inches"],["BL","Finish","BL, EZ or PG"],["10","Length","10 ft (120\")"]];
+  let x=40;const ws=[130,120,120,120];
+  segs.forEach((s,i)=>{const w=ws[i];
+    txt(s[0],{x:x+w/2,y:80,"font-size":64,"font-weight":700,"font-family":"Barlow Condensed, Arial Narrow, sans-serif","text-anchor":"middle",fill:i===0?"var(--muted)":"var(--ink)"},svg);
+    el("path",{d:`M${x+8} 98 v10 h${w-16} v-10`,stroke:"var(--hi)","stroke-width":3,fill:"none"},svg);
+    txt(s[1],{x:x+w/2,y:134,"font-size":17,"font-weight":600,"text-anchor":"middle"},svg);
+    if(s[2])txt(s[2],{x:x+w/2,y:156,"font-size":12.5,fill:"var(--muted)","text-anchor":"middle"},svg);
+    x+=w+14;});
+  txt("Other parts add a part code:",{x:610,y:44,"font-size":14,fill:"var(--muted)"},svg);
+  [["WGSW4BL","4\" sidewall, black"],["WGTBS18EZ","18\" trapeze, zinc"],["WGTL30PG","30\" liner, pre-galv"]].forEach((p,i)=>{
+    txt(p[0],{x:610,y:80+i*42,"font-size":20,"font-weight":600,"font-family":"Barlow Condensed, Arial Narrow, sans-serif"},svg);
+    txt(p[1],{x:610,y:97+i*42,"font-size":12.5,fill:"var(--muted)"},svg);});
+})();
+
+/* ---------- CATALOG ---------- */
+const BZ="BL / EZ";
+const CAT=[
+ ["Pathway section 8\" × 120\"","Pathway sections","WG8BL10","Black only"],
+ ["Pathway section 12\" × 120\"","Pathway sections","WG12**10",BZ],
+ ["Pathway section 18\" × 120\"","Pathway sections","WG18**10",BZ],
+ ["Pathway section 24\" × 120\"","Pathway sections","WG24**10",BZ],
+ ["Pathway section 30\" × 120\"","Pathway sections","WG30**10",BZ],
+ ["Splice, 8\"/12\"/18\"","Splice connectors","WGSPL1218**",BZ],
+ ["Splice, 24\"/30\"","Splice connectors","WGSPL2430**",BZ],
+ ["Intersection splice","Splice connectors","WGINTSPL**",BZ],
+ ["Splice with clip, 8\"/12\"/18\"","Splice connectors","WGESPL**",BZ],
+ ["Splice with clip, 24\"/30\"","Splice connectors","WGESPL2430**",BZ],
+ ["Expansion splice","Splice connectors","WGEXS**",BZ],
+ ["Sidewall 2\"","Sidewalls & guides","WGSW2**",BZ],["Sidewall 4\"","Sidewalls & guides","WGSW4**",BZ],["Sidewall 6\"","Sidewalls & guides","WGSW6**",BZ],
+ ["Intersection bend-radius control 2\"","Sidewalls & guides","WGIBRC2**",BZ],["Intersection bend-radius control 4\"","Sidewalls & guides","WGIBRC4**",BZ],["Intersection bend-radius control 6\"","Sidewalls & guides","WGIBRC6**",BZ],
+ ["Side waterfall 4\" (ABS)","Sidewalls & guides","WGSWF4BL","Black only"],["Bottom waterfall","Sidewalls & guides","WGBTMWF**",BZ],
+ ["Divider wall 2\"","Sidewalls & guides","WGDW2PG","PG only"],["Divider wall 4\"","Sidewalls & guides","WGDW4PG","PG only"],["Divider wall 6\"","Sidewalls & guides","WGDW6PG","PG only"],
+ ...[8,12,18,24,30].map(w=>["Tray liner "+w+"\"","Tray liners","WGTL"+w+"PG","PG only"]),
+ ...[8,12,18,24,30].map(w=>["Trapeze bracket "+w+"\"","Mounting brackets","WGTBS"+w+"**",BZ]),
+ ...[12,18,24].map(w=>["Cantilever bracket "+w+"\"","Mounting brackets","WGCB"+w+"BL**","as printed"]),
+ ...[12,18,24].map(w=>["2-post channel rack bracket, "+w+"\" pathway","Mounting brackets","WG2PRB"+w+"BL","Black only"]),
+ ["FiberRunner QuikLock trapeze bracket, 12\"","Mounting brackets","WG12FRTBBL","Black only"],
+ ["FiberRunner QuikLock trapeze bracket, 18\"","Mounting brackets","WG18FRTBBL","Black only"],
+ ["FiberRunner QuikLock trapeze bracket, 24\"","Mounting brackets","WG24RFTBBL","as printed — likely WG24FRTBBL"],
+ ["FiberRunner QuikLock trapeze bracket, 30\"","Mounting brackets","WG30FRTBBL","Black only"],
+ ["Wall bracket 8\"","Mounting brackets","WGWMTB8**",BZ],["Wall bracket 12\"","Mounting brackets","WGWMTB12**",BZ],["Wall bracket 18\"–30\"","Mounting brackets","WGWMTB1830**",BZ],
+ ["Strut bracket","Mounting brackets","WGSK**",BZ],["Vertical mounting bracket","Mounting brackets","WGVWMBEZ","Zinc only"],
+ ["Cabinet direct-mount bracket, 1200 mm deep","Mounting brackets","WGCMB1200BL","Black only"],["Cabinet direct-mount bracket, 1070 mm deep","Mounting brackets","WGCMB1070BL","Black only"],
+ ["Cabinet mounting bracket, 1200 mm deep","Mounting brackets","WGCMK1200BL","Black only"],["Cabinet mounting bracket, 1070 mm deep","Mounting brackets","WGCMK1070BL","Black only"],
+ ["4-post rack mounting bracket","Mounting brackets","WGR4PK30",""],
+ ["Manual cutting tool","Tools & hardware","WGCT-M",""],["Hydraulic cutting tool","Tools & hardware","WGCT-A",""],["Hardware kit","Tools & hardware","WGHRDWKT**",BZ]
+];
+(function(){
+  const sel=document.getElementById("fCat"),q=document.getElementById("fQ"),tb=document.querySelector("#cat tbody");
+  ["All",...new Set(CAT.map(r=>r[1]))].forEach(c=>{const o=document.createElement("option");o.textContent=c;sel.appendChild(o)});
+  function draw(){const c=sel.value,s=q.value.trim().toLowerCase();tb.innerHTML="";
+    CAT.filter(r=>(c==="All"||r[1]===c)&&(!s||(r[0]+r[2]).toLowerCase().includes(s))).forEach(r=>{
+      const tr=document.createElement("tr");tr.innerHTML=`<td>${r[0]}</td><td class="muted">${r[1]}</td><td class="pn">${r[2]}${r[3]?`<span class="chip">${r[3]}</span>`:""}</td>`;tb.appendChild(tr);});
+    if(!tb.children.length)tb.innerHTML=`<tr><td colspan="3" class="muted">No parts match. Clear the search or pick another category.</td></tr>`;}
+  sel.onchange=draw;q.oninput=draw;draw();
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DGX H100/H200 User Guide, explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E9ECE8; --surface:#F6F7F4; --ink:#1C2026; --muted:#5A636E; --rule:#C6CCC5;
+  --gpu:#2847D8; --cpu:#6B4FB0; --net:#0E8178; --sto:#5E7A1C; --pwr:#C98A00; --bad:#C23B32; --ok:#2E8A4A;
+  --gpu-soft:#DCE2FB; --cpu-soft:#E6DFF4; --net-soft:#D3ECE9; --sto-soft:#E4EBD0; --pwr-soft:#F5E8C6; --bad-soft:#F6DAD7;
+  --code-bg:#1F242B; --code-ink:#E6EAE5;
+  --sans:"Archivo", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#14171B; --surface:#1C2026; --ink:#E5E8E3; --muted:#9AA3AD; --rule:#333A42;
+    --gpu:#7D93FF; --cpu:#AE97EA; --net:#4CC2B7; --sto:#A6C25A; --pwr:#F0B83A; --bad:#F07368; --ok:#5CC27A;
+    --gpu-soft:#232C52; --cpu-soft:#2E2645; --net-soft:#16332F; --sto-soft:#272F17; --pwr-soft:#3A2F12; --bad-soft:#3D1F1C;
+    --code-bg:#0F1215; --code-ink:#E6EAE5;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#14171B; --surface:#1C2026; --ink:#E5E8E3; --muted:#9AA3AD; --rule:#333A42;
+  --gpu:#7D93FF; --cpu:#AE97EA; --net:#4CC2B7; --sto:#A6C25A; --pwr:#F0B83A; --bad:#F07368; --ok:#5CC27A;
+  --gpu-soft:#232C52; --cpu-soft:#2E2645; --net-soft:#16332F; --sto-soft:#272F17; --pwr-soft:#3A2F12; --bad-soft:#3D1F1C;
+  --code-bg:#0F1215; --code-ink:#E6EAE5;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 16px);scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.55;font-variation-settings:"wdth" 100;-webkit-font-smoothing:antialiased}
+img,svg{max-width:100%}
+a{color:var(--gpu);text-underline-offset:3px}
+a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--gpu);outline-offset:2px;border-radius:4px}
+code,pre{font-family:var(--mono);font-size:.86em}
+p code,li code,td code{background:var(--surface);border:1px solid var(--rule);padding:.05em .35em;border-radius:4px}
+
+/* ---------- Hero ---------- */
+.hero{max-width:1240px;margin:0 auto;padding:56px 28px 24px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:40px;align-items:center}
+.hero h1{font-stretch:125%;font-variation-settings:"wdth" 125;font-weight:780;font-size:clamp(2.2rem,4.6vw,3.7rem);line-height:1.02;letter-spacing:-.02em;margin:0 0 20px}
+.hero .lede{font-size:1.12rem;max-width:34em;color:var(--ink);margin:0 0 18px}
+.hero .src{font-size:.92rem;color:var(--muted);max-width:36em}
+.hero .src a{word-break:break-all}
+.stack-wrap{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:18px 18px 14px}
+.stack-wrap .hint{font-size:.85rem;color:var(--muted);margin:2px 4px 8px}
+#stack{display:block;width:100%;height:auto}
+.slab{cursor:pointer}
+.slab .face{transition:transform .25s ease}
+.slab:hover .face,.slab.on .face{transform:translateX(-10px)}
+@media (prefers-reduced-motion:reduce){.slab .face{transition:none}}
+.slab-detail{min-height:6.2em;border-top:1px solid var(--rule);margin-top:6px;padding:12px 4px 2px}
+.slab-detail h3{margin:0 0 4px;font-size:1.05rem;font-variation-settings:"wdth" 112}
+.slab-detail p{margin:0;font-size:.95rem;color:var(--muted)}
+
+/* ---------- Layout ---------- */
+.layout{max-width:1240px;margin:0 auto;padding:0 28px 80px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start;padding-top:36px;font-size:.92rem}
+.toc p{margin:0 0 10px;color:var(--muted);font-weight:600}
+.toc ol{list-style:none;margin:0;padding:0;border-left:2px solid var(--rule)}
+.toc a{display:block;padding:5px 0 5px 14px;margin-left:-2px;border-left:2px solid transparent;color:var(--muted);text-decoration:none}
+.toc a:hover{color:var(--ink)}
+.toc a.active{color:var(--ink);border-left-color:var(--gpu);font-weight:600}
+main{min-width:0}
+section{padding-top:44px;border-top:1px solid var(--rule);margin-top:44px}
+section:first-child{border-top:0;margin-top:0}
+h2{font-variation-settings:"wdth" 118;font-weight:740;font-size:clamp(1.6rem,2.6vw,2.15rem);line-height:1.12;letter-spacing:-.01em;margin:0 0 14px}
+h3{font-variation-settings:"wdth" 108;font-weight:680;font-size:1.18rem;margin:28px 0 8px}
+.prose{max-width:44em}
+.prose p{margin:0 0 14px}
+.note{color:var(--muted);font-size:.9rem}
+.chapter-link{font-size:.9rem;color:var(--muted);margin:-4px 0 18px}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:20px}
+.fig{margin:22px 0}
+.fig figcaption{font-size:.86rem;color:var(--muted);margin-top:8px}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* callouts */
+.callout{border-left:4px solid var(--pwr);background:var(--pwr-soft);padding:14px 18px;border-radius:0 10px 10px 0;margin:18px 0;max-width:44em}
+.callout.bad{border-color:var(--bad);background:var(--bad-soft)}
+.callout.info{border-color:var(--gpu);background:var(--gpu-soft)}
+.callout strong{display:block;margin-bottom:2px}
+.callout p{margin:0}
+
+/* ---------- Guide map ---------- */
+.journey{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:18px}
+.phase{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:16px;position:relative}
+.phase h3{margin:0 0 4px;font-size:1.05rem}
+.phase .why{font-size:.88rem;color:var(--muted);margin:0 0 12px}
+.phase ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.phase li a{display:block;font-size:.92rem;padding:6px 10px;background:var(--paper);border-radius:7px;text-decoration:none;color:var(--ink);border:1px solid var(--rule)}
+.phase li a:hover{border-color:var(--gpu)}
+.phase:not(:last-child)::after{content:"";position:absolute;right:-12px;top:28px;width:10px;height:10px;border-top:2px solid var(--muted);border-right:2px solid var(--muted);transform:rotate(45deg)}
+.legal{font-size:.88rem;color:var(--muted);margin-top:12px}
+
+/* ---------- Spec table ---------- */
+table{border-collapse:collapse;width:100%;font-size:.94rem}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:650;color:var(--muted);font-size:.86rem}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:baseline}
+
+/* memory bars */
+.bars{display:flex;flex-direction:column;gap:12px;margin:10px 0 4px}
+.bar-row{display:grid;grid-template-columns:70px 1fr;gap:12px;align-items:center;font-size:.92rem}
+.bar{height:34px;background:var(--gpu-soft);border-radius:6px;position:relative;overflow:hidden}
+.bar span{position:absolute;inset:0 auto 0 0;background:var(--gpu);border-radius:6px;display:flex;align-items:center;padding-left:12px;color:#fff;font-weight:600;white-space:nowrap}
+:root[data-theme="dark"] .bar span{color:#0d1020}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .bar span{color:#0d1020}}
+
+/* ---------- Topology ---------- */
+#topo{display:block;min-width:760px;width:100%;height:auto}
+#topo text{font-family:var(--sans)}
+.tnode{cursor:pointer}
+.topo-info{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:14px}
+.topo-info div{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:8px 10px}
+.topo-info small{display:block;color:var(--muted);font-size:.78rem}
+.topo-info b{font-family:var(--mono);font-weight:500;font-size:.92rem}
+
+/* ---------- Ports ---------- */
+.ports{display:grid;grid-template-columns:2.2fr 1.4fr 1fr;gap:14px}
+.pgroup{border:1px solid var(--rule);border-radius:10px;padding:12px;background:var(--paper)}
+.pgroup h4{margin:0 0 2px;font-size:.95rem}
+.pgroup p{margin:0 0 10px;font-size:.82rem;color:var(--muted)}
+.pgrid{display:flex;flex-wrap:wrap;gap:8px}
+.cage{display:flex;flex-direction:column;gap:4px;padding:5px;border:1px dashed var(--rule);border-radius:7px}
+.cage em{font-style:normal;font-size:.72rem;color:var(--muted);text-align:center}
+.port{font:inherit;font-size:.8rem;font-weight:600;min-width:58px;padding:9px 8px;border-radius:6px;border:2px solid currentColor;background:var(--surface);cursor:pointer;color:var(--net)}
+.port.sto{color:var(--sto)} .port.mgmt{color:var(--cpu)} .port.bmc{color:var(--pwr)}
+.port[aria-pressed="true"]{background:currentColor}
+.port[aria-pressed="true"] i{color:var(--surface)}
+.port i{font-style:normal;color:var(--ink)}
+.port-detail{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.port-detail div{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:8px 10px}
+.port-detail small{display:block;color:var(--muted);font-size:.78rem}
+.port-detail b{font-family:var(--mono);font-weight:500;font-size:.88rem;word-break:break-all}
+
+/* ---------- Storage ---------- */
+.raid{display:grid;grid-template-columns:1fr 2.4fr;gap:16px}
+.raid .disks{display:flex;gap:6px;margin:10px 0}
+.disk{flex:1;height:64px;border-radius:6px;border:2px solid var(--sto);background:var(--sto-soft);display:flex;align-items:flex-end;justify-content:center;font-size:.72rem;padding-bottom:4px;color:var(--ink)}
+.raid .mirror .disk{background:repeating-linear-gradient(45deg,var(--sto-soft) 0 6px,transparent 6px 12px)}
+.raid h4{margin:0;font-size:1rem}
+.raid .cap{font-size:.9rem;color:var(--muted)}
+.raid .cap b{color:var(--ink);font-size:1.25rem;font-variation-settings:"wdth" 115}
+
+/* ---------- PSU sim ---------- */
+.psus{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:14px 0}
+.psu{font:inherit;border:2px solid var(--pwr);background:var(--pwr-soft);color:var(--ink);border-radius:8px;padding:12px 4px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:.82rem}
+.psu .fan{width:30px;height:30px;border-radius:50%;border:2px solid var(--pwr);position:relative}
+.psu .fan::before,.psu .fan::after{content:"";position:absolute;inset:12px 2px;background:var(--pwr);border-radius:2px}
+.psu .fan::after{transform:rotate(90deg)}
+.psu[aria-pressed="false"]{border-color:var(--bad);background:var(--surface);border-style:dashed}
+.psu[aria-pressed="false"] .fan{border-color:var(--bad);opacity:.4}
+.psu[aria-pressed="false"] .fan::before,.psu[aria-pressed="false"] .fan::after{background:var(--bad)}
+.psu b{font-weight:650}
+.capacity{position:relative;height:40px;background:var(--paper);border:1px solid var(--rule);border-radius:8px;overflow:hidden;margin:6px 0 4px}
+.capacity .fill{position:absolute;inset:0 auto 0 0;background:var(--pwr);transition:width .3s ease}
+.capacity .peak{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink)}
+.capacity .peak span{position:absolute;top:2px;left:6px;font-size:.75rem;white-space:nowrap;background:var(--surface);padding:0 4px;border-radius:3px}
+.cap-scale{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted)}
+.psu-status{margin-top:14px;padding:14px 16px;border-radius:10px;border-left:4px solid var(--ok);background:var(--paper)}
+.psu-status h4{margin:0 0 4px}
+.psu-status p{margin:0;font-size:.94rem}
+.psu-status.warn{border-color:var(--pwr)} .psu-status.crit{border-color:var(--bad)}
+
+/* power limit flow */
+#plimit{display:block;width:100%;min-width:620px;height:auto}
+
+/* ---------- Environment ---------- */
+.env{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.gauge{margin:10px 0 2px;height:16px;border-radius:8px;background:var(--paper);border:1px solid var(--rule);position:relative}
+.gauge .ok{position:absolute;top:0;bottom:0;background:var(--ok);border-radius:8px;opacity:.85}
+.gauge-scale{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted)}
+.big{font-variation-settings:"wdth" 120;font-weight:760;font-size:1.9rem;line-height:1.05}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:16px}
+.stats div{border-top:3px solid var(--ink);padding-top:8px}
+.stats small{display:block;color:var(--muted);font-size:.85rem}
+
+/* ---------- LEDs ---------- */
+.leds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:12px}
+.led-card{display:flex;gap:14px;align-items:center;background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:14px}
+.led{width:22px;height:22px;border-radius:50%;background:#2fbf55;box-shadow:0 0 12px #2fbf55;flex:none}
+.led.slow{animation:blink 1s steps(1,end) infinite}
+.led.fast{animation:blink .25s steps(1,end) infinite}
+.led.amber{background:#f0a500;box-shadow:0 0 12px #f0a500}
+.led.blue{background:#3d7bff;box-shadow:0 0 12px #3d7bff}
+@keyframes blink{50%{opacity:.12;box-shadow:none}}
+@media (prefers-reduced-motion:reduce){.led.slow,.led.fast{animation:none;opacity:.6}}
+.led-card b{display:block}
+.led-card span{font-size:.86rem;color:var(--muted)}
+
+/* ---------- Access ---------- */
+#accessSvg{display:block;width:100%;min-width:680px;height:auto}
+
+/* ---------- Steps ---------- */
+.steps{list-style:none;margin:16px 0 0;padding:0;counter-reset:s;max-width:46em}
+.steps li{counter-increment:s;position:relative;padding:0 0 22px 52px;border-left:2px solid var(--rule);margin-left:15px}
+.steps li:last-child{border-left-color:transparent;padding-bottom:0}
+.steps li::before{content:counter(s);position:absolute;left:-16px;top:-2px;width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-weight:700;font-size:.9rem}
+.steps li.opt::before{background:var(--surface);color:var(--ink);border:2px solid var(--ink)}
+.steps h4{margin:0 0 2px;font-size:1.02rem}
+.steps p{margin:0 0 6px;font-size:.96rem}
+.tag{display:inline-block;font-size:.74rem;font-weight:600;padding:1px 8px;border-radius:20px;background:var(--surface);border:1px solid var(--rule);color:var(--muted);margin-left:6px;vertical-align:2px}
+
+/* ---------- Code ---------- */
+.code{position:relative;margin:8px 0 12px;max-width:46em}
+.code pre{margin:0;background:var(--code-bg);color:var(--code-ink);padding:12px 70px 12px 14px;border-radius:8px;overflow-x:auto;line-height:1.5}
+.copy{position:absolute;top:7px;right:7px;font:inherit;font-size:.75rem;padding:4px 9px;border-radius:5px;border:1px solid #4a525c;background:#2b3138;color:#dfe4de;cursor:pointer}
+.copy:hover{background:#38404a}
+
+/* ---------- Software stack ---------- */
+.swstack{display:flex;flex-direction:column;gap:6px;max-width:46em;margin-top:14px}
+.layer{display:flex;gap:6px;flex-wrap:wrap}
+.layer div{flex:1 1 140px;padding:12px 14px;border-radius:7px;font-size:.92rem;border:1px solid var(--rule)}
+.layer div small{display:block;color:var(--muted);font-size:.8rem}
+.l-mgmt div{background:var(--cpu-soft)} .l-ctr div{background:var(--gpu-soft)} .l-drv div{background:var(--net-soft)} .l-os div{background:var(--surface)}
+
+/* ---------- Chapter cards ---------- */
+.chapters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px}
+.chap{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:16px 18px}
+.chap h3{margin:0 0 6px;font-size:1.05rem}
+.chap p{margin:0 0 8px;font-size:.93rem}
+.chap a{font-size:.88rem}
+
+footer{max-width:1240px;margin:0 auto;padding:24px 28px 48px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--rule)}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1000px){
+  .hero{grid-template-columns:1fr;padding-top:36px}
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+  .journey{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .phase:nth-child(2)::after{display:none}
+  .ports{grid-template-columns:1fr}
+}
+@media (max-width:680px){
+  body{font-size:16px}
+  .hero,.layout,footer{padding-left:18px;padding-right:18px}
+  .journey,.chapters,.env,.raid{grid-template-columns:1fr}
+  .phase::after{display:none}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .leds{grid-template-columns:1fr}
+  .psus{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .topo-info,.port-detail{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div>
+    <h1>The DGX H100/H200 User Guide, explained</h1>
+    <p class="lede">The link you shared is the front door to NVIDIA's official manual for its DGX H100 and DGX H200 systems: 8U rack servers that each hold eight data-center GPUs and are sold as ready-to-run AI machines. The page itself is only a table of contents. This explainer walks through what the chapters behind it actually say, with diagrams in place of long tables.</p>
+    <p class="src">Source: <a href="https://docs.nvidia.com/dgx/dgxh100-user-guide/" target="_blank" rel="noopener">docs.nvidia.com/dgx/dgxh100-user-guide/</a>, last updated by NVIDIA on Jan 26, 2026. Also available from NVIDIA as a <a href="https://docs.nvidia.com/dgx/dgxh100-user-guide/dgxh100-user-guide.pdf" target="_blank" rel="noopener">PDF</a>.</p>
+  </div>
+  <div class="stack-wrap">
+    <p class="hint">The system in one picture. Select a layer to see what it contains.</p>
+    <svg id="stack" viewBox="0 0 460 440" role="group" aria-label="Logical layers of the DGX H100/H200 system"></svg>
+    <div class="slab-detail" id="slabDetail" aria-live="polite"></div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="toc" aria-label="On this page">
+    <p>On this page</p>
+    <ol>
+      <li><a href="#map">How the guide is organised</a></li>
+      <li><a href="#hardware">What's in the box</a></li>
+      <li><a href="#topology">How the parts connect</a></li>
+      <li><a href="#network">Network ports</a></li>
+      <li><a href="#storage">Storage</a></li>
+      <li><a href="#power">Power and redundancy</a></li>
+      <li><a href="#site">Site requirements</a></li>
+      <li><a href="#access">Getting to a console</a></li>
+      <li><a href="#firstboot">First boot to production</a></li>
+      <li><a href="#operate">Daily operation</a></li>
+      <li><a href="#software">Software stack</a></li>
+      <li><a href="#rest">Remaining chapters</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <!-- ================= MAP ================= -->
+    <section id="map">
+      <h2>How the guide is organised</h2>
+      <div class="prose">
+        <p>The manual has ten chapters plus three legal appendices. Read in order, they follow the life of a machine: learn what it is, get a screen on it, bring it into service, then manage and protect it. Grouping them that way makes it easier to know where to look.</p>
+      </div>
+      <div class="journey">
+        <div class="phase">
+          <h3>Understand it</h3>
+          <p class="why">Hardware, ports, topology, specs</p>
+          <ul><li><a href="#hardware">Introduction to DGX H100/H200</a></li></ul>
+        </div>
+        <div class="phase">
+          <h3>Reach it</h3>
+          <p class="why">Get a console, then set it up</p>
+          <ul>
+            <li><a href="#access">Connecting to DGX</a></li>
+            <li><a href="#firstboot">First Boot Setup</a></li>
+          </ul>
+        </div>
+        <div class="phase">
+          <h3>Run it</h3>
+          <p class="why">Health checks, firmware, remote control</p>
+          <ul>
+            <li><a href="#operate">Quickstart and Basic Operation</a></li>
+            <li><a href="#rest">SBIOS Settings</a></li>
+            <li><a href="#rest">Using the BMC</a></li>
+            <li><a href="#power">Managing Power Capping</a></li>
+          </ul>
+        </div>
+        <div class="phase">
+          <h3>Protect it</h3>
+          <p class="why">Security, automation, physical safety</p>
+          <ul>
+            <li><a href="#rest">Security</a></li>
+            <li><a href="#rest">Redfish APIs Support</a></li>
+            <li><a href="#rest">Safety</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="legal">Legal appendices: regulatory compliance by country (US, Canada, EU, Japan, India and others), third-party licence notices (Micron msecli, Mellanox OFED), and NVIDIA's general notices and trademarks.</p>
+    </section>
+
+    <!-- ================= HARDWARE ================= -->
+    <section id="hardware">
+      <h2>What's in the box</h2>
+      <p class="chapter-link">From the chapter <a href="https://docs.nvidia.com/dgx/dgxh100-user-guide/introduction-to-dgxh100.html" target="_blank" rel="noopener">Introduction to NVIDIA DGX H100/H200 Systems</a></p>
+      <div class="prose">
+        <p>The H100 and H200 versions share one chassis, one motherboard and one set of networking. The only difference the guide lists is the GPU: the H200 carries far more memory per GPU, which matters most for large models that would otherwise have to be split across more machines.</p>
+      </div>
+
+      <div class="panel fig">
+        <h3 style="margin-top:0">Total GPU memory across all eight GPUs</h3>
+        <div class="bars">
+          <div class="bar-row"><b>H100</b><div class="bar"><span style="width:56.7%">640 GB · 80 GB per GPU</span></div></div>
+          <div class="bar-row"><b>H200</b><div class="bar"><span style="width:100%">1,128 GB · 141 GB per GPU</span></div></div>
+        </div>
+        <p class="note" style="margin:8px 0 0">Per-GPU figures are the totals divided by eight.</p>
+      </div>
+
+      <div class="scroll-x">
+      <table>
+        <thead><tr><th>Part</th><th>What the system has</th></tr></thead>
+        <tbody>
+          <tr><td><span class="sw" style="background:var(--gpu)"></span>GPUs</td><td>8 × NVIDIA H100 (640 GB total) or 8 × H200 (1,128 GB total)</td></tr>
+          <tr><td><span class="sw" style="background:var(--gpu)"></span>GPU interconnect</td><td>4 NVSwitch chips using 4th-generation NVLink, giving 900 GB/s between any two GPUs</td></tr>
+          <tr><td><span class="sw" style="background:var(--cpu)"></span>CPUs</td><td>2 × Intel Xeon 8480C, 56 cores each; 2.0 GHz base, 2.9 GHz all-core turbo, 3.8 GHz max turbo</td></tr>
+          <tr><td><span class="sw" style="background:var(--cpu)"></span>System memory</td><td>2 TB across 32 DIMMs</td></tr>
+          <tr><td><span class="sw" style="background:var(--sto)"></span>OS drives</td><td>2 × 1.92 TB NVMe M.2, mirrored (RAID 1)</td></tr>
+          <tr><td><span class="sw" style="background:var(--sto)"></span>Data cache drives</td><td>8 × 3.84 TB NVMe U.2 self-encrypting drives, striped (RAID 0)</td></tr>
+          <tr><td><span class="sw" style="background:var(--net)"></span>Cluster network</td><td>8 single-port ConnectX-7 cards behind 4 OSFP cages; InfiniBand up to 400 Gb/s by default, or Ethernet 10–400 GbE</td></tr>
+          <tr><td><span class="sw" style="background:var(--net)"></span>Storage / in-band network</td><td>2 dual-port ConnectX-7 cards; Ethernet 10–400 GbE by default, or InfiniBand up to 400 Gb/s</td></tr>
+          <tr><td><span class="sw" style="background:var(--cpu)"></span>Management</td><td>Dual-port 100 GbE in slot 3, plus a 10 GbE RJ45 port</td></tr>
+          <tr><td><span class="sw" style="background:var(--pwr)"></span>BMC</td><td>1 GbE RJ45 for out-of-band control: Redfish, IPMI, SNMP, KVM and a web interface</td></tr>
+          <tr><td><span class="sw" style="background:var(--pwr)"></span>Power</td><td>6 × 3.3 kW power supplies</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3>Front panel signals</h3>
+      <div class="prose"><p>Three indicators on the bezel tell you the machine's state at a glance. The power button's green light changes its blink rate as the system boots.</p></div>
+      <div class="leds">
+        <div class="led-card"><div class="led slow" aria-hidden="true"></div><div><b>Slow green blink (1 Hz)</b><span>Standby: the BMC has booted, the host has not</span></div></div>
+        <div class="led-card"><div class="led fast" aria-hidden="true"></div><div><b>Fast green blink (4 Hz)</b><span>Power-on self-test in progress</span></div></div>
+        <div class="led-card"><div class="led" aria-hidden="true"></div><div><b>Solid green</b><span>Powered on</span></div></div>
+        <div class="led-card"><div class="led blue" aria-hidden="true"></div><div><b>Blue ID light</b><span>Pressed to mark this unit for servicing; a matching light flashes at the rear</span></div></div>
+        <div class="led-card"><div class="led amber" aria-hidden="true"></div><div><b>Amber fault light</b><span>The system or one of its components has failed</span></div></div>
+      </div>
+      <p class="note" style="margin-top:10px">At the back, the motherboard tray repeats the power and ID buttons and adds a button that resets the BMC by hand.</p>
+    </section>
+
+    <!-- ================= TOPOLOGY ================= -->
+    <section id="topology">
+      <h2>How the parts connect</h2>
+      <div class="prose">
+        <p>The key design idea: every GPU gets its own 400 Gb/s network card. GPUs talk to each other inside the box over NVLink through the four NVSwitches, and talk to GPUs in <em>other</em> DGX systems through their dedicated ConnectX-7 card. Four GPUs and their cards sit under each CPU.</p>
+        <p>Select a GPU to see which network port, Linux interface and RDMA device belongs to it. This mapping matters when you pin jobs or debug a slow link.</p>
+      </div>
+      <div class="panel fig">
+        <div class="scroll-x"><svg id="topo" viewBox="0 0 960 480" role="group" aria-label="Simplified system topology"></svg></div>
+        <div class="topo-info" id="topoInfo" aria-live="polite"></div>
+        <figcaption>Simplified from NVIDIA's topology figure and network-module table. PCIe switches between GPUs, cards and CPUs are omitted.</figcaption>
+      </div>
+      <div class="prose">
+        <p>Physically, the eight cluster cards are packaged as two "network modules" of four cards each, mounted on an interposer board that links the CPUs on one side to the GPU tray on the other. DensiLink cables run from the cards to the OSFP cages on the rear, and each cable carries two ports, one from each of two cards. That is why each OSFP cage shows two ports belonging to different GPUs.</p>
+      </div>
+    </section>
+
+    <!-- ================= NETWORK ================= -->
+    <section id="network">
+      <h2>Network ports</h2>
+      <div class="prose">
+        <p>The rear-panel network connections fall into three groups, each with its own job. Select a port to see its PCI address and the names Linux gives it. "Default" is the name you will see out of the box; "optional" is the name after switching the port between InfiniBand and Ethernet.</p>
+      </div>
+      <div class="panel fig">
+        <div class="ports" id="ports"></div>
+        <div class="port-detail" id="portDetail" aria-live="polite"></div>
+        <figcaption>Grouped by role, not by physical position on the rear panel. Eight cluster ports at 400 Gb/s add up to 3.2 Tb/s per system.</figcaption>
+      </div>
+      <div class="callout info">
+        <strong>No cables in the box</strong>
+        <p>The system ships without network cables or adaptors. Which ones work is decided by the ConnectX-7 firmware, and NVIDIA keeps the list of validated cables in the release notes for that firmware.</p>
+      </div>
+      <p class="note">BMC port lights: the left LED shows link speed (green for 100 Mb/s, amber for 1 Gb/s); the right LED flashes green with traffic.</p>
+    </section>
+
+    <!-- ================= STORAGE ================= -->
+    <section id="storage">
+      <h2>Storage</h2>
+      <div class="prose"><p>Two separate drive sets do two different jobs. The OS sits on a mirrored pair so a single drive failure doesn't take the machine down. The data drives are striped for speed with no redundancy, which is fine because they act as a local cache for datasets that live elsewhere (the <code>cachefilesd</code> daemon in the software stack manages this).</p></div>
+      <div class="raid fig">
+        <div class="panel mirror">
+          <h4>OS: RAID 1 (mirror)</h4>
+          <div class="disks"><div class="disk">M.2</div><div class="disk">M.2</div></div>
+          <p class="cap"><b>1.92 TB</b> usable · survives one drive failure</p>
+        </div>
+        <div class="panel">
+          <h4>Data cache: RAID 0 (stripe)</h4>
+          <div class="disks"><div class="disk">U.2</div><div class="disk">U.2</div><div class="disk">U.2</div><div class="disk">U.2</div><div class="disk">U.2</div><div class="disk">U.2</div><div class="disk">U.2</div><div class="disk">U.2</div></div>
+          <p class="cap"><b>30.72 TB</b> usable (8 × 3.84 TB) · fastest, but one failed drive loses the array</p>
+        </div>
+      </div>
+      <p class="note">After a fresh install or re-image, the OS mirror rebuilds itself for up to an hour. Performance can dip and <code>nvsm show health</code> will warn about re-syncing until it finishes; <code>sudo nvsm show volumes</code> shows progress.</p>
+    </section>
+
+    <!-- ================= POWER ================= -->
+    <section id="power">
+      <h2>Power and redundancy</h2>
+      <p class="chapter-link">From the chapters on hardware and <a href="https://docs.nvidia.com/dgx/dgxh100-user-guide/power-capping.html" target="_blank" rel="noopener">Managing Power Capping</a></p>
+      <div class="prose">
+        <p>Six 3.3 kW supplies feed a system that can draw up to 10.2 kW. They're arranged as 4+2: four can carry the full load and two are spares. Each supply needs 200–240 V AC at 16 A, and must use the six locking C19/C20 cords NVIDIA ships with the system.</p>
+        <p>Try it: select supplies to take them offline and see what the guide says happens.</p>
+      </div>
+      <div class="panel fig">
+        <div class="psus" id="psus"></div>
+        <div class="capacity" aria-hidden="true"><div class="fill" id="capFill"></div><div class="peak" style="left:51.5%"><span>10.2 kW peak draw</span></div></div>
+        <div class="cap-scale"><span>0 kW</span><span id="capLabel"></span><span>19.8 kW</span></div>
+        <div class="psu-status" id="psuStatus" aria-live="polite"></div>
+      </div>
+      <div class="callout bad">
+        <strong>Never cut power to a running system</strong>
+        <p>Pulling cords or switching off the PDU while the OS is running can damage components. Shut down from the OS, with a short press of the power button, or with Graceful Shutdown in the BMC, and wait until it is fully off before any maintenance. Don't run the system with supply bays left empty.</p>
+      </div>
+
+      <h3>Who decides each GPU's power limit</h3>
+      <div class="prose"><p>Three sources can set a GPU power limit. The GPU's own power-management unit always obeys whichever is lowest.</p></div>
+      <div class="scroll-x fig"><svg id="plimit" viewBox="0 0 760 230" role="img" aria-label="Three power-limit sources feed the GPU power management unit, which applies the lowest limit">
+        <g font-family="Archivo, Arial, sans-serif" font-size="14">
+          <rect x="10" y="12" width="230" height="56" rx="8" fill="var(--pwr-soft)" stroke="var(--pwr)" stroke-width="1.5"/>
+          <text x="24" y="36" fill="var(--ink)" font-weight="700">VBIOS</text><text x="24" y="56" fill="var(--muted)" font-size="12.5">Hard ceiling on total GPU power</text>
+          <rect x="10" y="87" width="230" height="56" rx="8" fill="var(--pwr-soft)" stroke="var(--pwr)" stroke-width="1.5"/>
+          <text x="24" y="111" fill="var(--ink)" font-weight="700">nvidia-smi</text><text x="24" y="131" fill="var(--muted)" font-size="12.5">Set by users from the host OS</text>
+          <rect x="10" y="162" width="230" height="56" rx="8" fill="var(--pwr-soft)" stroke="var(--pwr)" stroke-width="1.5"/>
+          <text x="24" y="186" fill="var(--ink)" font-weight="700">SMBPBI</text><text x="24" y="206" fill="var(--muted)" font-size="12.5">Set out-of-band, e.g. via the BMC</text>
+          <path d="M240 40 C330 40 330 115 380 115 M240 115 L380 115 M240 190 C330 190 330 115 380 115" fill="none" stroke="var(--muted)" stroke-width="2"/>
+          <rect x="380" y="80" width="200" height="70" rx="10" fill="var(--gpu-soft)" stroke="var(--gpu)" stroke-width="2"/>
+          <text x="398" y="108" fill="var(--ink)" font-weight="700">GPU power unit (PMU)</text><text x="398" y="130" fill="var(--muted)" font-size="12.5">Picks the lowest limit</text>
+          <path d="M580 115 L640 115" stroke="var(--gpu)" stroke-width="2.5"/><path d="M634 108 L644 115 L634 122" fill="none" stroke="var(--gpu)" stroke-width="2.5"/>
+          <rect x="648" y="88" width="104" height="54" rx="8" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="666" y="120" fill="var(--ink)" font-weight="700">GPU draw</text>
+        </g>
+      </svg></div>
+      <div class="prose">
+        <p>For an N+N setup (two independent power feeds, each able to run the box), the guide says to turn on the system-level power-capping feature so total consumption stays limited. Over IPMI that means reading the current limit and writing a new one. The limit comes back as two little-endian bytes: a reply of <code>c8 32</code> means 0x32C8, or 13,000 W. Anything above 12,000 means capping is off, which is the default from firmware 24.07.1 onward.</p>
+      </div>
+      <div class="code"><pre># read the current system power limit
+ipmitool raw 0x3c 0x80 0x05</pre><button class="copy">Copy</button></div>
+      <div class="code"><pre># set a 12 kW budget (0x2EE0 = 12000, sent low byte first)
+ipmitool raw 0x3c 0x81 0x05 0xE0 0x2E</pre><button class="copy">Copy</button></div>
+      <p class="note">NVIDIA's page prints the second command as <code>x3c</code>; <code>0x3c</code> is shown here to match the read command. The same controls are also available through Redfish.</p>
+    </section>
+
+    <!-- ================= SITE ================= -->
+    <section id="site">
+      <h2>Site requirements</h2>
+      <div class="prose"><p>This is a heavy, hot machine. Plan the rack, cooling and floor loading before it arrives. Installation itself has to be done by NVIDIA field engineers or an NVIDIA partner, or the hardware warranty is void.</p></div>
+      <div class="stats">
+        <div><span class="big">8U</span><small>Rack height (356 mm)</small></div>
+        <div><span class="big">130 kg</span><small>Maximum weight (287.6 lb)</small></div>
+        <div><span class="big">897 mm</span><small>Maximum depth; 19-inch rack width</small></div>
+        <div><span class="big">38,557</span><small>BTU per hour of heat to remove</small></div>
+      </div>
+      <div class="env fig">
+        <div class="panel">
+          <h4 style="margin:0">Operating temperature</h4>
+          <div class="gauge" role="img" aria-label="Allowed range 5 to 30 degrees Celsius on a 0 to 40 scale"><div class="ok" style="left:12.5%;width:62.5%"></div></div>
+          <div class="gauge-scale"><span>0 °C</span><span>5</span><span>30</span><span>40 °C</span></div>
+          <p class="note" style="margin:8px 0 0">5–30 °C (41–86 °F)</p>
+        </div>
+        <div class="panel">
+          <h4 style="margin:0">Relative humidity</h4>
+          <div class="gauge" role="img" aria-label="Allowed range 20 to 80 percent on a 0 to 100 scale"><div class="ok" style="left:20%;width:60%"></div></div>
+          <div class="gauge-scale"><span>0 %</span><span>20</span><span>80</span><span>100 %</span></div>
+          <p class="note" style="margin:8px 0 0">20–80 %, non-condensing</p>
+        </div>
+      </div>
+      <p class="note">Airflow runs front to back at 1,105 CFM when the fans are at 80 %.</p>
+    </section>
+
+    <!-- ================= ACCESS ================= -->
+    <section id="access">
+      <h2>Getting to a console</h2>
+      <p class="chapter-link">From the chapter <a href="https://docs.nvidia.com/dgx/dgxh100-user-guide/connect-dgx.html" target="_blank" rel="noopener">Connecting to DGX H100/H200</a></p>
+      <div class="prose"><p>There are three ways in. The first two give you the machine's own screen, so they work before any OS setup. SSH only works once first-boot setup has configured the network.</p></div>
+      <div class="scroll-x fig"><svg id="accessSvg" viewBox="0 0 860 330" role="img" aria-label="Three access paths: direct console, BMC remote KVM, and SSH">
+        <g font-family="Archivo, Arial, sans-serif" font-size="14">
+          <rect x="10" y="120" width="110" height="90" rx="10" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="65" y="160" text-anchor="middle" fill="var(--ink)" font-weight="700">You</text>
+          <text x="65" y="180" text-anchor="middle" fill="var(--muted)" font-size="12">admin</text>
+
+          <rect x="700" y="40" width="150" height="250" rx="12" fill="var(--gpu-soft)" stroke="var(--gpu)" stroke-width="2"/>
+          <text x="775" y="70" text-anchor="middle" fill="var(--ink)" font-weight="700">DGX H100/H200</text>
+          <rect x="716" y="88" width="118" height="36" rx="6" fill="var(--surface)" stroke="var(--rule)"/><text x="775" y="111" text-anchor="middle" fill="var(--ink)" font-size="12.5">VGA + USB</text>
+          <rect x="716" y="150" width="118" height="36" rx="6" fill="var(--pwr-soft)" stroke="var(--pwr)"/><text x="775" y="173" text-anchor="middle" fill="var(--ink)" font-size="12.5">BMC port</text>
+          <rect x="716" y="212" width="118" height="36" rx="6" fill="var(--net-soft)" stroke="var(--net)"/><text x="775" y="235" text-anchor="middle" fill="var(--ink)" font-size="12.5">Network port</text>
+
+          <path d="M120 145 C200 145 200 106 260 106 L716 106" fill="none" stroke="var(--ink)" stroke-width="2"/>
+          <path d="M120 165 L716 168" fill="none" stroke="var(--pwr)" stroke-width="2.5" stroke-dasharray="8 5"/>
+          <path d="M120 185 C200 185 200 230 260 230 L716 230" fill="none" stroke="var(--net)" stroke-width="2"/>
+
+          <rect x="250" y="16" width="420" height="56" rx="8" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="264" y="38" fill="var(--ink)" font-weight="700">1 · Direct console</text>
+          <text x="264" y="58" fill="var(--muted)" font-size="12.5">Monitor ≤ 1440×900 + keyboard. Front or rear VGA; rear wins if both.</text>
+
+          <rect x="250" y="122" width="420" height="30" rx="8" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="264" y="142" fill="var(--ink)" font-weight="700">2 · Browser → BMC → Remote Control → Launch KVM</text>
+
+          <rect x="250" y="256" width="420" height="56" rx="8" fill="var(--surface)" stroke="var(--rule)"/>
+          <text x="264" y="278" fill="var(--ink)" font-weight="700">3 · SSH to the OS</text>
+          <text x="264" y="298" fill="var(--muted)" font-size="12.5">Only after first-boot setup has configured networking.</text>
+        </g>
+      </svg></div>
+      <div class="callout bad">
+        <strong>Change the BMC's factory login before it touches a shared network</strong>
+        <p>Until first-boot setup runs, the BMC accepts the factory default credentials, which are published in the guide. First-boot replaces them: the BMC then uses the administrator username you create plus a separate BMC password. NVIDIA also recommends keeping the BMC on an isolated management network, a firewalled subnet, or at least its own VLAN.</p>
+      </div>
+      <div class="callout">
+        <strong>The 172.17.x.x trap</strong>
+        <p>Docker on the DGX uses 172.17.x.x for containers by default. If your office or data-center network also uses that range, you won't be able to reach the system over the network, so connect directly to the console and change Docker's address range first (covered in the DGX OS 6 User Guide).</p>
+      </div>
+    </section>
+
+    <!-- ================= FIRST BOOT ================= -->
+    <section id="firstboot">
+      <h2>First boot to production</h2>
+      <p class="chapter-link">From <a href="https://docs.nvidia.com/dgx/dgxh100-user-guide/first-boot-setup.html" target="_blank" rel="noopener">First Boot Setup</a> and <a href="https://docs.nvidia.com/dgx/dgxh100-user-guide/quickstart-basics.html" target="_blank" rel="noopener">Quickstart and Basic Operation</a></p>
+      <div class="prose"><p>NVIDIA's installers normally do the first steps on site. The guide documents them anyway because you'll repeat them whenever the system is re-imaged. Hollow markers are optional or situational steps.</p></div>
+      <ol class="steps">
+        <li><h4>Register the system</h4><p>Follow the Entitlement Certification email from the purchase. It unlocks the support portal, software updates and an NGC account for NVIDIA's container registry.</p></li>
+        <li><h4>Connect to the console</h4><p>Directly or through the BMC's remote KVM, as shown above.</p></li>
+        <li><h4>Power on</h4><p>With the physical button or from the BMC. After the login prompt appears, give it up to a minute of idle time so every component finishes starting.</p></li>
+        <li><h4>Run the first-boot wizard</h4><p>Accept the EULAs, choose language and locale, create the administrator account (used for the OS, the BMC and the GRUB boot loader), and configure the primary network interface. Encrypting the root file system is offered here too.</p></li>
+        <li><h4>Let the OS mirror rebuild</h4><p>Up to an hour of reduced performance while RAID 1 syncs.</p></li>
+        <li><h4>Update DGX OS</h4><p>Pulls in security fixes; Ubuntu's security notices list which CVEs updates resolve.</p></li>
+        <li class="opt"><h4>Enable the SRP daemon <span class="tag">only for RDMA over InfiniBand</span></h4>
+          <div class="code"><pre>sudo systemctl enable srp_daemon.service
+sudo systemctl enable srptools.service</pre><button class="copy">Copy</button></div></li>
+        <li><h4>Quick health check</h4><p>Over SSH, confirm everything reports Healthy, Docker is present, and a container can see all eight GPUs.</p>
+          <div class="code"><pre>sudo nvsm show health
+sudo docker --version
+sudo docker run --gpus all --rm nvcr.io/nvidia/cuda:12.1.1-base-ubuntu22.04 nvidia-smi</pre><button class="copy">Copy</button></div></li>
+        <li><h4>Pre-flight stress test</h4><p>Loads the GPUs, CPUs, memory and storage for about 20 minutes. NVIDIA recommends it before production and after any servicing.</p>
+          <div class="code"><pre>sudo nvsm stress-test --force</pre><button class="copy">Copy</button></div></li>
+      </ol>
+    </section>
+
+    <!-- ================= OPERATE ================= -->
+    <section id="operate">
+      <h2>Daily operation</h2>
+      <h3>Running GPU containers</h3>
+      <div class="prose"><p>Work on a DGX is meant to run in containers, mostly NVIDIA's optimised images from NGC. Docker 20.10.18 and later understand GPUs natively, so you pick GPUs with the <code>--gpus</code> flag:</p></div>
+      <div class="code"><pre>sudo docker run --gpus all ...              # every GPU
+sudo docker run --gpus 2 ...                # any two GPUs
+sudo docker run --gpus '"device=1,2"' ...   # GPUs 1 and 2 specifically</pre><button class="copy">Copy</button></div>
+      <p class="note">The older <code>nvidia-docker2</code> runtime still works on DGX OS 6 but is deprecated. If you make it Docker's default runtime, image builds may get tuned only for the GPU they were built on unless the build declares its target architectures.</p>
+
+      <h3>CPU security mitigations: a speed trade-off</h3>
+      <div class="prose"><p>DGX OS ships with protections against CPU side-channel attacks (Spectre-style bugs). They cost some performance in AI workloads. If your cluster already defends against these attacks at another layer, you can turn them off per node with one package and turn them back on by removing it. Each change needs a reboot.</p></div>
+      <div class="code"><pre># check: "Mitigation:" lines = on, "Vulnerable" lines = off
+cat /sys/devices/system/cpu/vulnerabilities/*
+
+# turn mitigations off, then reboot
+sudo apt install nv-mitigations-off -y
+
+# turn them back on, then reboot
+sudo apt purge nv-mitigations-off</pre><button class="copy">Copy</button></div>
+    </section>
+
+    <!-- ================= SOFTWARE ================= -->
+    <section id="software">
+      <h2>Software stack</h2>
+      <div class="prose"><p>DGX OS comes pre-installed. It's Ubuntu Server with NVIDIA's drivers, networking stack and container tooling layered on top, plus two tools for watching hardware health.</p></div>
+      <div class="swstack" role="list">
+        <div class="layer l-mgmt" role="listitem"><div><b>NVSM</b><small>Health checks, alerts, stress tests for one node</small></div><div><b>DCGM</b><small>GPU management across a node, cluster or data center</small></div></div>
+        <div class="layer l-ctr" role="listitem"><div><b>Docker Engine</b><small>Runs workloads</small></div><div><b>NVIDIA Container Toolkit</b><small>Gives containers GPU access</small></div><div><b>cachefilesd</b><small>Manages the local data cache</small></div></div>
+        <div class="layer l-drv" role="listitem"><div><b>NVIDIA GPU driver</b></div><div><b>MOFED</b><small>InfiniBand / RDMA networking</small></div><div><b>MST</b><small>Networking tools</small></div><div><b>DGX support packages</b></div></div>
+        <div class="layer l-os" role="listitem"><div><b>Ubuntu Server</b><small>The base OS</small></div></div>
+      </div>
+    </section>
+
+    <!-- ================= REST ================= -->
+    <section id="rest">
+      <h2>Remaining chapters</h2>
+      <div class="prose"><p>These chapters are reference material for administrators. Here's what each covers so you know when to open it.</p></div>
+      <div class="chapters">
+        <div class="chap"><h3>SBIOS Settings</h3><p>Getting into the system firmware setup, changing the boot order, configuring a serial terminal from Linux, Windows or macOS, and power-cycling from there.</p><a href="https://docs.nvidia.com/dgx/dgxh100-user-guide/sbios-settings.html" target="_blank" rel="noopener">Open chapter</a></div>
+        <div class="chap"><h3>Using the BMC</h3><p>The BMC is a small always-on computer inside the server that you can reach even when the main system is off. The chapter covers its controls and open ports, giving it a static IP (with <code>ipmitool</code> or the BIOS), credentials and password rules, the remote console, Active Directory/LDAP login, event filters and SSL certificates.</p><a href="https://docs.nvidia.com/dgx/dgxh100-user-guide/bmc.html" target="_blank" rel="noopener">Open chapter</a></div>
+        <div class="chap"><h3>Security</h3><p>Locking down the BMC port, how firmware updates are verified before flashing, drive encryption, NVIDIA System Manager security, and a procedure for securely erasing data before a system leaves your hands.</p><a href="https://docs.nvidia.com/dgx/dgxh100-user-guide/security.html" target="_blank" rel="noopener">Open chapter</a></div>
+        <div class="chap"><h3>Redfish APIs Support</h3><p>Redfish is a standard REST API for managing servers, so everything above can be scripted. Examples cover firmware updates, BIOS settings and boot order, Secure Boot keys, telemetry, event logs, virtual media, backing up BMC settings, debug data, factory reset, and GPU power limits and capping policies.</p><a href="https://docs.nvidia.com/dgx/dgxh100-user-guide/redfish-api-supp.html" target="_blank" rel="noopener">Open chapter</a></div>
+        <div class="chap"><h3>Safety</h3><p>Choosing a site, lifting and handling a 130 kg unit, electrical and power-cord warnings, rack-mount warnings, static discharge, battery replacement, and keeping airflow clear.</p><a href="https://docs.nvidia.com/dgx/dgxh100-user-guide/safety.html" target="_blank" rel="noopener">Open chapter</a></div>
+        <div class="chap"><h3>Getting help</h3><p>Problems, troubleshooting and moving the system all go through NVIDIA Enterprise Support, reachable through the support portal or by email for customers with a support contract.</p><a href="https://www.nvidia.com/en-us/support/enterprise/" target="_blank" rel="noopener">NVIDIA Enterprise Support</a></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  An unofficial explainer built from NVIDIA's DGX H100/H200 System User Guide (docs updated Jan 26, 2026). Diagrams are simplified illustrations, not NVIDIA artwork. Check the original guide before acting on any procedure.
+</footer>
+
+<script>
+(function(){
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs, parent, text) => {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+
+  /* ---------- Hero exploded stack ---------- */
+  const layers = [
+    {k:"gpu", name:"GPU board", sub:"8 GPUs · 4 NVSwitch", color:"--gpu", soft:"--gpu-soft", n:8,
+     title:"GPU board: where the AI work happens",
+     body:"Eight H100 GPUs (640 GB total memory) or eight H200 GPUs (1,128 GB). Four NVSwitch chips connect every GPU to every other at 900 GB/s, so the eight behave like one large accelerator."},
+    {k:"cpu", name:"Host", sub:"2 Xeon CPUs · 2 TB RAM", color:"--cpu", soft:"--cpu-soft", n:2,
+     title:"Host: runs the OS and feeds the GPUs",
+     body:"Two 56-core Intel Xeon 8480C processors and 2 TB of system memory in 32 DIMMs. Each CPU looks after four of the GPUs and their network cards."},
+    {k:"net", name:"Network", sub:"10 ConnectX-7 cards", color:"--net", soft:"--net-soft", n:10,
+     title:"Network: links this box to the rest of the cluster",
+     body:"Eight single-port 400 Gb/s cards, one per GPU, for GPU-to-GPU traffic between systems. Two dual-port cards for storage and in-band management, plus 100 GbE and 10 GbE management ports."},
+    {k:"sto", name:"Storage", sub:"2 OS + 8 cache NVMe", color:"--sto", soft:"--sto-soft", n:10,
+     title:"Storage: OS on a mirror, data on a fast stripe",
+     body:"Two 1.92 TB M.2 drives mirrored for the operating system. Eight 3.84 TB self-encrypting U.2 drives striped together as a roughly 30 TB local cache for training data."},
+    {k:"pwr", name:"Power + BMC", sub:"6 × 3.3 kW PSUs", color:"--pwr", soft:"--pwr-soft", n:6,
+     title:"Power and management: keeps it alive and reachable",
+     body:"Six 3.3 kW supplies in a 4+2 arrangement for up to 10.2 kW of draw. The BMC, a separate always-on controller, lets you power, monitor and reach the console remotely."}
+  ];
+  const stack = document.getElementById("stack");
+  const detail = document.getElementById("slabDetail");
+  let current = null;
+  layers.forEach((L, i) => {
+    const y = 18 + i * 82;
+    const g = el("g", {class:"slab", tabindex:"0", role:"button", "aria-label":L.title, "data-k":L.k}, stack);
+    const f = el("g", {class:"face"}, g);
+    el("polygon", {points:`${70},${y} ${450},${y} ${410},${y+52} ${30},${y+52}`, fill:`var(${L.soft})`, stroke:`var(${L.color})`, "stroke-width":"2", "stroke-linejoin":"round"}, f);
+    el("polygon", {points:`${30},${y+52} ${410},${y+52} ${410},${y+64} ${30},${y+64}`, fill:`var(${L.color})`, opacity:".85"}, f);
+    el("polygon", {points:`${410},${y+52} ${450},${y} ${450},${y+12} ${410},${y+64}`, fill:`var(${L.color})`, opacity:".6"}, f);
+    el("text", {x:62, y:y+24, fill:"var(--ink)", "font-family":"Archivo, Arial, sans-serif", "font-weight":"700", "font-size":"16"}, f, L.name);
+    el("text", {x:56, y:y+43, fill:"var(--muted)", "font-family":"Archivo, Arial, sans-serif", "font-size":"12.5"}, f, L.sub);
+    // chips
+    const x0 = 230, x1 = 420, w = (x1 - x0) / L.n;
+    for (let c = 0; c < L.n; c++) {
+      const cx = x0 + c * w - (L.k === "cpu" ? 0 : 0);
+      const chipW = L.k === "cpu" ? w * 0.6 : w * 0.72;
+      el("rect", {x:cx + (w - chipW)/2 - 6, y:y+16, width:chipW, height:20, rx:3, fill:`var(${L.color})`, opacity: L.k==="sto" && c<2 ? ".55" : ".9"}, f);
+    }
+    const select = () => {
+      stack.querySelectorAll(".slab").forEach(s => s.classList.remove("on"));
+      g.classList.add("on"); current = L.k;
+      detail.innerHTML = `<h3>${L.title}</h3><p>${L.body}</p>`;
+    };
+    g.addEventListener("click", select);
+    g.addEventListener("mouseenter", select);
+    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(); }});
+    if (i === 0) select();
+  });
+  el("text", {x:30, y:432, fill:"var(--muted)", "font-family":"Archivo, Arial, sans-serif", "font-size":"11.5"}, stack, "Logical grouping, not the physical layout inside the chassis.");
+
+  /* ---------- Topology ---------- */
+  const map = [
+    {gpu:0, osfp:"OSFP4 P2", cx:"CX1", cpu:0, ifn:"ibp24s0",  rdma:"mlx5_0"},
+    {gpu:1, osfp:"OSFP3 P2", cx:"CX3", cpu:0, ifn:"ibp64s0",  rdma:"mlx5_3"},
+    {gpu:2, osfp:"OSFP3 P1", cx:"CX2", cpu:0, ifn:"ibp79s0",  rdma:"mlx5_4"},
+    {gpu:3, osfp:"OSFP4 P1", cx:"CX0", cpu:0, ifn:"ibp94s0",  rdma:"mlx5_5"},
+    {gpu:4, osfp:"OSFP1 P2", cx:"CX1", cpu:1, ifn:"ibp154s0", rdma:"mlx5_6"},
+    {gpu:5, osfp:"OSFP2 P2", cx:"CX3", cpu:1, ifn:"ibp192s0", rdma:"mlx5_9"},
+    {gpu:6, osfp:"OSFP2 P1", cx:"CX2", cpu:1, ifn:"ibp206s0", rdma:"mlx5_10"},
+    {gpu:7, osfp:"OSFP1 P1", cx:"CX0", cpu:1, ifn:"ibp220s0", rdma:"mlx5_11"}
+  ];
+  const topo = document.getElementById("topo");
+  const info = document.getElementById("topoInfo");
+  const F = "Archivo, Arial, sans-serif";
+  const gx = i => 24 + i * 116, GW = 96;
+  const swX = j => 40 + j * 225, SWW = 180;
+  const linkG = el("g", {}, topo);
+  const nvl = [], pcie = [];
+  // NVSwitches
+  for (let j = 0; j < 4; j++) {
+    el("rect", {x:swX(j), y:20, width:SWW, height:44, rx:8, fill:"var(--surface)", stroke:"var(--gpu)", "stroke-width":"2"}, topo);
+    el("text", {x:swX(j)+SWW/2, y:47, "text-anchor":"middle", fill:"var(--ink)", "font-family":F, "font-weight":"700", "font-size":"14"}, topo, `NVSwitch ${j}`);
+  }
+  el("text", {x:480, y:120, "text-anchor":"middle", fill:"var(--muted)", stroke:"var(--surface)", "stroke-width":"6", "paint-order":"stroke", "font-family":F, "font-size":"12.5"}, topo, "NVLink: every GPU to every NVSwitch · 900 GB/s GPU-to-GPU");
+  // links
+  for (let i = 0; i < 8; i++) {
+    nvl[i] = [];
+    for (let j = 0; j < 4; j++) {
+      nvl[i].push(el("line", {x1:gx(i)+GW/2, y1:160, x2:swX(j)+SWW/2, y2:64, stroke:"var(--gpu)", "stroke-width":"1", opacity:".25"}, linkG));
+    }
+    const m = map[i];
+    const cpuX = m.cpu === 0 ? 24 + 2*116 - 10 + GW/2 + 10 : 24 + 6*116 - 10 + GW/2 + 10;
+    pcie[i] = [
+      el("line", {x1:gx(i)+GW/2, y1:212, x2:gx(i)+GW/2, y2:280, stroke:"var(--net)", "stroke-width":"2", opacity:".5"}, linkG),
+      el("line", {x1:gx(i)+GW/2, y1:336, x2:gx(i)+GW/2, y2:400, stroke:"var(--cpu)", "stroke-width":"2", opacity:".5"}, linkG)
+    ];
+  }
+  // GPUs, NICs
+  const gpuRects = [], nicRects = [], nicText = [];
+  for (let i = 0; i < 8; i++) {
+    const g = el("g", {class:"tnode", tabindex:"0", role:"button", "aria-label":`GPU ${i}`}, topo);
+    gpuRects[i] = el("rect", {x:gx(i), y:160, width:GW, height:52, rx:8, fill:"var(--gpu-soft)", stroke:"var(--gpu)", "stroke-width":"2"}, g);
+    el("text", {x:gx(i)+GW/2, y:191, "text-anchor":"middle", fill:"var(--ink)", "font-family":F, "font-weight":"700", "font-size":"15"}, g, `GPU ${i}`);
+    nicRects[i] = el("rect", {x:gx(i), y:280, width:GW, height:56, rx:8, fill:"var(--net-soft)", stroke:"var(--net)", "stroke-width":"2"}, topo);
+    el("text", {x:gx(i)+GW/2, y:302, "text-anchor":"middle", fill:"var(--ink)", "font-family":F, "font-weight":"600", "font-size":"12.5"}, topo, "ConnectX-7");
+    nicText[i] = el("text", {x:gx(i)+GW/2, y:322, "text-anchor":"middle", fill:"var(--muted)", "font-family":F, "font-size":"12"}, topo, map[i].osfp);
+    const pick = () => selectGPU(i);
+    g.addEventListener("click", pick);
+    g.addEventListener("mouseenter", pick);
+    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); }});
+  }
+  // CPUs
+  const cpuRects = [];
+  for (let c = 0; c < 2; c++) {
+    const x = c === 0 ? gx(0) : gx(4);
+    const w = gx(3) + GW - gx(0);
+    cpuRects[c] = el("rect", {x, y:400, width:w, height:56, rx:10, fill:"var(--cpu-soft)", stroke:"var(--cpu)", "stroke-width":"2"}, topo);
+    el("text", {x:x + w/2, y:426, "text-anchor":"middle", fill:"var(--ink)", "font-family":F, "font-weight":"700", "font-size":"15"}, topo, `CPU ${c} · Xeon 8480C`);
+    el("text", {x:x + w/2, y:445, "text-anchor":"middle", fill:"var(--muted)", "font-family":F, "font-size":"12"}, topo, `Network module ${c} · GPUs ${c*4}–${c*4+3}`);
+  }
+  function selectGPU(i){
+    const m = map[i];
+    for (let k = 0; k < 8; k++) {
+      const on = k === i;
+      gpuRects[k].setAttribute("stroke-width", on ? "4" : "2");
+      gpuRects[k].setAttribute("fill", on ? "var(--gpu)" : "var(--gpu-soft)");
+      gpuRects[k].nextSibling.setAttribute("fill", on ? "var(--surface)" : "var(--ink)");
+      nicRects[k].setAttribute("stroke-width", on ? "4" : "2");
+      nvl[k].forEach(l => { l.setAttribute("opacity", on ? "1" : ".18"); l.setAttribute("stroke-width", on ? "2.2" : "1"); });
+      pcie[k].forEach(l => { l.setAttribute("opacity", on ? "1" : ".35"); l.setAttribute("stroke-width", on ? "3.5" : "2"); });
+    }
+    cpuRects.forEach((r, c) => r.setAttribute("stroke-width", c === m.cpu ? "4" : "2"));
+    info.innerHTML = `
+      <div><small>GPU</small><b>GPU ${m.gpu}</b></div>
+      <div><small>Rear port</small><b>${m.osfp}</b></div>
+      <div><small>Interface</small><b>${m.ifn}</b></div>
+      <div><small>RDMA device</small><b>${m.rdma}</b></div>
+      <div><small>Attached CPU</small><b>CPU ${m.cpu}</b></div>`;
+  }
+  selectGPU(0);
+
+  /* ---------- Ports ---------- */
+  const ports = {
+    "OSFP1 P1":{bus:"dc:00.0", def:"ibp220s0", opt:"enp220s0np0", rdma:"mlx5_11", role:"Cluster (GPU 7)"},
+    "OSFP1 P2":{bus:"9a:00.0", def:"ibp154s0", opt:"enp154s0np0", rdma:"mlx5_6", role:"Cluster (GPU 4)"},
+    "OSFP2 P1":{bus:"ce:00.0", def:"ibp206s0", opt:"enp206s0np0", rdma:"mlx5_10", role:"Cluster (GPU 6)"},
+    "OSFP2 P2":{bus:"c0:00.0", def:"ibp192s0", opt:"enp192s0np0", rdma:"mlx5_9", role:"Cluster (GPU 5)"},
+    "OSFP3 P1":{bus:"4f:00.0", def:"ibp79s0", opt:"enp79s0np0", rdma:"mlx5_4", role:"Cluster (GPU 2)"},
+    "OSFP3 P2":{bus:"40:00.0", def:"ibp64s0", opt:"enp64s0np0", rdma:"mlx5_3", role:"Cluster (GPU 1)"},
+    "OSFP4 P1":{bus:"5e:00.0", def:"ibp94s0", opt:"enp94s0np0", rdma:"mlx5_5", role:"Cluster (GPU 3)"},
+    "OSFP4 P2":{bus:"18:00.0", def:"ibp24s0", opt:"enp24s0np0", rdma:"mlx5_0", role:"Cluster (GPU 0)"},
+    "Slot1 P1":{bus:"aa:00.0", def:"ibp170s0f0", opt:"enp170s0f0np0", rdma:"mlx5_7", role:"Storage / in-band"},
+    "Slot1 P2":{bus:"aa:00.1", def:"enp170s0f1np1", opt:"ibp170s0f1", rdma:"mlx5_8", role:"Storage / in-band"},
+    "Slot2 P1":{bus:"29:00.0", def:"ibp41s0f0", opt:"enp41s0f0np0", rdma:"mlx5_1", role:"Storage / in-band"},
+    "Slot2 P2":{bus:"29:00.1", def:"enp41s0f1np1", opt:"ibp41s0f1", rdma:"mlx5_2", role:"Storage / in-band"},
+    "Slot3 P1":{bus:"82:00.0", def:"ens6f0", opt:"n/a", rdma:"irdma0", role:"Management 100 GbE"},
+    "Slot3 P2":{bus:"82:00.1", def:"ens6f1", opt:"n/a", rdma:"irdma1", role:"Management 100 GbE"},
+    "On-board":{bus:"0b:00.0", def:"eno3", opt:"n/a", rdma:"none", role:"Management 10 GbE RJ45"},
+    "BMC":{bus:"separate controller", def:"own IP address", opt:"n/a", rdma:"none", role:"Out-of-band, 1 GbE RJ45"}
+  };
+  const groups = [
+    {title:"Compute fabric", desc:"4 OSFP cages, 8 × 400 Gb/s, InfiniBand by default. One port per GPU.", cls:"", cages:[["OSFP1 P1","OSFP1 P2"],["OSFP2 P1","OSFP2 P2"],["OSFP3 P1","OSFP3 P2"],["OSFP4 P1","OSFP4 P2"]]},
+    {title:"Storage and in-band", desc:"2 dual-port ConnectX-7 cards in slots 1 and 2.", cls:"sto", cages:[["Slot1 P1","Slot1 P2"],["Slot2 P1","Slot2 P2"]]},
+    {title:"Management", desc:"Host networking for admins, plus the BMC.", cls:"mgmt", cages:[["Slot3 P1","Slot3 P2"],["On-board"],["BMC"]]}
+  ];
+  const portsEl = document.getElementById("ports");
+  const pd = document.getElementById("portDetail");
+  const btns = [];
+  groups.forEach(G => {
+    const box = document.createElement("div"); box.className = "pgroup";
+    box.innerHTML = `<h4>${G.title}</h4><p>${G.desc}</p>`;
+    const grid = document.createElement("div"); grid.className = "pgrid";
+    G.cages.forEach(c => {
+      const cage = document.createElement("div"); cage.className = "cage";
+      c.forEach(name => {
+        const b = document.createElement("button");
+        b.className = "port " + (name === "BMC" ? "bmc" : G.cls);
+        b.setAttribute("aria-pressed", "false");
+        const short = name.replace("OSFP","").replace("Slot","S").replace("On-board","10G").replace(" ","·");
+        b.innerHTML = `<i>${name === "BMC" ? "BMC" : short}</i>`;
+        b.setAttribute("aria-label", name);
+        b.addEventListener("click", () => showPort(name, b));
+        btns.push(b); cage.appendChild(b);
+      });
+      if (c.length === 2 && c[0].startsWith("OSFP")) { const em = document.createElement("em"); em.textContent = "cage " + c[0][4]; cage.appendChild(em); }
+      grid.appendChild(cage);
+    });
+    box.appendChild(grid); portsEl.appendChild(box);
+  });
+  function showPort(name, b){
+    btns.forEach(x => x.setAttribute("aria-pressed", "false"));
+    b.setAttribute("aria-pressed", "true");
+    const p = ports[name];
+    pd.innerHTML = `
+      <div><small>Port</small><b>${name}</b></div>
+      <div><small>Role</small><b>${p.role}</b></div>
+      <div><small>PCI bus</small><b>${p.bus}</b></div>
+      <div><small>Default name</small><b>${p.def}</b></div>
+      <div><small>Optional name</small><b>${p.opt}</b></div>
+      <div><small>RDMA</small><b>${p.rdma}</b></div>`;
+  }
+  showPort("OSFP4 P2", btns[7]);
+
+  /* ---------- PSU simulator ---------- */
+  const psuWrap = document.getElementById("psus");
+  const state = [true,true,true,true,true,true];
+  const fill = document.getElementById("capFill");
+  const capLabel = document.getElementById("capLabel");
+  const status = document.getElementById("psuStatus");
+  state.forEach((_, i) => {
+    const b = document.createElement("button");
+    b.className = "psu"; b.setAttribute("aria-pressed","true");
+    b.innerHTML = `<span class="fan" aria-hidden="true"></span><b>PSU ${i+1}</b><span class="st">Online</span>`;
+    b.addEventListener("click", () => { state[i] = !state[i]; b.setAttribute("aria-pressed", String(state[i])); b.querySelector(".st").textContent = state[i] ? "Online" : "Offline"; update(); });
+    psuWrap.appendChild(b);
+  });
+  function update(){
+    const n = state.filter(Boolean).length;
+    const kw = (n * 3.3).toFixed(1);
+    fill.style.width = (n * 3.3 / 19.8 * 100) + "%";
+    capLabel.textContent = `${n} online · ${kw} kW available`;
+    let cls = "", h = "", p = "";
+    if (n === 6) { h = "Normal: fully redundant"; p = "Four supplies carry the load and two stand by. Any two can fail without affecting the system."; }
+    else if (n >= 4) { cls = "warn"; h = "Full performance, reduced redundancy"; p = `${kw} kW still covers the 10.2 kW peak. The guide says to find out why the supply failed and replace it straight away.`; }
+    else if (n === 3) { cls = "warn"; h = "Running, but at reduced performance"; p = "This is what happens if one power feed or PDU drops out. 9.9 kW is just under the peak draw, so the system slows down to stay within it. It can still boot like this. Shut it down before swapping any supply that is still working."; }
+    else { cls = "crit"; h = "Host won't run: only the BMC is available"; p = "With fewer than three supplies the system can't boot. You can still reach the BMC to investigate."; }
+    status.className = "psu-status " + cls;
+    status.innerHTML = `<h4>${h}</h4><p>${p}</p>`;
+  }
+  update();
+
+  /* ---------- Copy buttons ---------- */
+  document.querySelectorAll(".copy").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const raw = btn.previousElementSibling.textContent;
+      const text = raw.split("\n").filter(l => !l.trim().startsWith("#")).map(l => l.replace(/\s+#.*$/, "")).join("\n").trim();
+      try { await navigator.clipboard.writeText(text); }
+      catch(e){ const t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select(); try{document.execCommand("copy");}catch(_){} t.remove(); }
+      btn.textContent = "Copied"; setTimeout(() => btn.textContent = "Copy", 1400);
+    });
+  });
+
+  /* ---------- TOC highlight ---------- */
+  const links = [...document.querySelectorAll(".toc a")];
+  const secs = links.map(a => document.querySelector(a.getAttribute("href")));
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (en.isIntersecting) {
+          links.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + en.target.id));
+        }
+      });
+    }, {rootMargin:"-30% 0px -60% 0px"});
+    secs.forEach(s => s && io.observe(s));
+  }
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

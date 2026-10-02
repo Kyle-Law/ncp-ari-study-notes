@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Energy-Efficient Data Center Design, Explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F5F4; --panel:#FFFFFF; --ink:#18222E; --muted:#56636F; --rule:#CBD3D6;
+  --cold:#2C6BB3; --cold-soft:#D7E5F4; --hot:#E0452B; --hot-soft:#F8DDD6;
+  --amber:#E89A1C; --leaf:#2D8A66; --leaf-soft:#D6EDE3; --grid:#E3E8EA;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121A22; --panel:#1A242E; --ink:#E7ECEF; --muted:#9AA8B3; --rule:#33424F;
+    --cold:#6AA6EC; --cold-soft:#1E3550; --hot:#FF7158; --hot-soft:#4A2620;
+    --amber:#F2B34A; --leaf:#4CC293; --leaf-soft:#173A2E; --grid:#24313C;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121A22; --panel:#1A242E; --ink:#E7ECEF; --muted:#9AA8B3; --rule:#33424F;
+  --cold:#6AA6EC; --cold-soft:#1E3550; --hot:#FF7158; --hot-soft:#4A2620;
+  --amber:#F2B34A; --leaf:#4CC293; --leaf-soft:#173A2E; --grid:#24313C;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px); scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:1.08rem;line-height:1.68;-webkit-font-smoothing:antialiased}
+img,svg{max-width:100%}
+a{color:var(--cold)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+/* ---------- layout ---------- */
+.shell{display:grid;grid-template-columns:230px minmax(0,1fr);gap:56px;max-width:1240px;margin:0 auto;padding:0 28px}
+nav.toc{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;padding:40px 0;font-family:var(--display);font-size:.9rem;max-height:100vh;overflow:auto}
+nav.toc p{margin:0 0 12px;font-weight:700;font-stretch:110%}
+nav.toc ol{list-style:none;margin:0;padding:0}
+nav.toc li a{display:grid;grid-template-columns:28px 1fr;padding:5px 0;color:var(--muted);text-decoration:none;border-left:2px solid transparent;padding-left:10px;margin-left:-12px}
+nav.toc li a:hover{color:var(--ink)}
+nav.toc li a.on{color:var(--ink);border-left-color:var(--hot)}
+nav.toc li a span{font-variant-numeric:tabular-nums;color:var(--muted)}
+main{min-width:0;padding-bottom:80px}
+section{padding-top:56px}
+.prose{max-width:68ch}
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr;gap:0;padding:0 18px}
+  nav.toc{display:none}
+}
+
+/* ---------- type ---------- */
+h1,h2,h3,h4{font-family:var(--display);line-height:1.08;margin:0}
+h1{font-size:clamp(2.3rem,5.6vw,4.4rem);font-weight:800;font-stretch:72%;letter-spacing:-.01em;max-width:16ch}
+h2{font-size:clamp(1.7rem,3.2vw,2.4rem);font-weight:750;font-stretch:80%;margin-bottom:16px;display:flex;gap:14px;align-items:baseline}
+h2 .num{font-stretch:125%;font-weight:500;color:var(--muted);font-size:.6em;min-width:2.2em}
+h3{font-size:1.18rem;font-weight:700;font-stretch:100%;margin:34px 0 8px}
+p{margin:0 0 14px}
+.lede{font-size:1.25rem;line-height:1.55;max-width:58ch;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted)}
+.ui{font-family:var(--display)}
+strong{font-weight:600}
+
+/* ---------- hero ---------- */
+header.hero{padding:56px 0 24px;border-bottom:1px solid var(--rule)}
+.source{font-family:var(--display);font-size:.92rem;color:var(--muted);margin-bottom:28px}
+.source a{color:var(--muted)}
+.powerbar{margin-top:36px;background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:22px 22px 18px}
+.powerbar .track{display:flex;height:64px;border-radius:3px;overflow:hidden}
+.powerbar .it{background:var(--leaf);transition:width .25s ease}
+.powerbar .oh{background:repeating-linear-gradient(135deg,var(--hot) 0 10px,color-mix(in srgb,var(--hot) 80%,var(--paper)) 10px 20px);flex:1}
+.powerbar .legend{display:flex;justify-content:space-between;font-family:var(--display);font-size:.95rem;margin:10px 0 18px;gap:12px;flex-wrap:wrap}
+.powerbar .legend b{font-size:1.5rem;font-stretch:80%;display:block;font-variant-numeric:tabular-nums}
+.slider-row{display:flex;align-items:center;gap:16px;font-family:var(--display);flex-wrap:wrap}
+.slider-row label{font-weight:600}
+.slider-row output{font-stretch:80%;font-weight:800;font-size:1.6rem;min-width:3.2ch;font-variant-numeric:tabular-nums}
+input[type=range]{flex:1;min-width:180px;accent-color:var(--ink)}
+.ticks{position:relative;height:22px;margin:4px 8px 0;font-family:var(--display);font-size:.78rem;color:var(--muted)}
+.ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+
+/* ---------- figures ---------- */
+figure{margin:26px 0 30px;background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:20px}
+figure.wide{max-width:100%}
+figcaption{font-family:var(--display);font-size:.88rem;color:var(--muted);margin-top:12px;line-height:1.45}
+figcaption b{color:var(--ink)}
+.scroll{overflow-x:auto}
+.fig-title{font-family:var(--display);font-weight:700;font-size:1rem;margin:0 0 12px}
+svg text{font-family:var(--display)}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:4px;overflow:hidden;font-family:var(--display);font-size:.9rem;margin-bottom:14px}
+.seg button{border:0;background:transparent;color:var(--ink);padding:8px 14px;cursor:pointer;font:inherit}
+.seg button+button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.callout{border-left:4px solid var(--amber);padding:4px 0 4px 16px;margin:18px 0}
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:700px){.twocol{grid-template-columns:1fr}}
+
+/* steps */
+.steps{list-style:none;padding:0;margin:24px 0;display:grid;gap:0}
+.steps li{display:grid;grid-template-columns:64px 1fr auto;gap:16px;align-items:center;padding:16px 0;border-top:1px solid var(--rule)}
+.steps li:last-child{border-bottom:1px solid var(--rule)}
+.steps .n{font-family:var(--display);font-weight:800;font-stretch:72%;font-size:2.6rem;line-height:1;color:var(--muted)}
+.steps h4{font-size:1.1rem;margin-bottom:4px}
+.steps p{margin:0;font-size:.98rem;color:var(--muted)}
+.steps .metric{font-family:var(--display);font-weight:800;font-stretch:90%;font-size:1.05rem;padding:6px 10px;border-radius:3px;color:#fff}
+@media (max-width:560px){.steps li{grid-template-columns:44px 1fr}.steps .metric{grid-column:2;justify-self:start}}
+
+/* calculators */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;font-family:var(--display);font-size:.9rem}
+.calc label{display:flex;flex-direction:column;gap:5px;color:var(--muted)}
+.calc input[type=number]{font:inherit;font-size:1rem;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:8px 10px;width:100%}
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden;margin-top:18px}
+.results div{background:var(--panel);padding:14px;font-family:var(--display)}
+.results b{display:block;font-size:1.7rem;font-stretch:78%;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.results span{font-size:.82rem;color:var(--muted)}
+
+/* bars */
+.hbar{display:grid;grid-template-columns:150px 1fr 70px;gap:12px;align-items:center;font-family:var(--display);font-size:.9rem;margin:8px 0}
+.hbar .t{height:22px;background:var(--grid);border-radius:2px;overflow:hidden}
+.hbar .f{height:100%}
+.hbar .v{font-variant-numeric:tabular-nums;font-weight:700}
+@media (max-width:560px){.hbar{grid-template-columns:100px 1fr 56px}}
+
+.check{list-style:none;padding:0;margin:0}
+.check li{padding:10px 0 10px 32px;position:relative;border-top:1px solid var(--rule)}
+.check li::before{content:"";position:absolute;left:4px;top:18px;width:14px;height:8px;border-left:3px solid var(--leaf);border-bottom:3px solid var(--leaf);transform:rotate(-45deg)}
+
+footer{border-top:1px solid var(--rule);margin-top:60px;padding:24px 0;font-family:var(--display);font-size:.85rem;color:var(--muted)}
+
+/* aisle diagram */
+.flowline{fill:none;stroke:var(--rule);stroke-width:1.2;stroke-dasharray:3 4}
+.p-cold{fill:var(--cold)} .p-hot{fill:var(--hot)}
+.leak{transition:opacity .3s}
+.dim{opacity:.18;transition:opacity .3s}
+.lit{opacity:1;transition:opacity .3s}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <p>Contents</p>
+  <ol>
+    <li><a href="#top"><span>&nbsp;</span>Overview</a></li>
+    <li><a href="#s1"><span>1</span>Four key steps</a></li>
+    <li><a href="#s2"><span>2</span>IT systems</a></li>
+    <li><a href="#s3"><span>3</span>Environmental conditions</a></li>
+    <li><a href="#s4"><span>4</span>Air management</a></li>
+    <li><a href="#s5"><span>5</span>Cooling systems</a></li>
+    <li><a href="#s6"><span>6</span>Electrical systems</a></li>
+    <li><a href="#s7"><span>7</span>Waste heat</a></li>
+    <li><a href="#s8"><span>8</span>Benchmarking</a></li>
+    <li><a href="#s9"><span>9</span>Takeaways</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero" id="top">
+  <div class="source">An explainer of <a href="https://www.energy.gov/sites/default/files/2024-07/best-practice-guide-data-center-design_0.pdf">Best Practices Guide for Energy-Efficient Data Center Design</a>, U.S. DOE Federal Energy Management Program and NREL, revised July 2024</div>
+  <h1>Every watt that doesn’t reach a server is overhead.</h1>
+  <p class="lede" style="margin-top:22px">Data centers can use many times the electricity of an office. The guide walks through IT equipment, room conditions, airflow, cooling, power, and heat reuse, and shows how to measure the result. Its core yardstick is PUE: total facility energy divided by the energy the IT equipment actually uses.</p>
+
+  <div class="powerbar" role="group" aria-label="PUE explorer">
+    <div class="track" aria-hidden="true"><div class="it" id="pueIt"></div><div class="oh"></div></div>
+    <div class="legend">
+      <div><b id="pueItTxt">63%</b>reaches IT equipment</div>
+      <div style="text-align:right"><b id="pueOhTxt">38%</b>cooling, power conversion, lighting</div>
+    </div>
+    <div class="slider-row">
+      <label for="pue">Drag the PUE</label>
+      <div style="flex:1;min-width:180px"><input type="range" id="pue" min="1" max="2.5" step="0.01" value="1.6" style="width:100%;margin:0">
+      <div class="ticks" id="pueTicks" aria-hidden="true"></div></div>
+      <output id="pueOut" for="pue">1.60</output>
+    </div>
+  </div>
+  <p class="small" style="margin-top:12px">The guide puts an average data center at about 1.6; the most efficient facilities get below 1.1. A PUE of 1.0 would mean zero overhead.</p>
+</header>
+
+<!-- ========== 1 ========== -->
+<section id="s1">
+  <h2><span class="num">1</span>Four steps, in order of importance</h2>
+  <div class="prose">
+    <p>Design is often rushed, and reliability and power density rightly come first. That leads to scaled-up office designs or “good enough” reuse of old specs. FEMP and NREL propose a priority order for sustainability, each step paired with a metric you can track.</p>
+  </div>
+  <ol class="steps">
+    <li><span class="n">1</span><div><h4>Reduce energy use</h4><p>Run IT intake air as warm as the thermal guidelines allow, use free cooling instead of compressors, and tune fans, pumps and UPS units.</p></div><span class="metric" style="background:var(--leaf)">PUE</span></li>
+    <li><span class="n">2</span><div><h4>Reuse the heat</h4><p>Let equipment discharge hotter air or water so the heat is useful elsewhere.</p></div><span class="metric" style="background:var(--amber)">ERE</span></li>
+    <li><span class="n">3</span><div><h4>Reject the rest dry</h4><p>Send leftover heat to dry coolers instead of evaporating water in towers.</p></div><span class="metric" style="background:var(--cold)">WUE</span></li>
+    <li><span class="n">4</span><div><h4>Go renewable</h4><p>Aim for 100% renewable energy, 100% of the time, on-site or from the grid region.</p></div><span class="metric" style="background:var(--ink);color:var(--paper)">CUE</span></li>
+  </ol>
+  <p class="prose small">A thread running through all four: higher temperatures coming out of the IT equipment make heat reuse and dry heat rejection easier.</p>
+</section>
+
+<!-- ========== 2 ========== -->
+<section id="s2">
+  <h2><span class="num">2</span>Start with the IT equipment</h2>
+  <div class="prose">
+    <p>IT gear is the guide’s starting point because every watt saved there also removes the cooling and power-conversion overhead that would have served it. Even in a well-cooled facility, IT equipment can be more than half the total energy.</p>
+    <p>Cloud and colocation can lower first cost and may lower operating cost, especially compared with small on-premises rooms that lack round-the-clock staff, redundancy, and efficient design. The guide leaves the cloud-versus-on-premises choice to each organization.</p>
+  </div>
+
+  <h3>Servers: idle capacity is the biggest waste</h3>
+  <div class="prose"><p>Enterprise servers typically run at 20–40% utilization. Raising utilization from low levels improves work-per-watt by about 50%. ENERGY STAR servers average about 30% more efficient than standard ones and are required in federal data centers. Virtualization is the main lever: fewer, busier machines.</p></div>
+  <figure>
+    <p class="fig-title">Virtualization consolidates the same work onto fewer servers</p>
+    <div class="scroll"><svg viewBox="0 0 760 210" width="760" role="img" aria-label="Ten servers at 20 percent utilization consolidated onto three servers at about 67 percent">
+      <g id="vmBefore"></g>
+      <text x="0" y="200" font-size="13" fill="var(--muted)">Before: 10 servers at ~20% utilization</text>
+      <path d="M470 95 h40 m-10 -8 l10 8 l-10 8" stroke="var(--ink)" stroke-width="2" fill="none"/>
+      <g id="vmAfter"></g>
+      <text x="540" y="200" font-size="13" fill="var(--muted)">After: 3 servers at ~67%</text>
+    </svg></div>
+    <figcaption>Same total work (10 × 20% ≈ 3 × 67%). Fewer servers means less server power and smaller cooling equipment; the guide notes the virtualization overhead is small compared with the savings.</figcaption>
+  </figure>
+
+  <h3>Storage and network</h3>
+  <div class="prose"><p>Storage power rises roughly linearly with the number of drives, so right-size redundancy, move rarely used data offline (NAS or SAN), and use <em>thin provisioning</em>, which draws from a shared pool as needed instead of reserving fixed space per application. For networks, newer gear moves more data per watt, and Ethernet links can be stepped down to match the traffic actually flowing.</p></div>
+
+  <h3>Power supplies: pick for where they’ll actually run</h3>
+  <figure>
+    <p class="fig-title">Power supply efficiency versus load</p>
+    <div class="scroll"><svg viewBox="0 0 700 300" width="700" id="psu" role="img" aria-label="Efficiency curves peaking between 40 and 60 percent load"></svg></div>
+    <figcaption><b>Curve shapes are illustrative</b> (the guide’s Figure 2-1 shows measured curves). The point: efficiency drops sharply at light load and peaks around 40–60% load. Older supplies managed roughly 60–70%; 80 PLUS Titanium units reach about 92%.</figcaption>
+  </figure>
+  <div class="callout prose"><p>At $0.12/kWh, going from 75% to 85% power-supply efficiency saves roughly <strong>$2,000–$6,000 per rack per year</strong> for 10–25 kW racks, counting the knock-on reduction in UPS and cooling load.</p></div>
+  <div class="prose"><p>Grouping equipment with similar heat density and temperature needs also helps, because each zone’s cooling can then run at its least energy-intensive set point. The same logic applies at building scale: consolidating scattered server rooms into one place makes efficiency measures easier to apply.</p></div>
+</section>
+
+<!-- ========== 3 ========== -->
+<section id="s3">
+  <h2><span class="num">3</span>How warm can the room be?</h2>
+  <div class="prose">
+    <p>Cooling design starts from the inlet air conditions IT equipment is rated for. ASHRAE, working with manufacturers, widened its envelope in 2008; the 2021 edition defines a <strong>recommended</strong> range for efficient, reliable operation and wider <strong>allowable</strong> ranges (classes A1–A4) that manufacturers test for function, not long-term reliability. Design to the recommended range.</p>
+  </div>
+  <figure>
+    <div class="seg" role="group" aria-label="Units"><button type="button" aria-pressed="true" data-unit="C">°C</button><button type="button" aria-pressed="false" data-unit="F">°F</button></div>
+    <div class="scroll"><svg viewBox="0 0 760 300" width="760" id="ashrae" role="img" aria-label="ASHRAE 2021 inlet temperature ranges"></svg></div>
+    <figcaption><b>ASHRAE 2021 thermal guidelines for air cooling</b> (guide Table 3-1). Relative humidity: recommended 8–70%; allowable 8–80% (A1, A2), 8–85% (A3), 8–90% (A4). The amber band is the guide’s practical supply set point of 77–79°F, leaving a margin under 80°F.</figcaption>
+  </figure>
+
+  <h3>The catch: server fans speed up</h3>
+  <div class="prose"><p>Server fans follow internal temperature, so very warm inlet air makes them spin faster. Fan power rises with the <em>cube</em> of speed. The guide’s example: inlet air going from 77°F to 91°F can push fan speed up 30%, which more than doubles fan power. Even so, facility cooling savings usually outweigh it, as long as you stay near the recommended range.</p></div>
+  <figure>
+    <p class="fig-title">Fan affinity law: power ∝ speed³</p>
+    <div class="slider-row"><label for="fan">Fan speed</label><input type="range" id="fan" min="70" max="160" value="130"><output id="fanOut">130%</output></div>
+    <div class="hbar" style="margin-top:18px"><span>Speed</span><div class="t"><div class="f" id="fanS" style="background:var(--cold)"></div></div><span class="v" id="fanSv"></span></div>
+    <div class="hbar"><span>Fan power</span><div class="t"><div class="f" id="fanP" style="background:var(--hot)"></div></div><span class="v" id="fanPv"></span></div>
+    <figcaption>100% is the baseline speed and power. At 130% speed, power is 1.3³ ≈ 2.2× baseline.</figcaption>
+  </figure>
+  <p class="prose">ASHRAE has also added Class H1 for high-density servers with powerful CPUs, GPUs and memory. For those, the guide points toward direct liquid cooling (section 5).</p>
+</section>
+
+<!-- ========== 4 ========== -->
+<section id="s4">
+  <h2><span class="num">4</span>Air management: stop hot and cold air mixing</h2>
+  <div class="prose">
+    <p>Good air management means cool supply air goes only into rack intakes and hot exhaust goes straight back to the cooling system. Two failure modes waste energy: <strong>bypass</strong> (cold air that skips the racks) and <strong>recirculation</strong> (hot exhaust drawn back into intakes, creating hot spots). Fix them and you can raise supply temperature, slow fans, and pack more power per square foot.</p>
+  </div>
+  <figure>
+    <div class="seg" role="group" aria-label="Containment"><button type="button" aria-pressed="true" data-cont="0">Open hot aisle / cold aisle</button><button type="button" aria-pressed="false" data-cont="1">With containment</button></div>
+    <div class="scroll"><svg viewBox="0 0 800 380" width="800" id="aisle" role="img" aria-label="Side view of a data hall showing airflow between racks">
+      <rect x="0" y="0" width="800" height="50" fill="var(--grid)"/>
+      <rect x="0" y="300" width="800" height="55" fill="var(--grid)"/>
+      <line x1="64" y1="50" x2="800" y2="50" stroke="var(--muted)" stroke-width="2"/>
+      <line x1="140" y1="50" x2="196" y2="50" stroke="var(--grid)" stroke-width="4"/>
+      <line x1="612" y1="50" x2="668" y2="50" stroke="var(--grid)" stroke-width="4"/>
+      <line x1="64" y1="300" x2="800" y2="300" stroke="var(--muted)" stroke-width="2"/>
+      <line x1="350" y1="300" x2="450" y2="300" stroke="var(--cold)" stroke-width="4" stroke-dasharray="6 5"/>
+      <rect x="8" y="50" width="56" height="300" rx="3" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.5"/>
+      <text x="36" y="200" font-size="12" text-anchor="middle" transform="rotate(-90 36 200)" fill="var(--ink)">Air handler (CRAH)</text>
+      <g id="racks"></g>
+      <g id="barriers" opacity="0">
+        <rect x="296" y="50" width="8" height="80" fill="var(--ink)"/><rect x="496" y="50" width="8" height="80" fill="var(--ink)"/>
+        <text x="400" y="74" font-size="12" text-anchor="middle" fill="var(--ink)">containment panels</text>
+      </g>
+      <g id="flowlines"></g><g id="dots"></g>
+      <text x="700" y="30" font-size="12" text-anchor="middle" fill="var(--muted)">Return plenum</text>
+      <text x="700" y="333" font-size="12" text-anchor="middle" fill="var(--muted)">Raised-floor plenum</text>
+      <text x="400" y="290" font-size="13" text-anchor="middle" fill="var(--cold)" font-weight="700">Cold aisle</text>
+      <text x="125" y="290" font-size="13" text-anchor="middle" fill="var(--hot)" font-weight="700">Hot aisle</text>
+      <text x="690" y="290" font-size="13" text-anchor="middle" fill="var(--hot)" font-weight="700">Hot aisle</text>
+      <text x="400" y="373" font-size="11" text-anchor="middle" fill="var(--muted)">perforated tiles</text>
+    </svg></div>
+    <div class="twocol" style="margin-top:10px" aria-live="polite">
+      <p class="ui small" id="aisleA" style="margin:0"></p><p class="ui small" id="aisleB" style="margin:0"></p>
+    </div>
+    <figcaption>Side view after the guide’s Figures 4-1 and 4-2. Blue dots are supply air, red dots are exhaust. Racks breathe front to back; blanking panels fill empty slots.</figcaption>
+  </figure>
+
+  <h3>Practical rules from the guide</h3>
+  <ul class="check prose">
+    <li>Keep at least 24 inches of clear height under a raised floor, and run an ongoing program to remove abandoned cables that block airflow.</li>
+    <li>Seal cable openings in floors and ceilings; use strip curtains or panels between rack tops and the return to stop “short-circuiting.”</li>
+    <li>Target the recommended range (about 65–80°F) at IT intakes. Buy equipment rated A2 or wider.</li>
+    <li>Raise supply air in small steps until the hottest intake sits near 80°F; 77–79°F is a practical set point. Do this only after fixing air management.</li>
+    <li>Control on IT <em>intake</em> temperatures (ideally read from the servers’ own sensors), not on return air temperature.</li>
+    <li>With overhead supply, use diffusers that drop air straight down into the cold aisle, not office diffusers that throw air sideways.</li>
+    <li>Watch under-floor air velocity near downflow units: it can create negative pressure that starves nearby racks.</li>
+  </ul>
+  <div class="prose" style="margin-top:16px"><p>Separated hot air often returns at 85°F or more (a server can raise air temperature by 10°F to over 40°F). That hotter return is what unlocks more economizer hours, lets standard package units use more of their capacity for sensible cooling, and allows warmer chilled water.</p></div>
+</section>
+
+<!-- ========== 5 ========== -->
+<section id="s5">
+  <h2><span class="num">5</span>Cooling systems</h2>
+  <div class="prose"><p>Size for today and tomorrow, and pay special attention to part-load performance; data centers rarely run at design peak.</p></div>
+
+  <h3>Direct expansion (DX) units</h3>
+  <div class="prose"><p>Packaged DX units (CRACs and rooftop units) are common in smaller rooms. Improve them with multiple or variable-speed compressors, evaporative spray on air-cooled condensers, variable-speed condenser fans, air-side economizers, and, for water-cooled CRACs, a pre-cooling coil fed by condenser water when it’s cold enough. In dry climates, water-cooled CRACs with cooling towers can beat air-cooled units.</p></div>
+
+  <h3>Central air handlers beat scattered units</h3>
+  <figure>
+    <p class="fig-title">Share of facility electricity reaching IT equipment</p>
+    <div class="hbar"><span>Distributed CRACs</span><div class="t" style="display:flex"><div class="f" style="width:35%;background:var(--leaf)"></div><div class="f" style="width:2%;background:var(--amber)"></div><div class="f" style="flex:1;background:var(--hot-soft)"></div></div><span class="v">≈35%</span></div>
+    <div class="hbar"><span>Central air handler</span><div class="t" style="display:flex"><div class="f" style="width:64%;background:var(--leaf)"></div><div class="f" style="width:1%;background:var(--amber)"></div><div class="f" style="flex:1;background:var(--hot-soft)"></div></div><span class="v">≈64%</span></div>
+    <figcaption>Two comparable facilities run by the same company (guide Figure 5-1): <b style="color:var(--leaf)">IT</b>, <b style="color:var(--amber)">lighting</b> (2% vs 1%), and the rest overhead. The guide describes the split as “just over one-third” versus “almost two-thirds”; bars are approximate.</figcaption>
+  </figure>
+  <div class="prose"><p>Central systems use bigger, more efficient fans and motors, run well at part load with variable-speed drives, are easier to pair with economizers and containment, and avoid modular units “fighting” (one humidifying while its neighbor dehumidifies). Use oversized, short, straight ducts or a generous under-floor plenum: low pressure drop means low fan energy, around the clock.</p></div>
+
+  <h3>Chilled water plants</h3>
+  <div class="prose"><p>For large facilities, a variable-speed water-cooled chiller with condenser water reset is usually the most efficient option. Run chilled water at <strong>55°F or higher</strong>: chillers work more efficiently, coils stop accidentally dehumidifying, and free-cooling hours go up. Oversize cooling towers (smaller approach, slower fans), aim for a 5–7°F tower approach, and select pumps for efficiency at typical, not peak, flow.</p>
+  <p>Pumping upgrades include converting to primary-only variable flow, swapping 3-way valves for 2-way, removing balancing valves in favor of VFDs, and resetting differential pressure set points.</p></div>
+
+  <h3>Free cooling with a water-side economizer</h3>
+  <figure>
+    <div class="seg" role="group" aria-label="Weather"><button type="button" aria-pressed="true" data-eco="cold">Cold weather</button><button type="button" aria-pressed="false" data-eco="mild">Mild weather</button><button type="button" aria-pressed="false" data-eco="hot">Hot weather</button></div>
+    <div class="scroll"><svg viewBox="0 0 760 260" width="760" id="eco" role="img" aria-label="Water-side economizer arrangement">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/></marker></defs>
+      <rect x="10" y="90" width="120" height="100" rx="4" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.5"/>
+      <text x="70" y="136" font-size="14" text-anchor="middle" fill="var(--ink)" font-weight="700">Data hall</text>
+      <text x="70" y="156" font-size="12" text-anchor="middle" fill="var(--muted)">air handlers</text>
+      <path d="M130,115 H250" stroke="var(--hot)" stroke-width="5" fill="none" marker-end="url(#ah)"/>
+      <text x="186" y="104" font-size="12" text-anchor="middle" fill="var(--hot)">warm return</text>
+      <g id="eHx"><rect x="252" y="90" width="110" height="60" rx="4" fill="var(--cold-soft)" stroke="var(--cold)" stroke-width="2"/>
+        <text x="307" y="118" font-size="13" text-anchor="middle" fill="var(--ink)" font-weight="700">Heat</text><text x="307" y="135" font-size="13" text-anchor="middle" fill="var(--ink)" font-weight="700">exchanger</text>
+        <path d="M285,90 V45 M330,45 V90" stroke="var(--cold)" stroke-width="3"/>
+        <path d="M262,45 L282,8 H333 L353,45 Z" fill="var(--cold-soft)" stroke="var(--cold)" stroke-width="2"/>
+        <text x="307" y="34" font-size="12" text-anchor="middle" fill="var(--ink)">Cooling tower</text></g>
+      <path id="ePipe1" d="M362,115 H470" stroke="var(--ink)" stroke-width="5" fill="none" marker-end="url(#ah)"/>
+      <g id="eCh"><rect x="472" y="90" width="110" height="60" rx="4" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+        <text x="527" y="126" font-size="13" text-anchor="middle" fill="var(--ink)" font-weight="700">Chillers</text></g>
+      <path id="eBy" d="M410,115 V185 H630 V140" stroke="var(--leaf)" stroke-width="4" fill="none" stroke-dasharray="7 5"/>
+      <text id="eByT" x="520" y="202" font-size="12" text-anchor="middle" fill="var(--leaf)">bypass around chillers</text>
+      <path d="M582,115 H640 V230 H70 V192" stroke="var(--cold)" stroke-width="5" fill="none" marker-end="url(#ah)"/>
+      <text x="360" y="250" font-size="12" text-anchor="middle" fill="var(--cold)">chilled water supply, 55°F or warmer</text>
+    </svg></div>
+    <p class="ui small" id="ecoTxt" aria-live="polite" style="margin:6px 0 0"></p>
+    <figcaption>The heat exchanger sits <b>upstream</b> of the chillers so it always takes the first bite. Best suited to climates with wet-bulb temperatures under 55°F for 3,000+ hours a year.</figcaption>
+  </figure>
+  <div class="prose">
+    <p><strong>Air-side economizers</strong> bring in outside air whenever it is cooler than the <em>return</em> air (not the set point), which is why hot-aisle separation pays off. MERV 13 filters keep pollutant effects small; use a dew-point lockout to avoid humidity swings, and place intakes on the north side in the northern hemisphere. They are hard to retrofit, which is where water-side economizers come in. Many cool-climate data centers use only economizer cooling.</p>
+    <p><strong>Thermal storage</strong> (for example, chilled water tanks charged by cooling towers on cool nights) cuts peak demand, improves reliability, and doubles as backup make-up water.</p>
+  </div>
+
+  <h3>Direct liquid cooling</h3>
+  <div class="prose"><p>Water moves heat far better than air. Capturing heat at or near the chip allows warmer coolant, smaller fans, more economizer hours and, at high enough temperatures, dry coolers that use no water. Rising CPU/GPU/TPU power is pushing liquid cooling into the mainstream; high-performance computing racks went from about 60 kW in 2013 to beyond 125 kW. Most systems use a coolant distribution unit (CDU) between the facility loop and the IT loop.</p></div>
+  <figure>
+    <p class="fig-title">Three families of liquid cooling</p>
+    <div class="scroll"><svg viewBox="0 0 780 230" width="780" role="img" aria-label="Rear door heat exchanger, cold plate, and immersion cooling">
+      <!-- rear door -->
+      <g transform="translate(20,20)">
+        <rect x="40" y="20" width="80" height="140" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.5"/>
+        <g stroke="var(--muted)"><line x1="48" y1="45" x2="112" y2="45"/><line x1="48" y1="70" x2="112" y2="70"/><line x1="48" y1="95" x2="112" y2="95"/><line x1="48" y1="120" x2="112" y2="120"/></g>
+        <rect x="120" y="20" width="16" height="140" fill="var(--cold-soft)" stroke="var(--cold)" stroke-width="2"/>
+        <path d="M124,30 v120 M132,30 v120" stroke="var(--cold)" stroke-dasharray="4 3"/>
+        <path d="M10,60 h26 M10,90 h26 M10,120 h26" stroke="var(--hot)" stroke-width="3"/>
+        <path d="M140,60 h26 M140,90 h26 M140,120 h26" stroke="var(--cold)" stroke-width="3"/>
+        <text x="90" y="185" font-size="13" text-anchor="middle" font-weight="700" fill="var(--ink)">Rear-door heat exchanger</text>
+        <text x="90" y="202" font-size="11" text-anchor="middle" fill="var(--muted)">coil on the rack; air leaves cool</text>
+      </g>
+      <!-- cold plate -->
+      <g transform="translate(285,20)">
+        <rect x="20" y="100" width="170" height="14" fill="var(--leaf-soft)" stroke="var(--leaf)"/>
+        <rect x="70" y="80" width="70" height="20" fill="var(--hot-soft)" stroke="var(--hot)"/>
+        <text x="105" y="95" font-size="11" text-anchor="middle" fill="var(--ink)">chip</text>
+        <rect x="60" y="48" width="90" height="32" rx="3" fill="var(--cold-soft)" stroke="var(--cold)" stroke-width="2"/>
+        <path d="M70,64 h70" stroke="var(--cold)" stroke-width="2" stroke-dasharray="5 3"/>
+        <path d="M80,48 V18 M130,48 V18" stroke="var(--cold)" stroke-width="4"/>
+        <text x="80" y="12" font-size="10" text-anchor="middle" fill="var(--cold)">in</text><text x="130" y="12" font-size="10" text-anchor="middle" fill="var(--hot)">out</text>
+        <text x="105" y="185" font-size="13" text-anchor="middle" font-weight="700" fill="var(--ink)">Cold plate</text>
+        <text x="105" y="202" font-size="11" text-anchor="middle" fill="var(--muted)">liquid channels replace heat sinks</text>
+      </g>
+      <!-- immersion -->
+      <g transform="translate(540,20)">
+        <rect x="20" y="30" width="180" height="130" fill="none" stroke="var(--ink)" stroke-width="2"/>
+        <rect x="22" y="55" width="176" height="103" fill="var(--cold-soft)"/>
+        <g fill="var(--panel)" stroke="var(--ink)"><rect x="45" y="70" width="12" height="80"/><rect x="75" y="70" width="12" height="80"/><rect x="105" y="70" width="12" height="80"/><rect x="135" y="70" width="12" height="80"/><rect x="165" y="70" width="12" height="80"/></g>
+        <g fill="none" stroke="var(--cold)"><circle cx="66" cy="62" r="3"/><circle cx="96" cy="48" r="3"/><circle cx="126" cy="58" r="3"/><circle cx="156" cy="44" r="3"/></g>
+        <text x="110" y="185" font-size="13" text-anchor="middle" font-weight="700" fill="var(--ink)">Immersion</text>
+        <text x="110" y="202" font-size="11" text-anchor="middle" fill="var(--muted)">servers in dielectric fluid; 1- or 2-phase</text>
+      </g>
+    </svg></div>
+    <figcaption>Cold plates and immersion count as <b>direct</b> liquid cooling. Fully fanless solutions that capture practically all the heat are the most efficient; hybrids still need some air cooling.</figcaption>
+  </figure>
+  <figure>
+    <p class="fig-title">ASHRAE liquid cooling classes, renamed by maximum supply temperature (°C)</p>
+    <div id="wclass"></div>
+    <figcaption>Old names in brackets. The higher the class, the more hours dry coolers and economizers can do the work.</figcaption>
+  </figure>
+
+  <h3>Humidity: usually overdone</h3>
+  <div class="prose"><p>Most data centers don’t need humidification to stay above the recommended minimum (15.8°F dew point, about 10% RH). Tight humidity control is a legacy habit. When you do humidify, adiabatic methods also cool the air instead of heating it.</p></div>
+  <figure>
+    <p class="fig-title">Power to humidify with one pound of water</p>
+    <div class="hbar"><span>Electric resistance</span><div class="t"><div class="f" style="width:100%;background:var(--hot)"></div></div><span class="v">430 W</span></div>
+    <div class="hbar"><span>Ultrasonic</span><div class="t"><div class="f" style="width:7%;background:var(--cold)"></div></div><span class="v">30 W</span></div>
+    <figcaption>Ultrasonic units may need deionized water. Other adiabatic options: wetted media and micro-droplet spray.</figcaption>
+  </figure>
+
+  <h3>Controls</h3>
+  <div class="prose"><p>Put variable-speed drives on CRAH/CRAC fans and control raised-floor fans to under-floor pressure; better still, use variable air volume delivery. Have all units share sensors and set points, recalibrate humidity sensors, keep cooling coils above the dew point (chilled water above about 50°F), and reset chilled water warmer at low load.</p></div>
+</section>
+
+<!-- ========== 6 ========== -->
+<section id="s6">
+  <h2><span class="num">6</span>Electrical systems</h2>
+  <div class="prose"><p>Every device between the utility and the server sheds some power as heat, and that heat then has to be cooled. First question: does every load actually need UPS protection? A scientific computing facility may need far less than a bank.</p></div>
+
+  <h3>UPS efficiency has a big multiplier</h3>
+  <figure>
+    <p class="fig-title">Double-conversion UPS efficiency over time</p>
+    <div class="hbar"><span>1990s</span><div class="t"><div class="f" style="width:85%;background:var(--muted)"></div></div><span class="v">85–90%</span></div>
+    <div class="hbar"><span>2023</span><div class="t"><div class="f" style="width:95%;background:var(--cold)"></div></div><span class="v">95%+</span></div>
+    <div class="hbar"><span>Eco mode</span><div class="t"><div class="f" style="width:99%;background:var(--leaf)"></div></div><span class="v">up to 99%</span></div>
+    <figcaption>“Eco” or “energy saver” mode switches double-conversion units into the more efficient line-conditioning mode.</figcaption>
+  </figure>
+  <figure>
+    <p class="fig-title">UPS savings calculator (the guide’s worked example is preloaded)</p>
+    <div class="calc">
+      <label>Data hall area (ft²)<input type="number" id="uA" value="15000" min="0"></label>
+      <label>IT load density (W/ft²)<input type="number" id="uD" value="100" min="0"></label>
+      <label>Current UPS efficiency (%)<input type="number" id="uE1" value="90" min="50" max="100" step="0.5"></label>
+      <label>Upgraded UPS efficiency (%)<input type="number" id="uE2" value="95" min="50" max="100" step="0.5"></label>
+      <label>Electricity price ($/kWh)<input type="number" id="uP" value="0.12" min="0" step="0.01"></label>
+    </div>
+    <div class="results" aria-live="polite">
+      <div><b id="uIT"></b><span>IT energy per year (MWh)</span></div>
+      <div><b id="uS"></b><span>UPS energy saved per year (kWh)</span></div>
+      <div><b id="uD$"></b><span>saved per year, before cooling savings</span></div>
+    </div>
+    <figcaption>Savings = IT energy ÷ old efficiency − IT energy ÷ new efficiency. The guide’s case: 13,140 MWh of IT load, 90% to 95%, about 768,000 kWh or $90,000 a year, plus extra savings from the smaller cooling load.</figcaption>
+  </figure>
+  <figure>
+    <p class="fig-title">Redundancy without low load: split N+1 into smaller units</p>
+    <div class="scroll"><svg viewBox="0 0 720 170" width="720" id="nplus" role="img" aria-label="Two UPS units at 30 percent load versus three smaller units at 40 percent"></svg></div>
+    <figcaption>Same load and same N+1 redundancy. Raising load factor from 30% to 40% gains about 1.2 percentage points of efficiency, roughly 13,000 kWh a year per 100 kW of load.</figcaption>
+  </figure>
+
+  <h3>Fewer conversions, higher voltage</h3>
+  <figure>
+    <p class="fig-title">Each conversion loses a little energy</p>
+    <div class="scroll"><svg viewBox="0 0 780 190" width="780" id="chain" role="img" aria-label="AC versus DC power distribution chains"></svg></div>
+    <figcaption>A 2007 Berkeley Lab study found a 380 V DC design used <b>7% less energy</b> than a 480 V AC design. DC is common in telecom but still uncommon (and costlier up front) in data centers; 575 V and 48 V DC systems exist too.</figcaption>
+  </figure>
+  <ul class="check prose">
+    <li>Keep voltage high for as long as possible to cut current, and keep conductors short and thick.</li>
+    <li>Place voltage regulators close to the load; use switch-mode power conditioning.</li>
+    <li>In PDUs with step-down transformers, a 176°F-rise dry-type transformer uses 13–21% less energy than a 302°F-rise unit, and transformers tend to be most efficient at 20–50% load. Use fewer transformer PDUs where you can.</li>
+    <li>Join utility demand-response programs: dim some lighting, shut idle equipment, or shift to backup generation at peak times.</li>
+    <li>Use LED lighting placed over aisles (not racks) with zoned occupancy sensors, especially in rarely visited UPS, battery and switchgear rooms.</li>
+  </ul>
+</section>
+
+<!-- ========== 7 ========== -->
+<section id="s7">
+  <h2><span class="num">7</span>Use the waste heat</h2>
+  <div class="prose"><p>The hotter the air or water leaving the servers, the more useful it is. The best returns come from direct low-temperature uses such as preheating ventilation air or heating water; heat recovery chillers can also serve office heating. Reuse can cut or eliminate chiller use and water-evaporating towers, and it offsets fossil heating fuel.</p></div>
+  <figure>
+    <div class="scroll"><svg viewBox="0 0 760 200" width="760" role="img" aria-label="Heat from data center to heat host with backup rejection">
+      <defs><marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--amber)"/></marker>
+      <marker id="ah3" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+      <rect x="10" y="50" width="160" height="90" rx="4" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.5"/>
+      <text x="90" y="92" font-size="14" text-anchor="middle" font-weight="700" fill="var(--ink)">Data center</text>
+      <text x="90" y="112" font-size="12" text-anchor="middle" fill="var(--muted)">high leaving temperature</text>
+      <path d="M170,85 H440" stroke="var(--amber)" stroke-width="7" fill="none" marker-end="url(#ah2)"/>
+      <text x="305" y="73" font-size="12" text-anchor="middle" fill="var(--ink)">warm water or air, ideally usable without heat pumps</text>
+      <rect x="445" y="40" width="300" height="100" rx="4" fill="var(--hot-soft)" stroke="var(--amber)" stroke-width="2"/>
+      <text x="595" y="70" font-size="14" text-anchor="middle" font-weight="700" fill="var(--ink)">Heat host</text>
+      <text x="595" y="92" font-size="12" text-anchor="middle" fill="var(--ink)">ventilation preheat, hot water,</text>
+      <text x="595" y="110" font-size="12" text-anchor="middle" fill="var(--ink)">office heating, district loop</text>
+      <path d="M90,140 V175 H260" stroke="var(--muted)" stroke-width="3" stroke-dasharray="6 4" fill="none" marker-end="url(#ah3)"/>
+      <text x="270" y="179" font-size="12" fill="var(--muted)">redundant cooling handles the heat when the host doesn’t need it</text>
+    </svg></div>
+  </figure>
+  <h3>What makes a heat reuse project work</h3>
+  <ul class="check prose">
+    <li>A heat host close by, ideally adjacent, or a connection to a district loop.</li>
+    <li>A temperature the host can use directly, ideally without heat pumps.</li>
+    <li>Ideally, the same owner for the data center and the heat host.</li>
+    <li>A champion, plus incentives and policies that support reuse.</li>
+  </ul>
+</section>
+
+<!-- ========== 8 ========== -->
+<section id="s8">
+  <h2><span class="num">8</span>Benchmarking: measure to manage</h2>
+  <div class="prose"><p>The guide recommends the PUE family of metrics plus a work-per-watt utilization metric suited to your workload (such as Gflops or transactions per watt). All are annual figures. Note that PUE judges the infrastructure only; it says nothing about how efficient the IT itself is.</p></div>
+
+  <figure>
+    <p class="fig-title">Calculate your PUE, ERE, WUE and CUE</p>
+    <div class="calc">
+      <label>Total facility energy (MWh/yr)<input type="number" id="mT" value="1600" min="0"></label>
+      <label>IT equipment energy (MWh/yr)<input type="number" id="mI" value="1000" min="1"></label>
+      <label>Energy reused elsewhere (MWh/yr)<input type="number" id="mR" value="0" min="0"></label>
+      <label>Site water use (m³/yr)<input type="number" id="mW" value="1800" min="0"></label>
+      <label>CO₂ emissions (tonnes/yr)<input type="number" id="mC" value="400" min="0"></label>
+    </div>
+    <div class="results" aria-live="polite">
+      <div><b id="rP"></b><span>PUE = total ÷ IT</span></div>
+      <div><b id="rE"></b><span>ERE = (total − reused) ÷ IT</span></div>
+      <div><b id="rW"></b><span>WUE, L/kWh = water ÷ IT</span></div>
+      <div><b id="rC"></b><span>CUE, kg CO₂e/kWh = CO₂ ÷ IT</span></div>
+    </div>
+    <div class="scroll" style="margin-top:18px"><svg viewBox="0 0 720 90" width="720" id="pueScale" role="img" aria-label="Your PUE on the benchmark scale"></svg></div>
+    <figcaption>Sample values are made up for illustration. PUE can’t go below 1.0. ERE can, because reused heat is subtracted: an ERE of 0 means all the energy is reused outside the data center. CO₂ rates for U.S. sites are available from the EPA Power Profiler by ZIP code.</figcaption>
+  </figure>
+
+  <figure>
+    <p class="fig-title">Benchmarks from the guide (lower is better)</p>
+    <div id="bench"></div>
+    <figcaption>Airflow efficiency is total fan power per unit of airflow; cooling efficiency is average cooling power per ton of cooling load. The guide prints the airflow “better” value as 0.5 kW/cfm, which appears to be a typo for W/cfm.</figcaption>
+  </figure>
+
+  <h3>Rack Cooling Index: the safety check on warmer rooms</h3>
+  <figure>
+    <div class="scroll"><svg viewBox="0 0 720 90" width="720" role="img" aria-label="Rack Cooling Index scale">
+      <rect x="20" y="30" width="540" height="22" fill="var(--hot-soft)"/>
+      <rect x="560" y="30" width="120" height="22" fill="var(--grid)"/>
+      <rect x="680" y="24" width="8" height="34" fill="var(--leaf)"/>
+      <text x="290" y="46" font-size="12" text-anchor="middle" fill="var(--ink)">below 90%: poor, risk of overheating</text>
+      <text x="620" y="46" font-size="12" text-anchor="middle" fill="var(--ink)">90–100%</text>
+      <text x="684" y="80" font-size="12" text-anchor="middle" fill="var(--leaf)" font-weight="700">100%</text>
+      <text x="692" y="16" font-size="11" text-anchor="end" fill="var(--muted)">100% = no intake above recommended</text>
+      <text x="560" y="80" font-size="12" text-anchor="middle" fill="var(--muted)">90%</text>
+    </svg></div>
+    <figcaption>RCI captures both how many intakes are too warm and by how much. It is built into DOE’s free Air Management Tool.</figcaption>
+  </figure>
+  <div class="prose">
+    <p>The international versions of these KPIs live in ISO/IEC 30134 (parts covering PUE, renewable energy factor, server efficiency and utilization, energy reuse factor, cooling efficiency ratio, CUE and WUE).</p>
+    <h3>Metering that’s worth having</h3>
+    <p>Set targets first, then decide what to measure. Specify sensor accuracy that fits the range (±1.5°F sensors can’t resolve a 5°F chilled-water ΔT), use electromagnetic or ultrasonic flow meters and true-RMS three-phase power meters, trend everything for at least a year, use an open-protocol control system, and measure temperature and humidity at IT air inlets at ASHRAE-prescribed heights.</p>
+  </div>
+</section>
+
+<!-- ========== 9 ========== -->
+<section id="s9">
+  <h2><span class="num">9</span>If you remember eight things</h2>
+  <ul class="check prose">
+    <li>Fix IT first: efficient servers and power supplies, higher utilization, virtualization. Savings cascade into cooling and power.</li>
+    <li>Design to ASHRAE’s recommended range and push intake air toward 80°F, gradually.</li>
+    <li>Separate hot and cold air with aisles, blanking panels, sealing and containment.</li>
+    <li>Prefer central, low-pressure-drop air systems with variable-speed fans, and chilled water at 55°F or above.</li>
+    <li>Use free cooling (air- or water-side) wherever the climate allows; consider liquid cooling for dense racks.</li>
+    <li>Right-size UPS and transformers so they run in their efficient load range; use eco modes where acceptable.</li>
+    <li>Run equipment hot enough at the outlet to reuse heat and reject the rest without water.</li>
+    <li>Meter properly and track PUE, ERE, WUE, CUE and RCI year over year.</li>
+  </ul>
+  <p class="prose" style="margin-top:22px">FEMP also offers Data Center Energy Practitioner (DCEP) training and free tools through the Center of Expertise at <a href="https://datacenters.lbl.gov">datacenters.lbl.gov</a>.</p>
+</section>
+
+<footer>Explainer based on DOE/GO-102024-6283 (July 2024), by Otto Van Geet and David Sickinger, NREL. Figures here are redrawn from the guide’s text and tables; anything marked illustrative is a simplified shape, not measured data.</footer>
+</main>
+</div>
+
+<script>
+(function(){
+const NS='http://www.w3.org/2000/svg';
+const $=id=>document.getElementById(id);
+const el=(tag,attrs,parent,text)=>{const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;};
+const fmt=(n,d=0)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---- hero PUE ---- */
+const pue=$('pue');
+function heroPUE(){const v=+pue.value;const it=100/v;$('pueIt').style.width=it+'%';$('pueItTxt').textContent=Math.round(it)+'%';$('pueOhTxt').textContent=(100-Math.round(it))+'%';$('pueOut').textContent=v.toFixed(2);}
+pue.addEventListener('input',heroPUE);heroPUE();
+[[1.1,'1.1 better'],[1.4,'1.4 good'],[1.6,'1.6 average']].forEach(([v,t])=>{const s=document.createElement('span');s.style.left=((v-1)/1.5*100)+'%';s.textContent=t;$('pueTicks').appendChild(s);});
+
+/* ---- virtualization ---- */
+function servers(g,n,fill,x0,colorVar){for(let i=0;i<n;i++){const x=x0+i*44;el('rect',{x,y:20,width:34,height:150,rx:2,fill:'var(--grid)',stroke:'var(--muted)'},g);const h=150*fill;el('rect',{x,y:170-h,width:34,height:h,fill:colorVar},g);}}
+servers($('vmBefore'),10,0.2,0,'var(--hot)');servers($('vmAfter'),3,0.667,540,'var(--leaf)');
+
+/* ---- PSU curves (illustrative) ---- */
+(function(){const s=$('psu');const X=l=>60+l*6.1,Y=e=>260-(e-40)*3.6;
+ for(let e=40;e<=100;e+=10){el('line',{x1:60,x2:670,y1:Y(e),y2:Y(e),stroke:'var(--grid)'},s);el('text',{x:52,y:Y(e)+4,'font-size':11,'text-anchor':'end',fill:'var(--muted)'},s,e+'%');}
+ for(let l=0;l<=100;l+=20)el('text',{x:X(l),y:282,'font-size':11,'text-anchor':'middle',fill:'var(--muted)'},s,l+'%');
+ el('text',{x:365,y:298,'font-size':11,'text-anchor':'middle',fill:'var(--muted)'},s,'load (% of rated capacity)');
+ el('rect',{x:X(40),y:Y(100),width:X(60)-X(40),height:Y(40)-Y(100),fill:'var(--leaf-soft)'},s);
+ el('text',{x:X(50),y:Y(97),'font-size':12,'text-anchor':'middle',fill:'var(--leaf)','font-weight':700},s,'sweet spot');
+ const curve=(peak,floor)=>{let d='';for(let l=5;l<=100;l+=1){const e=floor+(peak-floor)*(1-Math.exp(-l/9))-(Math.max(0,l-55)**2)*0.0012;d+=(l===5?'M':'L')+X(l).toFixed(1)+','+Y(e).toFixed(1);}return d;};
+ el('path',{d:curve(70,45),fill:'none',stroke:'var(--muted)','stroke-width':3},s);
+ el('path',{d:curve(92.5,62),fill:'none',stroke:'var(--cold)','stroke-width':3},s);
+ el('text',{x:X(80),y:Y(66),'font-size':12,fill:'var(--muted)'},s,'older typical');
+ el('text',{x:X(72),y:Y(94.5),'font-size':12,fill:'var(--cold)','font-weight':700},s,'80 PLUS Titanium');
+})();
+
+/* ---- ASHRAE ---- */
+const ash=[['Recommended (A1–A4)',18,27,'var(--leaf)'],['Allowable A1',15,32,'var(--cold)'],['Allowable A2',10,35,'var(--cold)'],['Allowable A3',5,40,'var(--cold)'],['Allowable A4',5,45,'var(--cold)']];
+function drawAsh(unit){const s=$('ashrae');s.innerHTML='';const X=c=>170+c*11.5;const conv=c=>unit==='C'?c:Math.round((c*9/5+32)*10)/10;
+ for(let c=0;c<=50;c+=5){el('line',{x1:X(c),x2:X(c),y1:20,y2:250,stroke:'var(--grid)'},s);el('text',{x:X(c),y:270,'font-size':11,'text-anchor':'middle',fill:'var(--muted)'},s,Math.round(conv(c))+'°');}
+ el('rect',{x:X(25),y:16,width:X(26.1)-X(25),height:236,fill:'var(--amber)',opacity:.35},s);
+ el('text',{x:X(25.5),y:12,'font-size':11,'text-anchor':'middle',fill:'var(--amber)','font-weight':700},s,'set point');
+ ash.forEach((r,i)=>{const y=34+i*44;el('text',{x:160,y:y+16,'font-size':12.5,'text-anchor':'end',fill:'var(--ink)','font-weight':i?400:700},s,r[0]);
+  el('rect',{x:X(r[1]),y,width:X(r[2])-X(r[1]),height:22,rx:2,fill:r[3],opacity:i?.25+i*.12:1},s);
+  el('text',{x:X(r[1])-6,y:y+16,'font-size':11,'text-anchor':'end',fill:'var(--muted)'},s,conv(r[1])+'°');
+  el('text',{x:X(r[2])+6,y:y+16,'font-size':11,fill:'var(--muted)'},s,conv(r[2])+'°'+unit);});
+ el('text',{x:X(25),y:292,'font-size':11,'text-anchor':'middle',fill:'var(--muted)'},s,'IT equipment inlet air temperature (°'+unit+')');}
+drawAsh('C');
+document.querySelectorAll('[data-unit]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-unit]').forEach(x=>x.setAttribute('aria-pressed',x===b));drawAsh(b.dataset.unit);}));
+
+/* ---- fan law ---- */
+function fan(){const v=+$('fan').value;const p=Math.pow(v/100,3);$('fanOut').textContent=v+'%';$('fanS').style.width=(v/160*100)+'%';$('fanP').style.width=(p/4.096*100)+'%';$('fanSv').textContent=v+'%';$('fanPv').textContent=Math.round(p*100)+'%';}
+$('fan').addEventListener('input',fan);fan();
+
+/* ---- aisle diagram ---- */
+(function(){const racks=$('racks');[[230],[500]].forEach(([x])=>{el('rect',{x,y:130,width:70,height:170,fill:'var(--panel)',stroke:'var(--ink)','stroke-width':1.5},racks);for(let y=145;y<300;y+=16)el('line',{x1:x+6,x2:x+64,y1:y,y2:y,stroke:'var(--rule)'},racks);});
+ const flows=[
+  {c:'M60,318 L372,318 L372,175 L300,175',h:'L230,175 L168,175 L168,24 L38,24 L38,52',n:9},
+  {c:'M60,328 L362,328 L362,255 L300,255',h:'L230,255 L150,255 L150,34 L28,34 L28,52',n:9},
+  {c:'M60,322 L428,322 L428,175 L500,175',h:'L570,175 L632,175 L632,24 L38,24 L38,52',n:11},
+  {c:'M60,338 L438,338 L438,255 L500,255',h:'L570,255 L650,255 L650,34 L28,34 L28,52',n:11},
+  {c:'',h:'M572,150 Q605,92 535,98 Q470,104 470,145 L500,150',n:4,leak:1},
+  {c:'',h:'M228,150 Q195,92 265,98 Q330,104 330,145 L300,150',n:4,leak:1},
+  {c:'M60,312 L405,312 L405,110 Q405,68 330,64 Q240,60 182,52 L182,40 L38,40 L38,52',h:'',n:6,leak:1}
+ ];
+ const lines=$('flowlines'),dots=$('dots');
+ flows.forEach(f=>{const d=f.c+(f.h?' '+f.h:'');f.p=el('path',{d,class:'flowline'+(f.leak?' leak':'')},lines);f.len=f.p.getTotalLength();
+  if(f.c&&f.h){const tmp=el('path',{d:f.c},lines);f.cl=tmp.getTotalLength();tmp.remove();}else f.cl=f.c?f.len:0;
+  f.g=el('g',{class:f.leak?'leak':''},dots);f.dots=[];for(let i=0;i<f.n;i++)f.dots.push(el('circle',{r:3.4},f.g));});
+ let contained=false;
+ const txt={0:['Rack intake: uneven. Exhaust curls over the rack tops back into the intakes, so the top of each rack runs hotter and supply air has to be overcooled to protect it.','Return air: diluted by cold air that bypassed the racks, so it comes back cooler, which shrinks economizer hours and wastes fan energy.'],
+            1:['Rack intake: even from top to bottom, so supply air can be raised toward 77–79°F and fan speeds reduced.','Return air: undiluted and hot (often 85°F or more), which extends economizer hours and makes the heat worth reusing.']};
+ function setC(c){contained=!!c;$('barriers').setAttribute('opacity',contained?1:0);document.querySelectorAll('#aisle .leak').forEach(e=>e.style.opacity=contained?0:1);$('aisleA').textContent=txt[+contained][0];$('aisleB').textContent=txt[+contained][1];}
+ document.querySelectorAll('[data-cont]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-cont]').forEach(x=>x.setAttribute('aria-pressed',x===b));setC(+b.dataset.cont);}));
+ setC(0);
+ function frame(t){const sp=reduced?0:t/1000*80;flows.forEach(f=>{f.dots.forEach((dot,i)=>{const s=(sp+i/f.n*f.len)%f.len;const pt=f.p.getPointAtLength(s);dot.setAttribute('cx',pt.x);dot.setAttribute('cy',pt.y);const cls=s<f.cl?'p-cold':'p-hot';if(dot.getAttribute('class')!==cls)dot.setAttribute('class',cls);});});if(!reduced)requestAnimationFrame(frame);}
+ requestAnimationFrame(frame);
+})();
+
+/* ---- economizer ---- */
+const ecoTxt={cold:'Cold weather: the cooling tower and heat exchanger reach the set point on their own, so chilled water bypasses the chillers entirely.',
+ mild:'Mild weather: the heat exchanger pre-cools the return water, and the chillers run at reduced load to trim it the rest of the way.',
+ hot:'Hot weather: the tower can’t get water cold enough, so the chillers carry the load. Warmer chilled water (55°F+) keeps this period as short as possible.'};
+function eco(m){$('eHx').setAttribute('class',m==='hot'?'dim':'lit');$('eCh').setAttribute('class',m==='cold'?'dim':'lit');$('ePipe1').setAttribute('class',m==='cold'?'dim':'lit');
+ const by=m==='cold';$('eBy').setAttribute('class',by?'lit':'dim');$('eByT').setAttribute('class',by?'lit':'dim');$('ecoTxt').textContent=ecoTxt[m];}
+document.querySelectorAll('[data-eco]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-eco]').forEach(x=>x.setAttribute('aria-pressed',x===b));eco(b.dataset.eco);}));
+eco('cold');
+
+/* ---- W classes ---- */
+[['W17','W1',17],['W27','W2',27],['W32','W3',32],['W40','new',40],['W45','W4',45],['W+','W5',55]].forEach(([n,o,t])=>{const r=document.createElement('div');r.className='hbar';
+ r.innerHTML=`<span><b>${n}</b> <span class="small">[${o}]</span></span><div class="t"><div class="f" style="width:${t/55*100}%;background:linear-gradient(90deg,var(--cold),${t>=40?'var(--hot)':'var(--amber)'})"></div></div><span class="v">${n==='W+'?'>45°C':'≤'+t+'°C'}</span>`;$('wclass').appendChild(r);});
+
+/* ---- UPS calc ---- */
+function ups(){const A=+$('uA').value,D=+$('uD').value,e1=+$('uE1').value/100,e2=+$('uE2').value/100,P=+$('uP').value;
+ const it=A*D*8760/1000;const ok=e1>0&&e2>0;const s=ok?it/e1-it/e2:0;
+ $('uIT').textContent=fmt(it/1000);$('uS').textContent=fmt(s);$('uD$').textContent='$'+fmt(s*P);}
+['uA','uD','uE1','uE2','uP'].forEach(i=>$(i).addEventListener('input',ups));ups();
+
+/* ---- N+1 ---- */
+(function(){const s=$('nplus');const unit=(x,w,load,label)=>{el('rect',{x,y:30,width:w,height:90,rx:3,fill:'var(--grid)',stroke:'var(--ink)'},s);el('rect',{x,y:120-90*load,width:w,height:90*load,fill:'var(--cold)'},s);el('text',{x:x+w/2,y:140,'font-size':12,'text-anchor':'middle',fill:'var(--ink)'},s,label);};
+ el('text',{x:0,y:18,'font-size':13,'font-weight':700,fill:'var(--ink)'},s,'2 large units, each 30% loaded');
+ unit(0,120,.3,'30%');unit(140,120,.3,'30%');
+ el('text',{x:330,y:18,'font-size':13,'font-weight':700,fill:'var(--ink)'},s,'3 smaller units, each 40% loaded');
+ unit(330,80,.4,'40%');unit(430,80,.4,'40%');unit(530,80,.4,'40%');
+ el('text',{x:640,y:85,'font-size':13,'fill':'var(--leaf)','font-weight':700},s,'+1.2 pts');
+ el('text',{x:640,y:102,'font-size':12,'fill':'var(--muted)'},s,'efficiency');})();
+
+/* ---- power chain ---- */
+(function(){const s=$('chain');const row=(y,label,items)=>{el('text',{x:0,y:y+30,'font-size':13,'font-weight':700,fill:'var(--ink)'},s,label);let x=110;items.forEach((it,i)=>{const w=it[1]?118:96;el('rect',{x,y,width:w,height:46,rx:3,fill:it[1]?'var(--hot-soft)':'var(--panel)',stroke:it[1]?'var(--hot)':'var(--rule)'},s);el('text',{x:x+w/2,y:y+20,'font-size':12,'text-anchor':'middle',fill:'var(--ink)','font-weight':600},s,it[0]);if(it[1])el('text',{x:x+w/2,y:y+36,'font-size':11,'text-anchor':'middle',fill:'var(--hot)'},s,it[1]);x+=w;if(i<items.length-1){el('line',{x1:x,x2:x+12,y1:y+23,y2:y+23,stroke:'var(--ink)'},s);x+=12;}});};
+ row(20,'AC design',[['Utility AC',''],['UPS','AC→DC→AC'],['PDU','transformer'],['Server PSU','AC→DC'],['Regulators','DC→DC']]);
+ row(110,'DC design',[['Utility AC',''],['Rectifier','AC→DC 380 V'],['Server','DC→DC'],['Regulators','DC→DC']]);
+ el('text',{x:110,y:182,'font-size':11,fill:'var(--muted)'},s,'Shaded boxes are conversion stages. Simplified; real designs vary.');})();
+
+/* ---- metrics calc ---- */
+function metrics(){const T=+$('mT').value,I=Math.max(+$('mI').value,0.0001),R=+$('mR').value,W=+$('mW').value,C=+$('mC').value;
+ const p=T/I,e=(T-R)/I,w=(W*1000)/(I*1000),c=(C*1000)/(I*1000);
+ $('rP').textContent=p.toFixed(2);$('rE').textContent=e.toFixed(2);$('rW').textContent=w.toFixed(2);$('rC').textContent=c.toFixed(2);
+ const s=$('pueScale');s.innerHTML='';const X=v=>20+(Math.min(Math.max(v,1),2.2)-1)/1.2*680;
+ el('rect',{x:20,y:34,width:680,height:14,rx:2,fill:'var(--grid)'},s);
+ [[1.1,'better'],[1.4,'good'],[1.6,'standard']].forEach(([v,t])=>{el('line',{x1:X(v),x2:X(v),y1:30,y2:52,stroke:'var(--muted)','stroke-width':2},s);el('text',{x:X(v),y:68,'font-size':11,'text-anchor':'middle',fill:'var(--muted)'},s,v+' '+t);});
+ el('text',{x:20,y:68,'font-size':11,fill:'var(--muted)'},s,'1.0');el('text',{x:700,y:68,'font-size':11,'text-anchor':'end',fill:'var(--muted)'},s,'2.2+');
+ const col=p<=1.1?'var(--leaf)':p<=1.4?'var(--cold)':p<=1.6?'var(--amber)':'var(--hot)';
+ el('path',{d:`M${X(p)-8},12 L${X(p)+8},12 L${X(p)},28 Z`,fill:col},s);el('rect',{x:20,y:34,width:Math.max(0,X(p)-20),height:14,rx:2,fill:col,opacity:.7},s);
+ el('text',{x:X(p),y:8,'font-size':12,'text-anchor':'middle',fill:'var(--ink)','font-weight':700},s,'your PUE '+p.toFixed(2));}
+['mT','mI','mR','mW','mC'].forEach(i=>$(i).addEventListener('input',metrics));metrics();
+
+/* ---- benchmarks ---- */
+[['PUE','',[1.6,1.4,1.1],1.8],['Airflow efficiency','W/cfm',[1.25,0.75,0.5],1.4],['Cooling system','kW/ton',[1.1,0.8,0.6],1.3]].forEach(([n,u,v,max])=>{
+ const wrap=document.createElement('div');wrap.style.margin='14px 0 18px';wrap.innerHTML=`<div class="ui" style="font-weight:700;margin-bottom:6px">${n}${u?' <span class="small">('+u+')</span>':''}</div>`;
+ [['Standard','var(--hot)'],['Good','var(--amber)'],['Better','var(--leaf)']].forEach(([l,c],i)=>{const r=document.createElement('div');r.className='hbar';r.style.margin='4px 0';
+  r.innerHTML=`<span>${l}</span><div class="t"><div class="f" style="width:${v[i]/max*100}%;background:${c}"></div></div><span class="v">${v[i]}</span>`;wrap.appendChild(r);});
+ $('bench').appendChild(wrap);});
+
+/* ---- TOC highlight ---- */
+const links=[...document.querySelectorAll('nav.toc a')];const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>s&&io.observe(s));
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

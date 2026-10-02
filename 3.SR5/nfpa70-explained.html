@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NFPA 70 (NEC) code development, explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F3F5F7;
+    --panel: #FFFFFF;
+    --ink: #1C2430;
+    --muted: #5B6675;
+    --rule: #CDD4DC;
+    --hot: #1C2430;      /* phase A, black */
+    --red: #C8322B;      /* phase B */
+    --blue: #2457A6;     /* phase C */
+    --ground: #2E7D4F;   /* equipment ground */
+    --yellow: #F2B705;   /* caution / now */
+    --done: #8C96A3;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #141A22; --panel: #1C2430; --ink: #E7ECF2; --muted: #A3AEBB;
+      --rule: #334050; --hot: #E7ECF2; --red: #E5615A; --blue: #6A9BE6;
+      --ground: #5BBF85; --yellow: #F5C842; --done: #6B7686;
+    }
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 400 17px/1.6 "Barlow", "Segoe UI", system-ui, sans-serif;
+  }
+  h1, h2, h3 { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; line-height: 1.1; margin: 0; }
+  h1 { font-size: clamp(2.4rem, 6vw, 4.2rem); font-weight: 700; letter-spacing: -0.01em; max-width: 16ch; }
+  h2 { font-size: clamp(1.7rem, 3.4vw, 2.4rem); font-weight: 700; margin-bottom: .5rem; }
+  h3 { font-size: 1.25rem; font-weight: 600; }
+  p { margin: 0 0 1rem; max-width: 68ch; }
+  a { color: var(--blue); }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 clamp(18px, 4vw, 40px); }
+  section { padding: 56px 0; border-top: 1px solid var(--rule); }
+  .lede { font-size: 1.15rem; color: var(--muted); }
+
+  /* Hero: a wire with three phase conductors under the title */
+  header { padding: 64px 0 40px; }
+  .conductors { display: grid; gap: 5px; margin: 28px 0 32px; max-width: 520px; }
+  .conductors span { height: 5px; border-radius: 3px; }
+  .conductors span:nth-child(1) { background: var(--hot); }
+  .conductors span:nth-child(2) { background: var(--red); width: 92%; }
+  .conductors span:nth-child(3) { background: var(--blue); width: 84%; }
+  .conductors span:nth-child(4) { background: var(--ground); width: 76%; }
+  .url { font-family: ui-monospace, Consolas, monospace; font-size: .9rem; word-break: break-all;
+         background: var(--panel); border: 1px solid var(--rule); padding: 10px 12px; border-radius: 6px; max-width: 760px; }
+  .nameplate { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-top: 28px;
+               border: 2px solid var(--ink); border-radius: 4px; max-width: 760px; background: var(--panel); }
+  .nameplate div { padding: 12px 16px; border-right: 1px solid var(--rule); }
+  .nameplate div:last-child { border-right: 0; }
+  .nameplate dt { font-size: .85rem; color: var(--muted); }
+  .nameplate dd { margin: 0; font: 600 1.35rem/1.2 "Barlow Condensed", sans-serif; }
+  .nameplate .now dd { color: var(--ink); }
+  .nameplate .now { background: color-mix(in srgb, var(--yellow) 22%, var(--panel)); }
+
+  /* Tabs explainer */
+  .tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0; margin-top: 24px;
+          border-top: 2px solid var(--ink); }
+  .tabs div { padding: 16px 18px 6px 0; border-bottom: 1px solid var(--rule); }
+  .tabs h3 { margin-bottom: 4px; }
+  .tabs p { font-size: .95rem; color: var(--muted); }
+
+  /* The circuit: revision cycle */
+  .circuit { position: relative; margin-top: 36px; }
+  .circuit ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(8, 1fr); position: relative; }
+  .circuit .wire, .circuit .live { position: absolute; left: 6.25%; top: 21px; height: 6px; border-radius: 3px; }
+  .circuit .wire { right: 6.25%; background: var(--rule); }
+  .circuit .live { background: var(--hot); width: 0; transition: width 1.6s cubic-bezier(.3,.7,.2,1); }
+  .circuit li { text-align: center; position: relative; z-index: 1; }
+  .circuit button {
+    all: unset; cursor: pointer; display: grid; justify-items: center; gap: 8px; padding: 0 4px 6px; border-radius: 6px; width: 100%;
+  }
+  .node { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; border: 3px solid var(--ink);
+          background: var(--panel); font: 700 1.2rem "Barlow Condensed", sans-serif; }
+  .done .node { background: var(--done); border-color: var(--done); color: var(--panel); }
+  .now .node { background: var(--yellow); color: #1C2430; box-shadow: 0 0 0 6px color-mix(in srgb, var(--yellow) 35%, transparent); }
+  .circuit .t { font: 600 1.02rem/1.15 "Barlow Condensed", sans-serif; }
+  .circuit .d { font-size: .82rem; color: var(--muted); line-height: 1.3; }
+  .circuit button[aria-pressed="true"] .t { text-decoration: underline 3px var(--red); text-underline-offset: 4px; }
+  .detail { margin-top: 22px; background: var(--panel); border-left: 6px solid var(--red); padding: 18px 22px; border-radius: 0 6px 6px 0; min-height: 120px; }
+  .detail h3 { margin-bottom: 6px; }
+  .detail p { margin-bottom: .4rem; }
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px; font-size: .9rem; color: var(--muted); }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 50%; vertical-align: -2px; margin-right: 6px; border: 2px solid var(--ink); }
+  @media (max-width: 760px) {
+    .circuit ol { grid-template-columns: 1fr; gap: 10px; }
+    .circuit .wire, .circuit .live { left: 21px; top: 24px; bottom: 24px; width: 6px; height: auto; right: auto; }
+    .circuit .live { transition: height 1.6s cubic-bezier(.3,.7,.2,1); }
+    .circuit li { text-align: left; }
+    .circuit button { grid-template-columns: 48px 1fr; justify-items: start; align-items: center; column-gap: 14px; }
+    .circuit button .txt { display: grid; }
+  }
+  @media (min-width: 761px) { .circuit button .txt { display: grid; gap: 4px; } }
+
+  /* Gantt */
+  .chart { overflow-x: auto; margin-top: 24px; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 12px; }
+  .chart svg { display: block; min-width: 760px; width: 100%; height: auto; }
+  .chart text { font-family: "Barlow", sans-serif; fill: var(--ink); }
+  .keys { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; font-size: .9rem; color: var(--muted); }
+  .keys b { display: inline-block; width: 22px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+
+  /* People */
+  .flow svg { width: 100%; height: auto; display: block; }
+  .flow text { font-family: "Barlow", sans-serif; fill: var(--ink); }
+  .flow .hd { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 20px; }
+  .flow .sm { font-size: 13px; fill: var(--muted); }
+
+  /* Structure */
+  .two { display: grid; grid-template-columns: 1.15fr 1fr; gap: 40px; margin-top: 24px; align-items: start; }
+  @media (max-width: 860px) { .two { grid-template-columns: 1fr; } }
+  .struct svg { width: 100%; height: auto; display: block; }
+  .struct text { font-family: "Barlow", sans-serif; fill: var(--ink); }
+  .grow { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; margin: 12px 0 6px; }
+  .grow span { aspect-ratio: 1; border-radius: 3px; background: var(--ink); }
+  .grow.future span { background: transparent; border: 2px dashed var(--blue); }
+  .grow.future span.maybe { border-color: var(--rule); }
+  .cap { font-size: .9rem; color: var(--muted); }
+
+  /* Steps */
+  .steps { counter-reset: s; list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: 0; max-width: 820px; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 56px 1fr; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--rule); }
+  .steps li::before { content: counter(s); font: 700 2rem/1 "Barlow Condensed", sans-serif; color: var(--red); }
+  .steps .closed { color: var(--muted); }
+  .steps .closed::before { color: var(--done); }
+  .tag { display: inline-block; font-size: .8rem; font-weight: 600; padding: 1px 8px; border-radius: 10px; margin-left: 6px; vertical-align: 2px; }
+  .tag.c { background: var(--rule); color: var(--muted); }
+  .tag.o { background: color-mix(in srgb, var(--ground) 20%, var(--panel)); color: var(--ground); }
+
+  footer { padding: 40px 0 64px; border-top: 1px solid var(--rule); font-size: .9rem; color: var(--muted); }
+  footer ul { padding-left: 18px; }
+  footer li { margin-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) { .circuit .live { transition: none; } }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <h1>NFPA 70: where the National Electrical Code gets rewritten</h1>
+  <div class="conductors" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  <p class="lede">The link you shared is NFPA's <strong>code development page</strong> for NFPA 70, better known as the National Electrical Code (NEC). It's not the code text itself. It's the public window into how the code is maintained: which editions exist, what's being changed for the next one, who decides, and how anyone can propose a change.</p>
+  <div class="url">nfpa.org/…/detail?code=70 &nbsp;redirects to&nbsp; nfpa.org/codes-and-standards/nfpa-70-standard-development/70</div>
+
+  <dl class="nameplate">
+    <div><dt>Document</dt><dd>NFPA 70 (NEC)</dd></div>
+    <div><dt>Current edition</dt><dd>2026</dd></div>
+    <div><dt>In development</dt><dd>2029 edition</dd></div>
+    <div class="now"><dt>Status on 1 Oct 2026</dt><dd>First Draft meetings</dd></div>
+  </dl>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>What the NEC is, in one paragraph</h2>
+    <p>The NEC is the United States' model standard for safe electrical installation: wiring, overcurrent protection, grounding and bonding, equipment, and special locations like pools, hospitals and hazardous areas. NFPA publishes it, but it only becomes law when a state or city adopts it, often with local amendments. A new edition comes out every three years, and each one goes through the public process shown on this page.</p>
+
+    <h2 style="margin-top:36px">What you'll find on the page</h2>
+    <p>NFPA document pages are organised into tabs. For NFPA 70 they typically cover:</p>
+    <div class="tabs">
+      <div><h3>Current &amp; prior editions</h3><p>Edition list, errata, and Tentative Interim Amendments (TIAs), which are urgent fixes issued between editions. Free read-only access to the code is offered with an NFPA account.</p></div>
+      <div><h3>Next edition</h3><p>The 2029 cycle: key dates, public inputs received, draft reports, ballots, and the link to submit inputs or comments when a window is open.</p></div>
+      <div><h3>Technical committees</h3><p>The Correlating Committee and the Code-Making Panels, their scopes, rosters and meeting notices.</p></div>
+      <div><h3>Archived revision info</h3><p>Reports and records from past cycles, so you can trace why any requirement reads the way it does.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="cycle">
+  <div class="wrap">
+    <h2>The 2029 revision cycle, as a circuit</h2>
+    <p>Every change to the NEC flows through the same path. Grey stages are finished, the yellow one is happening now, and the rest are ahead. Select any stage for detail.</p>
+
+    <div class="circuit">
+      <div class="wire" aria-hidden="true"></div>
+      <div class="live" id="live" aria-hidden="true"></div>
+      <ol id="stages"></ol>
+    </div>
+    <div class="detail" id="detail" aria-live="polite"></div>
+    <div class="legend">
+      <span><i style="background:var(--done);border-color:var(--done)"></i>Complete</span>
+      <span><i style="background:var(--yellow)"></i>In progress</span>
+      <span><i style="background:var(--panel)"></i>Upcoming</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Two cycles side by side</h2>
+    <p>The 2026 edition took about 32 months from opening to issuance. The 2029 cycle is planned at roughly 36, partly to make room for the biggest reorganisation the code has seen since 1937 (more below). The yellow line marks today.</p>
+    <div class="chart"><svg id="gantt" viewBox="0 0 1000 250" role="img" aria-label="Timeline comparing the 2026 and 2029 NEC revision cycles"></svg></div>
+    <div class="keys">
+      <span><b style="background:var(--ground)"></b>Public input window</span>
+      <span><b style="background:var(--hot)"></b>First Draft work</span>
+      <span><b style="background:var(--blue)"></b>Public comment window</span>
+      <span><b style="background:var(--red)"></b>Second Draft work</span>
+      <span><b style="background:var(--done)"></b>Motions, Technical Meeting, Council</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap flow">
+    <h2>Who actually writes it</h2>
+    <p>Anyone can propose a change, but every proposal is acted on by a technical committee and has to survive several votes before it reaches print.</p>
+    <svg viewBox="0 0 1000 300" role="img" aria-label="Flow from public input through code-making panels, correlating committee, NFPA membership and Standards Council to adoption">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+      </defs>
+      <g stroke="currentColor" stroke-width="3" fill="none" style="color:var(--ink)" marker-end="url(#ah)">
+        <path d="M168 110 H 222"/><path d="M388 110 H 442"/><path d="M608 110 H 662"/><path d="M828 110 H 852"/>
+        <path d="M922 172 V 225 H 616"/>
+      </g>
+      <g>
+        <rect x="10" y="60" width="158" height="100" rx="6" fill="var(--panel)" stroke="var(--ground)" stroke-width="3"/>
+        <text x="89" y="100" text-anchor="middle" class="hd">The public</text>
+        <text x="89" y="124" text-anchor="middle" class="sm">inputs, comments,</text>
+        <text x="89" y="142" text-anchor="middle" class="sm">motions</text>
+
+        <rect x="230" y="40" width="158" height="140" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="3"/>
+        <text x="309" y="78" text-anchor="middle" class="hd">Code-Making</text>
+        <text x="309" y="100" text-anchor="middle" class="hd">Panels</text>
+        <text x="309" y="126" text-anchor="middle" class="sm">about 18 panels, each</text>
+        <text x="309" y="144" text-anchor="middle" class="sm">owning certain articles;</text>
+        <text x="309" y="162" text-anchor="middle" class="sm">balanced interest groups</text>
+
+        <rect x="450" y="60" width="158" height="100" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="3"/>
+        <text x="529" y="96" text-anchor="middle" class="hd">Correlating</text>
+        <text x="529" y="118" text-anchor="middle" class="hd">Committee</text>
+        <text x="529" y="140" text-anchor="middle" class="sm">keeps panels</text><text x="529" y="156" text-anchor="middle" class="sm">consistent</text>
+
+        <rect x="670" y="60" width="158" height="100" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="3"/>
+        <text x="749" y="96" text-anchor="middle" class="hd">Technical</text>
+        <text x="749" y="118" text-anchor="middle" class="hd">Meeting</text>
+        <text x="749" y="140" text-anchor="middle" class="sm">NFPA members vote</text><text x="749" y="156" text-anchor="middle" class="sm">on motions</text>
+
+        <circle cx="922" cy="110" r="62" fill="var(--yellow)" stroke="var(--ink)" stroke-width="3"/>
+        <text x="922" y="106" text-anchor="middle" class="hd" style="fill:#1C2430;font-size:18px">Standards</text>
+        <text x="922" y="128" text-anchor="middle" class="hd" style="fill:#1C2430;font-size:18px">Council</text>
+
+        <rect x="356" y="185" width="260" height="80" rx="6" fill="var(--panel)" stroke="var(--blue)" stroke-width="3" stroke-dasharray="7 5"/>
+        <text x="486" y="218" text-anchor="middle" class="hd">New edition issued</text>
+        <text x="486" y="242" text-anchor="middle" class="sm">then adopted by states and cities</text>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<section>
+  <div class="wrap struct">
+    <h2>How the code is built, and why 2029 will look different</h2>
+    <p>Since 1937 the NEC has used the same nine-chapter frame. The first four chapters apply everywhere; the next three add or modify rules for particular places, equipment and conditions. Chapter 8 (communications) used to stand apart from the rest, but the 2026 edition ended that independence.</p>
+    <div class="two">
+      <svg viewBox="0 0 520 420" role="img" aria-label="Diagram of the 2026 NEC chapter structure">
+        <rect x="10" y="10" width="500" height="44" rx="4" fill="none" stroke="var(--muted)" stroke-width="2"/>
+        <text x="260" y="38" text-anchor="middle" font-weight="600">Article 90: Introduction (scope, how the code is arranged)</text>
+
+        <g font-size="14">
+          <rect x="10" y="80" width="160" height="110" rx="4" fill="var(--panel)" stroke="var(--red)" stroke-width="3"/>
+          <text x="90" y="112" text-anchor="middle" font-weight="600">Ch 5</text>
+          <text x="90" y="134" text-anchor="middle">Specific occupancies</text>
+          <text x="90" y="152" text-anchor="middle">and locations</text>
+
+          <rect x="180" y="80" width="160" height="110" rx="4" fill="var(--panel)" stroke="var(--red)" stroke-width="3"/>
+          <text x="260" y="112" text-anchor="middle" font-weight="600">Ch 6</text>
+          <text x="260" y="134" text-anchor="middle">Specific equipment</text>
+
+          <rect x="350" y="80" width="160" height="110" rx="4" fill="var(--panel)" stroke="var(--red)" stroke-width="3"/>
+          <text x="430" y="112" text-anchor="middle" font-weight="600">Ch 7</text>
+          <text x="430" y="134" text-anchor="middle">Specific conditions</text>
+          <text x="430" y="152" text-anchor="middle">and systems</text>
+        </g>
+        <text x="260" y="212" text-anchor="middle" font-size="13" style="fill:var(--muted)">supplement or modify Chapters 1–4</text>
+        <g stroke="var(--muted)" stroke-width="2"><path d="M90 190 V 228"/><path d="M260 218 V 228"/><path d="M430 190 V 228"/></g>
+
+        <rect x="10" y="230" width="500" height="96" rx="4" fill="var(--ink)"/>
+        <g font-size="14" style="fill:var(--paper)">
+          <text x="72" y="262" text-anchor="middle" font-weight="600" style="fill:var(--paper)">Ch 1</text>
+          <text x="72" y="282" text-anchor="middle" style="fill:var(--paper)">General</text>
+          <text x="196" y="262" text-anchor="middle" font-weight="600" style="fill:var(--paper)">Ch 2</text>
+          <text x="196" y="282" text-anchor="middle" style="fill:var(--paper)">Wiring and</text>
+          <text x="196" y="300" text-anchor="middle" style="fill:var(--paper)">protection</text>
+          <text x="322" y="262" text-anchor="middle" font-weight="600" style="fill:var(--paper)">Ch 3</text>
+          <text x="322" y="282" text-anchor="middle" style="fill:var(--paper)">Wiring methods</text>
+          <text x="322" y="300" text-anchor="middle" style="fill:var(--paper)">and materials</text>
+          <text x="448" y="262" text-anchor="middle" font-weight="600" style="fill:var(--paper)">Ch 4</text>
+          <text x="448" y="282" text-anchor="middle" style="fill:var(--paper)">Equipment for</text>
+          <text x="448" y="300" text-anchor="middle" style="fill:var(--paper)">general use</text>
+        </g>
+        <text x="260" y="344" text-anchor="middle" font-size="13" style="fill:var(--muted)">Chapters 1–4 apply generally</text>
+
+        <rect x="10" y="356" width="245" height="56" rx="4" fill="var(--panel)" stroke="var(--blue)" stroke-width="3"/>
+        <text x="132" y="380" text-anchor="middle" font-size="14" font-weight="600">Ch 8 Communications</text>
+        <text x="132" y="398" text-anchor="middle" font-size="12" style="fill:var(--muted)">no longer standalone in 2026</text>
+        <rect x="265" y="356" width="245" height="56" rx="4" fill="var(--panel)" stroke="var(--muted)" stroke-width="2"/>
+        <text x="387" y="380" text-anchor="middle" font-size="14" font-weight="600">Ch 9 Tables</text>
+        <text x="387" y="398" text-anchor="middle" font-size="12" style="fill:var(--muted)">conduit fill, conductor data</text>
+      </svg>
+
+      <div>
+        <h3>From 9 chapters…</h3>
+        <div class="grow" id="g9"></div>
+        <h3 style="margin-top:18px">…to roughly 20–30</h3>
+        <div class="grow future" id="g30"></div>
+        <p class="cap">Dashed outlines are proposed, not final. Faint ones show the upper range.</p>
+        <p style="margin-top:14px">The 2026 edition added <strong>Informative Annex L</strong> as a preview map of the proposed 2029 layout, and already moved some material into place. For example, load calculations moved from Article 220 to new Article 120, and energy management moved from Article 750 to new Article 130.</p>
+        <p>The plan is to apply the new structure after the 2029 First Draft is complete, so article numbers people have memorised for decades are expected to change.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>How to take part from here</h2>
+    <p>Participation is free with an NFPA account. Here's where each opportunity stands for the 2029 edition.</p>
+    <ol class="steps">
+      <li class="closed"><div><h3>Submit a public input <span class="tag c">Closed 9 Apr 2026</span></h3><p>Proposed new or revised text with a reason. This was the only stage where brand-new material could be introduced.</p></div></li>
+      <li><div><h3>Read the First Draft Report <span class="tag o">Expected 10 Jun 2027</span></h3><p>Shows each panel's action on every input, plus the "First Revisions" with new text underlined.</p></div></li>
+      <li><div><h3>Submit a public comment <span class="tag o">Closes 29 Jul 2027</span></h3><p>Respond to what's in the First Draft. Comments can't introduce unrelated new material.</p></div></li>
+      <li><div><h3>File a NITMAM <span class="tag o">Closes 21 Apr 2028</span></h3><p>A Notice of Intent to Make a Motion lets you raise an unresolved issue for a floor vote at the June 2028 Technical Meeting.</p></div></li>
+      <li><div><h3>Watch for issuance and local adoption <span class="tag o">About Sep 2028</span></h3><p>After the Standards Council issues the 2029 NEC, each state or city decides when, or whether, to adopt it.</p></div></li>
+    </ol>
+  </div>
+</section>
+
+<footer class="wrap">
+  <p>Dates come from published 2029 cycle schedules and are subject to change. Always confirm on the NFPA 70 "Next edition" tab.</p>
+  <ul>
+    <li><a href="https://www.nfpa.org/codes-and-standards/nfpa-70-standard-development/70">NFPA 70 code development page (the link you shared)</a></li>
+    <li><a href="https://www.nfpa.org/education-and-research/electrical/reorganization-of-the-national-electrical-code">NFPA: Reorganization of the NEC</a></li>
+    <li><a href="https://www.rvia.org/media/7945">RVIA: 2029 NEC revision cycle dates vs 2026</a></li>
+    <li><a href="https://www.ecmag.com/magazine/articles/article-detail/reshuffling-the-deck--readying-the-2026-nec-for-a-major-rewrite-for-2029">EC&amp;M Magazine: Readying the 2026 NEC for 2029</a></li>
+    <li><a href="https://ieci.org/national-electrical-code-global-code-wide-changes-and-overview/">IEC: 2026 NEC global changes and Annex L</a></li>
+  </ul>
+  <p>Prepared 1 October 2026. This is an explainer, not legal or engineering advice.</p>
+</footer>
+
+<script>
+(function () {
+  const stages = [
+    { t: "Public input", d: "30 Sep 2025 – 9 Apr 2026", s: "done",
+      body: "Anyone could submit proposed changes through NFPA's online system. The window closed at 5 p.m. Eastern on 9 April 2026. This is the only stage where entirely new material can enter." },
+    { t: "First Draft meetings", d: "22 Sep – 3 Oct 2026", s: "now",
+      body: "The Code-Making Panels are meeting right now to act on every public input. Each input is accepted, rejected or folded into a 'First Revision' with the panel's written reasoning. Task groups have been pre-working inputs since mid-2026." },
+    { t: "Ballot & correlation", d: "≈ Mar – May 2027", s: "next",
+      body: "Panel members ballot on the First Revisions (around 11 March 2027), then the Correlating Committee meets 4–7 May 2027 to resolve conflicts between panels. The 9-to-20+ chapter reorganisation is planned to be applied after this First Draft work." },
+    { t: "First Draft Report", d: "10 Jun 2027", s: "next",
+      body: "The full First Draft is posted publicly with every panel action, so anyone can see what changed and why." },
+    { t: "Public comment", d: "closes 29 Jul 2027", s: "next",
+      body: "The public responds to the First Draft. Comments must relate to what is already in the draft." },
+    { t: "Second Draft", d: "Oct 2027 – 24 Mar 2028", s: "next",
+      body: "Panels meet 4–16 Oct 2027 to act on comments, ballot around 3 Dec 2027, Correlating Committee meets 11–14 Jan 2028, and the Second Draft Report is posted 24 Mar 2028." },
+    { t: "Motions & vote", d: "Apr – Jun 2028", s: "next",
+      body: "NITMAMs close 21 Apr 2028, the Motions Committee Report posts 19 May 2028, and NFPA members debate certified motions at the Technical Meeting on 22–23 Jun 2028." },
+    { t: "Issuance", d: "≈ 18 Sep 2028", s: "next",
+      body: "The Standards Council hears any appeals (about 27–29 Aug 2028) and issues the 2029 NEC. Adoption by states and localities follows on their own schedules." }
+  ];
+
+  const ol = document.getElementById("stages");
+  const detail = document.getElementById("detail");
+  stages.forEach((st, i) => {
+    const li = document.createElement("li");
+    li.className = st.s;
+    li.innerHTML = `<button type="button" aria-pressed="false">
+        <span class="node">${i + 1}</span>
+        <span class="txt"><span class="t">${st.t}</span><span class="d">${st.d}</span></span>
+      </button>`;
+    li.querySelector("button").addEventListener("click", () => show(i));
+    ol.appendChild(li);
+  });
+  function show(i) {
+    ol.querySelectorAll("button").forEach((b, j) => b.setAttribute("aria-pressed", j === i ? "true" : "false"));
+    const st = stages[i];
+    const label = st.s === "done" ? "Complete" : st.s === "now" ? "In progress" : "Upcoming";
+    detail.innerHTML = `<h3>${i + 1}. ${st.t}</h3><p><strong>${st.d}</strong> &nbsp;(${label})</p><p>${st.body}</p>`;
+  }
+  show(1);
+
+  // energise the wire up to the current stage
+  const live = document.getElementById("live");
+  const nowIdx = stages.findIndex(s => s.s === "now");
+  requestAnimationFrame(() => setTimeout(() => {
+    if (window.matchMedia("(max-width: 760px)").matches) {
+      const nodes = ol.querySelectorAll(".node");
+      const top = nodes[0].getBoundingClientRect().top, cur = nodes[nowIdx].getBoundingClientRect().top;
+      live.style.height = (cur - top) + "px";
+    } else {
+      live.style.width = (nowIdx / (stages.length - 1)) * 87.5 + "%";
+    }
+  }, 150));
+
+  // Gantt chart
+  const svg = document.getElementById("gantt");
+  const css = getComputedStyle(document.documentElement);
+  const c = n => css.getPropertyValue(n).trim();
+  const x0 = 120, x1 = 980, start = new Date(2023, 0, 1), end = new Date(2029, 0, 1);
+  const X = d => x0 + (x1 - x0) * (d - start) / (end - start);
+  const D = s => { const [y, m, dd] = s.split("-").map(Number); return new Date(y, m - 1, dd); };
+  const ns = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs, text) => { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text) e.textContent = text; svg.appendChild(e); return e; };
+
+  for (let y = 2023; y <= 2029; y++) {
+    const x = X(new Date(y, 0, 1));
+    el("line", { x1: x, x2: x, y1: 30, y2: 200, stroke: c("--rule"), "stroke-width": 1 });
+    if (y < 2029) el("text", { x: x + 4, y: 22, "font-size": 13, fill: c("--muted") }, y);
+  }
+  const rows = [
+    { name: "2026 edition", y: 60, bars: [
+      ["2023-01-01", "2023-09-07", "--ground"], ["2024-01-15", "2024-07-10", "--hot"], ["2024-07-10", "2024-08-28", "--blue"],
+      ["2024-10-14", "2025-03-21", "--red"], ["2025-03-21", "2025-09-11", "--done"] ], issue: "2025-09-11" },
+    { name: "2029 edition", y: 130, bars: [
+      ["2025-09-30", "2026-04-09", "--ground"], ["2026-09-22", "2027-06-10", "--hot"], ["2027-06-10", "2027-07-29", "--blue"],
+      ["2027-10-04", "2028-03-24", "--red"], ["2028-03-24", "2028-09-18", "--done"] ], issue: "2028-09-18" }
+  ];
+  rows.forEach(r => {
+    el("text", { x: 0, y: r.y + 21, "font-size": 15, "font-weight": 600 }, r.name);
+    el("line", { x1: X(D(r.bars[0][0])), x2: X(D(r.issue)), y1: r.y + 16, y2: r.y + 16, stroke: c("--rule"), "stroke-width": 2 });
+    r.bars.forEach(([a, b, col]) => el("rect", { x: X(D(a)), y: r.y + 4, width: Math.max(4, X(D(b)) - X(D(a))), height: 24, rx: 3, fill: c(col) }));
+    el("text", { x: X(D(r.issue)) + 6, y: r.y + 21, "font-size": 13, fill: c("--muted") }, "issued");
+  });
+  const today = X(new Date(2026, 9, 1));
+  el("line", { x1: today, x2: today, y1: 34, y2: 200, stroke: c("--yellow"), "stroke-width": 4 });
+  el("text", { x: today, y: 222, "text-anchor": "middle", "font-size": 13, "font-weight": 600 }, "Today, 1 Oct 2026");
+
+  // 9 -> 30 squares
+  const g9 = document.getElementById("g9"), g30 = document.getElementById("g30");
+  for (let i = 0; i < 9; i++) g9.appendChild(document.createElement("span"));
+  for (let i = 0; i < 30; i++) { const s = document.createElement("span"); if (i >= 20) s.className = "maybe"; g30.appendChild(s); }
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

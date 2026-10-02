@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vertiv Rack Cooling, explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF1F4; --panel:#FFFFFF; --ink:#18212B; --muted:#56626F; --line:#C9D2DA;
+  --cold:#2B78C9; --cold-soft:#D6E7F7; --hot:#D9502B; --hot-soft:#F8DDD3; --warm:#E9A23B;
+  --steel:#8C99A6; --rack:#2E3A46;
+  --display:"Barlow Condensed","Arial Narrow","Roboto Condensed",sans-serif;
+  --body:"Barlow","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121820; --panel:#1B232D; --ink:#E6ECF1; --muted:#9AA7B4; --line:#2F3B48;
+    --cold:#5AA2EE; --cold-soft:#1C3350; --hot:#F0714C; --hot-soft:#4A2419; --warm:#F2B55A;
+    --steel:#6D7B89; --rack:#AEBBC8;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121820; --panel:#1B232D; --ink:#E6ECF1; --muted:#9AA7B4; --line:#2F3B48;
+  --cold:#5AA2EE; --cold-soft:#1C3350; --hot:#F0714C; --hot-soft:#4A2419; --warm:#F2B55A;
+  --steel:#6D7B89; --rack:#AEBBC8;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.6 var(--body);-webkit-font-smoothing:antialiased}
+main{max-width:980px;margin:0 auto;padding:40px 22px 80px}
+h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0}
+h1{font-size:clamp(44px,8vw,84px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(30px,4.5vw,42px);font-weight:600;margin-bottom:14px}
+h3{font-size:24px;font-weight:600;margin-bottom:8px}
+p{margin:0 0 14px;max-width:68ch}
+a{color:var(--cold)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--warm);outline-offset:2px}
+.lede{font-size:20px;color:var(--muted);max-width:60ch;margin-top:14px}
+.src{font-size:14px;color:var(--muted)}
+section{margin-top:72px}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;margin:22px 0;overflow-x:auto}
+.fig svg{display:block;width:100%;height:auto;min-width:560px}
+.cap{font-size:14px;color:var(--muted);margin-top:10px;max-width:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+@media (max-width:720px){.grid2{grid-template-columns:1fr}}
+.spec{border-left:4px solid var(--cold);padding:4px 0 4px 16px;margin:10px 0}
+.spec.hot{border-color:var(--hot)}
+dl{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;margin:12px 0}
+dt{font-weight:600}
+dd{margin:0;color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-family:var(--display);font-size:17px;font-weight:600}
+tr.hl td{background:var(--cold-soft)}
+.tag{display:inline-block;padding:1px 8px;border-radius:3px;font-size:13px;font-weight:600}
+.tag.p{background:var(--cold-soft);color:var(--cold)}
+.tag.a{background:var(--hot-soft);color:var(--hot)}
+.tool{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:22px;margin-top:20px}
+label{font-weight:600;display:block;margin-bottom:6px}
+input[type=range]{width:100%;accent-color:var(--hot)}
+select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--ink);width:100%;max-width:420px}
+.readout{display:flex;flex-wrap:wrap;gap:28px;margin:16px 0}
+.readout b{display:block;font-family:var(--display);font-size:36px;font-weight:700;line-height:1}
+.readout span{font-size:14px;color:var(--muted)}
+.bar{height:22px;background:var(--bg);border:1px solid var(--line);border-radius:3px;position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--cold),var(--warm) 70%,var(--hot));transition:width .25s}
+.bar .mark{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink)}
+.verdict{margin-top:14px;font-weight:500}
+.checks li{margin-bottom:8px}
+.legend{display:flex;gap:20px;flex-wrap:wrap;font-size:14px;color:var(--muted);margin-top:8px}
+.legend span::before{content:"";display:inline-block;width:22px;height:4px;border-radius:2px;margin-right:6px;vertical-align:middle;background:var(--c)}
+/* airflow animation, the one moving thing on the page */
+.flow{stroke-dasharray:8 10;animation:run 1.4s linear infinite}
+@keyframes run{to{stroke-dashoffset:-36}}
+@media (prefers-reduced-motion:reduce){.flow{animation:none}.bar i{transition:none}}
+footer{margin-top:80px;padding-top:20px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <p class="src">Explaining: <a href="https://www.vertiv.com/en-us/products-catalog/thermal-management/rack-cooling/">vertiv.com › Thermal Management › Rack Cooling</a></p>
+  <h1>Rack cooling, explained</h1>
+  <p class="lede">This page is Vertiv's product catalog for cooling that lives <em>inside or on</em> a single IT rack, rather than cooling a whole room or a whole row. It covers two families: the VRC rack-mounted air conditioner, and SwitchAir airflow guides for network switches.</p>
+
+  <div class="fig" role="img" aria-label="Side view of a rack with a VRC cooling unit at the bottom. Cold air leaves the front, passes through servers, hot air collects at the rear, returns to the VRC, and waste heat is ducted up into the ceiling.">
+    <svg viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="ac" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--cold)"/></marker>
+        <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--hot)"/></marker>
+      </defs>
+      <!-- ceiling -->
+      <rect x="0" y="0" width="900" height="44" fill="var(--bg)"/>
+      <line x1="0" y1="44" x2="900" y2="44" stroke="var(--steel)" stroke-width="2"/>
+      <text x="20" y="28" font-family="Barlow" font-size="15" fill="var(--muted)">Ceiling plenum / building HVAC</text>
+      <!-- rack -->
+      <rect x="330" y="80" width="240" height="320" rx="4" fill="none" stroke="var(--rack)" stroke-width="3"/>
+      <g fill="var(--panel)" stroke="var(--steel)">
+        <rect x="350" y="96" width="200" height="30"/><rect x="350" y="132" width="200" height="30"/>
+        <rect x="350" y="168" width="200" height="30"/><rect x="350" y="204" width="200" height="30"/>
+        <rect x="350" y="240" width="200" height="30"/>
+      </g>
+      <g font-family="Barlow" font-size="13" fill="var(--muted)" text-anchor="middle">
+        <text x="450" y="116">Server</text><text x="450" y="152">Server</text><text x="450" y="188">Storage</text>
+        <text x="450" y="224">Server</text><text x="450" y="260">Switch</text>
+      </g>
+      <!-- VRC -->
+      <rect x="350" y="290" width="200" height="96" fill="var(--cold-soft)" stroke="var(--cold)" stroke-width="2"/>
+      <text x="450" y="332" text-anchor="middle" font-family="Barlow Condensed" font-weight="700" font-size="22" fill="var(--cold)">VRC · 10U</text>
+      <text x="450" y="354" text-anchor="middle" font-family="Barlow" font-size="13" fill="var(--muted)">compressor + fans</text>
+      <!-- labels -->
+      <text x="200" y="400" text-anchor="middle" font-family="Barlow Condensed" font-weight="600" font-size="20" fill="var(--cold)">Front · cold side</text>
+      <text x="700" y="400" text-anchor="middle" font-family="Barlow Condensed" font-weight="600" font-size="20" fill="var(--hot)">Rear · hot side</text>
+      <!-- cold supply: out of VRC front, up the front -->
+      <path class="flow" d="M350 338 H300 V110" fill="none" stroke="var(--cold)" stroke-width="4" marker-end="url(#ac)"/>
+      <path class="flow" d="M300 150 H346" stroke="var(--cold)" stroke-width="3" marker-end="url(#ac)"/>
+      <path class="flow" d="M300 220 H346" stroke="var(--cold)" stroke-width="3" marker-end="url(#ac)"/>
+      <!-- through servers -->
+      <path class="flow" d="M555 150 H600" stroke="var(--hot)" stroke-width="3" marker-end="url(#ah)"/>
+      <path class="flow" d="M555 220 H600" stroke="var(--hot)" stroke-width="3" marker-end="url(#ah)"/>
+      <!-- hot return down rear into VRC -->
+      <path class="flow" d="M610 110 V320 H556" fill="none" stroke="var(--hot)" stroke-width="4" marker-end="url(#ah)"/>
+      <!-- exhaust duct -->
+      <path d="M520 290 V200" stroke="none"/>
+      <rect x="640" y="46" width="30" height="306" fill="none" stroke="var(--steel)" stroke-dasharray="4 4"/>
+      <path d="M556 366 H655 V52" fill="none" stroke="var(--warm)" stroke-width="4" class="flow" marker-end="url(#ah)"/>
+      <text x="690" y="200" font-family="Barlow" font-size="14" fill="var(--muted)">Heat-rejection duct:</text>
+      <text x="690" y="218" font-family="Barlow" font-size="14" fill="var(--muted)">compressor heat goes</text>
+      <text x="690" y="236" font-family="Barlow" font-size="14" fill="var(--muted)">up to the ceiling</text>
+      <text x="40" y="200" font-family="Barlow" font-size="14" fill="var(--muted)">Cooled air is blown out</text>
+      <text x="40" y="218" font-family="Barlow" font-size="14" fill="var(--muted)">the front and drawn in by</text>
+      <text x="40" y="236" font-family="Barlow" font-size="14" fill="var(--muted)">each device's own fans</text>
+    </svg>
+    <div class="legend"><span style="--c:var(--cold)">Cold supply air</span><span style="--c:var(--hot)">Hot IT exhaust</span><span style="--c:var(--warm)">Rejected compressor heat</span></div>
+    <p class="cap">Simplified airflow for a closed rack with a VRC unit. The rack becomes its own tiny data center: no raised floor or room CRAC needed.</p>
+  </div>
+</header>
+
+<section>
+  <h2>What the page is actually saying</h2>
+  <p>The catalog page's intro makes one argument: faster data transfer, lower latency and always-on availability push more computing into each rack, which raises power density per rack. Servers only run at full capacity inside the right temperature band, so the heat of tightly packed gear needs to be removed at the rack, efficiently.</p>
+  <p>Beyond that intro, the page is mostly a navigation shell. The product grid is loaded by script, and the sidebar points to two selector tools: the <strong>SwitchAir Finder</strong> (match by switch model) and the <strong>SwitchAir Smart Selector</strong> (match by specification).</p>
+
+  <div class="fig" role="img" aria-label="Three nested scopes of cooling: room cooling covers the whole hall, in-row cooling sits between racks in a row, and rack cooling acts on a single cabinet.">
+    <svg viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="20" width="860" height="260" rx="6" fill="none" stroke="var(--steel)" stroke-width="2"/>
+      <text x="40" y="50" font-family="Barlow Condensed" font-weight="600" font-size="22" fill="var(--muted)">Room cooling — conditions the whole hall</text>
+      <rect x="60" y="80" width="580" height="170" rx="4" fill="none" stroke="var(--steel)" stroke-dasharray="6 5"/>
+      <text x="80" y="108" font-family="Barlow Condensed" font-weight="600" font-size="20" fill="var(--muted)">In-row cooling — units between racks in a row</text>
+      <g fill="var(--panel)" stroke="var(--steel)">
+        <rect x="90" y="130" width="70" height="100"/><rect x="170" y="130" width="40" height="100" fill="var(--bg)"/>
+        <rect x="220" y="130" width="70" height="100"/><rect x="300" y="130" width="70" height="100"/>
+        <rect x="380" y="130" width="40" height="100" fill="var(--bg)"/><rect x="430" y="130" width="70" height="100"/>
+      </g>
+      <text x="190" y="185" text-anchor="middle" font-family="Barlow" font-size="11" fill="var(--muted)" transform="rotate(-90 190 185)">in-row unit</text>
+      <text x="400" y="185" text-anchor="middle" font-family="Barlow" font-size="11" fill="var(--muted)" transform="rotate(-90 400 185)">in-row unit</text>
+      <!-- rack cooling highlight -->
+      <rect x="690" y="100" width="150" height="150" rx="4" fill="var(--cold-soft)" stroke="var(--cold)" stroke-width="3"/>
+      <rect x="735" y="130" width="60" height="100" fill="var(--panel)" stroke="var(--cold)"/>
+      <rect x="735" y="205" width="60" height="25" fill="var(--cold)"/>
+      <text x="765" y="90" text-anchor="middle" font-family="Barlow Condensed" font-weight="700" font-size="22" fill="var(--cold)">Rack cooling</text>
+      <text x="765" y="272" text-anchor="middle" font-family="Barlow" font-size="13" fill="var(--muted)">this page: one cabinet</text>
+    </svg>
+    <p class="cap">Where "Rack Cooling" sits in Vertiv's thermal catalog. Sibling pages cover Room Cooling, In-Row Cooling, and Liquid Cooling for high-density AI loads.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Family 1: Vertiv VRC rack cooling unit</h2>
+  <p>The VRC is a small, self-contained air conditioner that bolts into a standard 19-inch rack. It's aimed at small server rooms, network closets and edge sites, where there's no proper data-center cooling and the building's comfort AC isn't reliable enough for IT.</p>
+  <div class="grid2">
+    <div>
+      <div class="spec"><h3>Key numbers</h3>
+        <dl>
+          <dt>Capacity</dt><dd>Up to 3,500 W (≈12,000 BTU/h) per cabinet</dd>
+          <dt>Size</dt><dd>10U of rack space</dd>
+          <dt>Rack</dt><dd>Standard 19-inch, open (perforated) or closed doors</dd>
+          <dt>Versions</dt><dd>Self-contained, and a split version</dd>
+          <dt>Monitoring</dt><dd>SNMP and Modbus-RTU for remote / BMS access</dd>
+        </dl>
+      </div>
+    </div>
+    <div>
+      <div class="spec hot"><h3>How it saves energy</h3>
+        <p>Its fans and compressor are variable speed, so output tracks the real-time IT load instead of cycling fully on and off. It comes pre-charged with refrigerant and ships with a power cord and plug, so deployment is close to plug-in.</p>
+        <p>There's also a bundled option, the <strong>VRC-S micro data center</strong> (VR3300 42U rack with a 3.5 kW, 120 V cooling unit), filed under Integrated Solutions.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tool" aria-labelledby="calc-h">
+    <h3 id="calc-h">Try it: would one VRC cover your rack?</h3>
+    <label for="load">IT load in the rack: <span id="loadv">2,000</span> W</label>
+    <input id="load" type="range" min="200" max="8000" step="100" value="2000">
+    <div class="readout">
+      <div><b id="btu">6,824</b><span>BTU/h of heat to remove</span></div>
+      <div><b id="pct">57%</b><span>of one VRC's 3.5 kW rating</span></div>
+    </div>
+    <div class="bar" aria-hidden="true"><i id="fill" style="width:25%"></i><div class="mark" style="left:43.75%"></div></div>
+    <p class="cap">Black line = 3.5 kW VRC rating on an 8 kW scale.</p>
+    <p class="verdict" id="verdict"></p>
+    <p class="cap">Rule of thumb: 1 W of IT load ≈ 3.412 BTU/h of heat. Real capacity depends on room temperature and setup; size with Vertiv or a partner.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Family 2: SwitchAir airflow guides</h2>
+  <p>Network switches, routers and load balancers are usually mounted at the top and <em>back</em> of the rack so their ports face the cabling. The catch: many switches breathe sideways or from the rear, so they end up inhaling the hot exhaust of the servers beside them. That drives up intake temperature and shortens their life.</p>
+  <p>SwitchAir is a rack-mounted duct that gives the switch a private path to cold air at the front of the cabinet, and blocks hot air from wrapping around to its intake.</p>
+
+  <div class="fig" role="img" aria-label="Top-down view of two racks. Left: without SwitchAir, a switch at the rear rails pulls hot air from the rear. Right: with SwitchAir, a channel carries cold air from the front of the rack to the switch intake.">
+    <svg viewBox="0 0 900 330" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="bc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--cold)"/></marker>
+        <marker id="bh" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--hot)"/></marker>
+      </defs>
+      <text x="220" y="28" text-anchor="middle" font-family="Barlow Condensed" font-weight="600" font-size="22" fill="var(--hot)">Without SwitchAir</text>
+      <text x="680" y="28" text-anchor="middle" font-family="Barlow Condensed" font-weight="600" font-size="22" fill="var(--cold)">With SwitchAir</text>
+      <!-- left rack top view -->
+      <g>
+        <rect x="60" y="60" width="320" height="200" fill="none" stroke="var(--rack)" stroke-width="3"/>
+        <line x1="90" y1="60" x2="90" y2="260" stroke="var(--steel)" stroke-dasharray="4 4"/>
+        <line x1="350" y1="60" x2="350" y2="260" stroke="var(--steel)" stroke-dasharray="4 4"/>
+        <rect x="240" y="120" width="110" height="80" fill="var(--panel)" stroke="var(--rack)" stroke-width="2"/>
+        <text x="295" y="165" text-anchor="middle" font-family="Barlow" font-weight="600" font-size="15" fill="var(--ink)">Switch</text>
+        <path class="flow" d="M400 110 C330 80 250 80 240 125" fill="none" stroke="var(--hot)" stroke-width="3.5" marker-end="url(#bh)"/>
+        <path class="flow" d="M400 210 C330 240 250 240 240 195" fill="none" stroke="var(--hot)" stroke-width="3.5" marker-end="url(#bh)"/>
+        <path d="M20 160 H80" stroke="var(--cold)" stroke-width="3.5" marker-end="url(#bc)"/>
+        <text x="130" y="165" font-family="Barlow" font-size="13" fill="var(--muted)">cold air</text>
+        <text x="130" y="181" font-family="Barlow" font-size="13" fill="var(--muted)">never reaches it</text>
+        <text x="220" y="290" text-anchor="middle" font-family="Barlow" font-size="14" fill="var(--muted)">Side intakes pull recirculated hot air</text>
+      </g>
+      <!-- right rack -->
+      <g>
+        <rect x="520" y="60" width="320" height="200" fill="none" stroke="var(--rack)" stroke-width="3"/>
+        <line x1="550" y1="60" x2="550" y2="260" stroke="var(--steel)" stroke-dasharray="4 4"/>
+        <line x1="810" y1="60" x2="810" y2="260" stroke="var(--steel)" stroke-dasharray="4 4"/>
+        <rect x="700" y="120" width="110" height="80" fill="var(--panel)" stroke="var(--rack)" stroke-width="2"/>
+        <text x="755" y="165" text-anchor="middle" font-family="Barlow" font-weight="600" font-size="15" fill="var(--ink)">Switch</text>
+        <!-- duct -->
+        <path d="M550 90 H700 V120 M550 230 H700 V200" fill="none" stroke="var(--cold)" stroke-width="2"/>
+        <rect x="550" y="90" width="150" height="140" fill="var(--cold-soft)" opacity=".7"/>
+        <text x="625" y="258" text-anchor="middle" font-family="Barlow" font-weight="600" font-size="13" fill="var(--cold)">SwitchAir channel</text>
+        <path class="flow" d="M480 130 H696" stroke="var(--cold)" stroke-width="3.5" marker-end="url(#bc)"/>
+        <path class="flow" d="M480 190 H696" stroke="var(--cold)" stroke-width="3.5" marker-end="url(#bc)"/>
+        <path d="M870 100 C850 80 830 80 815 88" fill="none" stroke="var(--hot)" stroke-width="3" opacity=".5"/>
+        <line x1="812" y1="80" x2="822" y2="96" stroke="var(--ink)" stroke-width="2"/>
+        <line x1="822" y1="80" x2="812" y2="96" stroke="var(--ink)" stroke-width="2"/>
+        <text x="680" y="290" text-anchor="middle" font-family="Barlow" font-size="14" fill="var(--muted)">Cold front air ducted to intake; hot air blocked</text>
+      </g>
+      <text x="30" y="316" font-family="Barlow" font-size="13" fill="var(--muted)">◀ front / cold aisle</text>
+      <text x="870" y="316" text-anchor="end" font-family="Barlow" font-size="13" fill="var(--muted)">rear / hot aisle ▶</text>
+    </svg>
+    <p class="cap">Top-down view of a rack. Dashed lines are the front and rear mounting rails.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="spec"><h3><span class="tag p">Passive</span></h3><p>No power. Just a channel; the switch's own fans pull cold air through it. Most models are this type.</p></div>
+    <div class="spec hot"><h3><span class="tag a">Active</span></h3><p>Adds internal fans that push cold air from the front of the cabinet to the switch intake, for tougher placements.</p></div>
+  </div>
+
+  <div class="tool" aria-labelledby="sw-h">
+    <h3 id="sw-h">Try it: which SwitchAir matches your switch's airflow?</h3>
+    <label for="flow">Where does your switch take in air?</label>
+    <select id="flow">
+      <option value="all">Show all models</option>
+      <option value="dual">Both sides</option>
+      <option value="single">One side</option>
+      <option value="rear">Rear intake, front exhaust</option>
+      <option value="side">Side intake (2U/3U devices)</option>
+      <option value="exh">Side exhaust (needs a deflector)</option>
+    </select>
+    <div style="overflow-x:auto;margin-top:16px">
+      <table>
+        <thead><tr><th>Model</th><th>Type</th><th>Switch airflow</th><th>Height</th><th>Availability</th></tr></thead>
+        <tbody id="swt"></tbody>
+      </table>
+    </div>
+    <p class="cap">Model list from Vertiv's SwitchAir brochure and product pages. For an exact fit, use Vertiv's SwitchAir Finder with your switch model. Units are designed around a 29 in (73.7 cm) front-to-rear rail distance.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Before you buy</h2>
+  <ul class="checks">
+    <li><strong>Match the family to the problem.</strong> Whole rack too hot with no proper cooling nearby → VRC. Only the switches running hot in an otherwise cooled rack → SwitchAir.</li>
+    <li><strong>Check your load.</strong> VRC tops out at 3.5 kW per cabinet. Denser racks belong to the In-Row, Room or Liquid Cooling pages.</li>
+    <li><strong>Plan the heat exit.</strong> The self-contained VRC dumps compressor heat through a duct into a ceiling void, or straight into a large space like a warehouse. If neither works, ask about the split version.</li>
+    <li><strong>Confirm current SKUs.</strong> At least one reseller lists the VRC101KIT (208 V) as end-of-life, so check what's currently orderable in your region.</li>
+    <li><strong>Register SwitchAir.</strong> Standard warranty is 3 years, extended to 5 if registered within 120 days of purchase.</li>
+  </ul>
+</section>
+
+<footer>
+  Explainer built from the Vertiv Rack Cooling catalog page plus Vertiv's VRC brochure, SwitchAir brochure and product pages, and reseller listings. Paraphrased; specifications may change, so confirm with Vertiv. Diagrams are simplified illustrations, not engineering drawings.
+</footer>
+</main>
+
+<script>
+(function(){
+  const load=document.getElementById('load'),loadv=document.getElementById('loadv'),btu=document.getElementById('btu'),
+        pct=document.getElementById('pct'),fill=document.getElementById('fill'),verdict=document.getElementById('verdict');
+  const fmt=n=>Math.round(n).toLocaleString('en-US');
+  function upd(){
+    const w=+load.value; const p=w/3500*100;
+    loadv.textContent=fmt(w); btu.textContent=fmt(w*3.412); pct.textContent=Math.round(p)+'%';
+    fill.style.width=(w/8000*100)+'%';
+    if(p<=80) verdict.textContent='Within one VRC\u2019s rating, with headroom for growth.';
+    else if(p<=100) verdict.textContent='Near the limit of one VRC. Little room for new gear; check real operating conditions.';
+    else verdict.textContent='Over one VRC\u2019s 3.5 kW rating. Look at In-Row or Room cooling, or split the load across racks.';
+  }
+  load.addEventListener('input',upd); upd();
+
+  const models=[
+    ['SA1-01001NB','p','Dual side intake','1U','Built to order','dual'],
+    ['SA1-01001SS','p','Single side intake','1U','Built to order','single'],
+    ['SA1-01002','p','Rear intake, front exhaust','1U','Stocked','rear'],
+    ['SA1-01002L','p','Rear intake, front exhaust','1U','Stocked','rear'],
+    ['SA1-01002S','p','Rear intake, front exhaust','1U','Stocked','rear'],
+    ['SA1-01002XLNB','p','Rear intake, front exhaust','1U','Stocked','rear'],
+    ['SA1-02003','p','Rear intake, front exhaust','2U','Built to order','rear'],
+    ['SA1-02003XS','p','Rear intake','2U','Built to order','rear'],
+    ['SA1-02005','p','Side intake','2U','Built to order','side'],
+    ['SA1-03001','p','Side intake','3U','Built to order','side'],
+    ['SA1-09001','p','Side exhaust deflector','9U','Built to order','exh'],
+    ['SA2-002','a','Dual side or rear intake, for 1U/2U switches','2U','See Vertiv','dual rear'],
+    ['SA2-003','a','Single side intake, for 1U/2U switches','2U','See Vertiv','single']
+  ];
+  const tb=document.getElementById('swt'),sel=document.getElementById('flow');
+  function draw(){
+    const f=sel.value;
+    tb.innerHTML=models.filter(m=>f==='all'||m[5].split(' ').includes(f)).map(m=>
+      `<tr${m[4]==='Stocked'?' class="hl"':''}><td><strong>${m[0]}</strong></td><td><span class="tag ${m[1]}">${m[1]==='p'?'Passive':'Active'}</span></td><td>${m[2]}</td><td>${m[3]}</td><td>${m[4]}</td></tr>`).join('');
+  }
+  sel.addEventListener('change',draw); draw();
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

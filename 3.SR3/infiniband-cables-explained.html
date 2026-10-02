@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>InfiniBand cables, explained visually</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* Palette borrowed from real cable jackets: copper twinax, violet/aqua multimode, yellow single-mode */
+:root{
+  --bg:#EBEFF2; --surface:#F8FAFB; --ink:#15212B; --muted:#54636E; --line:#C7D0D6; --soft:#DDE4E8;
+  --copper:#B4632A; --acc:#7E4520; --aoc:#6E52BC; --mm:#16929E; --sm:#B88B00; --bad:#B23A3A;
+  --display:"Barlow Condensed","Arial Narrow","Roboto Condensed",sans-serif;
+  --body:"Barlow","Segoe UI",system-ui,-apple-system,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#11191F; --surface:#18232B; --ink:#E3E9ED; --muted:#98A7B1; --line:#2D3A44; --soft:#22303A;
+    --copper:#DB8C50; --acc:#C27A48; --aoc:#A28CE8; --mm:#47C4CF; --sm:#E6BE2E; --bad:#E36B6B;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11191F; --surface:#18232B; --ink:#E3E9ED; --muted:#98A7B1; --line:#2D3A44; --soft:#22303A;
+  --copper:#DB8C50; --acc:#C27A48; --aoc:#A28CE8; --mm:#47C4CF; --sm:#E6BE2E; --bad:#E36B6B;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.55;-webkit-font-smoothing:antialiased}
+img,svg{max-width:100%}
+a{color:var(--mm);text-underline-offset:3px}
+a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible,select:focus-visible{outline:3px solid var(--aoc);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.prose{max-width:700px}
+h1,h2,h3{font-family:var(--display);line-height:1.05;margin:0}
+h1{font-size:clamp(52px,9vw,104px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(34px,5vw,50px);font-weight:600;margin-bottom:14px}
+h3{font-size:26px;font-weight:600;margin:28px 0 8px}
+p{margin:0 0 14px}
+section{padding:64px 0;border-top:1px solid var(--line)}
+.lede{font-size:21px;color:var(--muted);max-width:640px}
+.note{font-size:15px;color:var(--muted)}
+.figure{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:20px;margin:24px 0;overflow-x:auto}
+.figure figcaption{font-size:15px;color:var(--muted);margin-top:10px}
+svg text{font-family:var(--body)}
+.svg-ink{fill:var(--ink)} .svg-muted{fill:var(--muted)} .svg-line{stroke:var(--line)} .svg-surface{fill:var(--surface)} .svg-soft{fill:var(--soft)}
+
+/* hero */
+header.hero{padding:56px 0 40px}
+.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center}
+.source{font-size:15px;color:var(--muted);margin-top:18px}
+@media (max-width:820px){.hero-grid{grid-template-columns:1fr}}
+.lane-pulse{stroke-dasharray:6 44;animation:flow 1.6s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-50}}
+@media (prefers-reduced-motion:reduce){.lane-pulse,.lanes-anim{animation:none!important}}
+
+.takeaways{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0;margin-top:36px;border-left:4px solid var(--ink)}
+.takeaways div{padding:4px 20px 4px 18px}
+.takeaways strong{display:block;font-family:var(--display);font-size:22px;font-weight:600}
+.takeaways span{font-size:16px;color:var(--muted)}
+
+/* generation explorer */
+.gen-layout{display:grid;grid-template-columns:300px 1fr;gap:28px;align-items:start}
+@media (max-width:820px){.gen-layout{grid-template-columns:1fr}}
+.genbars{display:flex;flex-direction:column;gap:5px}
+.genbar{display:grid;grid-template-columns:54px 1fr;align-items:center;gap:8px;background:none;border:0;padding:3px 0;cursor:pointer;color:var(--ink);font:inherit;text-align:left}
+.genbar .nm{font-family:var(--display);font-weight:600;font-size:19px}
+.genbar .track{position:relative;height:24px;background:var(--soft);border-radius:3px}
+.genbar .fill{position:absolute;left:0;top:0;bottom:0;background:var(--muted);border-radius:3px;transition:background .2s}
+.genbar .val{position:absolute;right:6px;top:2px;font-size:14px;color:var(--ink)}
+.genbar[aria-pressed="true"] .fill{background:var(--mm)}
+.genbar[aria-pressed="true"] .nm{color:var(--mm)}
+.genbar.beyond .nm{font-style:italic}
+.gen-detail{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:20px}
+.gen-head{display:flex;flex-wrap:wrap;gap:6px 28px;align-items:baseline;margin-bottom:6px}
+.gen-head .big{font-family:var(--display);font-size:56px;font-weight:700;line-height:1}
+.facts{display:flex;flex-wrap:wrap;gap:4px 24px;font-size:16px;color:var(--muted);margin:6px 0 10px}
+.facts b{color:var(--ink);font-weight:600}
+.equation{font-family:var(--display);font-size:22px;margin-top:6px}
+
+/* tables */
+.tbl{overflow-x:auto;margin:20px 0}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:16px;background:var(--surface)}
+th,td{text-align:left;vertical-align:top;padding:12px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--display);font-weight:600;font-size:19px;background:var(--soft)}
+td:first-child{font-weight:600}
+.swatch{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+
+/* picker */
+.picker{display:grid;grid-template-columns:320px 1fr;gap:24px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:22px}
+@media (max-width:820px){.picker{grid-template-columns:1fr}}
+fieldset{border:0;padding:0;margin:0 0 18px}
+legend{font-family:var(--display);font-size:20px;font-weight:600;margin-bottom:6px;padding:0}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;inset:0;margin:0}
+.seg span{display:inline-block;padding:7px 12px;border:1px solid var(--line);border-radius:4px;font-size:15px;cursor:pointer;background:var(--bg)}
+.seg input:checked+span{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.seg input:focus-visible+span{outline:3px solid var(--aoc);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--mm)}
+.dist-read{font-family:var(--display);font-size:34px;font-weight:700}
+.result h3{margin-top:0}
+.meters{display:grid;grid-template-columns:70px 1fr;gap:6px 10px;font-size:14px;color:var(--muted);margin:12px 0;max-width:340px;align-items:center}
+.meter{height:8px;background:var(--soft);border-radius:4px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ink)}
+
+/* steps */
+ol.steps{list-style:none;counter-reset:s;padding:0;margin:24px 0;display:grid;gap:0}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:56px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+ol.steps li::before{content:counter(s);font-family:var(--display);font-size:40px;font-weight:700;line-height:1;color:var(--mm)}
+ol.steps b{font-family:var(--display);font-size:22px;font-weight:600;display:block}
+
+details{border-bottom:1px solid var(--line);padding:12px 0}
+summary{cursor:pointer;font-weight:600;font-size:18px}
+details p{margin:10px 0 0;color:var(--ink)}
+
+.apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:28px;margin-top:20px}
+.apps h3{margin-top:6px}
+.caution{border-left:4px solid var(--sm);padding:6px 0 6px 18px;margin:20px 0}
+footer{padding:40px 0 60px;border-top:1px solid var(--line);font-size:15px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <h1>InfiniBand cables, explained</h1>
+      <p class="lede" style="margin-top:18px">A visual walkthrough of a 2025 buyer's guide: how InfiniBand speeds are built from lanes, which plug each generation uses, and how far each kind of cable can reach.</p>
+      <p class="source">Explaining: <a href="https://network-switch.com/blogs/networking/infiniband-cables-types-speeds-connectors">“Understanding InfiniBand Cables: Types, Speeds, Connectors, and Best Practices”</a> by network-switch.com. All text here is a paraphrased summary; diagrams are illustrative, not to scale unless noted.</p>
+    </div>
+    <!-- Hero: the core idea, four lanes converging into one plug -->
+    <svg viewBox="0 0 440 260" role="img" aria-labelledby="heroT">
+      <title id="heroT">Four signal lanes merging into a single QSFP-style plug, producing one 4x link</title>
+      <g fill="none" stroke-width="6" stroke-linecap="round">
+        <path d="M10 40 C120 40 160 104 240 104" stroke="var(--mm)"/>
+        <path d="M10 100 C120 100 160 122 240 122" stroke="var(--mm)"/>
+        <path d="M10 160 C120 160 160 140 240 140" stroke="var(--mm)"/>
+        <path d="M10 220 C120 220 160 158 240 158" stroke="var(--mm)"/>
+      </g>
+      <g fill="none" stroke-width="6" stroke-linecap="round" stroke="var(--surface)" class="lane-pulse">
+        <path d="M10 40 C120 40 160 104 240 104"/>
+        <path d="M10 100 C120 100 160 122 240 122"/>
+        <path d="M10 160 C120 160 160 140 240 140"/>
+        <path d="M10 220 C120 220 160 158 240 158"/>
+      </g>
+      <rect x="236" y="84" width="150" height="92" rx="6" fill="var(--ink)"/>
+      <rect x="386" y="98" width="44" height="64" rx="3" fill="var(--muted)"/>
+      <text x="311" y="124" text-anchor="middle" fill="var(--surface)" font-size="20" font-weight="600">4 lanes</text>
+      <text x="311" y="150" text-anchor="middle" fill="var(--surface)" font-size="15">one 4x port</text>
+      <text x="14" y="30" class="svg-muted" font-size="14">lane 1</text>
+      <text x="14" y="90" class="svg-muted" font-size="14">lane 2</text>
+      <text x="14" y="150" class="svg-muted" font-size="14">lane 3</text>
+      <text x="14" y="210" class="svg-muted" font-size="14">lane 4</text>
+    </svg>
+  </div>
+  <div class="wrap">
+    <div class="takeaways">
+      <div><strong>Speed = lane rate × 4</strong><span>Each generation roughly doubles the per-lane rate; nearly every modern port bundles four lanes.</span></div>
+      <div><strong>Plug depends on generation</strong><span>HDR uses QSFP56. NDR uses OSFP on switches and OSFP or QSFP112 on adapters. They don't interchange.</span></div>
+      <div><strong>Distance picks the cable</strong><span>Copper inside a rack, active optical cables across a row, transceivers and fiber beyond that.</span></div>
+      <div><strong>Verify exact part numbers</strong><span>Shape alone proves nothing; check the cable against the switch and adapter support lists.</span></div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section id="what">
+  <div class="wrap">
+    <h2>What InfiniBand is for</h2>
+    <div class="prose">
+      <p>InfiniBand (IB) is a networking fabric built for one job: moving data between computers with as little delay as possible. Ethernet has caught up on raw bandwidth, but for workloads where microseconds matter, such as supercomputing, AI training, high-frequency trading and large analytics clusters, the article explains that IB is still often the default choice.</p>
+      <p>Its main trick is <b>RDMA</b> (remote direct memory access): the network adapter reads and writes another machine's memory directly, so the data skips the operating system's networking stack and doesn't keep the CPU busy.</p>
+    </div>
+
+    <figure class="figure">
+      <svg viewBox="0 0 960 300" role="img" aria-labelledby="rdmaT" style="min-width:640px">
+        <title id="rdmaT">Conventional networking passes data through the kernel on both hosts; RDMA goes straight from application memory to the adapter and across the link</title>
+        <defs>
+          <marker id="arIB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--mm)"/></marker>
+          <marker id="arGr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker>
+        </defs>
+        <!-- Host A -->
+        <text x="40" y="26" class="svg-ink" font-size="18" font-weight="600">Server A</text>
+        <rect x="30" y="38" width="260" height="62" rx="4" class="svg-soft"/><text x="160" y="75" text-anchor="middle" class="svg-ink" font-size="16">Application memory</text>
+        <rect x="30" y="118" width="260" height="62" rx="4" class="svg-soft"/><text x="160" y="155" text-anchor="middle" class="svg-muted" font-size="16">OS kernel / network stack</text>
+        <rect x="30" y="198" width="260" height="62" rx="4" fill="var(--ink)"/><text x="160" y="235" text-anchor="middle" fill="var(--surface)" font-size="16">IB adapter (HCA)</text>
+        <!-- Host B -->
+        <text x="680" y="26" class="svg-ink" font-size="18" font-weight="600">Server B</text>
+        <rect x="670" y="38" width="260" height="62" rx="4" class="svg-soft"/><text x="800" y="75" text-anchor="middle" class="svg-ink" font-size="16">Application memory</text>
+        <rect x="670" y="118" width="260" height="62" rx="4" class="svg-soft"/><text x="800" y="155" text-anchor="middle" class="svg-muted" font-size="16">OS kernel / network stack</text>
+        <rect x="670" y="198" width="260" height="62" rx="4" fill="var(--ink)"/><text x="800" y="235" text-anchor="middle" fill="var(--surface)" font-size="16">IB adapter (HCA)</text>
+        <!-- conventional path -->
+        <path d="M70 100 V118 M70 180 V198" stroke="var(--muted)" stroke-width="2.5" stroke-dasharray="5 5" fill="none" marker-end="url(#arGr)"/>
+        <path d="M890 198 V180 M890 118 V100" stroke="var(--muted)" stroke-width="2.5" stroke-dasharray="5 5" fill="none" marker-end="url(#arGr)"/>
+        <!-- RDMA path -->
+        <path d="M290 62 C350 62 350 214 294 216" stroke="var(--mm)" stroke-width="3.5" fill="none" marker-end="url(#arIB)"/>
+        <path d="M670 216 C610 214 610 62 666 62" stroke="var(--mm)" stroke-width="3.5" fill="none" marker-end="url(#arIB)"/>
+        <!-- wire -->
+        <line x1="290" y1="229" x2="670" y2="229" stroke="var(--mm)" stroke-width="5"/>
+        <text x="480" y="254" text-anchor="middle" class="svg-ink" font-size="15">InfiniBand link, lossless, credit-based flow control</text>
+        <text x="480" y="288" text-anchor="middle" class="svg-muted" font-size="14">Dashed grey: conventional path through the kernel.  Solid: RDMA bypasses the kernel and CPU copies.</text>
+      </svg>
+      <figcaption>RDMA is what gives InfiniBand its very low latency. The link itself never drops packets: a sender only transmits when the receiver has signalled free buffer space ("credits").</figcaption>
+    </figure>
+
+    <div class="prose">
+      <p>The article lists four design goals: very low latency through RDMA; the ability to grow modularly into huge fabrics of thousands of nodes; hardware support for <i>collective operations</i> (the "everyone share your results" steps that dominate AI and HPC jobs); and high link utilisation thanks to that lossless, credit-based flow control.</p>
+    </div>
+  </div>
+</section>
+
+<section id="speeds">
+  <div class="wrap">
+    <h2>Speed generations: lanes × lane rate</h2>
+    <div class="prose">
+      <p>InfiniBand speeds are quoted per lane, then multiplied by link width. Almost every deployment uses four lanes ("4x"), carried in a QSFP-family or OSFP plug. Pick a generation to see how its headline number is built.</p>
+    </div>
+
+    <div class="gen-layout" style="margin-top:20px">
+      <div class="genbars" id="genbars" aria-label="InfiniBand generations, bar length on a log scale"></div>
+      <div class="gen-detail" aria-live="polite">
+        <div class="gen-head">
+          <span class="big" id="gName">HDR</span>
+          <span class="big" id="gRate" style="color:var(--mm)">200 Gb/s</span>
+        </div>
+        <div class="facts" id="gFacts"></div>
+        <svg id="laneSvg" viewBox="0 0 620 230" role="img" aria-label="Four lanes with their signalling waveform"></svg>
+        <div class="equation" id="gEq"></div>
+        <p class="note" id="gNote" style="margin-top:8px"></p>
+      </div>
+    </div>
+
+    <h3>Why HDR and NDR switched to PAM4</h3>
+    <div class="prose"><p>Up to EDR, every lane used NRZ signalling: two voltage levels, one bit per symbol. HDR and NDR use PAM4: four levels, two bits per symbol. That doubles the data carried without doubling the symbol rate, at the cost of smaller gaps between levels, which makes the signal more fragile and is one reason copper reach shrinks at higher speeds.</p></div>
+    <figure class="figure">
+      <svg viewBox="0 0 900 215" role="img" aria-labelledby="pamT" style="min-width:600px">
+        <title id="pamT">NRZ waveform with two levels compared with a PAM4 waveform with four levels over the same eight symbol periods</title>
+        <g transform="translate(20,20)">
+          <text x="0" y="0" class="svg-ink" font-size="17" font-weight="600">NRZ: 2 levels, 1 bit per symbol</text>
+          <g class="svg-line" stroke-width="1"><line x1="0" y1="40" x2="400" y2="40"/><line x1="0" y1="140" x2="400" y2="140"/></g>
+          <path d="M0 140 H50 V40 H100 V140 H150 V40 H250 V140 H300 V40 H350 V140 H400" fill="none" stroke="var(--muted)" stroke-width="3"/>
+          <g class="svg-muted" font-size="13" text-anchor="middle">
+            <text x="25" y="165">0</text><text x="75" y="165">1</text><text x="125" y="165">0</text><text x="175" y="165">1</text><text x="225" y="165">1</text><text x="275" y="165">0</text><text x="325" y="165">1</text><text x="375" y="165">0</text>
+          </g>
+          <text x="200" y="185" text-anchor="middle" class="svg-muted" font-size="13">8 symbols = 8 bits</text>
+        </g>
+        <g transform="translate(480,20)">
+          <text x="0" y="0" class="svg-ink" font-size="17" font-weight="600">PAM4: 4 levels, 2 bits per symbol</text>
+          <g class="svg-line" stroke-width="1"><line x1="0" y1="40" x2="400" y2="40"/><line x1="0" y1="73" x2="400" y2="73"/><line x1="0" y1="107" x2="400" y2="107"/><line x1="0" y1="140" x2="400" y2="140"/></g>
+          <path d="M0 140 H50 V73 H100 V40 H150 V107 H200 V140 H250 V40 H300 V73 H350 V107 H400" fill="none" stroke="var(--mm)" stroke-width="3"/>
+          <g class="svg-muted" font-size="13" text-anchor="middle">
+            <text x="25" y="165">00</text><text x="75" y="165">10</text><text x="125" y="165">11</text><text x="175" y="165">01</text><text x="225" y="165">00</text><text x="275" y="165">11</text><text x="325" y="165">10</text><text x="375" y="165">01</text>
+          </g>
+          <text x="200" y="185" text-anchor="middle" class="svg-muted" font-size="13">8 symbols = 16 bits</text>
+        </g>
+      </svg>
+    </figure>
+  </div>
+</section>
+
+<section id="connectors">
+  <div class="wrap">
+    <h2>Connectors: what plugs into what</h2>
+    <div class="prose">
+      <p>The single most practical point in the article: before ordering anything, check which cage your switch and your adapter actually have. A cable built for one shell will not fit the other.</p>
+    </div>
+
+    <figure class="figure">
+      <svg viewBox="0 0 940 230" role="img" aria-labelledby="shellT" style="min-width:600px">
+        <title id="shellT">Front-view outlines of QSFP56, QSFP112 and OSFP plugs; OSFP is wider and taller with cooling fins</title>
+        <g transform="translate(40,40)">
+          <rect x="0" y="60" width="110" height="51" rx="5" fill="none" stroke="var(--mm)" stroke-width="3"/>
+          <rect x="16" y="76" width="78" height="19" rx="2" class="svg-soft"/>
+          <text x="55" y="140" text-anchor="middle" class="svg-ink" font-size="18" font-weight="600">QSFP56</text>
+          <text x="55" y="162" text-anchor="middle" class="svg-muted" font-size="14">HDR · 4 × 50G</text>
+          <text x="55" y="182" text-anchor="middle" class="svg-muted" font-size="14">≈18 mm wide</text>
+        </g>
+        <g transform="translate(250,40)">
+          <rect x="0" y="60" width="110" height="51" rx="5" fill="none" stroke="var(--aoc)" stroke-width="3"/>
+          <rect x="16" y="76" width="78" height="19" rx="2" class="svg-soft"/>
+          <text x="55" y="140" text-anchor="middle" class="svg-ink" font-size="18" font-weight="600">QSFP112</text>
+          <text x="55" y="162" text-anchor="middle" class="svg-muted" font-size="14">NDR adapters · 4 × 100G</text>
+          <text x="55" y="182" text-anchor="middle" class="svg-muted" font-size="14">same outline as QSFP56</text>
+        </g>
+        <g transform="translate(480,40)">
+          <g fill="var(--muted)">
+            <rect x="6" y="6" width="8" height="30"/><rect x="24" y="6" width="8" height="30"/><rect x="42" y="6" width="8" height="30"/><rect x="60" y="6" width="8" height="30"/><rect x="78" y="6" width="8" height="30"/><rect x="96" y="6" width="8" height="30"/><rect x="114" y="6" width="8" height="30"/>
+          </g>
+          <rect x="0" y="36" width="135" height="75" rx="5" fill="none" stroke="var(--copper)" stroke-width="3"/>
+          <rect x="14" y="62" width="107" height="22" rx="2" class="svg-soft"/>
+          <text x="68" y="140" text-anchor="middle" class="svg-ink" font-size="18" font-weight="600">OSFP (finned)</text>
+          <text x="68" y="162" text-anchor="middle" class="svg-muted" font-size="14">NDR switches · twin-port</text>
+          <text x="68" y="182" text-anchor="middle" class="svg-muted" font-size="14">≈23 mm wide, taller</text>
+        </g>
+        <text x="700" y="96" class="svg-ink" font-size="16" font-weight="600">Not cross-compatible</text>
+        <text x="700" y="120" class="svg-muted" font-size="14">An OSFP cable won't seat in</text>
+        <text x="700" y="140" class="svg-muted" font-size="14">a QSFP cage, or vice versa.</text>
+        <text x="700" y="164" class="svg-muted" font-size="14">Use OSFP↔QSFP112 harnesses</text>
+        <text x="700" y="184" class="svg-muted" font-size="14">when the ends differ.</text>
+      </svg>
+      <figcaption>Front-view outlines, roughly to relative scale. Fins on OSFP help shed the extra heat of 400G-class optics.</figcaption>
+    </figure>
+
+    <figure class="figure">
+      <svg viewBox="0 0 960 404" role="img" aria-labelledby="mapT" style="min-width:680px">
+        <title id="mapT">HDR: switch QSFP56 to ConnectX-6 or BlueField-2 QSFP56. NDR: Quantum-2 twin-port OSFP to ConnectX-7 OSFP or QSFP112, or BlueField-3 QSFP112, with optional 2 by 200G breakout</title>
+        <!-- HDR row -->
+        <text x="20" y="34" class="svg-ink" font-size="22" font-weight="700" style="font-family:var(--display)">HDR · 200G</text>
+        <rect x="20" y="50" width="220" height="64" rx="4" fill="var(--ink)"/>
+        <text x="130" y="78" text-anchor="middle" fill="var(--surface)" font-size="16" font-weight="600">HDR switch</text>
+        <text x="130" y="100" text-anchor="middle" fill="var(--surface)" font-size="14">QSFP56 ports</text>
+        <line x1="240" y1="82" x2="700" y2="82" stroke="var(--mm)" stroke-width="5"/>
+        <text x="470" y="72" text-anchor="middle" class="svg-muted" font-size="14">QSFP56 ↔ QSFP56 (DAC, AOC or optics)</text>
+        <rect x="700" y="50" width="240" height="64" rx="4" class="svg-soft" stroke="var(--line)"/>
+        <text x="820" y="78" text-anchor="middle" class="svg-ink" font-size="16" font-weight="600">ConnectX-6 / BlueField-2</text>
+        <text x="820" y="100" text-anchor="middle" class="svg-muted" font-size="14">QSFP56 (accepts QSFP28 too)</text>
+
+        <!-- NDR row -->
+        <text x="20" y="168" class="svg-ink" font-size="22" font-weight="700" style="font-family:var(--display)">NDR · 400G</text>
+        <rect x="20" y="184" width="220" height="140" rx="4" fill="var(--ink)"/>
+        <text x="130" y="214" text-anchor="middle" fill="var(--surface)" font-size="16" font-weight="600">Quantum-2 switch</text>
+        <text x="130" y="236" text-anchor="middle" fill="var(--surface)" font-size="14">twin-port OSFP cages</text>
+        <text x="130" y="256" text-anchor="middle" fill="var(--surface)" font-size="14">(2 × 400G per cage)</text>
+        <path d="M240 222 H700" stroke="var(--copper)" stroke-width="5" fill="none"/>
+        <path d="M240 270 C460 270 480 292 700 292" stroke="var(--aoc)" stroke-width="5" fill="none"/>
+        <path d="M240 300 C440 300 470 362 700 362" stroke="var(--aoc)" stroke-width="3" fill="none" stroke-dasharray="8 6"/>
+        <text x="470" y="212" text-anchor="middle" class="svg-muted" font-size="14">OSFP ↔ OSFP</text>
+        <text x="470" y="266" text-anchor="middle" class="svg-muted" font-size="14">OSFP ↔ QSFP112 harness</text>
+        <text x="520" y="392" text-anchor="middle" class="svg-muted" font-size="14">dashed: optional 2 × 200G breakout from the same cage</text>
+        <rect x="700" y="196" width="240" height="52" rx="4" class="svg-soft" stroke="var(--line)"/>
+        <text x="820" y="219" text-anchor="middle" class="svg-ink" font-size="16" font-weight="600">ConnectX-7</text>
+        <text x="820" y="238" text-anchor="middle" class="svg-muted" font-size="14">OSFP version</text>
+        <rect x="700" y="264" width="240" height="56" rx="4" class="svg-soft" stroke="var(--line)"/>
+        <text x="820" y="288" text-anchor="middle" class="svg-ink" font-size="16" font-weight="600">ConnectX-7 / BlueField-3</text>
+        <text x="820" y="308" text-anchor="middle" class="svg-muted" font-size="14">QSFP112</text>
+        <rect x="700" y="340" width="240" height="44" rx="4" fill="none" stroke="var(--line)" stroke-dasharray="5 4"/>
+        <text x="820" y="367" text-anchor="middle" class="svg-muted" font-size="14">second 200G device</text>
+      </svg>
+      <figcaption>HDR is simple: QSFP56 at both ends. NDR mixes shells, so a switch-to-adapter link may need different plugs on each end.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="reach">
+  <div class="wrap">
+    <h2>Cable families and how far they reach</h2>
+    <div class="prose">
+      <p>The article sorts InfiniBand cabling into copper, active optical, and separate transceivers with fiber. The ruler below uses the article's typical reach figures on a logarithmic scale, with real-world distances underneath for orientation.</p>
+    </div>
+
+    <figure class="figure">
+      <svg viewBox="0 0 1000 330" role="img" aria-labelledby="reachT" style="min-width:720px">
+        <title id="reachT">Logarithmic reach chart: passive copper up to about 2.5 metres, active copper slightly further, active optical cables and multimode optics from 3 to 100 metres, single-mode optics up to 2 kilometres</title>
+        <!-- grid -->
+        <g class="svg-line" stroke-width="1">
+          <line x1="91" y1="20" x2="91" y2="240"/><line x1="160" y1="20" x2="160" y2="240"/><line x1="229" y1="20" x2="229" y2="240"/><line x1="321" y1="20" x2="321" y2="240"/><line x1="390" y1="20" x2="390" y2="240"/><line x1="459" y1="20" x2="459" y2="240"/><line x1="551" y1="20" x2="551" y2="240"/><line x1="620" y1="20" x2="620" y2="240"/><line x1="689" y1="20" x2="689" y2="240"/><line x1="781" y1="20" x2="781" y2="240"/><line x1="850" y1="20" x2="850" y2="240"/><line x1="920" y1="20" x2="920" y2="240"/>
+        </g>
+        <!-- bands -->
+        <rect x="40" y="30" width="212" height="28" rx="3" fill="var(--copper)"/>
+        <text x="262" y="50" class="svg-ink" font-size="15" font-weight="600">DAC passive copper · ≤ 2–2.5 m (HDR); shorter at NDR</text>
+        <rect x="229" y="72" width="92" height="28" rx="3" fill="var(--acc)" opacity=".75"/>
+        <text x="331" y="92" class="svg-ink" font-size="15" font-weight="600">ACC active copper · a little beyond DAC</text>
+        <rect x="270" y="114" width="350" height="28" rx="3" fill="var(--aoc)"/>
+        <text x="630" y="134" class="svg-ink" font-size="15" font-weight="600">AOC · 3–100 m</text>
+        <rect x="270" y="156" width="350" height="28" rx="3" fill="var(--mm)"/>
+        <rect x="551" y="156" width="69" height="28" rx="0" fill="var(--surface)" opacity=".45"/>
+        <text x="630" y="176" class="svg-ink" font-size="15" font-weight="600">Multimode optics · ~100 m</text>
+        <rect x="270" y="198" width="350" height="28" rx="3" fill="var(--sm)" opacity=".35"/>
+        <rect x="620" y="198" width="300" height="28" rx="3" fill="var(--sm)"/>
+        <text x="300" y="218" class="svg-ink" font-size="15" font-weight="600">Single-mode optics · up to ~2 km</text>
+        <!-- axis -->
+        <line x1="40" y1="240" x2="960" y2="240" stroke="var(--ink)" stroke-width="2"/>
+        <g class="svg-ink" font-size="13" text-anchor="middle">
+          <text x="91" y="258">0.5 m</text><text x="160" y="258">1</text><text x="229" y="258">2</text><text x="321" y="258">5</text><text x="390" y="258">10</text><text x="459" y="258">20</text><text x="551" y="258">50</text><text x="620" y="258">100</text><text x="689" y="258">200</text><text x="781" y="258">500</text><text x="850" y="258">1 km</text><text x="920" y="258">2 km</text>
+        </g>
+        <!-- context -->
+        <g class="svg-muted" font-size="13" text-anchor="middle">
+          <path d="M120 272 h120" stroke="var(--muted)" stroke-width="2"/><text x="180" y="292">inside one rack</text>
+          <path d="M280 272 h70" stroke="var(--muted)" stroke-width="2"/><text x="315" y="292">next rack</text>
+          <path d="M400 272 h180" stroke="var(--muted)" stroke-width="2"/><text x="490" y="292">across a row / pod</text>
+          <path d="M600 272 h120" stroke="var(--muted)" stroke-width="2"/><text x="660" y="292">data hall</text>
+          <path d="M780 272 h160" stroke="var(--muted)" stroke-width="2"/><text x="860" y="292">between buildings</text>
+        </g>
+        <text x="40" y="320" class="svg-muted" font-size="12">Faded segments: possible but not the family's sweet spot. NDR multimode transceivers are often specified nearer 50 m; check the datasheet.</text>
+      </svg>
+    </figure>
+
+    <div class="tbl">
+      <table>
+        <thead><tr><th style="width:190px">Family</th><th style="width:150px">What it looks like</th><th>Strengths</th><th>Trade-offs</th><th>Where it fits</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="swatch" style="background:var(--copper)"></span>DAC<br><span class="note">passive twinax copper</span></td>
+            <td><svg viewBox="0 0 140 40" width="140" aria-hidden="true"><rect x="2" y="10" width="26" height="20" rx="2" fill="var(--ink)"/><rect x="112" y="10" width="26" height="20" rx="2" fill="var(--ink)"/><line x1="28" y1="20" x2="112" y2="20" stroke="var(--copper)" stroke-width="9" stroke-linecap="round"/></svg></td>
+            <td>Cheapest option, lowest latency, draws no power</td><td>Very short; thick and stiff, with tight bend limits</td><td>Within a rack, or between neighbouring ports</td>
+          </tr>
+          <tr>
+            <td><span class="swatch" style="background:var(--acc)"></span>ACC<br><span class="note">active copper</span></td>
+            <td><svg viewBox="0 0 140 40" width="140" aria-hidden="true"><rect x="2" y="10" width="26" height="20" rx="2" fill="var(--ink)"/><rect x="112" y="10" width="26" height="20" rx="2" fill="var(--ink)"/><rect x="10" y="15" width="10" height="10" fill="var(--acc)"/><rect x="120" y="15" width="10" height="10" fill="var(--acc)"/><line x1="28" y1="20" x2="112" y2="20" stroke="var(--acc)" stroke-width="8" stroke-linecap="round"/></svg></td>
+            <td>Small chips in the plugs boost the signal, stretching copper a bit further</td><td>Pricier than DAC; a niche, platform-specific option</td><td>Links just too long for passive copper</td>
+          </tr>
+          <tr>
+            <td><span class="swatch" style="background:var(--aoc)"></span>AOC<br><span class="note">active optical cable</span></td>
+            <td><svg viewBox="0 0 140 40" width="140" aria-hidden="true"><rect x="2" y="10" width="26" height="20" rx="2" fill="var(--ink)"/><rect x="112" y="10" width="26" height="20" rx="2" fill="var(--ink)"/><circle cx="20" cy="20" r="4" fill="var(--aoc)"/><circle cx="120" cy="20" r="4" fill="var(--aoc)"/><path d="M28 20 C60 6 80 34 112 20" stroke="var(--aoc)" stroke-width="3.5" fill="none"/></svg></td>
+            <td>Thin, light and flexible; optics sealed in, so just plug in</td><td>Costs more and uses more power than DAC; fixed length</td><td>Rack-to-rack and dense GPU pods, where airflow and cable bulk matter</td>
+          </tr>
+          <tr>
+            <td><span class="swatch" style="background:var(--mm)"></span><span class="swatch" style="background:var(--sm)"></span>Transceivers + fiber<br><span class="note">multimode or single-mode</span></td>
+            <td><svg viewBox="0 0 140 40" width="140" aria-hidden="true"><rect x="2" y="10" width="30" height="20" rx="2" fill="var(--ink)"/><rect x="108" y="10" width="30" height="20" rx="2" fill="var(--ink)"/><rect x="36" y="14" width="8" height="12" fill="var(--muted)"/><rect x="96" y="14" width="8" height="12" fill="var(--muted)"/><line x1="44" y1="17" x2="96" y2="17" stroke="var(--mm)" stroke-width="3"/><line x1="44" y1="23" x2="96" y2="23" stroke="var(--sm)" stroke-width="3"/></svg></td>
+            <td>Longest reach; fiber can be swapped or run through structured cabling</td><td>Most expensive, more parts to manage and clean</td><td>Across rows, aggregation layers, buildings on a campus</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="picker">
+  <div class="wrap">
+    <h2>Try it: which cable for this link?</h2>
+    <div class="prose"><p>This applies the article's rules of thumb to a link you describe. It's a starting point, not a part number: the final pick must match your exact switch and adapter models.</p></div>
+
+    <div class="picker">
+      <form id="pickForm" onsubmit="return false">
+        <fieldset>
+          <legend>Generation</legend>
+          <div class="seg">
+            <label><input type="radio" name="gen" value="HDR" checked><span>HDR 200G</span></label>
+            <label><input type="radio" name="gen" value="NDR"><span>NDR 400G</span></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Link</legend>
+          <div class="seg">
+            <label><input type="radio" name="link" value="sw" checked><span>Switch ↔ switch</span></label>
+            <label><input type="radio" name="link" value="nic"><span>Switch ↔ adapter</span></label>
+            <label><input type="radio" name="link" value="split"><span>Breakout</span></label>
+          </div>
+        </fieldset>
+        <fieldset id="nicSet" hidden>
+          <legend>Adapter cage (NDR)</legend>
+          <div class="seg">
+            <label><input type="radio" name="nic" value="OSFP" checked><span>OSFP</span></label>
+            <label><input type="radio" name="nic" value="QSFP112"><span>QSFP112</span></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend><label for="dist">Distance</label></legend>
+          <div class="dist-read" id="distRead">2.0 m</div>
+          <input type="range" id="dist" min="0" max="1000" value="200" aria-describedby="distRead">
+          <div class="note" style="display:flex;justify-content:space-between"><span>0.5 m</span><span>3 km</span></div>
+        </fieldset>
+      </form>
+      <div class="result" aria-live="polite">
+        <h3 id="rTitle"></h3>
+        <svg id="rSvg" viewBox="0 0 560 170" role="img" aria-label="Diagram of the suggested link"></svg>
+        <p id="rText"></p>
+        <div class="meters" id="rMeters"></div>
+        <p class="note" id="rNote"></p>
+      </div>
+    </div>
+
+    <h3>The article's five-step checklist</h3>
+    <ol class="steps">
+      <li><div><b>Match the generation</b>HDR means QSFP56. NDR means OSFP on the switch and OSFP or QSFP112 on the adapter or DPU.</div></li>
+      <li><div><b>Measure the distance</b>Up to about 2 m: DAC. 3–100 m: AOC. 100 m to 2 km: multimode or single-mode optics.</div></li>
+      <li><div><b>Confirm the form factor</b>OSFP or QSFP, and order exact vendor part numbers (for example NVIDIA LinkX parts) rather than "anything 400G".</div></li>
+      <li><div><b>Check the environment</b>Bend radius in crowded racks, shielding where there's electrical noise, and airflow in GPU-dense clusters.</div></li>
+      <li><div><b>Balance budget and power</b>DAC is cheapest, AOC sits in the middle, optics cost the most but go furthest.</div></li>
+    </ol>
+  </div>
+</section>
+
+<section id="hdr-ndr">
+  <div class="wrap">
+    <h2>HDR vs NDR at a glance</h2>
+    <div class="tbl">
+      <table>
+        <thead><tr><th style="width:180px"></th><th>HDR (200G)</th><th>NDR (400G)</th></tr></thead>
+        <tbody>
+          <tr><td>Per-lane signal</td>
+            <td><svg viewBox="0 0 200 50" width="200" aria-label="4 lanes of 50G"><g fill="var(--mm)"><rect x="0" y="2" width="70" height="9"/><rect x="0" y="14" width="70" height="9"/><rect x="0" y="26" width="70" height="9"/><rect x="0" y="38" width="70" height="9"/></g><text x="80" y="30" class="svg-ink" font-size="14">4 × 50G PAM4</text></svg></td>
+            <td><svg viewBox="0 0 220 50" width="220" aria-label="4 lanes of 100G"><g fill="var(--mm)"><rect x="0" y="2" width="140" height="9"/><rect x="0" y="14" width="140" height="9"/><rect x="0" y="26" width="140" height="9"/><rect x="0" y="38" width="140" height="9"/></g><text x="148" y="30" class="svg-ink" font-size="14">4 × 100G</text></svg></td></tr>
+          <tr><td>Connectors</td><td>QSFP56 everywhere</td><td>OSFP on switches; QSFP112 (or OSFP) on adapters and DPUs</td></tr>
+          <tr><td>Cable options</td><td>Broad choice: DAC, AOC, multimode and single-mode optics</td><td>Mostly OSFP AOCs and optics; QSFP112 DAC/AOC for adapters</td></tr>
+          <tr><td>Power and cooling</td><td>Moderate</td><td>OSFP cages draw more power and need more careful airflow planning</td></tr>
+          <tr><td>Breakouts</td><td>—</td><td>Some OSFP ports can split into 2 × 200G for HDR-speed endpoints</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="vs-ethernet">
+  <div class="wrap">
+    <h2>InfiniBand vs Ethernet</h2>
+    <div class="prose"><p>Both now ship at 200, 400 and 800G, so the article argues bandwidth isn't what separates them. The difference is in latency, determinism and how the fabric is managed.</p></div>
+    <div class="tbl">
+      <table>
+        <thead><tr><th style="width:180px"></th><th>InfiniBand</th><th>Ethernet (incl. RoCEv2)</th></tr></thead>
+        <tbody>
+          <tr><td>Throughput</td><td>200 / 400 / 800G</td><td>200 / 400 / 800G</td></tr>
+          <tr><td>Latency</td><td>Sub-microsecond fabric latency</td><td>More protocol-stack overhead, even with RDMA over Converged Ethernet</td></tr>
+          <tr><td>RDMA and collectives</td><td>Native lossless RDMA; collective operations offloaded in hardware</td><td>Needs extra QoS and lossless tuning to behave well for RDMA</td></tr>
+          <tr><td>Fabric management</td><td>Built-in subnet manager configures the fabric</td><td>Relies on external SDN and automation tooling</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose"><b>Article's verdict:</b> Ethernet for general-purpose networking; InfiniBand where latency, predictability and scaling of collective operations matter most. Worth noting that this is contested ground, and large AI operators run both successfully.</p>
+  </div>
+</section>
+
+<section id="uses">
+  <div class="wrap">
+    <h2>Where these cables end up</h2>
+    <div class="apps">
+      <div><h3>HPC clusters</h3><p>The interconnect behind climate models, molecular dynamics and genomics, where both bandwidth and predictable latency are required.</p></div>
+      <div><h3>AI training and inference</h3><p>GPU-to-GPU and GPU-to-storage fabrics inside training pods. Hardware collectives speed up deep-learning frameworks, and 400G NDR cabling is quickly becoming standard in AI "superpods".</p></div>
+      <div><h3>Data centers</h3><p>Storage back-ends such as NVMe over Fabrics, low-latency east-west traffic, and redundant fabrics for resilience.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap prose">
+    <h2>FAQ, paraphrased</h2>
+    <details><summary>What does "4X" mean?</summary><p>Four lanes in one link. The actual payload rate then depends on the generation, encoding and implementation.</p></details>
+    <details><summary>Is there a standard reach for each cable type?</summary><p>No universal one. Reach depends on the exact part, generation, connector, copper gauge or fiber type, transceiver, temperature and the host's support list.</p></details>
+    <details><summary>Which connectors do HDR and NDR use?</summary><p>QSFP56 for HDR. NDR can use finned or flat-top OSFP, QSFP112, twin-port and breakout variants. A matching shell doesn't guarantee matching lanes, speed, cooling or compatibility.</p></details>
+    <details><summary>Can one cable serve both InfiniBand and Ethernet?</summary><p>Some specific NVIDIA cables and ports support both modes, others don't. You have to confirm the exact cable, switch, adapter, firmware and port mode.</p></details>
+    <details><summary>Is active copper actually used?</summary><p>Yes. Active and linear active copper exist for certain generations and lengths, but support is part-specific, so compare power, reach, latency, bend radius, airflow and cost.</p></details>
+  </div>
+</section>
+
+<section id="read-critically">
+  <div class="wrap prose">
+    <h2>Reading it critically</h2>
+    <p>The article is published by a cable and optics reseller and closes with a sales pitch, so treat its reach and cost figures as rules of thumb rather than independent test results. It says as much itself: every figure depends on the exact part numbers, standards, cable construction and environment.</p>
+    <div class="caution">
+      <p style="margin:0">For real deployments, the authoritative references are the vendor's own validated-cable lists. The article points to NVIDIA's <a href="https://docs.nvidia.com/dgx-superpod/design-guide-cabling-data-centers/latest/infiniband-overview.html">InfiniBand cabling overview</a> and <a href="https://docs.nvidia.com/dgx-superpod/design-guide-cabling-data-centers/latest/ndr-overview.html">NDR cabling guide</a>.</p>
+    </div>
+    <p>Also not covered in the article: the generation after NDR, XDR, moves to roughly 200G per lane for 800G ports. It's shown in italics in the speed explorer above for context.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">Summary and diagrams prepared from the network-switch.com article on InfiniBand cables (accessed October 2026). Text is paraphrased; figures are the article's unless marked otherwise.</div>
+</footer>
+
+<script>
+(function(){
+  /* ---------- Generation explorer ---------- */
+  var gens=[
+    {n:'SDR',lane:2.5,laneTxt:'2.5 Gb/s',enc:'8b/10b',mod:'NRZ',rate:10,conn:'legacy connectors',note:'The original generation. 8b/10b coding spends 2 of every 10 bits on overhead, so usable data is about 8 Gb/s.'},
+    {n:'DDR',lane:5,laneTxt:'5 Gb/s',enc:'8b/10b',mod:'NRZ',rate:20,conn:'legacy connectors',note:'Double the lane rate of SDR, same 8b/10b coding.'},
+    {n:'QDR',lane:10,laneTxt:'10 Gb/s',enc:'8b/10b',mod:'NRZ',rate:40,conn:'QSFP',note:'First generation commonly carried in the QSFP plug family.'},
+    {n:'FDR10',lane:10.3125,laneTxt:'~10.3 Gb/s',enc:'64b/66b',mod:'NRZ',rate:40,conn:'QSFP+',note:'Same headline as QDR, but the leaner 64b/66b coding wastes far less bandwidth on overhead.'},
+    {n:'FDR',lane:14.0625,laneTxt:'14.06 Gb/s',enc:'64b/66b',mod:'NRZ',rate:56,conn:'QSFP+',note:'Faster lanes with efficient 64b/66b coding.'},
+    {n:'EDR',lane:25.78125,laneTxt:'25.78 Gb/s',enc:'64b/66b',mod:'NRZ',rate:100,conn:'QSFP28',note:'The 100G generation and the last to use two-level NRZ signalling.'},
+    {n:'HDR',lane:53.125,laneTxt:'53.125 Gb/s',enc:'with FEC',mod:'PAM4',rate:200,conn:'QSFP56',note:'Lane rate doubled to about 50G by switching to four-level PAM4 signalling.'},
+    {n:'NDR',lane:106.25,laneTxt:'106.25 Gb/s',enc:'with FEC',mod:'PAM4',rate:400,conn:'OSFP (switches), QSFP112 (adapters/DPUs)',note:'Doubles again to about 100G PAM4 per lane. Switches use twin-port OSFP cages carrying two 400G ports each.'},
+    {n:'XDR',lane:200,laneTxt:'~200 Gb/s',enc:'with FEC',mod:'PAM4',rate:800,conn:'OSFP',note:'Not covered in the article; included for context as the generation after NDR.',beyond:true}
+  ];
+  var barsEl=document.getElementById('genbars');
+  var minL=Math.log10(8), maxL=Math.log10(800);
+  gens.forEach(function(g,i){
+    var b=document.createElement('button');
+    b.type='button'; b.className='genbar'+(g.beyond?' beyond':'');
+    b.setAttribute('aria-pressed','false');
+    var pct=8+92*(Math.log10(g.rate)-minL)/(maxL-minL);
+    b.innerHTML='<span class="nm">'+g.n+'</span><span class="track"><span class="fill" style="width:'+pct.toFixed(1)+'%"></span><span class="val">'+g.rate+'G</span></span>';
+    b.setAttribute('aria-label',g.n+', '+g.rate+' gigabits per second'+(g.beyond?', beyond the article':''));
+    b.addEventListener('click',function(){selectGen(i)});
+    barsEl.appendChild(b);
+  });
+
+  var NS='http://www.w3.org/2000/svg';
+  function wavePath(mod,x0,w,yMid,amp,seed){
+    var levels=mod==='PAM4'?[-1,-1/3,1/3,1]:[-1,1];
+    var n=mod==='PAM4'?16:10, step=w/n, d='', s=seed;
+    for(var k=0;k<n;k++){
+      s=(s*9301+49297)%233280;
+      var lv=levels[Math.floor(s/233280*levels.length)];
+      var y=yMid-lv*amp, x=x0+k*step;
+      d+=(k===0?'M'+x+' '+y:' V'+y)+' H'+(x+step);
+    }
+    return d;
+  }
+  function drawLanes(g){
+    var svg=document.getElementById('laneSvg'); svg.innerHTML='';
+    var col=g.mod==='PAM4'?'var(--mm)':'var(--muted)';
+    var dur=Math.max(0.35,2.4-Math.log10(g.lane)*0.95);
+    for(var i=0;i<4;i++){
+      var y=30+i*48;
+      var t=document.createElementNS(NS,'text');
+      t.setAttribute('x',0);t.setAttribute('y',y+5);t.setAttribute('font-size','14');t.setAttribute('class','svg-muted');
+      t.textContent='Lane '+(i+1); svg.appendChild(t);
+      var p=document.createElementNS(NS,'path');
+      p.setAttribute('d',wavePath(g.mod,60,400,y,14,(i+1)*977+g.rate));
+      p.setAttribute('fill','none');p.setAttribute('stroke',col);p.setAttribute('stroke-width','2.5');
+      svg.appendChild(p);
+      var lt=document.createElementNS(NS,'text');
+      lt.setAttribute('x',474);lt.setAttribute('y',y+5);lt.setAttribute('font-size','15');lt.setAttribute('class','svg-ink');
+      lt.textContent=g.laneTxt; svg.appendChild(lt);
+      var dot=document.createElementNS(NS,'circle');
+      dot.setAttribute('r','4');dot.setAttribute('cy',y);dot.setAttribute('fill','var(--ink)');
+      var an=document.createElementNS(NS,'animate');
+      an.setAttribute('attributeName','cx');an.setAttribute('from','60');an.setAttribute('to','460');
+      an.setAttribute('dur',dur.toFixed(2)+'s');an.setAttribute('repeatCount','indefinite');an.setAttribute('begin',(i*0.13).toFixed(2)+'s');
+      if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){dot.appendChild(an);} else {dot.setAttribute('cx','460');}
+      svg.appendChild(dot);
+    }
+    var br=document.createElementNS(NS,'path');
+    br.setAttribute('d','M590 14 h10 v180 h-10');br.setAttribute('fill','none');br.setAttribute('stroke','var(--ink)');br.setAttribute('stroke-width','2');
+    svg.appendChild(br);
+    var lab=document.createElementNS(NS,'text');
+    lab.setAttribute('x',300);lab.setAttribute('y',222);lab.setAttribute('text-anchor','middle');lab.setAttribute('font-size','13');lab.setAttribute('class','svg-muted');
+    lab.textContent=g.mod==='PAM4'?'PAM4 waveform: four levels per symbol':'NRZ waveform: two levels per symbol';
+    svg.appendChild(lab);
+  }
+  function selectGen(i){
+    var g=gens[i];
+    Array.prototype.forEach.call(barsEl.children,function(b,j){b.setAttribute('aria-pressed',j===i?'true':'false')});
+    document.getElementById('gName').textContent=g.n;
+    document.getElementById('gRate').textContent=g.rate+' Gb/s';
+    document.getElementById('gFacts').innerHTML='<span>Signalling <b>'+g.mod+'</b></span><span>Encoding <b>'+g.enc+'</b></span><span>Connector <b>'+g.conn+'</b></span>';
+    document.getElementById('gEq').textContent='4 lanes × '+g.laneTxt+' ≈ '+g.rate+' Gb/s link';
+    document.getElementById('gNote').textContent=g.note;
+    drawLanes(g);
+  }
+  selectGen(6);
+
+  /* ---------- Cable picker ---------- */
+  var fams={
+    dac:{name:'Passive copper DAC',col:'var(--copper)',cost:1,power:0,w:9,why:'At this length passive twinax copper is the cheapest option with the lowest latency, and it needs no power.'},
+    acc:{name:'Active copper (ACC) or a short AOC',col:'var(--acc)',cost:2,power:1,w:8,why:'Just past passive copper\u2019s limit. Active copper stretches a little further; a short AOC is the common alternative.'},
+    aoc:{name:'Active optical cable (AOC)',col:'var(--aoc)',cost:3,power:2,w:4,why:'The article\u2019s pick for rack-to-rack and row-scale links: thin, light, easy on airflow, and plug-and-play.'},
+    sm:{name:'Single-mode transceivers + fiber',col:'var(--sm)',cost:4,power:3,w:3,why:'Beyond 100 m you need separate optical modules and single-mode fiber, good to roughly 2 km.'},
+    none:{name:'Beyond this guide\u2019s range',col:'var(--bad)',cost:0,power:0,w:2,why:'The article covers links up to about 2 km. Longer runs need dedicated long-haul or inter-site solutions.'}
+  };
+  function famFor(gen,d){
+    var dacMax=gen==='HDR'?2.5:1.5;
+    if(d<=dacMax) return 'dac';
+    if(d<3) return 'acc';
+    if(d<=100) return 'aoc';
+    if(d<=2000) return 'sm';
+    return 'none';
+  }
+  function val(name){return document.querySelector('input[name="'+name+'"]:checked').value}
+  function dist(){var v=+document.getElementById('dist').value;return 0.5*Math.pow(6000,v/1000)}
+  function fmt(d){return d<10?d.toFixed(1)+' m':d<1000?Math.round(d)+' m':(d/1000).toFixed(2)+' km'}
+  function box(svg,x,y,w,h,title,sub,dark){
+    var r=document.createElementNS(NS,'rect');
+    r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);r.setAttribute('rx',4);
+    r.setAttribute('fill',dark?'var(--ink)':'var(--soft)'); if(!dark) r.setAttribute('stroke','var(--line)');
+    svg.appendChild(r);
+    [[title,16,600,y+h/2-2],[sub,13,400,y+h/2+16]].forEach(function(a){
+      var t=document.createElementNS(NS,'text');
+      t.setAttribute('x',x+w/2);t.setAttribute('y',a[3]);t.setAttribute('text-anchor','middle');t.setAttribute('font-size',a[1]);t.setAttribute('font-weight',a[2]);
+      t.setAttribute('fill',dark?'var(--surface)':'var(--ink)'); t.textContent=a[0]; svg.appendChild(t);
+    });
+  }
+  function line(svg,d,col,w,dash){
+    var p=document.createElementNS(NS,'path');p.setAttribute('d',d);p.setAttribute('fill','none');p.setAttribute('stroke',col);p.setAttribute('stroke-width',w);
+    if(dash)p.setAttribute('stroke-dasharray',dash); svg.appendChild(p);
+  }
+  function update(){
+    var gen=val('gen'),link=val('link'),nic=val('nic'),d=dist();
+    document.getElementById('nicSet').hidden=!(gen==='NDR'&&link==='nic');
+    document.getElementById('distRead').textContent=fmt(d);
+    var f=famFor(gen,d),F=fams[f];
+    var left,right,right2,notes=[];
+    if(gen==='HDR'){
+      left=['HDR switch','QSFP56'];
+      if(link==='sw'){right=['HDR switch','QSFP56']}
+      else if(link==='nic'){right=['ConnectX-6 / BlueField-2','QSFP56']}
+      else {right=['Adapter A','QSFP56 @ 100G'];right2=['Adapter B','QSFP56 @ 100G'];notes.push('HDR ports can split into two 100G (HDR100) links. This split isn\u2019t covered in the article.')}
+    } else {
+      left=['Quantum-2 switch','twin-port OSFP'];
+      if(link==='sw'){right=['Quantum-2 switch','twin-port OSFP']}
+      else if(link==='nic'){right=[nic==='OSFP'?'ConnectX-7':'ConnectX-7 / BlueField-3',nic];if(nic==='QSFP112')notes.push('Mixed ends: you need an OSFP-to-QSFP112 cable or harness, not two of the same.')}
+      else {right=['Endpoint A','200G'];right2=['Endpoint B','200G'];notes.push('Per the article, some NDR OSFP ports support a 2 \u00d7 200G breakout for HDR-speed devices.')}
+    }
+    if(gen==='NDR'&&f==='aoc'&&d>50) notes.push('If you use separate multimode optics instead of an AOC, NDR modules are often rated around 50 m.');
+    if(f==='aoc') notes.push('Alternative: multimode transceivers with patch fiber, useful when links run through structured cabling.');
+    if(gen==='NDR'&&f==='dac') notes.push('NDR copper is very short; confirm the maximum length for the exact part.');
+    notes.push('Final check: order exact part numbers from the switch and adapter vendor\u2019s validated-cable list.');
+
+    var svg=document.getElementById('rSvg'); svg.innerHTML='';
+    box(svg,0,50,170,64,left[0],left[1],true);
+    var mid=(gen==='HDR'?'QSFP56':'OSFP')+' end';
+    if(right2){
+      box(svg,390,6,170,58,right[0],right[1],false);
+      box(svg,390,106,170,58,right2[0],right2[1],false);
+      line(svg,'M170 82 H260',F.col,F.w);
+      line(svg,'M260 82 C320 82 320 35 390 35',F.col,Math.max(3,F.w-2));
+      line(svg,'M260 82 C320 82 320 135 390 135',F.col,Math.max(3,F.w-2));
+    } else {
+      box(svg,390,50,170,64,right[0],right[1],false);
+      line(svg,'M170 82 H390',F.col,F.w,f==='none'?'8 6':null);
+    }
+    var t=document.createElementNS(NS,'text');
+    t.setAttribute('x',right2?215:280);t.setAttribute('y',right2?66:70);t.setAttribute('text-anchor','middle');t.setAttribute('font-size','14');t.setAttribute('class','svg-ink');t.setAttribute('font-weight','600');
+    t.textContent=fmt(d); svg.appendChild(t);
+
+    document.getElementById('rTitle').textContent=F.name;
+    document.getElementById('rText').textContent=F.why;
+    var m=document.getElementById('rMeters');
+    if(f==='none'){m.innerHTML=''} else {
+      m.innerHTML='<span>Cost</span><span class="meter"><i style="width:'+(F.cost*25)+'%;background:'+F.col+'"></i></span><span>Power</span><span class="meter"><i style="width:'+(F.power===0?4:F.power*33)+'%;background:'+F.col+'"></i></span>';
+    }
+    document.getElementById('rNote').innerHTML=notes.map(function(n){return '<span style="display:block;margin-bottom:6px">'+n+'</span>'}).join('');
+  }
+  document.getElementById('pickForm').addEventListener('input',update);
+  document.getElementById('pickForm').addEventListener('change',update);
+  update();
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

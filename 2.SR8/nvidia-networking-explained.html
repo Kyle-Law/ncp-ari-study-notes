@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NVIDIA Networking, explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF0F3; --panel:#FFFFFF; --ink:#15212C; --muted:#5E6B78; --rule:#C9D1D9;
+  --signal:#2457C5; --fiber:#C97A10; --ib:#7A4DB8; --nvlink:#23826A; --dpu:#B93A52;
+  --soft:#E1E6EB;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#10161D; --panel:#18212B; --ink:#E6ECF2; --muted:#93A1AE; --rule:#2C3946;
+    --signal:#6E9BFF; --fiber:#F0B04A; --ib:#B48CF0; --nvlink:#4FC3A1; --dpu:#F07A8F; --soft:#222D39;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10161D; --panel:#18212B; --ink:#E6ECF2; --muted:#93A1AE; --rule:#2C3946;
+  --signal:#6E9BFF; --fiber:#F0B04A; --ib:#B48CF0; --nvlink:#4FC3A1; --dpu:#F07A8F; --soft:#222D39;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+p{max-width:68ch}
+.prose{font-family:"Newsreader",Georgia,"Times New Roman",serif;font-size:19px;line-height:1.65}
+a{color:var(--signal)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--fiber);outline-offset:3px}
+h1,h2,h3{font-variation-settings:"wdth" 70;line-height:1.02;margin:0}
+h1{font-size:clamp(48px,9vw,112px);font-weight:850;letter-spacing:-.01em}
+h2{font-size:clamp(32px,5vw,52px);font-weight:800;margin-bottom:14px}
+h3{font-size:24px;font-weight:750;font-variation-settings:"wdth" 85}
+section{padding:72px 0;border-top:1px solid var(--rule)}
+.muted{color:var(--muted)}
+svg text{font-family:"Archivo",system-ui,sans-serif}
+
+/* header */
+header{padding:56px 0 40px}
+.src{font-size:15px;color:var(--muted);margin-bottom:28px}
+.src a{word-break:break-all}
+.lede{display:grid;grid-template-columns:1.2fr 1fr;gap:40px;margin-top:28px;align-items:start}
+.lede .tldr{border-left:4px solid var(--ink);padding-left:20px}
+.tldr strong{display:block;font-size:15px;color:var(--muted);font-weight:600;margin-bottom:4px}
+.pagemap{list-style:none;padding:0;margin:0;font-size:15px}
+.pagemap li{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--rule)}
+.pagemap b{min-width:100px;font-weight:700}
+
+/* scale explorer */
+.explorer{background:var(--panel);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.seg{display:flex;border-bottom:1px solid var(--rule);overflow-x:auto}
+.seg button{flex:1;min-width:150px;font:inherit;font-weight:700;background:none;border:0;border-right:1px solid var(--rule);
+  padding:16px 14px;color:var(--muted);cursor:pointer;text-align:left}
+.seg button:last-child{border-right:0}
+.seg button span{display:block;font-weight:400;font-size:14px}
+.seg button[aria-pressed="true"]{color:var(--ink);box-shadow:inset 0 -4px 0 var(--k,var(--signal))}
+.explorer-body{display:grid;grid-template-columns:1.6fr 1fr}
+.stage{padding:12px;border-right:1px solid var(--rule);min-width:0}
+.stage svg{width:100%;height:auto;display:block}
+.scene{transition:opacity .45s ease}
+.scene[hidden-scene]{opacity:0;pointer-events:none}
+.explain{padding:24px}
+.explain h3{margin-bottom:10px}
+.explain .tag{display:inline-block;font-size:14px;font-weight:600;padding:3px 10px;border-radius:999px;border:1.5px solid currentColor;margin:4px 6px 0 0}
+
+/* iteration */
+.legend{display:flex;gap:20px;flex-wrap:wrap;font-size:14px;color:var(--muted);margin:8px 0 0}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:2px;vertical-align:-2px;margin-right:6px}
+.figure{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:20px;margin-top:22px;overflow-x:auto}
+.figure svg{display:block;width:100%;height:auto;min-width:560px}
+
+/* stack */
+.stackgrid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:22px;align-items:start}
+.layers{display:flex;flex-direction:column;gap:6px}
+.layers button{font:inherit;text-align:left;cursor:pointer;border:1.5px solid var(--rule);background:var(--panel);color:var(--ink);
+  padding:14px 18px;border-radius:3px;display:flex;justify-content:space-between;gap:12px;align-items:center;
+  border-left:10px solid var(--c)}
+.layers button[aria-pressed="true"]{border-color:var(--c);background:var(--soft)}
+.layers small{color:var(--muted);font-size:14px}
+.layerinfo{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:24px;position:sticky;top:20px}
+.layerinfo ul{padding-left:18px;margin:12px 0 0}
+.layerinfo li{margin:6px 0}
+
+/* compare table */
+.tablewrap{overflow-x:auto;margin-top:22px}
+table{border-collapse:collapse;width:100%;min-width:620px;background:var(--panel);border:1px solid var(--rule)}
+th,td{text-align:left;padding:14px 16px;border-bottom:1px solid var(--rule);vertical-align:top;font-size:16px}
+thead th{font-variation-settings:"wdth" 80;font-size:20px}
+tbody th{font-weight:600;color:var(--muted);width:22%}
+.eth{color:var(--signal)} .ibc{color:var(--ib)}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:22px}
+.two .figure{margin-top:0}
+.figcap{font-size:15px;color:var(--muted);margin:12px 0 0}
+
+/* claims */
+.claims{display:flex;flex-direction:column;gap:26px;margin-top:22px}
+.claim h3{font-size:20px;margin-bottom:8px}
+.barrow{display:flex;align-items:center;gap:10px;margin:4px 0;font-size:14px}
+.bar{height:28px;border-radius:2px;flex:none}
+.bar.base{background:var(--muted)}
+.barrow span{white-space:nowrap}
+.note{font-size:14px;color:var(--muted);margin-top:18px}
+
+/* benefits */
+.benefits{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:22px;border-top:1px solid var(--rule)}
+.benefit{padding:22px 22px 22px 0;border-bottom:1px solid var(--rule)}
+.benefit svg{width:36px;height:36px;margin-bottom:8px}
+.benefit h3{font-size:21px;margin-bottom:6px}
+.benefit p{font-size:16px;margin:0}
+
+/* news & glossary */
+.news{list-style:none;padding:0;margin:22px 0 0}
+.news li{display:grid;grid-template-columns:200px 1fr;gap:24px;padding:18px 0;border-bottom:1px solid var(--rule)}
+.news b{font-variation-settings:"wdth" 80;font-size:19px;line-height:1.2}
+.news p{margin:0}
+dl.gloss{display:grid;grid-template-columns:180px 1fr;gap:0;margin:22px 0 0}
+dl.gloss dt,dl.gloss dd{padding:12px 0;border-bottom:1px solid var(--rule);margin:0}
+dl.gloss dt{font-weight:700}
+
+.catalog{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:22px}
+.catalog h3{font-size:19px;padding-bottom:8px;border-bottom:2px solid var(--ink);margin-bottom:8px}
+.catalog ul{list-style:none;padding:0;margin:0;font-size:15px}
+.catalog li{padding:5px 0}
+
+footer{padding:40px 0 60px;border-top:1px solid var(--rule);font-size:14px;color:var(--muted)}
+.themebtn{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));font:inherit;font-size:14px;
+  background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:999px;padding:8px 14px;cursor:pointer}
+
+@media (max-width:860px){
+  .lede,.explorer-body,.stackgrid,.two{grid-template-columns:1fr}
+  .stage{border-right:0;border-bottom:1px solid var(--rule)}
+  .benefits{grid-template-columns:1fr 1fr}
+  .catalog{grid-template-columns:1fr 1fr}
+  .news li{grid-template-columns:1fr;gap:6px}
+  .layerinfo{position:static}
+}
+@media (max-width:540px){
+  .benefits,.catalog{grid-template-columns:1fr}
+  dl.gloss{grid-template-columns:1fr} dl.gloss dt{border-bottom:0;padding-bottom:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <div class="src">An explainer of <a href="https://www.nvidia.com/en-us/networking/">nvidia.com/en-us/networking</a> (page last updated 17 March 2026)</div>
+  <h1>NVIDIA Networking, explained</h1>
+  <div class="lede">
+    <div class="tldr prose">
+      <strong>In plain terms</strong>
+      This is NVIDIA's landing page for everything that moves data between GPUs. Its argument: once an AI system spans thousands or millions of GPUs, the network, not the chips, decides how fast the whole thing runs. NVIDIA sells the full set of parts — cables, switches, network cards, data-processing chips and management software — designed together so the GPUs never sit waiting.
+    </div>
+    <ul class="pagemap" aria-label="How the original page is organised">
+      <li><b>Introduction</b><span>The pitch: AI factories need a purpose-built network</span></li>
+      <li><b>Technology</b><span>Three product families: Spectrum-X Ethernet, Quantum InfiniBand, BlueField DPU</span></li>
+      <li><b>Benefits</b><span>Six claimed advantages, from speed to energy use</span></li>
+      <li><b>News</b><span>Rubin platform, BlueField-4, hyperscaler adoption, Spectrum-XGS</span></li>
+      <li><b>Resources</b><span>Links to products, docs, drivers and training</span></li>
+    </ul>
+  </div>
+</header>
+
+<!-- SCALE EXPLORER -->
+<section class="wrap" id="scale">
+  <h2>Three distances, three kinds of network</h2>
+  <p class="prose">The page's central idea is that one AI system is wired at three distances at once. Pick one to see what gets connected and which NVIDIA product does the job.</p>
+
+  <div class="explorer">
+    <div class="seg" role="group" aria-label="Choose a scale">
+      <button aria-pressed="true" data-scene="up" style="--k:var(--nvlink)">Scale up<span>Inside one rack</span></button>
+      <button aria-pressed="false" data-scene="out" style="--k:var(--signal)">Scale out<span>Across a data center</span></button>
+      <button aria-pressed="false" data-scene="across" style="--k:var(--fiber)">Scale across<span>Between data centers</span></button>
+    </div>
+    <div class="explorer-body">
+      <div class="stage">
+        <svg id="scaleSvg" viewBox="0 0 640 380" role="img" aria-label="Diagram of the selected networking scale"></svg>
+      </div>
+      <div class="explain" id="explain" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY -->
+<section class="wrap" id="why">
+  <h2>Why the network sets the pace</h2>
+  <p class="prose">Training a model is a loop: every GPU computes its share, then all of them swap results before the next step can begin. The step only ends when the <em>slowest</em> message arrives. A network with unpredictable delays (what the page calls tail latency) leaves every GPU idle while it waits. That is why NVIDIA stresses predictable latency, no dropped packets and steady iteration times rather than raw speed alone.</p>
+  <div class="figure">
+    <svg id="iterSvg" viewBox="0 0 900 230" role="img" aria-label="Four training steps on a generic network versus an AI-tuned network. The tuned network finishes noticeably sooner because communication waits are short and consistent."></svg>
+    <div class="legend"><span><i style="background:var(--signal)"></i>GPUs computing</span><span><i style="background:var(--fiber)"></i>GPUs waiting on the network</span></div>
+  </div>
+</section>
+
+<!-- STACK -->
+<section class="wrap" id="stack">
+  <h2>The full stack, layer by layer</h2>
+  <p class="prose">NVIDIA's pitch is that every layer below is designed alongside its GPUs ("extreme codesign" on the page). Select a layer to see what's in it.</p>
+  <div class="stackgrid">
+    <div class="layers" id="layers" role="group" aria-label="Networking stack layers"></div>
+    <div class="layerinfo" id="layerinfo" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- ETH vs IB -->
+<section class="wrap" id="compare">
+  <h2>Ethernet or InfiniBand?</h2>
+  <p class="prose">NVIDIA sells two scale-out fabrics side by side. Both do the same job, connecting servers across a data center, but they come from different worlds.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th></th><th class="eth">Spectrum-X Ethernet</th><th class="ibc">Quantum InfiniBand</th></tr></thead>
+      <tbody>
+        <tr><th>Background</th><td>The standard protocol of nearly every data center and cloud, tuned by NVIDIA for AI traffic</td><td>A protocol born in supercomputing, built for lowest latency from the start</td></tr>
+        <tr><th>Best fit</th><td>Hyperscale AI clouds that want familiar Ethernet tooling and multi-tenant operation</td><td>Dedicated AI training clusters and scientific computing (HPC)</td></tr>
+        <tr><th>Headline claim</th><td>1.6x network performance versus off-the-shelf Ethernet</td><td>Described as the fastest, most scalable fabric, with in-network computing</td></tr>
+        <tr><th>Key platforms</th><td>Spectrum switches, SuperNICs, Spectrum-XGS for multi-site</td><td>Quantum-X800 and Quantum-2 switches, ConnectX adapters</td></tr>
+        <tr><th>Management software</th><td>Cumulus Linux, Pure SONiC, NetQ</td><td>UFM fabric manager</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- DPU + CPO -->
+<section class="wrap" id="parts">
+  <h2>Two ideas worth a closer look</h2>
+  <div class="two">
+    <div>
+      <h3 style="margin-bottom:8px">BlueField DPU: a helper chip for the plumbing</h3>
+      <p>A data processing unit sits in each server and takes over networking, storage and security work that would otherwise steal time from the main CPU. The page frames BlueField-4 as the processor running the "operating system" of an AI factory; DOCA is the software kit for programming it.</p>
+      <div class="figure"><svg viewBox="0 0 460 250" role="img" aria-label="Without a DPU, the CPU spends much of its capacity on networking, storage and security. With BlueField, those tasks move to the DPU and the CPU runs applications only.">
+        <text x="10" y="20" font-size="14" font-weight="700" fill="var(--ink)">Without a DPU</text>
+        <rect x="10" y="32" width="200" height="200" rx="4" fill="none" stroke="var(--rule)" stroke-width="1.5"/>
+        <text x="22" y="54" font-size="13" fill="var(--muted)">CPU cores</text>
+        <g id="cpuA"></g>
+        <text x="250" y="20" font-size="14" font-weight="700" fill="var(--ink)">With BlueField</text>
+        <rect x="250" y="32" width="200" height="130" rx="4" fill="none" stroke="var(--rule)" stroke-width="1.5"/>
+        <text x="262" y="54" font-size="13" fill="var(--muted)">CPU cores</text>
+        <g id="cpuB"></g>
+        <rect x="250" y="172" width="200" height="60" rx="4" fill="none" stroke="var(--dpu)" stroke-width="2"/>
+        <text x="262" y="192" font-size="13" font-weight="700" fill="var(--dpu)">BlueField DPU</text>
+        <text x="262" y="214" font-size="12" fill="var(--muted)">network, storage, security</text>
+      </svg>
+      <div class="legend"><span><i style="background:var(--signal)"></i>Applications</span><span><i style="background:var(--dpu)"></i>Infrastructure chores</span></div></div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:8px">Co-packaged optics: light, closer to the chip</h3>
+      <p>Today a switch's chip sends electrical signals across a circuit board to plug-in optical modules at the front panel. Co-packaged silicon photonics puts the light-converting parts right beside the switch chip. Shorter electrical paths waste less power, which NVIDIA says lets networks grow to millions of GPUs.</p>
+      <div class="figure"><svg viewBox="0 0 460 250" role="img" aria-label="Left: a switch chip with long electrical traces to pluggable transceivers at the panel edge. Right: optical engines placed directly around the switch chip on one package, with fiber leaving directly.">
+        <text x="10" y="20" font-size="14" font-weight="700" fill="var(--ink)">Pluggable optics</text>
+        <rect x="10" y="32" width="200" height="200" rx="4" fill="none" stroke="var(--rule)" stroke-width="1.5"/>
+        <rect x="80" y="102" width="60" height="60" rx="3" fill="var(--signal)"/>
+        <text x="110" y="137" font-size="11" fill="#fff" text-anchor="middle" font-weight="700">switch</text>
+        <g stroke="var(--fiber)" stroke-width="2" fill="none">
+          <path d="M140 112 C175 112 175 60 192 60"/><path d="M140 124 C175 124 175 100 192 100"/>
+          <path d="M140 140 C175 140 175 164 192 164"/><path d="M140 152 C175 152 175 204 192 204"/>
+        </g>
+        <g fill="var(--muted)"><rect x="192" y="52" width="14" height="16"/><rect x="192" y="92" width="14" height="16"/><rect x="192" y="156" width="14" height="16"/><rect x="192" y="196" width="14" height="16"/></g>
+        <text x="20" y="224" font-size="12" fill="var(--muted)">long electrical traces</text>
+        <text x="250" y="20" font-size="14" font-weight="700" fill="var(--ink)">Co-packaged optics</text>
+        <rect x="250" y="32" width="200" height="200" rx="4" fill="none" stroke="var(--rule)" stroke-width="1.5"/>
+        <rect x="300" y="82" width="100" height="100" rx="6" fill="none" stroke="var(--ink)" stroke-dasharray="4 3"/>
+        <rect x="325" y="107" width="50" height="50" rx="3" fill="var(--signal)"/>
+        <text x="350" y="136" font-size="11" fill="#fff" text-anchor="middle" font-weight="700">switch</text>
+        <g fill="var(--fiber)"><rect x="306" y="88" width="14" height="14"/><rect x="380" y="88" width="14" height="14"/><rect x="306" y="162" width="14" height="14"/><rect x="380" y="162" width="14" height="14"/></g>
+        <g stroke="var(--fiber)" stroke-width="1.5" stroke-dasharray="2 3" fill="none">
+          <path d="M313 88 L313 44"/><path d="M387 88 L387 44"/><path d="M313 176 L313 222"/><path d="M387 176 L387 222"/>
+        </g>
+        <text x="260" y="224" font-size="12" fill="var(--muted)">optical engines in the package</text>
+      </svg>
+      <div class="legend"><span><i style="background:var(--fiber)"></i>Optics and fiber</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CLAIMS -->
+<section class="wrap" id="numbers">
+  <h2>The numbers on the page</h2>
+  <p class="prose">The page and its news items quote three performance multipliers. Each compares against a different baseline, so they can't be added together or compared with one another.</p>
+  <div class="claims" id="claims"></div>
+  <p class="note">These figures are NVIDIA's own marketing claims; the page doesn't state test conditions. Independent benchmarks may differ.</p>
+</section>
+
+<!-- BENEFITS -->
+<section class="wrap" id="benefits">
+  <h2>The six promised benefits</h2>
+  <div class="benefits">
+    <div class="benefit"><svg viewBox="0 0 36 36" fill="none" stroke="var(--signal)" stroke-width="2.5"><path d="M4 26 A14 14 0 0 1 32 26"/><path d="M18 26 L26 14"/></svg><h3>Performance</h3><p>Keeps GPUs busy by cutting the slow outlier messages that stall each training or inference step.</p></div>
+    <div class="benefit"><svg viewBox="0 0 36 36" fill="none" stroke="var(--fiber)" stroke-width="2.5"><rect x="4" y="20" width="8" height="10"/><rect x="14" y="13" width="8" height="17"/><rect x="24" y="5" width="8" height="25"/></svg><h3>Gigascale</h3><p>Large switches, optics in the chip package and Spectrum-XGS let whole campuses behave as one system.</p></div>
+    <div class="benefit"><svg viewBox="0 0 36 36" fill="none" stroke="var(--dpu)" stroke-width="2.5"><path d="M18 4 L30 9 V18 C30 25 24 30 18 32 C12 30 6 25 6 18 V9 Z"/></svg><h3>Security and visibility</h3><p>Isolates tenants and data, and shows operators exactly what's flowing through the network.</p></div>
+    <div class="benefit"><svg viewBox="0 0 36 36" fill="none" stroke="var(--nvlink)" stroke-width="2.5"><circle cx="18" cy="18" r="5"/><path d="M18 4v6M18 26v6M4 18h6M26 18h6M8 8l4 4M24 24l4 4M28 8l-4 4M8 28l4-4"/></svg><h3>Orchestration</h3><p>NetQ, UFM and DOCA turn network telemetry into automated monitoring and threat analytics.</p></div>
+    <div class="benefit"><svg viewBox="0 0 36 36" fill="none" stroke="var(--ib)" stroke-width="2.5"><rect x="4" y="6" width="28" height="18" rx="2"/><path d="M12 30h12M18 24v6"/><path d="M10 18l5-5 4 4 7-7"/></svg><h3>Simulation</h3><p>DSX Air builds a virtual copy of a data center network to test designs and policies before buying hardware.</p></div>
+    <div class="benefit"><svg viewBox="0 0 36 36" fill="none" stroke="var(--muted)" stroke-width="2.5"><path d="M20 4 L8 20 H18 L16 32 L28 16 H18 Z"/></svg><h3>Efficiency</h3><p>Lower power per bit through co-packaged optics and processing work inside the network itself.</p></div>
+  </div>
+</section>
+
+<!-- NEWS -->
+<section class="wrap" id="news">
+  <h2>What the news section is saying</h2>
+  <ul class="news">
+    <li><b>Rubin platform launch</b><p>NVIDIA's next GPU platform (Vera Rubin NVL72) ships with new networking chips: Spectrum-6, BlueField-4 and ConnectX-9. Its photonics switches are claimed to be 5x more power-efficient.</p></li>
+    <li><b>BlueField-4 for storage</b><p>BlueField-4 powers a new storage system that holds the working memory (context) of AI agents during inference.</p></li>
+    <li><b>Hyperscaler adoption</b><p>Meta, Microsoft and Oracle are named as adopters of Spectrum-X Ethernet for their AI data centers.</p></li>
+    <li><b>Spectrum-XGS</b><p>Links separate data centers into one "AI super-factory", with a claimed 1.9x gain in GPU-to-GPU communication (NCCL) performance.</p></li>
+  </ul>
+</section>
+
+<!-- CATALOG -->
+<section class="wrap" id="catalog">
+  <h2>Everything in the site's menu</h2>
+  <p class="prose">The navigation bar doubles as a product catalog. Here it is grouped the way the site groups it.</p>
+  <div class="catalog">
+    <div><h3>Platforms</h3><ul><li>BlueField DPU</li><li>Spectrum-X Ethernet</li><li>Quantum-X800 InfiniBand</li><li>Quantum-2 InfiniBand</li></ul></div>
+    <div><h3>Products</h3><ul><li>Ethernet switches</li><li>Ethernet SuperNICs</li><li>ConnectX Ethernet NICs</li><li>InfiniBand switches</li><li>ConnectX InfiniBand adapters</li><li>DPUs</li><li>Cables and transceivers (400G, 800G)</li><li>Silicon photonics</li></ul></div>
+    <div><h3>Software</h3><ul><li>DOCA</li><li>DSX Air</li><li>Cumulus Linux</li><li>Pure SONiC</li><li>NetQ</li><li>UFM</li></ul></div>
+    <div><h3>Support</h3><ul><li>Enterprise support portal</li><li>Firmware downloads</li><li>End-of-life products</li><li>Documentation</li><li>InfiniBand and Ethernet drivers</li></ul></div>
+  </div>
+</section>
+
+<!-- GLOSSARY -->
+<section class="wrap" id="glossary">
+  <h2>Jargon decoder</h2>
+  <dl class="gloss">
+    <dt>AI factory</dt><dd>NVIDIA's term for a data center built mainly to train and run AI models.</dd>
+    <dt>NVLink</dt><dd>NVIDIA's very fast GPU-to-GPU link, used inside a server or rack.</dd>
+    <dt>InfiniBand</dt><dd>A low-latency networking standard popular in supercomputers.</dd>
+    <dt>NIC / SuperNIC</dt><dd>The network card in each server; a SuperNIC is NVIDIA's AI-tuned version.</dd>
+    <dt>DPU</dt><dd>Data processing unit: a chip that handles networking, storage and security for the server.</dd>
+    <dt>Tail latency</dt><dd>The delay of the slowest messages. In AI training it sets the speed of every step.</dd>
+    <dt>Lossless</dt><dd>A network that avoids dropping packets, so nothing has to be resent.</dd>
+    <dt>NCCL</dt><dd>NVIDIA Collective Communications Library, the software GPUs use to exchange results.</dd>
+    <dt>Co-packaged optics</dt><dd>Optical components built into the same package as the switch chip.</dd>
+    <dt>RAG</dt><dd>Retrieval-augmented generation: an AI model that looks things up before answering. Named in the page's description as a target workload.</dd>
+  </dl>
+</section>
+
+<footer class="wrap">
+  Summary written from the public page at nvidia.com/en-us/networking as fetched on 1 October 2026. Diagrams are simplified illustrations, not product schematics. Product names belong to NVIDIA.
+</footer>
+
+<button class="themebtn" id="themeBtn" type="button">Toggle theme</button>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function txt(s,attrs,parent){const t=el("text",attrs,parent);t.textContent=s;return t}
+
+/* ---------- Scale explorer ---------- */
+const svg=document.getElementById("scaleSvg");
+const scenes={};
+// Scale up: one rack
+(function(){
+  const g=el("g",{class:"scene"},svg);scenes.up=g;
+  el("rect",{x:200,y:20,width:240,height:340,rx:6,fill:"none",stroke:"var(--ink)","stroke-width":2},g);
+  txt("One rack",{x:320,y:14,"text-anchor":"middle","font-size":13,fill:"var(--muted)"},g);
+  const trayY=[];
+  for(let i=0;i<14;i++){
+    const y=i<7?32+i*20:200+(i-7)*20+12;
+    trayY.push(y);
+    el("rect",{x:212,y:y,width:216,height:15,rx:2,fill:"var(--soft)",stroke:"var(--rule)"},g);
+    for(let j=0;j<4;j++)el("rect",{x:222+j*28,y:y+3,width:22,height:9,rx:1,fill:"var(--signal)"},g);
+  }
+  el("rect",{x:212,y:174,width:216,height:32,rx:3,fill:"var(--nvlink)"},g);
+  txt("NVLink switches",{x:320,y:195,"text-anchor":"middle","font-size":13,"font-weight":700,fill:"#fff"},g);
+  trayY.forEach((y,i)=>{
+    const cy=y+7.5;
+    el("path",{d:`M428 ${cy} C ${470+i*2} ${cy}, ${470+i*2} 190, 428 190`,fill:"none",stroke:"var(--nvlink)","stroke-width":1.4,opacity:.8},g);
+  });
+  txt("GPUs",{x:150,y:110,"text-anchor":"end","font-size":13,fill:"var(--muted)"},g);
+  el("path",{d:"M156 106 L218 106",stroke:"var(--muted)","stroke-width":1},g);
+  txt("every GPU linked",{x:520,y:186,"font-size":13,fill:"var(--nvlink)","font-weight":700},g);
+  txt("to every other",{x:520,y:202,"font-size":13,fill:"var(--nvlink)","font-weight":700},g);
+})();
+// Scale out: leaf-spine
+(function(){
+  const g=el("g",{class:"scene"},svg);scenes.out=g;
+  const racks=[],leaves=[],spines=[];
+  for(let i=0;i<8;i++)racks.push(40+i*76);
+  for(let i=0;i<4;i++)leaves.push(100+i*148);
+  for(let i=0;i<2;i++)spines.push(210+i*220);
+  leaves.forEach(lx=>spines.forEach(sx=>el("line",{x1:lx,y1:170,x2:sx,y2:80,stroke:"var(--signal)","stroke-width":1.5,opacity:.7},g)));
+  racks.forEach((rx,i)=>{
+    const a=leaves[Math.floor(i/2)], b=leaves[Math.min(3,Math.floor(i/2)+ (i%2?1:-1)) ]??a;
+    [a,b].forEach(lx=>el("line",{x1:rx+22,y1:250,x2:lx,y2:186,stroke:"var(--signal)","stroke-width":1,opacity:.45},g));
+  });
+  spines.forEach(sx=>{el("rect",{x:sx-60,y:58,width:120,height:26,rx:3,fill:"var(--ib)"},g);txt("spine switch",{x:sx,y:76,"text-anchor":"middle","font-size":12,"font-weight":700,fill:"#fff"},g)});
+  leaves.forEach(lx=>{el("rect",{x:lx-48,y:166,width:96,height:22,rx:3,fill:"var(--signal)"},g);txt("leaf switch",{x:lx,y:181,"text-anchor":"middle","font-size":11,"font-weight":700,fill:"#fff"},g)});
+  racks.forEach(rx=>{
+    el("rect",{x:rx,y:250,width:44,height:100,rx:3,fill:"none",stroke:"var(--ink)","stroke-width":1.5},g);
+    for(let k=0;k<6;k++)el("rect",{x:rx+6,y:258+k*14,width:32,height:8,rx:1,fill:"var(--soft)",stroke:"var(--rule)"},g);
+  });
+  txt("racks of GPU servers, each with ConnectX / SuperNIC cards",{x:320,y:372,"text-anchor":"middle","font-size":12,fill:"var(--muted)"},g);
+  txt("Quantum InfiniBand or Spectrum-X Ethernet",{x:320,y:30,"text-anchor":"middle","font-size":13,"font-weight":700,fill:"var(--ink)"},g);
+})();
+// Scale across: buildings
+(function(){
+  const g=el("g",{class:"scene"},svg);scenes.across=g;
+  const sites=[{x:70,y:210,n:"Site A"},{x:300,y:70,n:"Site B"},{x:470,y:240,n:"Site C"}];
+  const links=[[0,1],[1,2],[0,2]];
+  links.forEach(([a,b])=>{
+    const A=sites[a],B=sites[b];
+    el("line",{x1:A.x+55,y1:A.y+45,x2:B.x+55,y2:B.y+45,stroke:"var(--fiber)","stroke-width":3,"stroke-dasharray":"8 6"},g);
+  });
+  sites.forEach(s=>{
+    el("path",{d:`M${s.x} ${s.y+30} L${s.x+55} ${s.y} L${s.x+110} ${s.y+30} V${s.y+95} H${s.x} Z`,fill:"var(--panel)",stroke:"var(--ink)","stroke-width":2},g);
+    for(let i=0;i<4;i++)el("rect",{x:s.x+12+i*23,y:s.y+42,width:16,height:42,rx:1,fill:"var(--soft)",stroke:"var(--signal)"},g);
+    txt(s.n,{x:s.x+55,y:s.y+115,"text-anchor":"middle","font-size":13,"font-weight":700,fill:"var(--ink)"},g);
+  });
+  txt("Spectrum-XGS links",{x:225,y:200,"font-size":13,"font-weight":700,fill:"var(--fiber)","text-anchor":"middle"},g);
+  txt("buildings or campuses apart",{x:225,y:216,"font-size":12,fill:"var(--muted)","text-anchor":"middle"},g);
+})();
+
+const info={
+  up:{c:"var(--nvlink)",h:"Scale up: one rack acts like one giant GPU",
+    p:"Inside a rack, NVLink connects dozens of GPUs through dedicated NVLink switches so they can share data almost as if they were a single chip. The news section's Vera Rubin NVL72 is an example: 72 GPUs wired together this way.",
+    t:["NVLink","NVLink Switch"]},
+  out:{c:"var(--signal)",h:"Scale out: thousands of servers become one cluster",
+    p:"Racks are joined through layers of switches (a leaf-spine layout is typical). Each server has a ConnectX NIC or SuperNIC. NVIDIA offers two flavours of this fabric: Quantum InfiniBand and Spectrum-X Ethernet.",
+    t:["Quantum InfiniBand","Spectrum-X Ethernet","ConnectX","SuperNIC"]},
+  across:{c:"var(--fiber)",h:"Scale across: several data centers act as one",
+    p:"When one building runs out of power or space, Spectrum-XGS stretches the AI fabric across sites so they can train or serve a single model together. NVIDIA claims 1.9x better GPU-communication performance versus regular links.",
+    t:["Spectrum-XGS","Silicon photonics"]}
+};
+const explain=document.getElementById("explain");
+function show(k){
+  for(const s in scenes){s===k?scenes[s].removeAttribute("hidden-scene"):scenes[s].setAttribute("hidden-scene","")}
+  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.scene===k));
+  const d=info[k];
+  explain.innerHTML=`<h3 style="color:${d.c}">${d.h}</h3><p>${d.p}</p><div>${d.t.map(x=>`<span class="tag" style="color:${d.c}">${x}</span>`).join("")}</div>`;
+}
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>show(b.dataset.scene)));
+show("up");
+
+/* ---------- Iteration chart ---------- */
+(function(){
+  const s=document.getElementById("iterSvg");
+  const rows=[
+    {label:"Generic network",y:40,steps:[[60,40],[60,22],[60,78],[60,30]]},
+    {label:"AI-tuned network",y:130,steps:[[60,14],[60,14],[60,14],[60,14]]}
+  ];
+  const x0=170;
+  rows.forEach(r=>{
+    txt(r.label,{x:0,y:r.y+28,"font-size":15,"font-weight":700,fill:"var(--ink)"},s);
+    let x=x0;
+    r.steps.forEach(([c,w],i)=>{
+      el("rect",{x:x,y:r.y,width:c-2,height:44,rx:2,fill:"var(--signal)"},s);
+      txt("step "+(i+1),{x:x+(c-2)/2,y:r.y+27,"text-anchor":"middle","font-size":11,fill:"#fff","font-weight":600},s);
+      x+=c;
+      el("rect",{x:x,y:r.y,width:w-2,height:44,rx:2,fill:"var(--fiber)"},s);
+      x+=w;
+    });
+    el("line",{x1:x+4,y1:r.y-6,x2:x+4,y2:r.y+50,stroke:"var(--ink)","stroke-width":2},s);
+    txt("done",{x:x+10,y:r.y+27,"font-size":13,fill:"var(--ink)","font-weight":700},s);
+  });
+  txt("Same compute, less waiting: the tuned network finishes the four steps sooner, and every step takes the same time.",{x:0,y:218,"font-size":13,fill:"var(--muted)"},s);
+})();
+
+/* ---------- Stack layers ---------- */
+const layers=[
+  {n:"Software",s:"Operate, monitor, simulate",c:"var(--ib)",d:"Programs that configure the network, watch it and model it before you build it.",
+   items:["DOCA: toolkit for programming BlueField DPUs and ConnectX cards","Cumulus Linux and Pure SONiC: operating systems for Ethernet switches","NetQ: real-time visibility into Ethernet fabrics","UFM: management platform for InfiniBand fabrics","DSX Air: a cloud-hosted digital twin of your data center network"]},
+  {n:"DPUs",s:"Infrastructure processors",c:"var(--dpu)",d:"Chips in each server that take over networking, storage and security tasks.",
+   items:["BlueField-4: the newest DPU, part of the Rubin platform","Also powers the new AI-native storage platform for agent memory"]},
+  {n:"Network adapters",s:"The card in each server",c:"var(--nvlink)",d:"Where data leaves and enters a GPU server.",
+   items:["ConnectX-9 (Rubin generation) for Ethernet and InfiniBand","Spectrum-X SuperNICs tuned for AI traffic"]},
+  {n:"Switches",s:"Traffic routing at scale",c:"var(--signal)",d:"High-port-count switches that form the fabric between servers.",
+   items:["Spectrum and Spectrum-6 Ethernet switches","Quantum-X800 and Quantum-2 InfiniBand switches","NVLink switches inside the rack"]},
+  {n:"Optics and cables",s:"The physical links",c:"var(--fiber)",d:"Copper cables, optical transceivers and the new co-packaged photonics.",
+   items:["400G and 800G cables and transceivers for both protocols","Co-packaged silicon photonics switches for lower power"]}
+];
+const L=document.getElementById("layers"),LI=document.getElementById("layerinfo");
+function pick(i){
+  [...L.children].forEach((b,j)=>b.setAttribute("aria-pressed",i===j));
+  const x=layers[i];
+  LI.innerHTML=`<h3 style="color:${x.c}">${x.n}</h3><p style="margin:10px 0 0">${x.d}</p><ul>${x.items.map(t=>`<li>${t}</li>`).join("")}</ul>`;
+}
+layers.forEach((x,i)=>{
+  const b=document.createElement("button");b.type="button";b.style.setProperty("--c",x.c);
+  b.innerHTML=`<strong>${x.n}</strong><small>${x.s}</small>`;b.addEventListener("click",()=>pick(i));L.appendChild(b);
+});
+pick(0);
+
+/* ---------- DPU cores ---------- */
+(function(){
+  const A=document.getElementById("cpuA"),B=document.getElementById("cpuB");
+  const pattern=[1,1,0,1,0,0,1,0,1,0,0,1,0,1,1,0]; // 1 = infrastructure chores
+  pattern.forEach((p,i)=>{
+    const x=22+(i%4)*46,y=64+Math.floor(i/4)*40;
+    el("rect",{x,y,width:38,height:32,rx:3,fill:p?"var(--dpu)":"var(--signal)"},A);
+  });
+  for(let i=0;i<8;i++){
+    const x=262+(i%4)*46,y=64+Math.floor(i/4)*44;
+    el("rect",{x,y,width:38,height:36,rx:3,fill:"var(--signal)"},B);
+  }
+})();
+
+/* ---------- Claims ---------- */
+const claims=[
+  {t:"Spectrum-X vs off-the-shelf Ethernet",m:"network performance",v:1.6,c:"var(--signal)"},
+  {t:"Spectrum-XGS vs standard multi-site links",m:"GPU communication (NCCL) performance",v:1.9,c:"var(--fiber)"},
+  {t:"Spectrum-X Photonics switches vs pluggable optics",m:"power efficiency",v:5,c:"var(--nvlink)"}
+];
+const C=document.getElementById("claims");
+claims.forEach(x=>{
+  const pct=v=>Math.max(8,v/5*100);
+  const d=document.createElement("div");d.className="claim";
+  d.innerHTML=`<h3>${x.t}</h3>
+   <div class="barrow"><div class="bar base" style="width:${pct(1)*0.7}%"></div><span class="muted">1x baseline</span></div>
+   <div class="barrow"><div class="bar" style="width:${pct(x.v)*0.7}%;background:${x.c}"></div><span><b>${x.v}x</b> ${x.m}</span></div>`;
+  C.appendChild(d);
+});
+
+/* ---------- Theme toggle ---------- */
+document.getElementById("themeBtn").addEventListener("click",()=>{
+  const r=document.documentElement;
+  const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
+  r.dataset.theme=dark?"light":"dark";
+});
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

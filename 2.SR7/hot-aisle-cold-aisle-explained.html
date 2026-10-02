@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hot aisle / cold aisle layout, explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F5F7; --surface:#FFFFFF; --ink:#17222D; --muted:#566370; --line:#C9D1D9;
+  --cold:#2A7BD3; --cold-tint:#DCEBFA; --hot:#D9482B; --hot-tint:#FBE3DC;
+  --rack:#3A4654; --rack-slot:#56636F; --panel:#E4E9EE; --floor:#9AA6B2;
+  --amber:#C99A1E; --orange:#E07B2A;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#111921; --surface:#18222C; --ink:#E4EAF0; --muted:#9AA7B4; --line:#2D3A47;
+    --cold:#5AA2EE; --cold-tint:#163250; --hot:#F06A4A; --hot-tint:#47201A;
+    --rack:#3B4A59; --rack-slot:#56687A; --panel:#22303D; --floor:#5D6B79;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111921; --surface:#18222C; --ink:#E4EAF0; --muted:#9AA7B4; --line:#2D3A47;
+  --cold:#5AA2EE; --cold-tint:#163250; --hot:#F06A4A; --hot-tint:#47201A;
+  --rack:#3B4A59; --rack-slot:#56687A; --panel:#22303D; --floor:#5D6B79;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:1.0625rem;line-height:1.6}
+.wrap{max-width:1040px;margin:0 auto;padding:0 1.25rem}
+.prose{max-width:68ch}
+h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0}
+h1{font-size:clamp(2.4rem,6vw,4.4rem);font-weight:700;letter-spacing:-.01em;max-width:16ch}
+h2{font-size:clamp(1.7rem,3.4vw,2.4rem);font-weight:600;margin-bottom:.6rem}
+h3{font-size:1.25rem;font-weight:600;margin-bottom:.35rem}
+p{margin:.6rem 0}
+a{color:var(--cold)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--cold);outline-offset:2px}
+header.wrap{padding:3.5rem 1.25rem 1.5rem}
+.lede{font-size:1.2rem;color:var(--muted);max-width:60ch;margin-top:1rem}
+.src{font-size:.9rem;color:var(--muted)}
+section.wrap{padding:3rem 1.25rem;border-top:1px solid var(--line)}
+figure{margin:1.5rem 0 0}
+.fig{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:1rem;overflow-x:auto}
+.fig svg{display:block;width:100%;height:auto;min-width:640px}
+.fig.small svg{min-width:300px}
+figcaption{font-size:.9rem;color:var(--muted);margin-top:.6rem}
+.legend{display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;font-size:.9rem;color:var(--muted);margin-top:.75rem}
+.legend span{display:inline-flex;align-items:center;gap:.45rem}
+.sw{width:14px;height:14px;border-radius:2px;display:inline-block}
+
+/* svg text + shapes */
+.t{font-family:var(--body);font-size:13px;fill:var(--ink)}
+.t-s{font-family:var(--body);font-size:11.5px;fill:var(--muted)}
+.t-b{font-family:var(--display);font-weight:600;font-size:16px}
+.t-cold{fill:var(--cold)} .t-hot{fill:var(--hot)}
+.rack{fill:var(--rack)}
+.panel{fill:var(--panel);stroke:var(--line)}
+.cold-zone{fill:var(--cold-tint)} .hot-zone{fill:var(--hot-tint)}
+.fc{fill:var(--cold)} .fh{fill:var(--hot)}
+.sc{stroke:var(--cold)} .sh{stroke:var(--hot)}
+.flow{fill:none;stroke-width:3;stroke-linecap:round;stroke-dasharray:7 9;animation:dash 1.1s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-32}}
+@media (prefers-reduced-motion:reduce){.flow{animation:none;stroke-dasharray:none}}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;margin-top:1.5rem}
+.stat b{display:block;font-family:var(--display);font-size:2.6rem;font-weight:700;line-height:1}
+.stat p{margin:.4rem 0 0;color:var(--muted);font-size:.95rem}
+
+/* toggle */
+svg [hidden]{display:none}
+.toggle{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:1rem 0 .25rem;background:var(--surface)}
+.toggle button{font:inherit;font-size:.95rem;border:0;background:transparent;color:var(--ink);padding:.55rem 1rem;cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.readout{min-height:3.2em;font-size:1rem;margin-top:.75rem;max-width:68ch}
+.readout strong{font-family:var(--display);font-size:1.15rem}
+
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;margin-top:1.5rem}
+.costs{list-style:none;padding:0;margin:1rem 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem 2rem}
+.costs li{border-left:3px solid var(--line);padding-left:.9rem}
+.costs li b{display:block;font-weight:600}
+.costs li span{color:var(--muted);font-size:.95rem}
+ol.steps{padding-left:1.4rem;margin:.6rem 0}
+ol.steps li{margin:.35rem 0;padding-left:.3rem}
+.note{font-size:.88rem;color:var(--muted)}
+footer.wrap{padding:2.5rem 1.25rem 3rem;border-top:1px solid var(--line);font-size:.88rem;color:var(--muted)}
+footer ol{padding-left:1.2rem}
+footer li{margin:.3rem 0;word-break:break-word}
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <h1>Point the servers at each other</h1>
+  <p class="lede">The hot aisle / cold aisle layout is one of the oldest and cheapest ways to cut data center cooling energy. Server racks are arranged so their air intakes face each other across one aisle and their exhausts face each other across the next, so cold supply air and hot exhaust air stop mixing.</p>
+  <p class="src">An illustrated explainer of ENERGY STAR's guide, <a href="https://www.energystar.gov/products/data_center_equipment/16-more-ways-cut-energy-waste-data-center/move-hot-aislecold-aisle-layout">“Move to a Hot Aisle/Cold Aisle Layout”</a>, part of its 16 More Ways to Cut Energy Waste in the Data Center series.</p>
+
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 900 420" role="img" aria-labelledby="f1t">
+        <title id="f1t">Side view of a raised-floor data center: the CRAC unit pushes cold air under the floor, it rises through perforated tiles into cold aisles, passes through servers, exits into hot aisles and returns along the ceiling.</title>
+        <defs>
+          <linearGradient id="gLR" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="var(--cold)"/><stop offset="1" stop-color="var(--hot)"/></linearGradient>
+          <linearGradient id="gRL" x1="1" x2="0" y1="0" y2="0"><stop offset="0" stop-color="var(--cold)"/><stop offset="1" stop-color="var(--hot)"/></linearGradient>
+          <pattern id="slots" width="10" height="14" patternUnits="userSpaceOnUse"><line x1="0" y1="13" x2="10" y2="13" stroke="var(--rack-slot)" stroke-width="1.5"/></pattern>
+          <pattern id="perf" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="var(--panel)"/><circle cx="4" cy="4" r="1.6" fill="var(--cold)"/></pattern>
+          <marker id="mc" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" style="fill:var(--cold)"/></marker>
+          <marker id="mh" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" style="fill:var(--hot)"/></marker>
+        </defs>
+
+        <!-- aisle zones -->
+        <rect class="hot-zone" x="110" y="90" width="60" height="236" opacity=".7"/>
+        <rect class="cold-zone" x="230" y="90" width="120" height="236"/>
+        <rect class="hot-zone" x="410" y="90" width="110" height="236"/>
+        <rect class="cold-zone" x="580" y="90" width="120" height="236"/>
+        <rect class="hot-zone" x="760" y="90" width="120" height="236" opacity=".7"/>
+
+        <!-- ceiling -->
+        <line x1="10" y1="40" x2="890" y2="40" stroke="var(--floor)" stroke-width="3"/>
+        <text class="t-s" x="470" y="62" text-anchor="middle">Hot return air travels back along the ceiling</text>
+
+        <!-- plenum -->
+        <rect class="cold-zone" x="20" y="330" width="860" height="55" opacity=".8"/>
+        <line x1="10" y1="386" x2="890" y2="386" stroke="var(--floor)" stroke-width="3"/>
+        <text class="t-s" x="470" y="378" text-anchor="middle">Pressurized cold air under the raised floor</text>
+
+        <!-- floor tiles -->
+        <rect x="110" y="326" width="140" height="7" fill="var(--floor)"/>
+        <rect x="250" y="326" width="80" height="7" fill="url(#perf)" stroke="var(--cold)" stroke-width="1"/>
+        <rect x="330" y="326" width="270" height="7" fill="var(--floor)"/>
+        <rect x="600" y="326" width="80" height="7" fill="url(#perf)" stroke="var(--cold)" stroke-width="1"/>
+        <rect x="680" y="326" width="200" height="7" fill="var(--floor)"/>
+        <text class="t-s" x="290" y="406" text-anchor="middle">perforated tiles</text>
+        <text class="t-s" x="640" y="406" text-anchor="middle">perforated tiles</text>
+
+        <!-- CRAC -->
+        <rect class="panel" x="20" y="110" width="90" height="275" rx="3"/>
+        <text class="t t-b" x="65" y="215" text-anchor="middle">CRAC</text>
+        <text class="t-s" x="65" y="234" text-anchor="middle">air</text>
+        <text class="t-s" x="65" y="248" text-anchor="middle">conditioner</text>
+
+        <!-- flows: cold -->
+        <path class="flow sc" d="M65 300 V352 H560" marker-end="url(#mc)"/>
+        <path class="flow sc" d="M275 345 V295 C275 255 258 230 236 230" marker-end="url(#mc)"/>
+        <path class="flow sc" d="M305 345 V295 C305 255 322 230 344 230" marker-end="url(#mc)"/>
+        <path class="flow sc" d="M560 352 H690" />
+        <path class="flow sc" d="M625 345 V295 C625 255 608 230 586 230" marker-end="url(#mc)"/>
+        <path class="flow sc" d="M655 345 V295 C655 255 672 230 694 230" marker-end="url(#mc)"/>
+
+        <!-- flows: hot -->
+        <path class="flow sh" d="M166 230 C146 230 140 212 140 170 V86"/>
+        <path class="flow sh" d="M414 230 C446 230 465 212 465 170 V86"/>
+        <path class="flow sh" d="M516 230 C484 230 465 212 465 170 V86"/>
+        <path class="flow sh" d="M764 230 C800 230 820 212 820 170 V86"/>
+        <path class="flow sh" d="M840 78 H65 V104" marker-end="url(#mh)"/>
+
+        <!-- racks -->
+        <g>
+          <rect class="rack" x="170" y="130" width="60" height="196"/><rect x="170" y="130" width="60" height="196" fill="url(#slots)"/>
+          <rect class="fh" x="170" y="130" width="4" height="196"/><rect class="fc" x="226" y="130" width="4" height="196"/>
+          <polygon points="226,226 184,226 184,221 174,230 184,239 184,234 226,234" fill="url(#gRL)"/>
+
+          <rect class="rack" x="350" y="130" width="60" height="196"/><rect x="350" y="130" width="60" height="196" fill="url(#slots)"/>
+          <rect class="fc" x="350" y="130" width="4" height="196"/><rect class="fh" x="406" y="130" width="4" height="196"/>
+          <polygon points="354,226 396,226 396,221 406,230 396,239 396,234 354,234" fill="url(#gLR)"/>
+
+          <rect class="rack" x="520" y="130" width="60" height="196"/><rect x="520" y="130" width="60" height="196" fill="url(#slots)"/>
+          <rect class="fh" x="520" y="130" width="4" height="196"/><rect class="fc" x="576" y="130" width="4" height="196"/>
+          <polygon points="576,226 534,226 534,221 524,230 534,239 534,234 576,234" fill="url(#gRL)"/>
+
+          <rect class="rack" x="700" y="130" width="60" height="196"/><rect x="700" y="130" width="60" height="196" fill="url(#slots)"/>
+          <rect class="fc" x="700" y="130" width="4" height="196"/><rect class="fh" x="756" y="130" width="4" height="196"/>
+          <polygon points="704,226 746,226 746,221 756,230 746,239 746,234 704,234" fill="url(#gLR)"/>
+        </g>
+
+        <!-- aisle labels -->
+        <text class="t t-b t-cold" x="290" y="118" text-anchor="middle">Cold aisle</text>
+        <text class="t t-b t-cold" x="640" y="118" text-anchor="middle">Cold aisle</text>
+        <text class="t t-b t-hot" x="465" y="306" text-anchor="middle">Hot aisle</text>
+        <text class="t-s t-hot" x="140" y="306" text-anchor="middle">hot</text>
+        <text class="t-s t-hot" x="820" y="306" text-anchor="middle">hot</text>
+      </svg>
+    </div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--cold)"></i>Server front (air intake) and cold supply air</span>
+      <span><i class="sw" style="background:var(--hot)"></i>Server back (exhaust) and hot return air</span>
+      <span><i class="sw" style="background:var(--rack)"></i>Server rack</span>
+    </div>
+    <figcaption>Side view of the classic raised-floor arrangement. Each rack pulls air in through the front and pushes it out the back, so neighbouring rows are mirrored.</figcaption>
+  </figure>
+</header>
+
+<main>
+<section class="wrap">
+  <h2>How it works</h2>
+  <div class="prose">
+    <p>Every server breathes the same way: cool air in at the front, warm air out at the back. The layout simply lines racks up in alternating rows so that two rows of fronts share one aisle (the <strong>cold aisle</strong>) and two rows of backs share the next (the <strong>hot aisle</strong>).</p>
+    <p>In most large facilities this is paired with a raised floor. The computer room air conditioner (CRAC) blows chilled air into the space beneath the floor, which pressurizes it. That air escapes upward only where there are perforated tiles, which are placed in the cold aisles, so it arrives right where the servers draw it in. The warm exhaust gathers in the hot aisles, rises, and drifts back along the ceiling to the CRAC's intake.</p>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>1992</b><p>IBM introduced the layout, making it one of the longest-standing data center efficiency practices.</p></div>
+    <div class="stat"><b>≈ 2 in 3</b><p>larger (enterprise and mid-tier) data centers already use it, according to a NYSERDA operator survey.</p></div>
+    <div class="stat"><b>10–35%</b><p>cooling energy savings, because supply and exhaust air no longer mix.</p></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>What goes wrong without it</h2>
+  <p class="prose">If every row faces the same direction, the exhaust of one row becomes the intake of the next. Each row inhales air that's already been warmed, and the rows farthest from the air conditioner run hottest. The only way to protect them is to over-cool the entire room. Switch between the two arrangements below to compare.</p>
+
+  <div class="toggle" role="group" aria-label="Choose rack layout">
+    <button type="button" data-mode="bad" aria-pressed="true">All racks face the same way</button>
+    <button type="button" data-mode="good" aria-pressed="false">Hot aisle / cold aisle</button>
+  </div>
+
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 820 350" role="img" aria-labelledby="f2t">
+        <title id="f2t">Top view of four rows of racks comparing server inlet temperatures in the two layouts.</title>
+        <defs>
+          <marker id="ma" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="context-stroke"/></marker>
+          <marker id="mc2" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" style="fill:var(--cold)"/></marker>
+          <marker id="mh2" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" style="fill:var(--hot)"/></marker>
+          <pattern id="perf2" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="1.5" fill="var(--cold)" opacity=".7"/></pattern>
+        </defs>
+        <rect x="10" y="10" width="800" height="330" fill="none" stroke="var(--line)" stroke-width="2"/>
+        <rect class="panel" x="20" y="120" width="50" height="110" rx="3"/>
+        <text class="t-s" x="45" y="250" text-anchor="middle">CRAC</text>
+
+        <!-- BAD layout -->
+        <g id="layout-bad">
+          <g id="bad-rows"></g>
+          <text class="t-s" x="410" y="30" text-anchor="middle">All fronts face the CRAC. Arrows show exhaust feeding the next row.</text>
+        </g>
+
+        <!-- GOOD layout -->
+        <g id="layout-good" hidden>
+          <rect class="hot-zone" x="80" y="45" width="90" height="250" opacity=".7"/>
+          <rect class="cold-zone" x="214" y="45" width="106" height="250"/>
+          <rect x="214" y="45" width="106" height="250" fill="url(#perf2)"/>
+          <rect class="hot-zone" x="364" y="45" width="106" height="250"/>
+          <rect class="cold-zone" x="514" y="45" width="106" height="250"/>
+          <rect x="514" y="45" width="106" height="250" fill="url(#perf2)"/>
+          <rect class="hot-zone" x="664" y="45" width="136" height="250" opacity=".7"/>
+          <g id="good-rows"></g>
+          <text class="t-s" x="410" y="30" text-anchor="middle">Dotted floor = perforated tiles feeding cold aisles. Hot aisles vent up to the ceiling return.</text>
+        </g>
+      </svg>
+    </div>
+    <p class="readout" id="readout" aria-live="polite"></p>
+    <figcaption>Top view. Temperatures are illustrative, chosen to show the trend described in the ENERGY STAR guide rather than measured values.</figcaption>
+  </figure>
+</section>
+
+<section class="wrap">
+  <h2>No raised floor? It still works</h2>
+  <p class="prose">Smaller server rooms often sit on a concrete slab. You can still get distinct hot and cold aisles by rearranging the racks and reworking the overhead ductwork: supply diffusers drop cold air into the cold aisles, and return registers and ducts sit directly above the hot aisles.</p>
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 900 360" role="img" aria-labelledby="f3t">
+        <title id="f3t">Side view of a slab-floor room: overhead supply duct drops cold air into cold aisles; return grilles above hot aisles pull warm air into the ceiling space.</title>
+        <defs>
+          <linearGradient id="gLR2" x1="0" x2="1"><stop offset="0" stop-color="var(--cold)"/><stop offset="1" stop-color="var(--hot)"/></linearGradient>
+          <linearGradient id="gRL2" x1="1" x2="0"><stop offset="0" stop-color="var(--cold)"/><stop offset="1" stop-color="var(--hot)"/></linearGradient>
+          <pattern id="slots2" width="10" height="14" patternUnits="userSpaceOnUse"><line x1="0" y1="13" x2="10" y2="13" stroke="var(--rack-slot)" stroke-width="1.5"/></pattern>
+          <marker id="mc3" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" style="fill:var(--cold)"/></marker>
+          <marker id="mh3" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" style="fill:var(--hot)"/></marker>
+        </defs>
+        <!-- ceiling plenum -->
+        <rect class="hot-zone" x="10" y="8" width="880" height="62" opacity=".55"/>
+        <rect class="cold-zone" x="35" y="18" width="640" height="22" stroke="var(--cold)" stroke-width="1"/>
+        <text class="t-s" x="684" y="33">supply duct</text>
+        <line x1="10" y1="70" x2="890" y2="70" stroke="var(--floor)" stroke-width="3"/>
+        <!-- diffusers & grilles -->
+        <rect x="268" y="66" width="44" height="8" fill="var(--cold)"/>
+        <rect x="618" y="66" width="44" height="8" fill="var(--cold)"/>
+        <rect x="120" y="66" width="40" height="8" fill="none" stroke="var(--hot)" stroke-width="2" stroke-dasharray="3 2"/>
+        <rect x="445" y="66" width="40" height="8" fill="none" stroke="var(--hot)" stroke-width="2" stroke-dasharray="3 2"/>
+        <rect x="800" y="66" width="40" height="8" fill="none" stroke="var(--hot)" stroke-width="2" stroke-dasharray="3 2"/>
+        <!-- slab -->
+        <rect x="10" y="326" width="880" height="12" fill="var(--floor)"/>
+        <!-- aisle tints -->
+        <rect class="cold-zone" x="230" y="78" width="120" height="248"/>
+        <rect class="cold-zone" x="580" y="78" width="120" height="248"/>
+        <rect class="hot-zone" x="410" y="78" width="110" height="248"/>
+        <!-- AC -->
+        <rect class="panel" x="20" y="110" width="90" height="216" rx="3"/>
+        <text class="t t-b" x="65" y="215" text-anchor="middle">AC</text>
+        <text class="t-s" x="65" y="234" text-anchor="middle">unit</text>
+        <!-- flows -->
+        <path class="flow sc" d="M45 108 V29 H660"/>
+        <path class="flow sc" d="M282 76 V150 C282 190 258 205 236 205" marker-end="url(#mc3)"/>
+        <path class="flow sc" d="M298 76 V150 C298 190 322 205 344 205" marker-end="url(#mc3)"/>
+        <path class="flow sc" d="M632 76 V150 C632 190 608 205 586 205" marker-end="url(#mc3)"/>
+        <path class="flow sc" d="M648 76 V150 C648 190 672 205 694 205" marker-end="url(#mc3)"/>
+        <path class="flow sh" d="M166 205 C146 205 140 190 140 150 V80" marker-end="url(#mh3)"/>
+        <path class="flow sh" d="M414 205 C446 205 465 190 465 150 V80" marker-end="url(#mh3)"/>
+        <path class="flow sh" d="M516 205 C484 205 465 190 465 150 V80"/>
+        <path class="flow sh" d="M764 205 C800 205 820 190 820 150 V80" marker-end="url(#mh3)"/>
+        <path class="flow sh" d="M860 55 H92 V104" marker-end="url(#mh3)"/>
+        <!-- racks -->
+        <rect class="rack" x="170" y="150" width="60" height="176"/><rect x="170" y="150" width="60" height="176" fill="url(#slots2)"/>
+        <rect class="fh" x="170" y="150" width="4" height="176"/><rect class="fc" x="226" y="150" width="4" height="176"/>
+        <polygon points="226,201 184,201 184,196 174,205 184,214 184,209 226,209" fill="url(#gRL2)"/>
+        <rect class="rack" x="350" y="150" width="60" height="176"/><rect x="350" y="150" width="60" height="176" fill="url(#slots2)"/>
+        <rect class="fc" x="350" y="150" width="4" height="176"/><rect class="fh" x="406" y="150" width="4" height="176"/>
+        <polygon points="354,201 396,201 396,196 406,205 396,214 396,209 354,209" fill="url(#gLR2)"/>
+        <rect class="rack" x="520" y="150" width="60" height="176"/><rect x="520" y="150" width="60" height="176" fill="url(#slots2)"/>
+        <rect class="fh" x="520" y="150" width="4" height="176"/><rect class="fc" x="576" y="150" width="4" height="176"/>
+        <polygon points="576,201 534,201 534,196 524,205 534,214 534,209 576,209" fill="url(#gRL2)"/>
+        <rect class="rack" x="700" y="150" width="60" height="176"/><rect x="700" y="150" width="60" height="176" fill="url(#slots2)"/>
+        <rect class="fc" x="700" y="150" width="4" height="176"/><rect class="fh" x="756" y="150" width="4" height="176"/>
+        <polygon points="704,201 746,201 746,196 756,205 746,214 746,209 704,209" fill="url(#gLR2)"/>
+        <text class="t t-b t-cold" x="290" y="310" text-anchor="middle">Cold aisle</text>
+        <text class="t t-b t-cold" x="640" y="310" text-anchor="middle">Cold aisle</text>
+        <text class="t t-b t-hot" x="465" y="310" text-anchor="middle">Hot aisle</text>
+              </svg>
+    </div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--cold)"></i>Supply diffuser over each cold aisle</span>
+      <span><i class="sw" style="border:2px dashed var(--hot)"></i>Return register over each hot aisle</span>
+      <span><i class="sw" style="background:var(--hot-tint)"></i>Ceiling space carrying return air</span>
+    </div>
+    <figcaption>Slab-floor version: cold air comes down from overhead diffusers, warm air is pulled up through return registers placed over the hot aisles.</figcaption>
+  </figure>
+</section>
+
+<section class="wrap">
+  <h2>What you save</h2>
+  <p class="prose">Keeping supply and exhaust air apart means the cooling system delivers air at the temperature servers actually need, instead of making up for mixing. Better airflow also lets fans run slower and makes it possible to rely more often on “free cooling” from air-side or water-side economizers.</p>
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 20 760 215" role="img" aria-labelledby="f4t">
+        <title id="f4t">Range chart: cooling energy savings 10 to 35 percent from the layout; fan energy 20 to 25 percent and chiller energy about 20 percent when containment is combined with variable-speed fans.</title>
+        <g stroke="var(--line)">
+          <line x1="280" y1="30" x2="280" y2="200"/><line x1="395" y1="30" x2="395" y2="200"/>
+          <line x1="510" y1="30" x2="510" y2="200"/><line x1="625" y1="30" x2="625" y2="200"/>
+          <line x1="740" y1="30" x2="740" y2="200"/>
+        </g>
+        <g class="t-s" text-anchor="middle">
+          <text x="280" y="220">0%</text><text x="395" y="220">10%</text><text x="510" y="220">20%</text><text x="625" y="220">30%</text><text x="740" y="220">40%</text>
+        </g>
+        <text class="t" x="0" y="58" font-weight="600">Cooling energy</text>
+        <text class="t-s" x="0" y="75">hot / cold aisle layout alone</text>
+        <rect x="395" y="50" width="287.5" height="22" rx="3" class="fc"/>
+        <text class="t" x="690" y="66">10–35%</text>
+
+        <text class="t" x="0" y="118" font-weight="600">Fan energy</text>
+        <text class="t-s" x="0" y="135">containment + variable-speed fans</text>
+        <rect x="510" y="110" width="57.5" height="22" rx="3" fill="var(--amber)"/>
+        <text class="t" x="575" y="126">20–25%</text>
+
+        <text class="t" x="0" y="178" font-weight="600">Chiller energy</text>
+        <text class="t-s" x="0" y="195">containment + variable-speed fans</text>
+        <rect x="506" y="170" width="8" height="22" rx="2" fill="var(--amber)"/>
+        <text class="t" x="522" y="186">≈ 20%</text>
+      </svg>
+    </div>
+    <figcaption>Blue is the savings range quoted for the layout itself. Amber bars are U.S. DOE estimates for the next step up, aisle containment combined with variable-speed fan drives.</figcaption>
+  </figure>
+
+  <h3 style="margin-top:2.2rem">What it can cost</h3>
+  <ul class="costs">
+    <li><b>Downtime</b><span>Servers must be off while racks are moved.</span></li>
+    <li><b>HVAC tuning</b><span>The cooling system needs adjusting for the new airflow.</span></li>
+    <li><b>Cabling</b><span>New or rerouted cables for racks in new positions.</span></li>
+    <li><b>Power distribution</b><span>Power feeds to the racks may need to be reconfigured.</span></li>
+  </ul>
+</section>
+
+<section class="wrap">
+  <h2>Tips before you start</h2>
+  <div class="two">
+    <div>
+      <h3>Get rid of solid rack doors</h3>
+      <p>The layout depends on air passing straight through the rack. Solid glass or Plexiglas doors block it, so remove them or swap them for perforated doors.</p>
+      <figure>
+        <div class="fig small">
+          <svg viewBox="0 0 380 170" role="img" aria-labelledby="f5t">
+            <title id="f5t">A solid door deflects incoming cold air; a perforated door lets it through to the servers.</title>
+            <defs>
+              <marker id="mc5" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" style="fill:var(--cold)"/></marker>
+              <pattern id="slots5" width="10" height="14" patternUnits="userSpaceOnUse"><line x1="0" y1="13" x2="10" y2="13" stroke="var(--rack-slot)" stroke-width="1.5"/></pattern>
+            </defs>
+            <rect class="rack" x="110" y="30" width="50" height="110"/><rect x="110" y="30" width="50" height="110" fill="url(#slots5)"/>
+            <line x1="104" y1="26" x2="104" y2="144" stroke="var(--muted)" stroke-width="5"/>
+            <path class="flow sc" d="M20 85 H90 C98 85 98 60 70 55" marker-end="url(#mc5)"/>
+            <text class="t" x="90" y="164" text-anchor="middle">Solid door: air bounces off</text>
+            <rect class="rack" x="300" y="30" width="50" height="110"/><rect x="300" y="30" width="50" height="110" fill="url(#slots5)"/>
+            <line x1="294" y1="26" x2="294" y2="144" stroke="var(--muted)" stroke-width="5" stroke-dasharray="4 4"/>
+            <path class="flow sc" d="M210 85 H320" marker-end="url(#mc5)"/>
+            <text class="t" x="285" y="164" text-anchor="middle">Perforated: air flows in</text>
+          </svg>
+        </div>
+      </figure>
+    </div>
+    <div>
+      <h3>Control cooling from the cold aisle</h3>
+      <p>Many CRAC units decide how hard to work based on the temperature of the air coming back to them. Once exhaust is concentrated in hot aisles, that return air is much warmer than before, so the reading becomes misleading. Base control on server inlet temperature in the cold aisle instead.</p>
+      <figure>
+        <div class="fig small">
+          <svg viewBox="0 0 380 170" role="img" aria-labelledby="f6t">
+            <title id="f6t">Sensor at the CRAC return reads hot exhaust and is the wrong signal; sensor at the server inlet in the cold aisle is the right one.</title>
+            <defs><pattern id="slots6" width="10" height="14" patternUnits="userSpaceOnUse"><line x1="0" y1="13" x2="10" y2="13" stroke="var(--rack-slot)" stroke-width="1.5"/></pattern></defs>
+            <rect class="cold-zone" x="150" y="30" width="90" height="110"/>
+            <rect class="hot-zone" x="290" y="30" width="90" height="110"/>
+            <rect class="panel" x="10" y="40" width="70" height="100" rx="3"/>
+            <text class="t-s" x="45" y="95" text-anchor="middle">CRAC</text>
+            <rect class="rack" x="240" y="30" width="50" height="110"/><rect x="240" y="30" width="50" height="110" fill="url(#slots6)"/>
+            <rect class="fc" x="240" y="30" width="4" height="110"/><rect class="fh" x="286" y="30" width="4" height="110"/>
+            <circle cx="45" cy="34" r="7" fill="var(--surface)" stroke="var(--hot)" stroke-width="3"/>
+            <text class="t-s" x="58" y="20">return air: hot, misleading ✗</text>
+            <circle cx="232" cy="85" r="7" fill="var(--surface)" stroke="var(--cold)" stroke-width="3"/>
+            <text class="t" x="195" y="164" text-anchor="middle">server inlet: control here ✓</text>
+            <line x1="232" y1="93" x2="215" y2="150" stroke="var(--cold)" stroke-width="1"/>
+          </svg>
+        </div>
+      </figure>
+    </div>
+  </div>
+
+  <div class="two">
+    <div>
+      <h3>Retrofits take planning</h3>
+      <p>The layout makes sense for almost any new build or expansion. Rearranging an existing room is harder, since each rack move typically follows this order:</p>
+      <ol class="steps">
+        <li>Shut down everything in the rack.</li>
+        <li>Label and unplug every cable.</li>
+        <li>Have an electrician realign power so each device has an outlet in its new spot.</li>
+        <li>Work with facilities to reassess HVAC, because airflow in the room will change substantially.</li>
+      </ol>
+    </div>
+    <div>
+      <h3>Watch for new risks</h3>
+      <p>The new arrangement can leave the existing HVAC system ineffective, inefficient or undersized for the new airflow, and it can create fresh hot spots. Plan the cooling changes together with the rack moves rather than afterwards.</p>
+      <p class="note">ENERGY STAR's companion page on containment and enclosures covers the next step: physically closing off hot or cold aisles to prevent mixing even more.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="wrap">
+  <p>Based on ENERGY STAR (U.S. EPA), <a href="https://www.energystar.gov/products/data_center_equipment/16-more-ways-cut-energy-waste-data-center/move-hot-aislecold-aisle-layout">Move to a Hot Aisle/Cold Aisle Layout</a>. Diagrams redrawn for this explainer. Sources cited by that page:</p>
+  <ol>
+    <li>Origin of the layout with IBM in 1992: <a href="https://www.dataclean.com/pdf/AlternColdnew.pdf">dataclean.com</a></li>
+    <li>Adoption among larger data centers: <a href="https://www.nyserda.ny.gov/About/Publications/EA-Reports-and-Studies/Other-Technical-Reports/NY-Data-Center-Market-Characterization">NYSERDA, NY Data Center Market Characterization</a> (Table 12)</li>
+    <li>10–35% cooling savings: Siemens, Data Center FIM: Hot/Cold Aisle Layout</li>
+    <li>Fan and chiller savings with containment: NREL / DOE, <a href="http://energy.gov/sites/prod/files/2013/10/f3/eedatacenterbestpractices.pdf">Best Practices Guide for Energy-Efficient Data Center Design</a> (2010)</li>
+  </ol>
+</footer>
+
+<script>
+(function(){
+  var NS = "http://www.w3.org/2000/svg";
+  var xs = [170, 320, 470, 620], W = 44, Y0 = 45, H = 250;
+  var tempColor = {18:"var(--cold)",19:"var(--cold)",24:"var(--amber)",29:"var(--orange)",34:"var(--hot)",39:"var(--hot)"};
+
+  function el(tag, attrs, parent){
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function text(str, attrs, parent){ var t = el("text", attrs, parent); t.textContent = str; return t; }
+  function rack(g, x, frontLeft, inlet){
+    el("rect", {x:x, y:Y0, width:W, height:H, class:"rack"}, g);
+    for (var y = Y0 + 14; y < Y0 + H; y += 14) el("line", {x1:x, y1:y, x2:x+W, y2:y, stroke:"var(--rack-slot)", "stroke-width":1.2}, g);
+    var fx = frontLeft ? x : x + W - 5, bx = frontLeft ? x + W - 5 : x;
+    el("rect", {x:fx, y:Y0, width:5, height:H, fill:tempColor[inlet]}, g);
+    el("rect", {x:bx, y:Y0, width:5, height:H, fill:"var(--hot)", opacity:.55}, g);
+    var bx2 = x + W/2;
+    el("rect", {x:bx2-26, y:H+Y0+8, width:52, height:22, rx:3, fill:tempColor[inlet]}, g);
+    text(inlet + "°C", {x:bx2, y:H+Y0+23, "text-anchor":"middle", class:"t", fill:"#fff", style:"fill:#fff;font-weight:600"}, g);
+  }
+  function arrow(g, x1, x2, y, color){
+    var p = el("path", {d:"M"+x1+" "+y+" H"+x2, class:"flow", stroke:color, "marker-end":"url(#ma)"}, g);
+    p.style.stroke = color;
+  }
+
+  // Bad layout: all fronts face left
+  var bad = document.getElementById("bad-rows");
+  var temps = [18, 24, 29, 34];
+  var starts = [72, 214, 364, 514];
+  [100, 170, 240].forEach(function(y){
+    for (var i = 0; i < 4; i++) arrow(bad, starts[i], xs[i] - 6, y, tempColor[temps[i]]);
+    arrow(bad, 664, 790, y, tempColor[39]);
+  });
+  xs.forEach(function(x, i){ rack(bad, x, true, temps[i]); });
+  text("server inlet", {x:150, y:H+Y0+23, "text-anchor":"end", class:"t-s"}, bad);
+
+  // Good layout: alternate
+  var good = document.getElementById("good-rows");
+  var frontLeft = [false, true, false, true];
+  var gTemps = [18, 19, 18, 19];
+  [100, 170, 240].forEach(function(y){
+    arrow(good, 262, 220, y, "var(--cold)"); arrow(good, 272, 314, y, "var(--cold)");
+    arrow(good, 562, 520, y, "var(--cold)"); arrow(good, 572, 614, y, "var(--cold)");
+    arrow(good, 168, 120, y, "var(--hot)"); arrow(good, 366, 408, y, "var(--hot)");
+    arrow(good, 468, 426, y, "var(--hot)"); arrow(good, 666, 712, y, "var(--hot)");
+  });
+  xs.forEach(function(x, i){ rack(good, x, frontLeft[i], gTemps[i]); });
+  text("server inlet", {x:150, y:H+Y0+23, "text-anchor":"end", class:"t-s"}, good);
+
+  var copy = {
+    bad: "<strong>Hottest server inlet: about 34 °C.</strong> Each row breathes the previous row's exhaust, so to keep the last row safe the CRAC has to over-cool the whole room.",
+    good: "<strong>Every server inlet stays around 18–19 °C.</strong> Each row draws fresh supply air from its cold aisle, so cooling can be set for what the servers actually need."
+  };
+  var btns = document.querySelectorAll(".toggle button");
+  var readout = document.getElementById("readout");
+  function setMode(m){
+    document.getElementById("layout-bad").toggleAttribute("hidden", m !== "bad");
+    document.getElementById("layout-good").toggleAttribute("hidden", m !== "good");
+    btns.forEach(function(b){ b.setAttribute("aria-pressed", b.dataset.mode === m ? "true" : "false"); });
+    readout.innerHTML = copy[m];
+  }
+  btns.forEach(function(b){ b.addEventListener("click", function(){ setMode(b.dataset.mode); }); });
+  setMode("bad");
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

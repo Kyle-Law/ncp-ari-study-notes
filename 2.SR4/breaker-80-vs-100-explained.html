@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>80% vs 100% rated circuit breakers, explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F4F3; --panel:#FFFFFF; --ink:#18232E; --muted:#5C6975; --rule:#CDD4D9;
+  --copper:#B4642A; --copper-soft:#F1DFD0; --trip:#C23B2E; --ok:#2E7A58; --steel:#8996A1;
+  --band:#DCE3E8;
+  --sans:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --cond:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#131A20; --panel:#1B242C; --ink:#E4E9ED; --muted:#9AA7B2; --rule:#2E3A44;
+    --copper:#E08A4A; --copper-soft:#3A2A1E; --trip:#E5604F; --ok:#4CB386; --steel:#6F7D88; --band:#26323B;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#131A20; --panel:#1B242C; --ink:#E4E9ED; --muted:#9AA7B2; --rule:#2E3A44;
+  --copper:#E08A4A; --copper-soft:#3A2A1E; --trip:#E5604F; --ok:#4CB386; --steel:#6F7D88; --band:#26323B;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+main{max-width:860px;margin:0 auto;padding:40px 22px 64px}
+h1,h2,h3{font-family:var(--cond);font-weight:600;line-height:1.1;margin:0}
+h1{font-size:clamp(2.2rem,6vw,3.4rem);letter-spacing:-.01em}
+h2{font-size:1.75rem;margin-bottom:10px}
+p{margin:0 0 14px;max-width:68ch}
+a{color:var(--copper)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--copper);outline-offset:2px}
+.src{color:var(--muted);font-size:.92rem;margin-top:10px}
+.lede{font-size:1.2rem;margin-top:22px;max-width:60ch}
+.lede strong{font-weight:600}
+section{border-top:2px solid var(--ink);padding-top:22px;margin-top:52px}
+figure{margin:18px 0 0}
+figcaption{color:var(--muted);font-size:.9rem;margin-top:8px;max-width:68ch}
+.svgwrap{overflow-x:auto}
+svg{display:block;max-width:100%;height:auto}
+svg text{font-family:var(--sans);fill:var(--ink)}
+
+/* Load check (the hero instrument) */
+.instrument{background:var(--panel);border:1px solid var(--rule);border-left:6px solid var(--copper);padding:22px;margin-top:30px}
+.instrument h2{font-size:1.5rem}
+.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:16px 0 22px}
+.controls label{display:block;font-weight:600;font-size:.95rem;margin-bottom:6px}
+.controls output{font-family:var(--cond);font-weight:600;font-size:1.15rem}
+.seg{display:flex;border:1.5px solid var(--ink)}
+.seg button{flex:1;background:none;border:0;color:var(--ink);font:600 1rem var(--cond);padding:8px 6px;cursor:pointer}
+.seg button+button{border-left:1.5px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+select{width:100%;font:inherit;padding:7px;background:var(--paper);color:var(--ink);border:1.5px solid var(--ink)}
+input[type=range]{width:100%;accent-color:var(--copper)}
+.meter-label{display:flex;justify-content:space-between;font-size:.88rem;color:var(--muted);margin-top:14px}
+.verdict{margin-top:18px;padding:14px 16px;font-size:1.05rem;border:1.5px solid currentColor}
+.verdict b{font-family:var(--cond);font-size:1.3rem;font-weight:700;display:block;margin-bottom:2px}
+.v-ok{color:var(--ok)} .v-bad{color:var(--trip)}
+.verdict span{color:var(--ink)}
+
+/* Two-up compare */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media (max-width:600px){.pair{grid-template-columns:1fr}}
+.card{border:1px solid var(--rule);background:var(--panel);padding:16px}
+.card h3{font-size:1.35rem;margin-bottom:6px}
+.big{font-family:var(--cond);font-size:2.6rem;font-weight:700;line-height:1}
+.card small{color:var(--muted)}
+
+table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.98rem}
+th,td{text-align:left;padding:10px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--cond);font-weight:600;font-size:1.05rem;border-bottom:2px solid var(--ink)}
+.tablewrap{overflow-x:auto}
+.note{background:var(--copper-soft);padding:14px 16px;margin-top:18px;max-width:none}
+footer{margin-top:56px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--rule);padding-top:16px}
+@media (prefers-reduced-motion:no-preference){ .anim{transition:width .25s ease, x .25s ease} }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <h1>80% rated vs 100% rated circuit breakers</h1>
+  <p class="src">An illustrated explanation of Schneider Electric FAQ FA104355 &nbsp;|&nbsp; <a href="https://www.se.com/us/en/faqs/FA104355/">read the original</a></p>
+  <p class="lede">Both versions of a breaker carry the <strong>same amp rating and trip the same way</strong>. The only difference is how much load they're allowed to carry <strong>for 3 hours or more</strong>: a standard breaker may carry 80% of its setting, a 100% rated breaker may carry all of it.</p>
+</header>
+
+<!-- ============ HERO INSTRUMENT ============ -->
+<div class="instrument" id="check">
+  <h2>Try it: is this load allowed?</h2>
+  <div class="controls">
+    <div>
+      <label id="typeLbl">Breaker type</label>
+      <div class="seg" role="group" aria-labelledby="typeLbl">
+        <button type="button" data-type="80" aria-pressed="true">80% (standard)</button>
+        <button type="button" data-type="100" aria-pressed="false">100% rated</button>
+      </div>
+    </div>
+    <div>
+      <label for="irSel">Breaker setting (Ir)</label>
+      <select id="irSel">
+        <option>100</option><option selected>150</option><option>200</option><option>250</option><option>400</option>
+      </select>
+    </div>
+    <div>
+      <label for="loadR">Load: <output id="loadOut"></output></label>
+      <input id="loadR" type="range" min="0" max="125" step="1" value="90">
+    </div>
+    <div>
+      <label for="hrsR">Runs for: <output id="hrsOut"></output></label>
+      <input id="hrsR" type="range" min="0.5" max="8" step="0.5" value="4">
+    </div>
+  </div>
+
+  <div class="svgwrap">
+    <svg id="meter" viewBox="0 0 640 150" role="img" aria-label="Load compared with allowed continuous current">
+      <text x="0" y="14" font-size="13" fill="var(--muted)" style="fill:var(--muted)">Current (A)</text>
+      <rect x="0" y="24" width="640" height="34" fill="var(--band)"/>
+      <rect id="allowRect" x="0" y="24" width="0" height="34" fill="var(--ok)" opacity=".22"/>
+      <rect id="loadRect" class="anim" x="0" y="31" width="0" height="20" fill="var(--copper)"/>
+      <line id="m80" y1="18" y2="64" stroke="var(--ink)" stroke-dasharray="4 3"/>
+      <line id="m100" y1="18" y2="64" stroke="var(--ink)" stroke-width="2"/>
+      <text id="t80" y="80" font-size="12" text-anchor="middle"></text>
+      <text id="t100" y="80" font-size="12" text-anchor="middle"></text>
+
+      <text x="0" y="104" font-size="13" style="fill:var(--muted)">Duration (hours)</text>
+      <rect x="0" y="112" width="640" height="18" fill="var(--band)"/>
+      <rect id="hrsRect" class="anim" x="0" y="112" width="0" height="18" fill="var(--steel)"/>
+      <line x1="240" x2="240" y1="106" y2="136" stroke="var(--trip)" stroke-width="2"/>
+      <text x="246" y="146" font-size="12" style="fill:var(--trip)">3 h: "continuous" starts here</text>
+      <text x="0" y="146" font-size="12" style="fill:var(--muted)">0</text>
+      <text x="640" y="146" font-size="12" text-anchor="end" style="fill:var(--muted)">8 h</text>
+    </svg>
+  </div>
+  <div id="verdict" class="verdict" aria-live="polite"></div>
+</div>
+
+<!-- ============ SAME CURVE ============ -->
+<section>
+  <h2>Same breaker, same trip curve</h2>
+  <p>An 80% and a 100% version of a given breaker use the identical trip curve, so they react to an overload or a short circuit in exactly the same way. "100% rated" is not a stronger or slower breaker. It's a rating about how the breaker may be <em>applied</em> to long-running loads.</p>
+  <figure>
+    <div class="svgwrap"><svg id="curve" viewBox="0 0 640 380" role="img" aria-label="Simplified time-current trip curve shared by both versions"></svg></div>
+    <figcaption>Simplified, illustrative time-current curve (not from a datasheet). The shaded band is where the breaker trips. Both the 80% continuous limit and the full rating sit to the left of the band, where the breaker never trips; the difference between the two versions is a rule about heat over time, not a different curve.</figcaption>
+  </figure>
+</section>
+
+<!-- ============ 3 HOUR RULE ============ -->
+<section>
+  <h2>What "continuous" means: 3 hours or more</h2>
+  <p>The National Electrical Code (NEC) calls a load continuous when its maximum current is expected to last 3 hours or longer. The 80% restriction only applies to continuous loads. Below 3 hours, a standard breaker can be loaded to 100% of its setting.</p>
+  <figure>
+    <div class="svgwrap"><svg viewBox="0 0 640 230" role="img" aria-label="Two load scenarios on a timeline with a 3 hour threshold">
+      <!-- axis -->
+      <line x1="60" y1="190" x2="620" y2="190" stroke="var(--ink)"/>
+      <g font-size="12" style="fill:var(--muted)">
+        <text x="60" y="208" text-anchor="middle">0 h</text>
+        <text x="153" y="208" text-anchor="middle">1</text>
+        <text x="247" y="208" text-anchor="middle">2</text>
+        <text x="340" y="208" text-anchor="middle">3</text>
+        <text x="433" y="208" text-anchor="middle">4</text>
+        <text x="527" y="208" text-anchor="middle">5</text>
+        <text x="620" y="208" text-anchor="middle">6 h</text>
+      </g>
+      <rect x="340" y="10" width="280" height="180" fill="var(--trip)" opacity=".07"/>
+      <line x1="340" y1="10" x2="340" y2="190" stroke="var(--trip)" stroke-width="2"/>
+      <text x="348" y="26" font-size="13" style="fill:var(--trip)">Continuous zone</text>
+
+      <!-- Scenario A -->
+      <text x="0" y="74" font-size="13" font-weight="600">Load A</text>
+      <rect x="60" y="56" width="187" height="26" fill="var(--copper)"/>
+      <text x="256" y="74" font-size="13">100% load for 2 h. OK on either breaker.</text>
+
+      <!-- Scenario B -->
+      <text x="0" y="144" font-size="13" font-weight="600">Load B</text>
+      <rect x="60" y="126" width="373" height="26" fill="var(--copper)"/>
+      <rect x="340" y="126" width="93" height="26" fill="var(--trip)" opacity=".55"/>
+      <text x="442" y="138" font-size="13">100% load for 4 h.</text>
+      <text x="442" y="155" font-size="13">Needs a 100% rated breaker.</text>
+    </svg></div>
+    <figcaption>Load B crosses the 3-hour mark, so on a standard breaker it would have to be held to 80% of the setting.</figcaption>
+  </figure>
+</section>
+
+<!-- ============ Ir SETTING ============ -->
+<section>
+  <h2>The 80% applies to the setting, not the frame</h2>
+  <p>Many molded-case breakers have an adjustable long-time pickup, Ir. The FAQ's example: a 150 A PowerPact H-frame dialed down to 100 A has a continuous limit of 80% of <em>100 A</em>, not of 150 A. Turn the dial to see the limit follow.</p>
+  <figure>
+    <div class="pair" style="align-items:center">
+      <div class="svgwrap"><svg id="dial" viewBox="0 0 260 200" role="img" aria-label="Adjustable trip setting dial"></svg></div>
+      <div>
+        <label for="dialR" style="font-weight:600">Ir setting on a 150 A frame: <output id="dialOut"></output></label>
+        <input id="dialR" type="range" min="60" max="150" step="10" value="100">
+        <p style="font-size:.9rem;color:var(--muted);margin:8px 0 0">The needle is the Ir setting; the green arc is the load a standard breaker may carry continuously at that setting.</p>
+        <div class="card" style="margin-top:14px">
+          <small>Continuous limit on a standard (80%) breaker</small>
+          <div class="big" id="dialLimit"></div>
+          <small id="dialMath"></small>
+        </div>
+      </div>
+    </div>
+  </figure>
+</section>
+
+<!-- ============ SIZING ============ -->
+<section>
+  <h2>Why it matters: breaker size for the same load</h2>
+  <p>In practice, the 80% rule means a standard breaker has to be oversized for a continuous load (by 125%, the inverse of 80%), while a 100% rated breaker can be matched to the load. That can mean a smaller breaker, and sometimes smaller equipment upstream. Pick a continuous load:</p>
+  <label for="sizeR" style="font-weight:600">Continuous load: <output id="sizeOut"></output></label>
+  <input id="sizeR" type="range" min="40" max="640" step="5" value="120">
+  <div class="svgwrap" style="margin-top:12px"><svg id="sizeSvg" viewBox="0 0 640 150" role="img" aria-label="Required breaker size for each type"></svg></div>
+  <div class="pair">
+    <div class="card"><h3>80% (standard)</h3><div class="big" id="s80"></div><small id="s80m"></small></div>
+    <div class="card"><h3>100% rated</h3><div class="big" id="s100"></div><small id="s100m"></small></div>
+  </div>
+  <p class="note">Simplified on purpose: this assumes a purely continuous load and rounds up to standard NEC breaker sizes. Real sizing also accounts for non-continuous loads, conductor ampacity and the specific listing of the equipment. This part is general NEC context, not taken from the FAQ.</p>
+</section>
+
+<!-- ============ FRAMES ============ -->
+<section>
+  <h2>Schneider breakers that come in 100% rated versions</h2>
+  <p>A 100% rated breaker is a specific product, ordered by part number. The FAQ lists these frames:</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Frame</th><th>Where the 100% version applies</th><th>How to get it</th></tr></thead>
+    <tbody>
+      <tr><td>PowerPact H</td><td>Unit-mounted only</td><td>Special catalog suffix</td></tr>
+      <tr><td>PowerPact J</td><td>Unit-mounted only</td><td>Special catalog suffix</td></tr>
+      <tr><td>PowerPact L</td><td>Unit-mounted, or I-LINE up to 400 A</td><td>Special catalog suffix</td></tr>
+      <tr><td>PowerPact P and R</td><td>See product documentation</td><td>Special catalog suffix</td></tr>
+      <tr><td>Masterpact NT and NW</td><td>Power circuit breakers</td><td>Available as 100% rated</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="margin-top:14px">"Unit-mounted" means a breaker in its own individual enclosure, as opposed to one installed in a panelboard. The 100% rating holds only in the conditions the product is listed for, so the same breaker in a different assembly may revert to 80%.</p>
+</section>
+
+<footer>
+  Source: Schneider Electric USA, FAQ FA104355, "What is the difference between a 80% rated breaker and a 100% rated breaker?" Published 7/24/2003, last modified 10/14/2024. Curves and sizing figures on this page are illustrative. Always confirm with the product's documentation, the NEC as adopted locally, and a qualified engineer.
+</footer>
+</main>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; };
+
+  /* ---------- Load check ---------- */
+  let type = "80";
+  document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+    type = b.dataset.type;
+    document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    updateCheck();
+  }));
+  ["irSel","loadR","hrsR"].forEach(id => $(id).addEventListener("input", updateCheck));
+
+  function updateCheck(){
+    const ir = +$("irSel").value, pct = +$("loadR").value, hrs = +$("hrsR").value;
+    const load = Math.round(ir * pct / 100);
+    const continuous = hrs >= 3;
+    const limit = continuous && type === "80" ? 0.8 * ir : ir;
+    $("loadOut").textContent = load + " A (" + pct + "% of Ir)";
+    $("hrsOut").textContent = hrs + (hrs === 1 ? " hour" : " hours");
+
+    const W = 640, scale = W / (1.25 * ir);
+    $("loadRect").setAttribute("width", Math.min(load * scale, W));
+    $("allowRect").setAttribute("width", limit * scale);
+    const x80 = 0.8 * ir * scale, x100 = ir * scale;
+    ["m80","m100"].forEach((id,i) => { const x = i ? x100 : x80; $(id).setAttribute("x1", x); $(id).setAttribute("x2", x); });
+    $("t80").setAttribute("x", x80); $("t80").textContent = "80% = " + (0.8*ir) + " A";
+    $("t100").setAttribute("x", x100); $("t100").textContent = "Ir = " + ir + " A";
+    $("hrsRect").setAttribute("width", hrs / 8 * W);
+    $("loadRect").setAttribute("fill", load > limit ? "var(--trip)" : "var(--copper)");
+
+    const v = $("verdict");
+    let title, body, ok;
+    if (load > ir) {
+      ok = false; title = "Overloaded";
+      body = load + " A is above the " + ir + " A setting. Either version will eventually trip on its thermal curve; this isn't an 80% vs 100% question.";
+    } else if (load > limit) {
+      ok = false; title = "Not allowed on a standard breaker";
+      body = "This load runs " + hrs + " h, so it's continuous. A standard breaker may carry only " + (0.8*ir) + " A continuously. Use a 100% rated breaker, or a larger standard breaker.";
+    } else if (!continuous) {
+      ok = true; title = "Allowed";
+      body = "Under 3 hours isn't continuous, so even a standard breaker may carry up to its full " + ir + " A.";
+    } else {
+      ok = true; title = "Allowed";
+      body = type === "100"
+        ? "A 100% rated breaker may carry up to its full " + ir + " A continuously."
+        : load + " A is within the " + (0.8*ir) + " A continuous limit of a standard breaker.";
+    }
+    v.className = "verdict " + (ok ? "v-ok" : "v-bad");
+    v.innerHTML = "<b></b><span></span>";
+    v.querySelector("b").textContent = title;
+    v.querySelector("span").textContent = body;
+  }
+  updateCheck();
+
+  /* ---------- Trip curve ---------- */
+  (function(){
+    const svg = $("curve");
+    const L = 64, R = 620, T = 16, B = 330;
+    const xMin = Math.log10(0.5), xMax = Math.log10(20), yMin = Math.log10(0.01), yMax = Math.log10(10000);
+    const X = m => L + (Math.log10(m) - xMin) / (xMax - xMin) * (R - L);
+    const Y = t => B - (Math.log10(t) - yMin) / (yMax - yMin) * (B - T);
+
+    // grid
+    [0.5,1,2,5,10,20].forEach(m => {
+      svg.appendChild(el("line",{x1:X(m),x2:X(m),y1:T,y2:B,stroke:"var(--rule)"}));
+      svg.appendChild(el("text",{x:X(m),y:B+18,"font-size":12,"text-anchor":"middle",style:"fill:var(--muted)"}, m + "×"));
+    });
+    [0.01,0.1,1,10,100,1000,10000].forEach(t => {
+      svg.appendChild(el("line",{x1:L,x2:R,y1:Y(t),y2:Y(t),stroke:"var(--rule)"}));
+      svg.appendChild(el("text",{x:L-6,y:Y(t)+4,"font-size":12,"text-anchor":"end",style:"fill:var(--muted)"}, t >= 1 ? t : t));
+    });
+    svg.appendChild(el("text",{x:(L+R)/2,y:B+40,"font-size":13,"text-anchor":"middle"},"Current, as a multiple of the setting Ir"));
+    svg.appendChild(el("text",{x:14,y:(T+B)/2,"font-size":13,"text-anchor":"middle",transform:"rotate(-90 14 "+((T+B)/2)+")"},"Seconds to trip"));
+
+    // band
+    const thermal = m => 1000 / (m*m - 1);
+    const up = [], lo = [];
+    for (let m = 1.05; m <= 10; m *= 1.03) {
+      up.push([m, Math.min(thermal(m) * 3, 10000)]);
+      lo.push([m * 1.08, Math.min(thermal(m) * 0.4, 10000)]);
+    }
+    // instantaneous region
+    up.push([10, 0.05]); up.push([20, 0.05]);
+    lo.push([12, 0.01]); lo.push([20, 0.01]);
+    const pts = up.map(p => X(p[0]).toFixed(1) + "," + Y(Math.max(p[1],0.01)).toFixed(1))
+      .concat(lo.reverse().map(p => X(Math.min(p[0],20)).toFixed(1) + "," + Y(Math.max(p[1],0.01)).toFixed(1)));
+    svg.appendChild(el("polygon",{points:pts.join(" "),fill:"var(--copper)",opacity:".28",stroke:"var(--copper)","stroke-width":1.5}));
+    svg.appendChild(el("text",{x:X(2.6),y:Y(600),"font-size":13,"font-weight":600},"Trip band (same for both versions)"));
+    svg.appendChild(el("text",{x:X(11),y:Y(0.3),"font-size":12},"Instant trip"));
+
+    // markers
+    svg.appendChild(el("line",{x1:X(0.8),x2:X(0.8),y1:T,y2:B,stroke:"var(--ink)","stroke-width":2,"stroke-dasharray":"4 3"}));
+    svg.appendChild(el("line",{x1:X(1),x2:X(1),y1:T,y2:B,stroke:"var(--ink)","stroke-width":2}));
+    svg.appendChild(el("text",{x:X(0.8)-6,y:T+14,"font-size":12,"text-anchor":"end"},"80% limit"));
+    svg.appendChild(el("text",{x:X(1)+6,y:Y(3),"font-size":12},"Ir (100%)"));
+    svg.appendChild(el("rect",{x:L+2,y:Y(1),width:X(1)-L-4,height:46,fill:"var(--panel)",opacity:".9"}));
+    svg.appendChild(el("text",{x:L+8,y:Y(1)+18,"font-size":12},"No trip zone:"));
+    svg.appendChild(el("text",{x:L+8,y:Y(1)+36,"font-size":12},"both loads live here"));
+  })();
+
+  /* ---------- Dial ---------- */
+  (function(){
+    const svg = $("dial"), cx = 130, cy = 140, r = 100;
+    const a0 = Math.PI, a1 = 0; // left to right semicircle
+    const ang = v => a0 + (v - 60) / 90 * (a1 - a0);
+    const P = (v, rr) => [cx + rr * Math.cos(ang(v)), cy - rr * Math.sin(ang(v))];
+    svg.appendChild(el("path",{d:`M ${P(60,r)} A ${r} ${r} 0 0 1 ${P(150,r)}`,fill:"none",stroke:"var(--band)","stroke-width":18}));
+    const arc = el("path",{fill:"none",stroke:"var(--ok)","stroke-width":18,opacity:".6"}); svg.appendChild(arc);
+    for (let v = 60; v <= 150; v += 10) {
+      const [x1,y1] = P(v, r + 12), [x2,y2] = P(v, r + 20), [tx,ty] = P(v, r - 26);
+      svg.appendChild(el("line",{x1,y1,x2,y2,stroke:"var(--ink)","stroke-width":1.5}));
+      if (v % 30 === 0) svg.appendChild(el("text",{x:tx,y:ty+4,"font-size":12,"text-anchor":"middle"}, v));
+    }
+    const needle = el("line",{x1:cx,y1:cy,stroke:"var(--ink)","stroke-width":3,"stroke-linecap":"round"}); svg.appendChild(needle);
+    svg.appendChild(el("circle",{cx,cy,r:7,fill:"var(--ink)"}));
+    svg.appendChild(el("text",{x:cx,y:cy+30,"font-size":12,"text-anchor":"middle",style:"fill:var(--muted)"},"Ir dial, amps (150 A frame)"));
+
+    function upd(){
+      const v = +$("dialR").value, lim = 0.8 * v;
+      const [nx,ny] = P(v, r - 40);
+      needle.setAttribute("x2", nx); needle.setAttribute("y2", ny);
+      // green arc = 60 A … continuous limit (only drawn if limit ≥ 60)
+      const end = Math.max(lim, 60.01);
+      arc.setAttribute("d", `M ${P(60,r)} A ${r} ${r} 0 0 1 ${P(end,r)}`);
+      $("dialOut").textContent = v + " A";
+      $("dialLimit").textContent = lim + " A";
+      $("dialMath").textContent = "80% × " + v + " A setting (not 80% × 150 A = 120 A)";
+    }
+    $("dialR").addEventListener("input", upd); upd();
+  })();
+
+  /* ---------- Sizing ---------- */
+  (function(){
+    const STD = [15,20,25,30,35,40,45,50,60,70,80,90,100,110,125,150,175,200,225,250,300,350,400,450,500,600,700,800,1000,1200];
+    const next = a => STD.find(s => s >= a - 1e-9);
+    const svg = $("sizeSvg");
+    function upd(){
+      const load = +$("sizeR").value;
+      const n80 = next(load * 1.25), n100 = next(load);
+      $("sizeOut").textContent = load + " A";
+      $("s80").textContent = n80 + " A"; $("s80m").textContent = load + " A × 125% = " + (load*1.25).toFixed(1) + " A, round up to the next standard size";
+      $("s100").textContent = n100 + " A"; $("s100m").textContent = load + " A, round up to the next standard size";
+      const max = n80 * 1.3, W = 400, x0 = 130, s = W / max;
+      svg.innerHTML = "";
+      const rows = [["80% (standard)", n80, 30], ["100% rated", n100, 92]];
+      rows.forEach(([lbl, n, y]) => {
+        svg.appendChild(el("text",{x:0,y:y+22,"font-size":13,"font-weight":600}, lbl));
+        svg.appendChild(el("rect",{x:x0,y,width:n*s,height:32,fill:"var(--band)",stroke:"var(--ink)"}));
+        svg.appendChild(el("rect",{x:x0,y:y+6,width:load*s,height:20,fill:"var(--copper)"}));
+        svg.appendChild(el("text",{x:x0 + n*s + 8,y:y+22,"font-size":13}, n + " A breaker"));
+      });
+      svg.appendChild(el("text",{x:x0,y:16,"font-size":12,style:"fill:var(--muted)"},"Copper bar = load; outlined box = breaker size needed"));
+    }
+    $("sizeR").addEventListener("input", upd); upd();
+  })();
+})();
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

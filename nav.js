@@ -157,6 +157,118 @@
    "title": "Liquid cooling architectures for AI data centers, explained"
   },
   {
+   "path": "2.SR1/tia-606b-cable-labeling-explained.html",
+   "section": "2",
+   "kind": "SR",
+   "code": "SR1",
+   "title": "TIA-606-B cable labeling, explained visually"
+  },
+  {
+   "path": "2.SR2/elevated_return_air_explainer.html",
+   "section": "2",
+   "kind": "SR",
+   "code": "SR2",
+   "title": "Elevated return air temperature, explained"
+  },
+  {
+   "path": "2.SR3/nec-392-18F-cable-tray-access.html",
+   "section": "2",
+   "kind": "SR",
+   "code": "SR3",
+   "title": "NEC 392.18(F) Cable Tray Access, explained"
+  },
+  {
+   "path": "2.SR4/breaker-80-vs-100-explained.html",
+   "section": "2",
+   "kind": "SR",
+   "code": "SR4",
+   "title": "80% vs 100% rated circuit breakers, explained"
+  },
+  {
+   "path": "2.SR7/hot-aisle-cold-aisle-explained.html",
+   "section": "2",
+   "kind": "SR",
+   "code": "SR7",
+   "title": "Hot aisle / cold aisle layout, explained"
+  },
+  {
+   "path": "2.SR8/nvidia-networking-explained.html",
+   "section": "2",
+   "kind": "SR",
+   "code": "SR8",
+   "title": "NVIDIA Networking, explained"
+  },
+  {
+   "path": "3.SR1/data-center-design-explained.html",
+   "section": "3",
+   "kind": "SR",
+   "code": "SR1",
+   "title": "Energy-Efficient Data Center Design, Explained"
+  },
+  {
+   "path": "3.SR2/dgx-h100-h200-guide-explained.html",
+   "section": "3",
+   "kind": "SR",
+   "code": "SR2",
+   "title": "DGX H100/H200 User Guide, explained"
+  },
+  {
+   "path": "3.SR3/infiniband-cables-explained.html",
+   "section": "3",
+   "kind": "SR",
+   "code": "SR3",
+   "title": "InfiniBand cables, explained visually"
+  },
+  {
+   "path": "3.SR4/wyr-grid-explained.html",
+   "section": "3",
+   "kind": "SR",
+   "code": "SR4",
+   "title": "Wyr-Grid Overhead Cable Tray — explained"
+  },
+  {
+   "path": "3.SR5/nfpa70-explained.html",
+   "section": "3",
+   "kind": "SR",
+   "code": "SR5",
+   "title": "NFPA 70 (NEC) code development, explained"
+  },
+  {
+   "path": "3.SR6/n93180ycfx-site-prep.html",
+   "section": "3",
+   "kind": "SR",
+   "code": "SR6",
+   "title": "Nexus 93180YC-FX: Preparing the Site, Explained"
+  },
+  {
+   "path": "3.SR7/vertiv-rack-cooling-explained.html",
+   "section": "3",
+   "kind": "SR",
+   "code": "SR7",
+   "title": "Vertiv Rack Cooling, explained"
+  },
+  {
+   "path": "3.SR7/vertiv-rack-cooling-explained2.html",
+   "section": "3",
+   "kind": "SR",
+   "code": "SR7",
+   "title": "Vertiv rack cooling, explained"
+  },
+  {
+   "path": "3.SR8/intel-rack-compatibility-explained.html",
+   "section": "3",
+   "kind": "SR",
+   "code": "SR8",
+   "title": "Will this server fit this rack? Intel's rack compatibility guide, explained"
+  },
+  {
+   "path": "3.SR8/intel_rack_compatibility_explained.html",
+   "section": "3",
+   "kind": "SR",
+   "code": "SR8",
+   "title": "Intel Server Rack Cabinet Compatibility Guide, explained"
+  },
+  {
    "path": "4.SR2/osfp-vs-qsfpdd-explained.html",
    "section": "4",
    "kind": "SR",
