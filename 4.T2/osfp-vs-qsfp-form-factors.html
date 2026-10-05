@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OSFP vs. QSFP form factors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .shell { fill: var(--panel-2); stroke: var(--ink); stroke-width: 1.5; }
+  .pad1 { fill: var(--accent); } .pad2 { fill: var(--warn); }
+  .fin { stroke: var(--muted); stroke-width: 2; }
+  .dim { stroke: var(--muted); stroke-width: 1; fill: none; }
+  .t { font-size: 13px; } .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12px; fill: var(--muted) !important; }
+  .lanes { display: flex; flex-wrap: wrap; gap: 3px; margin: .6rem 0; min-height: 30px; }
+  .lane { height: 26px; border-radius: 4px; background: var(--accent); color: var(--bg); font-size: .75rem; font-weight: 600; display: grid; place-items: center; }
+  .calc { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); align-items: end; }
+  .fit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 1rem; }
+  #fit-out { margin-top: 1rem; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">4 · T2</span><span class="chip">High-Density Cabling</span><span class="chip weight">30% of exam</span></div>
+  <h1>OSFP vs. QSFP: same lanes, different boxes</h1>
+  <p class="lede">The form factor is the plug's shell: how many electrical lanes it carries, how much heat it can shed, and which cages it fits. Port speed is the number of lanes times the speed of each lane.</p>
+  <p class="objective"><b>Exam objective</b>Describe the different transceiver form factors (OSFP vs. QSFP).</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li>The prefix tells you the <b>lane count</b>: SFP = 1, QSFP = 4 (quad), QSFP-DD = 8 (double density, a second row of contacts), OSFP = 8 (octal, in a bigger shell).</li>
+    <li>The suffix hints at the <b>lane speed</b>: QSFP28 ≈ 25G lanes (100G port), QSFP56 ≈ 50G (200G, HDR), QSFP112 ≈ 100G (400G, NDR).</li>
+    <li><b>OSFP</b> is wider and taller (~22.6 × 13 mm face vs QSFP-DD's ~18.4 × 8.5 mm), so it has more room for heat. It suits high-power AI/HPC optics. QSFP-DD packs more ports per 1U and <b>accepts older QSFP plugs</b>.</li>
+    <li><b>OSFP and QSFP are separate families</b>: no QSFP plug fits an OSFP cage, and NVIDIA offers no adapter between them.</li>
+    <li>NVIDIA InfiniBand: switches use <b>twin-port OSFP</b> (2 × 400G at NDR). ConnectX-7 comes in <b>OSFP or QSFP112</b>. QSFP-DD appears only on Ethernet switches.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>The family tree</h2>
+  <p>Every name builds on <b>SFP</b> (Small Form-factor Pluggable). The letter in front says how many lanes, and the number after hints at the per-lane signalling rate.</p>
+  <figure>
+    <div class="wide"><svg viewBox="0 0 760 250" role="img" aria-labelledby="famT">
+      <title id="famT">Connector faces of SFP, QSFP, QSFP-DD and OSFP drawn to approximate scale, with lane pads</title>
+      <!-- SFP ~13.7 wide -->
+      <g transform="translate(20,40)">
+        <rect width="82" height="51" rx="4" class="shell"/>
+        <rect x="35" y="20" width="12" height="12" class="pad1"/>
+        <text x="41" y="80" text-anchor="middle" class="tb">SFP</text><text x="41" y="98" text-anchor="middle" class="tm">1 lane · ≈13.7 mm</text>
+      </g>
+      <!-- QSFP ~18.4 wide -->
+      <g transform="translate(150,40)">
+        <rect width="110" height="51" rx="4" class="shell"/>
+        <g class="pad1"><rect x="17" y="20" width="14" height="12"/><rect x="37" y="20" width="14" height="12"/><rect x="59" y="20" width="14" height="12"/><rect x="79" y="20" width="14" height="12"/></g>
+        <text x="55" y="80" text-anchor="middle" class="tb">QSFP (+/28/56/112)</text><text x="55" y="98" text-anchor="middle" class="tm">4 lanes · ≈18.4 mm</text>
+      </g>
+      <!-- QSFP-DD same width, two rows -->
+      <g transform="translate(310,40)">
+        <rect width="110" height="51" rx="4" class="shell"/>
+        <g class="pad1"><rect x="17" y="12" width="14" height="11"/><rect x="37" y="12" width="14" height="11"/><rect x="59" y="12" width="14" height="11"/><rect x="79" y="12" width="14" height="11"/></g>
+        <g class="pad2"><rect x="17" y="28" width="14" height="11"/><rect x="37" y="28" width="14" height="11"/><rect x="59" y="28" width="14" height="11"/><rect x="79" y="28" width="14" height="11"/></g>
+        <text x="55" y="80" text-anchor="middle" class="tb">QSFP-DD</text><text x="55" y="98" text-anchor="middle" class="tm">8 lanes · same width, 2nd row</text>
+      </g>
+      <!-- OSFP ~22.6 wide, 13 tall -->
+      <g transform="translate(480,18)">
+        <rect width="136" height="78" rx="5" class="shell"/>
+        <g class="fin"><line x1="10" y1="-8" x2="10" y2="0"/><line x1="26" y1="-8" x2="26" y2="0"/><line x1="42" y1="-8" x2="42" y2="0"/><line x1="58" y1="-8" x2="58" y2="0"/><line x1="74" y1="-8" x2="74" y2="0"/><line x1="90" y1="-8" x2="90" y2="0"/><line x1="106" y1="-8" x2="106" y2="0"/><line x1="122" y1="-8" x2="122" y2="0"/></g>
+        <g class="pad1"><rect x="14" y="33" width="11" height="12"/><rect x="28" y="33" width="11" height="12"/><rect x="42" y="33" width="11" height="12"/><rect x="56" y="33" width="11" height="12"/><rect x="70" y="33" width="11" height="12"/><rect x="84" y="33" width="11" height="12"/><rect x="98" y="33" width="11" height="12"/><rect x="112" y="33" width="11" height="12"/></g>
+        <text x="68" y="102" text-anchor="middle" class="tb">OSFP</text><text x="68" y="120" text-anchor="middle" class="tm">8 lanes · ≈22.6 × 13 mm</text>
+      </g>
+      <text x="0" y="190" class="t">Width grows SFP → QSFP; QSFP-DD keeps QSFP's width and adds a row; OSFP is a new, bigger shell with fins.</text>
+      <text x="0" y="214" class="tm">Faces drawn to approximate relative scale. Pads are schematic; real modules carry lanes as gold fingers on a paddle card.</text>
+    </svg></div>
+  </figure>
+</section>
+
+<section>
+  <h2>Port speed = lanes × lane rate</h2>
+  <p>The form factor fixes the lane count. The modulation fixes the lane speed: NRZ sends 1 bit per symbol, PAM4 sends 2. Try combinations:</p>
+  <div class="card">
+    <div class="calc">
+      <label class="field">Form factor
+        <select id="ff">
+          <option value="1">SFP (1 lane)</option>
+          <option value="4">QSFP (4 lanes)</option>
+          <option value="8" selected>OSFP / QSFP-DD (8 lanes)</option>
+        </select>
+      </label>
+      <label class="field">Lane rate
+        <select id="lr">
+          <option value="10">10G NRZ (QSFP+)</option>
+          <option value="25">25G NRZ (EDR / QSFP28)</option>
+          <option value="50">50G PAM4 (HDR / QSFP56)</option>
+          <option value="100" selected>100G PAM4 (NDR / QSFP112)</option>
+          <option value="200">200G PAM4 (XDR)</option>
+        </select>
+      </label>
+      <div><div class="muted small">Port speed</div><div class="out" id="sp-out"></div></div>
+    </div>
+    <div class="lanes" id="lanes" aria-hidden="true"></div>
+    <p class="small muted" id="sp-note" style="margin:0"></p>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Generation</th><th>Lane rate</th><th>Typical NVIDIA port</th><th>Form factor in NVIDIA gear</th></tr></thead>
+      <tbody>
+        <tr><td>EDR / 100GbE</td><td>25G NRZ</td><td>4 × 25G = 100G</td><td>QSFP28</td></tr>
+        <tr><td>HDR / 200GbE</td><td>50G PAM4</td><td>4 × 50G = 200G</td><td>QSFP56 (OSFP on some switch ends)</td></tr>
+        <tr><td>NDR / 400GbE</td><td>100G PAM4</td><td>4 × 100G = 400G per link; 2 links per twin-port switch cage = 800G</td><td>Twin-port OSFP (switch), OSFP or QSFP112 (ConnectX-7)</td></tr>
+        <tr><td>XDR / 800GbE</td><td>200G PAM4</td><td>4 × 200G = 800G per link; twin-port = 1.6T</td><td>OSFP</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>OSFP vs. QSFP-DD head to head</h2>
+  <p>At 400G and 800G both carry the same 8 × lanes, so the choice isn't about raw speed. It comes down to <b>heat</b>, <b>density</b>, <b>backward compatibility</b> and, above all, <b>which cage your switch has</b>.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>QSFP-DD</th><th>OSFP</th></tr></thead>
+      <tbody>
+        <tr><td>Lanes</td><td>8 (two rows of 4)</td><td>8</td></tr>
+        <tr><td>Size (approx.)</td><td>≈89 × 18.4 mm, 8.5 mm tall</td><td>≈108 × 22.6 mm, 13 mm tall</td></tr>
+        <tr><td>Typical power</td><td>≈7–12 W; top end may need extra cooling</td><td>≈12–15 W and beyond; more room to shed heat</td></tr>
+        <tr><td>Heat sink</td><td>In the host cage</td><td>Integrated fins (finned top) or flat top for riding heat sinks</td></tr>
+        <tr><td>Ports per 1U (typical)</td><td>36 (= 28.8 Tb/s at 800G)</td><td>32 (= 25.6 Tb/s at 800G)</td></tr>
+        <tr><td>Accepts older QSFP plugs</td><td class="yes">Yes: QSFP+/28/56/112 use the first row</td><td class="no">No</td></tr>
+        <tr><td>Where it shows up</td><td>Cloud, telecom, enterprise Ethernet; phased upgrades</td><td>AI/ML, HPC, NVIDIA InfiniBand; greenfield builds</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small muted">Power and size are the ballpark figures from the 4 · SR2 article and MSA dimensions. Real draw depends on the optic (short-reach multimode vs 10 km single-mode) and the vendor's datasheet.</p>
+</section>
+
+<section>
+  <h2>Will it fit?</h2>
+  <p>Pick the cage on your equipment and the plug in your hand.</p>
+  <div class="card">
+    <div class="fit-grid">
+      <label class="field">Cage (on the switch / NIC)
+        <select id="cage">
+          <option value="osfp2">Twin-port OSFP, open top (NDR/XDR switch)</option>
+          <option value="osfp1">Single-port OSFP, riding heat sink (ConnectX-7 OSFP)</option>
+          <option value="qsfpdd">QSFP-DD (Ethernet switch)</option>
+          <option value="qsfp112">QSFP112 (ConnectX-7 QSFP112, BlueField-3)</option>
+          <option value="qsfp56">QSFP56 (HDR switch / ConnectX-6)</option>
+        </select>
+      </label>
+      <label class="field">Plug
+        <select id="plug">
+          <option value="osfp2fin">Twin-port OSFP, finned top</option>
+          <option value="osfp1flat">Single-port OSFP, flat top</option>
+          <option value="qsfpdd">QSFP-DD</option>
+          <option value="qsfp112">QSFP112</option>
+          <option value="qsfp56">QSFP56</option>
+          <option value="qsfp28">QSFP28</option>
+        </select>
+      </label>
+    </div>
+    <p id="fit-out" aria-live="polite"></p>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"OSFP is faster than QSFP-DD."</b>Not inherently. Both carry 8 lanes. OSFP's advantage is thermal headroom, not lane count.</li>
+    <li><b>"QSFP-DD is used on ConnectX adapters."</b>It isn't. QSFP-DD is a switch-only cage, and only for Ethernet. NVIDIA adapters and DPUs use OSFP, QSFP112 or QSFP56.</li>
+    <li><b>"A QSFP56 plug will work in an OSFP port with the right adapter."</b>No NVIDIA adapter exists. Treat OSFP and QSFP as separate worlds.</li>
+    <li><b>Backward compatibility runs one way.</b>A newer QSFP cage accepts an older QSFP plug, which runs on 4 lanes at its own speed. An 8-lane QSFP-DD plug won't run in a 4-lane QSFP cage.</li>
+    <li><b>Twin-port ≠ one 800G link.</b>At NDR a twin-port OSFP carries two independent 400G links, usually split to two adapters.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. How many electrical lanes do QSFP-DD and OSFP each carry?</p>
+      <div class="opts"><button class="opt">4 and 8</button><button class="opt" data-correct>8 and 8</button><button class="opt">8 and 16</button></div>
+      <p class="why">Both are 8-lane. QSFP-DD adds a second row of 4 to the QSFP footprint. OSFP is an 8-lane ("octal") design in a larger shell.</p></div>
+    <div class="q"><p>2. A site has QSFP28 optics left over from a 100G network. Which new 400G switch cage can still use them?</p>
+      <div class="opts"><button class="opt" data-correct>QSFP-DD</button><button class="opt">OSFP</button><button class="opt">Either one</button></div>
+      <p class="why">QSFP-DD cages accept older QSFP plugs on their first row of contacts. OSFP has a different shape and won't accept them.</p></div>
+    <div class="q"><p>3. Why do AI/HPC clusters tend to choose OSFP?</p>
+      <div class="opts"><button class="opt">It supports more lanes</button><button class="opt" data-correct>Its larger shell dissipates more heat for high-power optics</button><button class="opt">It is cheaper per port</button></div>
+      <p class="why">OSFP's extra volume (and fins) gives thermal headroom for ~12–15 W+ modules. Lane count is the same as QSFP-DD.</p></div>
+    <div class="q"><p>4. ConnectX-7 adapters ship with which cage options?</p>
+      <div class="opts"><button class="opt">QSFP-DD or OSFP</button><button class="opt" data-correct>OSFP or QSFP112</button><button class="opt">Twin-port OSFP only</button></div>
+      <p class="why">ConnectX-7 comes in OSFP (single-port, flat-top plugs) and QSFP112 versions, so check the card before ordering cables.</p></div>
+    <div class="q"><p>5. What is the port speed of a 4-lane QSFP56 running 50G PAM4 lanes?</p>
+      <div class="opts"><button class="opt">100G</button><button class="opt" data-correct>200G</button><button class="opt">400G</button></div>
+      <p class="why">4 lanes × 50G = 200G, the HDR InfiniBand port speed.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../4.SR2/osfp-vs-qsfpdd-explained.html">OSFP vs QSFP-DD for 800G<span>4 · SR2: size, heat, density, compatibility</span></a></li>
+    <li><a href="../4.SR9/osfp-vs-qsfp-dd-explained.html">OSFP vs QSFP-DD, visually<span>4 · SR9</span></a></li>
+    <li><a href="../4.SR10/200g-qsfp-dd-vs-osfp-explained.html">200G: QSFP-DD vs OSFP<span>4 · SR10</span></a></li>
+    <li><a href="../4.SR6/nvidia-connectors-and-cages.html">Connectors and cages (LinkX)<span>4 · SR6: which plug fits which cage</span></a></li>
+    <li><a href="../4.SR17/osfp-transceiver-install.html">Installing an OSFP transceiver<span>4 · SR17</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Dimensions and power are approximate MSA/vendor figures; always confirm against the datasheet for your exact parts.</footer>
+</main>
+<script>
+(function () {
+  const ff = document.getElementById("ff"), lr = document.getElementById("lr");
+  const out = document.getElementById("sp-out"), lanes = document.getElementById("lanes"), note = document.getElementById("sp-note");
+  const fmt = (g) => g >= 1000 ? (g / 1000) + " Tb/s" : g + " Gb/s";
+  function calc() {
+    const n = +ff.value, r = +lr.value, tot = n * r;
+    out.textContent = fmt(tot);
+    lanes.innerHTML = Array.from({ length: n }, () => `<div class="lane" style="width:${Math.max(22, r * 0.55)}px">${r}G</div>`).join("");
+    const notes = {
+      "8-100": "NDR twin-port OSFP: 8 × 100G, usually run as two independent 400G links.",
+      "8-200": "XDR twin-port OSFP: 8 × 200G, usually run as two 800G links.",
+      "4-100": "NDR 400G on a single-port OSFP or QSFP112 adapter port.",
+      "4-50": "HDR 200G (QSFP56).", "4-25": "EDR / 100GbE (QSFP28).", "4-10": "40GbE (QSFP+).",
+      "8-50": "400GbE on QSFP-DD (8 × 50G PAM4)."
+    };
+    note.textContent = notes[n + "-" + r] || "";
+  }
+  ff.addEventListener("change", calc); lr.addEventListener("change", calc); calc();
+
+  const cage = document.getElementById("cage"), plug = document.getElementById("plug"), fo = document.getElementById("fit-out");
+  const Y = (t) => `<span class="ok">✓ Fits.</span> ${t}`, P = (t) => `<span class="caution">◐ Fits, with limits.</span> ${t}`, N = (t) => `<span class="fail">✕ No.</span> ${t}`;
+  const M = {
+    osfp2: { osfp2fin: Y("Correct match: switch cages are open on top, so the plug brings its own fins."),
+             osfp1flat: N("Single-port flat-top plugs are for adapter cages with a riding heat sink. In an open switch cage it has no cooling of its own, and it isn't the twin-port plug the cage expects.") },
+    osfp1: { osfp1flat: Y("Correct match: the cage's riding heat sink presses on the flat top."),
+             osfp2fin: N("Fins won't fit under the cage's riding heat sink. Use the flat-top single-port end (often the far end of a splitter cable).") },
+    qsfpdd: { qsfpdd: Y("All 8 lanes connect."), qsfp112: P("Accepted, runs on the first row of contacts (4 lanes)."),
+              qsfp56: P("Accepted, runs as a 4-lane device at 50G PAM4."), qsfp28: P("Accepted, runs as a 4-lane device at 25G NRZ.") },
+    qsfp112: { qsfp112: Y("Native match, 4 × 100G."), qsfp56: P("Accepted as an older QSFP device."), qsfp28: P("Accepted as an older QSFP device."),
+               qsfpdd: N("An 8-lane QSFP-DD plug is longer and expects a second row the cage doesn't have.") },
+    qsfp56: { qsfp56: Y("Native match, 4 × 50G."), qsfp28: P("Accepted as an older QSFP device."),
+              qsfp112: N("Not listed as supported: a QSFP56 cage accepts older plugs (QSFP28, QSFP+), not newer ones."),
+              qsfpdd: N("An 8-lane QSFP-DD plug won't run in a 4-lane cage.") }
+  };
+  function fit() {
+    const c = cage.value, p = plug.value;
+    const isOsfpPlug = p.startsWith("osfp"), isOsfpCage = c.startsWith("osfp");
+    let r = M[c] && M[c][p];
+    if (!r && isOsfpPlug !== isOsfpCage) r = N("OSFP and QSFP are different shapes. There's no NVIDIA adapter between the two families.");
+    fo.innerHTML = r || N("Not a supported combination.");
+  }
+  cage.addEventListener("change", fit); plug.addEventListener("change", fit); fit();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

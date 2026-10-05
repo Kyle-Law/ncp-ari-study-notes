@@ -162,14 +162,23 @@ This section details the practical deployment of high-density cables. It covers 
 
 ### Potential Exam Topics:
 - **T1** Describe the difference between NVIDIA cables vs. others.
+  - [NVIDIA cables vs. everyone else's](4.T1/nvidia-vs-other-cables.html)
 - **T2** Describe the different transceiver form factors (OSFP vs. QSFP).
+  - [OSFP vs. QSFP: same lanes, different boxes](4.T2/osfp-vs-qsfp-form-factors.html)
 - **T3** Describe the difference between MMF and SMF.
+  - [Multimode vs. single-mode fiber](4.T3/mmf-vs-smf.html)
 - **T4** Describe the transceiver requirements across the various SMF distances.
+  - [Picking single-mode optics by distance](4.T4/smf-transceiver-distances.html)
 - **T5** Deploy InfiniBand NDR/XDR copper cables.
+  - [Deploying NDR/XDR copper cables](4.T5/infiniband-copper-cables.html)
 - **T6** Install MPO/APC fiber optic cables.
+  - [Installing MPO/APC fiber](4.T6/mpo-apc-fiber-install.html)
 - **T7** Implement 50/50 left-right cable routing strategy.
+  - [The 50/50 left-right routing strategy](4.T7/50-50-cable-routing.html)
 - **T8** Bundle and dress cables professionally (hook and loop fasteners, soft ties, color coding).
+  - [Bundling and dressing cables professionally](4.T8/bundle-and-dress-cables.html)
 - **T9** Install fiber optic transceivers and clean connectors.
+  - [Installing transceivers and cleaning connectors](4.T9/install-transceivers-clean-connectors.html)
 
 ### Suggested Readings and Recommended Training for High-Density Cabling Installation
 

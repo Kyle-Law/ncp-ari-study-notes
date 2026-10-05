@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transceivers and clean connectors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12.5px; fill: var(--muted) !important; } .t { font-size: 13px; }
+  .scope-wrap { display: grid; grid-template-columns: minmax(0, 320px) 1fr; gap: 1.2rem; align-items: start; }
+  @media (max-width: 640px) { .scope-wrap { grid-template-columns: 1fr; } }
+  #scope { background: #0b0f0c; border-radius: 50%; aspect-ratio: 1; width: 100%; max-width: 320px; }
+  .zone-legend { display: grid; gap: .3rem; font-size: .9rem; margin: .6rem 0; }
+  .zone-legend span { display: inline-block; width: .9em; height: .9em; border-radius: 50%; margin-right: .4em; vertical-align: -.1em; border: 2px solid var(--c); }
+  .verdict { font-family: var(--display); font-size: 1.8rem; font-weight: 700; }
+  .btns { display: flex; flex-wrap: wrap; gap: .4rem; margin: .6rem 0; }
+  .count-line { font-size: .9rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">4 · T9</span><span class="chip">High-Density Cabling</span><span class="chip weight">30% of exam</span></div>
+  <h1>Installing transceivers and cleaning connectors</h1>
+  <p class="lede">A single-mode core is about 9 µm across, about the size of one dust speck. Most fiber link problems come down to two things: a module that isn't seated or validated, and a connector that wasn't clean when it went in.</p>
+  <p class="objective"><b>Exam objective</b>Install fiber optic transceivers and clean connectors.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Transceiver in</b>: right part (validated, correct finned/flat top), ESD precautions, keyed orientation, push by the body until it <b>latches</b>. Never force it. Handle by the pull tab; modules run hot.</li>
+    <li><b>Inspect → clean → inspect → connect</b>, on <b>both</b> the cable end and the transceiver port, on <b>every</b> insertion, including after an accidental unplug.</li>
+    <li><b>Dry clean</b> (one-click / tape cleaner) for loose particles. <b>Wet, then dry</b> for oils and residue. <b>No canned air</b>, no fingers, no shirts, no open bottles of IPA.</li>
+    <li>Judge with a scope against <b>IEC 61300-3-35</b>: <b>location matters</b>. Nothing at all is allowed in the core zone. Use an <b>APC tip</b> for APC faces and an MPO tip with X-panning for MPO.</li>
+    <li>Leave <b>dust caps</b> on every unused port and connector, and confirm the link (LED, link state, Rx power) before moving on.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Installing a transceiver</h2>
+  <ol class="steps">
+    <li><b>Check the part</b>On the validated list for this switch/NIC firmware. Correct form factor and top (finned for open switch cages, flat for riding-heat-sink cages). Correct reach and fiber type for the run.</li>
+    <li><b>ESD and handling</b>Grounded wrist strap or work surface. Unpack gently. Keep the dust cap on the optical port until the moment you connect.</li>
+    <li><b>Seat the module</b>Modules are keyed and fit one way up. Slide it in square and push by the body until it seats and latches. If it resists, check orientation. Never force it.</li>
+    <li><b>Clean, then connect the fiber</b>Inspect and clean the cable end-face and the module receptacle, inspect again, then insert the cable key-to-slot until it clicks.</li>
+    <li><b>Confirm the link</b>Port LED, then link state and optical readings (Rx power per lane, errors). An unqualified module may fit but stay offline. On some platforms it's flagged as an invalid module.</li>
+    <li><b>Dress</b>Route through managers so cables don't cover LEDs, vents or the module's pull-path.</li>
+  </ol>
+  <div class="callout tip"><b>Removing one</b><p>Disconnect the fiber first (by its connector or tab), cap both the cable and the module port, then pull the module's tab straight out. Never pull by the cable jacket.</p></div>
+</section>
+
+<section>
+  <h2>Try the inspection scope</h2>
+  <p>This is a single-mode UPC end-face with IEC 61300-3-35 zones. Contaminate it, try different cleaning methods, and watch the verdict. Click the face to drop a particle exactly where you want.</p>
+  <div class="scope-wrap">
+    <div>
+      <svg id="scope" viewBox="-130 -130 260 260" role="img" aria-labelledby="scT"><title id="scT">Fiber end-face under a microscope with zones A to D and contamination particles</title></svg>
+      <div class="zone-legend">
+        <div><span style="--c:#ff5a5a"></span><b>A · core</b> 0–25 µm: no defects at all</div>
+        <div><span style="--c:#ffb340"></span><b>B · cladding</b> 25–115 µm: none &gt; 5 µm; ≤ 5 of 2–5 µm</div>
+        <div><span style="--c:#7aa7ff"></span><b>C · adhesive</b> 115–135 µm: no limit</div>
+        <div><span style="--c:#7bd88f"></span><b>D · contact</b> 135–250 µm: none ≥ 10 µm</div>
+      </div>
+    </div>
+    <div>
+      <div class="verdict" id="verdict" aria-live="polite"></div>
+      <p class="count-line" id="counts"></p>
+      <div class="btns">
+        <button class="btn" id="b-dirty">Field-dirty connector</button>
+        <button class="btn" id="b-oil">Fingerprint (oil)</button>
+        <button class="btn" id="b-air">Canned air</button>
+        <button class="btn" id="b-dry">Dry clean (one-click)</button>
+        <button class="btn" id="b-wet">Wet, then dry clean</button>
+        <button class="btn" id="b-reset">Reset</button>
+      </div>
+      <label class="field">Particle size for clicks: <b id="ps-v"></b><input type="range" id="ps" min="1" max="20" value="4"></label>
+      <p class="small" id="msg" style="margin-top:.8rem"></p>
+    </div>
+  </div>
+  <p class="small muted">Zone limits are the commonly cited single-mode UPC criteria (from 4 · SR18). APC, multimode and multi-fiber connectors use different profiles, so set your scope to the right one. The cleaning behaviour is a simplified model.</p>
+</section>
+
+<section>
+  <h2>Cleaning methods, ranked</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Method</th><th>Removes</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td>Mechanical one-click / tape cleaner (dry)</td><td>Loose dust and debris</td><td class="yes">First choice; MPO versions clean the whole ferrule in one push</td></tr>
+        <tr><td>Optical cleaning fluid + lint-free wipe, then dry</td><td>Oils, films, stubborn residue</td><td class="yes">When dry cleaning fails; always finish dry. Wet cleaning also drains static.</td></tr>
+        <tr><td>Canned air / duster</td><td>Moves particles around</td><td class="no">Don't: scatters debris and can leave propellant residue</td></tr>
+        <tr><td>IPA from an open bottle</td><td>Some oils</td><td class="no">Hygroscopic: picks up water and dust within days</td></tr>
+        <tr><td>Shirt, tissue, fingertip</td><td>Nothing useful</td><td class="no">Leaves lint, fibers and skin oil</td></tr>
+        <tr><td>Reused wipe or stick</td><td>Transfers debris</td><td class="no">Fresh surface every time</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout warn"><b>Why dust "comes back"</b><p>Dry wiping builds a static charge on the insulating ferrule, which then pulls nearby particles onto the end-face, right at the apex where the core is. A wet-then-dry clean gives the charge a path away.</p></div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"New connectors are clean."</b>Clean them too. Caps and packaging carry debris.</li>
+    <li><b>Cleaning only the cable.</b>The transceiver receptacle gets cleaned as well. Dirt on either face ends up between both.</li>
+    <li><b>Clean, then skip inspection.</b>Cleaning can move debris to a neighbouring fiber. Always re-inspect.</li>
+    <li><b>Canned air.</b>Never. Use a dry click cleaner, or wet-then-dry for oils.</li>
+    <li><b>Forcing a module.</b>If it doesn't slide in, it's upside down or the wrong type. Forcing it damages the cage connector.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. What is the correct sequence before mating a fiber connector?</p>
+      <div class="opts"><button class="opt">Clean → connect</button><button class="opt" data-correct>Inspect → clean (if needed) → re-inspect → connect</button><button class="opt">Connect → test → clean if errors</button></div>
+      <p class="why">IEC 61300-3-35 workflow: look first, clean only if needed, look again, then connect.</p></div>
+    <div class="q"><p>2. Under IEC 61300-3-35 (SM UPC), how many particles are allowed in zone A, the core?</p>
+      <div class="opts"><button class="opt" data-correct>None</button><button class="opt">Up to 5 under 2 µm</button><button class="opt">Any under 5 µm</button></div>
+      <p class="why">The core zone allows no defects. Location matters more than size.</p></div>
+    <div class="q"><p>3. Inspection shows an oily smear after a dry clean. Next step?</p>
+      <div class="opts"><button class="opt">Canned air</button><button class="opt" data-correct>Wet clean with optical fluid, then dry clean, then re-inspect</button><button class="opt">Connect it; oil doesn't block light</button></div>
+      <p class="why">Dry cleaners lift particles. Oils need a wet step, always followed by a dry step.</p></div>
+    <div class="q"><p>4. A module slides in only halfway. What should you do?</p>
+      <div class="opts"><button class="opt">Push harder until it clicks</button><button class="opt" data-correct>Remove it and check orientation and that it's the right form factor/top</button><button class="opt">Insert the cable to lever it in</button></div>
+      <p class="why">Modules are keyed. Resistance means wrong orientation or wrong type, and forcing damages the cage.</p></div>
+    <div class="q"><p>5. Which probe tip inspects a green MPO connector?</p>
+      <div class="opts"><button class="opt">UPC MPO tip</button><button class="opt" data-correct>APC MPO tip</button><button class="opt">LC tip</button></div>
+      <p class="why">Green = APC. The angled face needs an APC tip. Pan across all fibers with an X-adjustable MPO tip.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../4.SR17/osfp-transceiver-install.html">Installing an OSFP transceiver<span>4 · SR17: keying, latch, LED</span></a></li>
+    <li><a href="../4.SR18/iec-61300-3-35-explained.html">IEC 61300-3-35, visually<span>4 · SR18: zones, static, consumables</span></a></li>
+    <li><a href="../4.SR15/mpo-mtp-cleaning-inspection.html">Cleaning &amp; inspecting MPO/MTP<span>4 · SR15</span></a></li>
+    <li><a href="../4.SR5/ndr-connector-maintenance-explained.html">Keeping NDR optics clean<span>4 · SR5</span></a></li>
+    <li><a href="../4.SR13/fiber-installation-mistakes.html">Two big installation mistakes<span>4 · SR13</span></a></li>
+    <li><a href="../6.SR2/fiber-connector-contamination-explained.html">Dirty connectors &amp; poor I/O<span>6 · SR2</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Inspection criteria vary by connector type and standard edition; configure your scope for the exact profile.</footer>
+</main>
+<script>
+(function () {
+  const svg = document.getElementById("scope"), title = svg.querySelector("title").outerHTML;
+  const S = 0.5; // 1 µm = 0.5 svg units (radius 250 µm ≈ 125 units)
+  let parts = [], oil = 0;
+  const rand = (a, b) => a + Math.random() * (b - a);
+  function zone(r) { return r <= 12.5 ? "A" : r <= 57.5 ? "B" : r <= 67.5 ? "C" : r <= 125 ? "D" : null; }
+  function addRandom(n, maxSize) {
+    for (let i = 0; i < n; i++) {
+      const r = Math.sqrt(Math.random()) * 125 * S * 2, a = rand(0, Math.PI * 2);
+      parts.push({ x: Math.cos(a) * r, y: Math.sin(a) * r, d: rand(1, maxSize) });
+    }
+  }
+  function grade() {
+    const z = { A: [], B: [], C: [], D: [] };
+    parts.forEach((p) => { const zz = zone(Math.hypot(p.x, p.y)); if (zz) z[zz].push(p.d); });
+    const fails = [];
+    if (z.A.length || oil > 0.3) fails.push(z.A.length ? "particle in the core (zone A)" : "oil film over the core");
+    if (z.B.some((d) => d > 5)) fails.push("particle > 5 µm in zone B");
+    if (z.B.filter((d) => d >= 2 && d <= 5).length > 5) fails.push("more than 5 particles of 2–5 µm in zone B");
+    if (z.D.some((d) => d >= 10)) fails.push("particle ≥ 10 µm in zone D");
+    return { z, fails };
+  }
+  function draw() {
+    let s = title;
+    s += `<circle r="${125 * S * 2}" fill="#1a231c"/>`;
+    s += `<circle r="${125 * S * 2}" fill="none" stroke="#7bd88f" stroke-width=".8" stroke-dasharray="3 3"/>`;
+    s += `<circle r="${67.5 * S * 2}" fill="#202b22" stroke="#7aa7ff" stroke-width=".8" stroke-dasharray="3 3"/>`;
+    s += `<circle r="${57.5 * S * 2}" fill="#2a382c" stroke="#ffb340" stroke-width=".8" stroke-dasharray="3 3"/>`;
+    s += `<circle r="${12.5 * S * 2}" fill="#d8f5dc" stroke="#ff5a5a" stroke-width=".8" stroke-dasharray="3 3"/>`;
+    if (oil > 0) s += `<ellipse cx="6" cy="-4" rx="${40 * oil + 10}" ry="${28 * oil + 8}" fill="#c9b36a" opacity="${0.25 + oil * 0.35}"/>`;
+    parts.forEach((p) => (s += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${Math.max(1, p.d * S)}" fill="#e8e2d0" opacity=".9"/>`));
+    svg.innerHTML = s;
+    const { z, fails } = grade();
+    const v = document.getElementById("verdict");
+    v.innerHTML = fails.length ? `<span class="fail">FAIL</span>` : `<span class="ok">PASS</span>`;
+    document.getElementById("counts").textContent = `Particles: A ${z.A.length} · B ${z.B.length} · C ${z.C.length} · D ${z.D.length}${oil > 0 ? " · oil film present" : ""}`;
+    document.getElementById("msg").innerHTML = fails.length ? "Why: " + fails.join("; ") + "." : "Clean enough to connect. Mate it now, before it collects more dust.";
+  }
+  svg.addEventListener("click", (e) => {
+    const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    if (Math.hypot(p.x, p.y) > 125) return;
+    parts.push({ x: p.x, y: p.y, d: +document.getElementById("ps").value }); draw();
+  });
+  const ps = document.getElementById("ps"), psv = document.getElementById("ps-v");
+  const showPs = () => (psv.textContent = ps.value + " µm"); ps.addEventListener("input", showPs); showPs();
+  const msg = (t) => (document.getElementById("msg").innerHTML += " " + t);
+  document.getElementById("b-dirty").onclick = () => { addRandom(18, 14); draw(); };
+  document.getElementById("b-oil").onclick = () => { oil = Math.min(1, oil + 0.6); draw(); };
+  document.getElementById("b-air").onclick = () => {
+    parts.forEach((p) => { const a = rand(0, Math.PI * 2), r = rand(0, 125); p.x = Math.cos(a) * r * 0.9; p.y = Math.sin(a) * r * 0.9; });
+    draw(); msg("<b>Canned air just moved the particles around</b>, some of them toward the core. The oil is untouched.");
+  };
+  document.getElementById("b-dry").onclick = () => {
+    parts = parts.filter(() => Math.random() < 0.08); oil = oil > 0 ? Math.max(0.35, oil * 0.8) : 0;
+    if (Math.random() < 0.4) addRandom(1, 3);
+    draw(); if (oil > 0) msg("<b>Dry cleaning lifted the particles but smeared the oil.</b> Use a wet-then-dry clean.");
+  };
+  document.getElementById("b-wet").onclick = () => { parts = parts.filter(() => Math.random() < 0.03); oil = 0; draw(); msg("Wet-then-dry removes oils and drains static. Now re-inspect."); };
+  document.getElementById("b-reset").onclick = () => { parts = []; oil = 0; draw(); };
+  [...document.querySelectorAll(".btns .btn")].forEach((b) => (b.type = "button"));
+  addRandom(10, 12); draw();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

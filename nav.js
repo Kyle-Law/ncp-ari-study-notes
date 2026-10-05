@@ -269,6 +269,69 @@
    "title": "Intel Server Rack Cabinet Compatibility Guide, explained"
   },
   {
+   "path": "4.T1/nvidia-vs-other-cables.html",
+   "section": "4",
+   "kind": "T",
+   "code": "T1",
+   "title": "NVIDIA cables vs. others"
+  },
+  {
+   "path": "4.T2/osfp-vs-qsfp-form-factors.html",
+   "section": "4",
+   "kind": "T",
+   "code": "T2",
+   "title": "OSFP vs. QSFP form factors"
+  },
+  {
+   "path": "4.T3/mmf-vs-smf.html",
+   "section": "4",
+   "kind": "T",
+   "code": "T3",
+   "title": "MMF vs. SMF"
+  },
+  {
+   "path": "4.T4/smf-transceiver-distances.html",
+   "section": "4",
+   "kind": "T",
+   "code": "T4",
+   "title": "SMF transceivers by distance"
+  },
+  {
+   "path": "4.T5/infiniband-copper-cables.html",
+   "section": "4",
+   "kind": "T",
+   "code": "T5",
+   "title": "Deploying NDR/XDR copper"
+  },
+  {
+   "path": "4.T6/mpo-apc-fiber-install.html",
+   "section": "4",
+   "kind": "T",
+   "code": "T6",
+   "title": "Installing MPO/APC fiber"
+  },
+  {
+   "path": "4.T7/50-50-cable-routing.html",
+   "section": "4",
+   "kind": "T",
+   "code": "T7",
+   "title": "50/50 cable routing"
+  },
+  {
+   "path": "4.T8/bundle-and-dress-cables.html",
+   "section": "4",
+   "kind": "T",
+   "code": "T8",
+   "title": "Bundling and dressing cables"
+  },
+  {
+   "path": "4.T9/install-transceivers-clean-connectors.html",
+   "section": "4",
+   "kind": "T",
+   "code": "T9",
+   "title": "Transceivers and clean connectors"
+  },
+  {
    "path": "4.SR2/osfp-vs-qsfpdd-explained.html",
    "section": "4",
    "kind": "SR",

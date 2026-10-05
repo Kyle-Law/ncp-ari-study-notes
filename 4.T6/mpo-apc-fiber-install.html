@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installing MPO/APC fiber</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12.5px; fill: var(--muted) !important; } .t { font-size: 13px; }
+  .ferrule { fill: var(--panel-2); stroke: var(--ink); stroke-width: 1.5; }
+  .body-apc { fill: var(--apc); } .body-upc { fill: #3a6fd8; }
+  .pinm { fill: #b9b9b9; stroke: var(--ink); }
+  .hole { fill: var(--bg); stroke: var(--ink); }
+  .fpos { fill: var(--bg); stroke: var(--muted); }
+  .ftx { fill: #e05a47; } .frx { fill: #3a9be0; }
+  .key { fill: var(--ink); }
+  .ln-ok { stroke: var(--good); stroke-width: 2; } .ln-bad { stroke: var(--bad); stroke-width: 2; } .ln-off { stroke: var(--rule); stroke-width: 1; }
+  #pol-svg { max-width: 500px; margin: 0 auto; }
+  #pol-svg text { font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">4 · T6</span><span class="chip">High-Density Cabling</span><span class="chip weight">30% of exam</span></div>
+  <h1>Installing MPO/APC fiber</h1>
+  <p class="lede">An MPO connector puts a whole row of fibers in one ferrule. It packs a 400G link into one plug, but every fiber in the row has to be clean, aligned and mapped to the right position at the far end.</p>
+  <p class="objective"><b>Exam objective</b>Install MPO/APC fiber optic cables.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>MPO</b> = multi-fiber push-on (MTP is a high-performance MPO brand). NVIDIA's NDR fiber uses <b>MPO-12</b>: 12 positions, 8 lit (4 Tx + 4 Rx).</li>
+    <li><b>APC</b> = angled physical contact, polished at <b>8°</b>, with a <b>green</b> body. The angle sends reflections into the cladding instead of back at the laser, which matters for PAM4. NVIDIA's NDR passive fiber cables (<code>MFP7E…</code>) are MPO-12/APC.</li>
+    <li><b>Never mate APC with UPC</b> (flat polish). The faces don't meet, so you get high loss, strong reflection and possible end-face damage.</li>
+    <li><b>Pinned mates unpinned</b>: two guide pins on one side, two holes on the other. Never pin-to-pin or hole-to-hole.</li>
+    <li><b>Polarity</b>: transmit fibers must land on receive fibers. For parallel optics the end-to-end path must act like a <b>Type B</b> (key-up to key-up) cable.</li>
+    <li><b>Inspect → clean → inspect</b> both the cable end and the port on <b>every</b> insertion, using an MPO click cleaner and an APC probe tip.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Anatomy of an MPO-12/APC</h2>
+  <figure>
+    <div class="wide"><svg viewBox="0 0 760 270" role="img" aria-labelledby="anaT">
+      <title id="anaT">MPO-12 end-face with key, two guide pins, 12 fiber positions (4 transmit, 4 receive, 4 unused); side profile showing the 8 degree APC angle versus flat UPC</title>
+      <rect x="20" y="40" width="330" height="110" rx="10" class="body-apc"/>
+      <rect x="150" y="22" width="70" height="20" rx="3" class="key"/><text x="185" y="16" text-anchor="middle" class="tm">key</text>
+      <rect x="40" y="62" width="290" height="66" rx="6" class="ferrule"/>
+      <circle cx="62" cy="95" r="9" class="pinm"/><circle cx="308" cy="95" r="9" class="pinm"/>
+      <g id="pos"></g>
+      <text x="62" y="170" text-anchor="middle" class="tm">guide pin</text><text x="308" y="170" text-anchor="middle" class="tm">guide pin</text>
+      <g transform="translate(20,195)">
+        <circle cx="8" cy="8" r="7" class="ftx"/><text x="22" y="13" class="t">Tx (1–4)</text>
+        <circle cx="108" cy="8" r="7" class="frx"/><text x="122" y="13" class="t">Rx (9–12)</text>
+        <circle cx="210" cy="8" r="7" class="fpos"/><text x="224" y="13" class="t">unused (5–8)</text>
+      </g>
+      <text x="20" y="250" class="tm">Pinned (male) end shown. It mates only with an unpinned (female) end.</text>
+
+      <g transform="translate(430,40)">
+        <text x="0" y="0" class="tb">Side profile</text>
+        <rect x="0" y="20" width="150" height="50" class="body-upc"/><rect x="150" y="20" width="10" height="50" class="ferrule"/>
+        <text x="175" y="50" class="t">UPC: flat, blue body</text>
+        <path d="M0 110 H150 L160 110 L153 160 H0 Z" class="body-apc"/>
+        <path d="M150 110 L160 110 L153 160 L143 160 Z" class="ferrule"/>
+        <text x="175" y="140" class="t">APC: 8°, green body</text>
+        <path d="M60 205 h80" stroke="var(--ink)" stroke-width="2" marker-end="url(#ar)"/><path d="M140 205 l-50 18" stroke="var(--bad)" stroke-width="2" stroke-dasharray="4 3"/>
+        <text x="175" y="210" class="tm">reflection angled away</text>
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--ink)"/></marker></defs>
+      </g>
+    </svg></div>
+  </figure>
+</section>
+
+<section>
+  <h2>Polarity: make Tx land on Rx</h2>
+  <p>A parallel optic (SR4, DR4) transmits on positions 1–4 and receives on 9–12. Choose a cable type and watch where each transmit fiber lands at the far transceiver.</p>
+  <div class="seg" id="pol-seg"><button data-pol="A">Type A · straight</button><button data-pol="B" aria-pressed="true">Type B · cross</button><button data-pol="C">Type C · pair-flip</button></div>
+  <div class="card">
+    <div class="wide"><svg id="pol-svg" class="fit" viewBox="44 0 352 330" role="img" aria-labelledby="polT"><title id="polT">Fiber mapping from near-end positions 1–12 to far-end positions for the selected polarity type</title></svg></div>
+    <p id="pol-out" aria-live="polite" style="margin:.6rem 0 0"></p>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Type (TIA-568)</th><th>Keys</th><th>Mapping</th><th>Parallel optics, end to end?</th></tr></thead>
+      <tbody>
+        <tr><td>A</td><td>Key up → key down</td><td>1→1 … 12→12</td><td class="no">No: Tx lands on Tx</td></tr>
+        <tr><td>B</td><td>Key up → key up</td><td>1→12, 2→11 … 12→1</td><td class="yes">Yes</td></tr>
+        <tr><td>C</td><td>Key up → key down</td><td>Pairs flipped: 1→2, 2→1 …</td><td class="no">No (built for duplex breakouts)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small">With patch panels and trunks in the path, what counts is the <b>net</b> mapping of all components together. For parallel optics it must work out to Type B. Follow the site's polarity method and label both ends.</p>
+</section>
+
+<section>
+  <h2>The install, step by step</h2>
+  <ol class="steps">
+    <li><b>Check the plan and the part</b>Fiber type (yellow SMF / aqua MMF), APC vs UPC, fiber count (MPO-12), pinned/unpinned ends, polarity type, length. Label both ends before routing.</li>
+    <li><b>Route first, plug last</b>Lay the cable with dust caps on. Pull pre-terminated trunks by their pulling grip or the aramid strength members, never by the connector or jacket. Respect the bend radius: about <b>10× OD at rest, 20× under tension</b> as a rule of thumb (the datasheet wins).</li>
+    <li><b>Inspect, clean, inspect</b>Clean the cable end-face and the transceiver port with an MPO click cleaner. Inspect with an MPO probe (APC tip for APC), panning across all 12 positions. Repeat until clean.</li>
+    <li><b>Mate immediately</b>Align the key, push straight in until it latches. Don't leave a cleaned face exposed. If a connector comes out, even by accident, clean it again.</li>
+    <li><b>Dress and support</b>Hook-and-loop ties (never zip ties on fiber), supports every ≤ 2 m, no weight on the connector, clear of vents and transceiver pull-paths.</li>
+    <li><b>Verify</b>Port LED and link state, then optical receive power and error counters (e.g. <code>mlxlink</code> module and BER readings). Low Rx power on one lane usually means a dirty or damaged position.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>APC into UPC.</b>The angled and flat faces don't meet, giving high loss, high reflection and possible damage. Green mates only with green.</li>
+    <li><b>Pin to pin.</b>Two pinned ends can't mate and will damage pins. Two unpinned ends mate loosely and misalign.</li>
+    <li><b>"Clean once at install."</b>NVIDIA's rule is every insertion, both sides, including after an accidental unplug.</li>
+    <li><b>Wrong probe tip.</b>APC end-faces need an APC tip, and cable plugs need an MPO-to-MPO adapter before the probe can enter.</li>
+    <li><b>Type A cable between two transceivers.</b>Tx faces Tx and the link stays down, even though all fibers are clean and lit.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. What does the green body of an MPO connector indicate?</p>
+      <div class="opts"><button class="opt">OM5 multimode</button><button class="opt" data-correct>APC, an angled 8° polish</button><button class="opt">Single-mode fiber</button></div>
+      <p class="why">Connector colour indicates polish: green = APC. Jacket colour indicates fiber type.</p></div>
+    <div class="q"><p>2. Why does APC matter for NDR links?</p>
+      <div class="opts"><button class="opt">It lets more fibers fit in the ferrule</button><button class="opt" data-correct>The angle reduces back-reflection, which PAM4 signalling is sensitive to</button><button class="opt">It removes the need to clean</button></div>
+      <p class="why">The 8° face sends reflected light into the cladding instead of back toward the transmitter.</p></div>
+    <div class="q"><p>3. A direct transceiver-to-transceiver MPO link needs which polarity type?</p>
+      <div class="opts"><button class="opt">Type A</button><button class="opt" data-correct>Type B</button><button class="opt">Type C</button></div>
+      <p class="why">Type B reverses positions (1→12 …) so Tx on 1–4 lands on Rx on 9–12.</p></div>
+    <div class="q"><p>4. A cable was unplugged by accident and is going straight back in. What first?</p>
+      <div class="opts"><button class="opt">Nothing; it was clean a minute ago</button><button class="opt" data-correct>Inspect and clean both the cable end and the port</button><button class="opt">Blow it off with canned air</button></div>
+      <p class="why">Every insertion gets cleaned, both sides. Canned air scatters particles and leaves oils.</p></div>
+    <div class="q"><p>5. How many of the 12 MPO positions does a DR4/SR4 link light?</p>
+      <div class="opts"><button class="opt">4</button><button class="opt" data-correct>8</button><button class="opt">12</button></div>
+      <p class="why">4 transmit + 4 receive. The middle 4 are unused but still collect dust.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../4.SR15/mpo-mtp-cleaning-inspection.html">Cleaning &amp; inspecting MPO/MTP<span>4 · SR15: Fluke workflow, APC tips</span></a></li>
+    <li><a href="../4.SR5/ndr-connector-maintenance-explained.html">Keeping NDR optics clean<span>4 · SR5: clean every insertion</span></a></li>
+    <li><a href="../4.SR18/iec-61300-3-35-explained.html">IEC 61300-3-35 pass/fail zones<span>4 · SR18</span></a></li>
+    <li><a href="../4.SR13/fiber-installation-mistakes.html">Two big installation mistakes<span>4 · SR13: cleaning and pulling</span></a></li>
+    <li><a href="../5.SR4/fiber-cable-installation-explained.html">FOA: installing fiber cable<span>5 · SR4</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo plus TIA-568 MPO polarity conventions. Follow your site's polarity method and the cable datasheet.</footer>
+</main>
+<script>
+(function () {
+  // End-face positions on the anatomy drawing.
+  const g = document.getElementById("pos");
+  let h = "";
+  for (let i = 1; i <= 12; i++) {
+    const x = 84 + (i - 1) * 18.5, cls = i <= 4 ? "ftx" : i >= 9 ? "frx" : "fpos";
+    h += `<circle cx="${x}" cy="95" r="6.5" class="${cls}"/><text x="${x}" y="122" text-anchor="middle" style="font-size:10px">${i}</text>`;
+  }
+  g.innerHTML = h;
+
+  // Polarity simulator.
+  const svg = document.getElementById("pol-svg"), out = document.getElementById("pol-out");
+  const map = { A: (i) => i, B: (i) => 13 - i, C: (i) => (i % 2 ? i + 1 : i - 1) };
+  const role = (i) => (i <= 4 ? "Tx" : i >= 9 ? "Rx" : "—");
+  function draw(t) {
+    const y = (i) => 20 + (i - 1) * 26;
+    let s = `<text x="80" y="12" text-anchor="middle" style="font-size:13px;font-weight:600">Near</text>
+             <text x="360" y="12" text-anchor="middle" style="font-size:13px;font-weight:600">Far</text>`;
+    let good = 0, bad = 0;
+    for (let i = 1; i <= 12; i++) {
+      const j = map[t](i), lit = role(i) === "Tx";
+      const ok = lit && role(j) === "Rx", wrong = lit && !ok;
+      if (ok) good++; if (wrong) bad++;
+      const cls = ok ? "ln-ok" : wrong ? "ln-bad" : "ln-off";
+      s += `<line x1="128" y1="${y(i) + 4}" x2="312" y2="${y(j) + 4}" class="${cls}"/>`;
+    }
+    for (let i = 1; i <= 12; i++) {
+      const c = role(i) === "Tx" ? "ftx" : role(i) === "Rx" ? "frx" : "fpos";
+      s += `<circle cx="120" cy="${y(i) + 4}" r="7" class="${c}"/><text x="104" y="${y(i) + 8}" text-anchor="end">${i} ${role(i)}</text>`;
+      s += `<circle cx="320" cy="${y(i) + 4}" r="7" class="${c}"/><text x="336" y="${y(i) + 8}">${i} ${role(i)}</text>`;
+    }
+    svg.innerHTML = svg.querySelector("title").outerHTML + s;
+    out.innerHTML = bad ? `<span class="fail">✕ Link stays down.</span> ${bad} of 4 transmit fibers land on a transmitter or an unused position.`
+                        : `<span class="ok">✓ All 4 transmit fibers land on receivers.</span> This is the end-to-end mapping parallel optics need.`;
+  }
+  const btns = document.querySelectorAll("#pol-seg button");
+  btns.forEach((b) => { b.type = "button"; b.addEventListener("click", () => { btns.forEach((x) => x.setAttribute("aria-pressed", String(x === b))); draw(b.dataset.pol); }); });
+  draw("B");
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

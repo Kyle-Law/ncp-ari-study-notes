@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deploying NDR/XDR copper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12.5px; fill: var(--muted) !important; }
+  .cu { fill: var(--copper); } .aoc { fill: var(--mmf); }
+  .zone { height: 34px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: .85rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; }
+  .track { display: flex; gap: 3px; margin-top: .8rem; }
+  .pin { position: relative; height: 18px; margin-top: 4px; }
+  .pin b { position: absolute; top: 0; transform: translateX(-50%); font-size: .8rem; color: var(--ink); white-space: nowrap; }
+  .pin b::before { content: "▲"; display: block; text-align: center; color: var(--accent); line-height: .8; }
+  .calc { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); align-items: end; }
+  .states { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: .5rem; margin: 1rem 0; }
+  .st { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: .6rem .8rem; font-size: .9rem; }
+  .st b { font-family: var(--display); font-size: 1.15rem; display: block; }
+  .st.on { border-color: var(--good); background: var(--good-soft); }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">4 · T5</span><span class="chip">High-Density Cabling</span><span class="chip weight">30% of exam</span></div>
+  <h1>Deploying NDR/XDR copper cables</h1>
+  <p class="lede">Copper is the cheapest, lowest-latency, lowest-power way to connect a port, but only over a couple of metres. It's also thick, heavy and stiff, so a good copper install is mostly about choosing the right length and protecting the connector from the cable's own weight.</p>
+  <p class="objective"><b>Exam objective</b>Deploy InfiniBand NDR/XDR copper cables.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Passive DAC</b> (<code>MCP…</code>): about <b>0.5–3 m</b> at NDR. <b>Active copper / ACC</b> (<code>MCA…</code>): about <b>4–6.5 m</b>. Beyond that, use AOC or transceivers with fiber. At XDR's 200G lanes, copper reach shrinks further, so check the datasheet.</li>
+    <li>Plan every run under <b>90% of the cable's rated reach</b>, and match the <b>ends</b>: finned twin-port OSFP on the switch, flat-top on adapters/DGX, splitters for 2 × 400G or 4 × 200G.</li>
+    <li>Copper is roughly <b>9.4 mm thick and 0.045 kg/m</b>, about 10× the tray area and 5× the weight of an AOC. Support it at least every <b>2 m</b> with hook-and-loop ties every <b>30–60 cm</b>, and never let it hang from the port.</li>
+    <li>Install by the book: velcro the cable to the rack, <b>pre-bend</b> the tip, grip the <b>connector body</b> and push square until it latches, then <b>install one, test one</b>.</li>
+    <li>Keep copper <b>away from EMI sources</b> (power cords, PDUs, converters, fluorescent lights) and in separate runs from fiber.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Where copper fits</h2>
+  <p>Distance picks the medium. Enter a run length (cable path, not straight-line distance) to see what NVIDIA's NDR portfolio would use:</p>
+  <div class="card">
+    <label class="field">Cable run (m): <b id="run-v"></b>
+      <input type="range" id="run" min="0.5" max="30" step="0.5" value="2.5">
+    </label>
+    <div class="track" aria-hidden="true">
+      <div class="zone" style="flex:3;background:var(--copper)">DAC ≤ 3 m</div>
+      <div class="zone" style="flex:3.5;background:#8e5a2e">ACC 4–6.5 m</div>
+      <div class="zone" style="flex:23.5;background:var(--mmf)">AOC / transceivers + fiber</div>
+    </div>
+    <div class="pin" aria-hidden="true"><b id="pin"></b></div>
+    <p id="run-out" aria-live="polite" style="margin:.6rem 0 0"></p>
+  </div>
+  <p class="small muted">Ranges from NVIDIA's ConnectX-7 validated-cables list (NDR). Exact maximum lengths depend on the part, wire gauge (30 vs 26 AWG) and generation.</p>
+</section>
+
+<section>
+  <h2>Copper's trade-offs</h2>
+  <div class="grid two">
+    <div class="card"><h3>Why choose it</h3><ul class="small"><li>Cheapest per link</li><li>Passive DAC draws essentially no power: no optics to cool</li><li>Lowest latency (no electrical-optical conversion)</li><li>Nothing to clean: no fiber end-faces</li></ul></div>
+    <div class="card"><h3>What it costs you</h3><ul class="small"><li>Short reach, and shorter with every lane-speed jump (PAM4 levels sit closer together)</li><li>Thick and stiff: large bend radius, hard to dress in dense racks</li><li>Heavy: ~5× an AOC per metre, so loads trays and connectors</li><li>Picks up EMI</li></ul></div>
+  </div>
+  <figure>
+    <div class="wide"><svg viewBox="0 0 700 170" role="img" aria-labelledby="xsT">
+      <title id="xsT">Cross-sections to scale: copper cable 9.43 mm diameter vs AOC 3.0 mm; copper weighs 0.045 kg per metre vs 0.009</title>
+      <circle cx="90" cy="80" r="56.6" class="cu"/><text x="90" y="160" text-anchor="middle" class="tb">Copper 9.43 mm · 0.045 kg/m</text>
+      <circle cx="300" cy="80" r="18" class="aoc"/><text x="300" y="160" text-anchor="middle" class="tb">AOC 3.0 mm · 0.009 kg/m</text>
+      <text x="420" y="60" class="tb">≈ 10× the tray area</text>
+      <text x="420" y="88" class="tb">≈ 5× the weight per metre</text>
+      <text x="420" y="116" class="tm">Averages from the DGX SuperPOD networking guide (5 · SR1)</text>
+    </svg></div>
+  </figure>
+</section>
+
+<section>
+  <h2>Match the ends</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Link</th><th>Switch end</th><th>Far end</th><th>Example description</th></tr></thead>
+      <tbody>
+        <tr><td>Switch ↔ switch (in-rack)</td><td>Twin-port OSFP, finned</td><td>Twin-port OSFP, finned</td><td>800G OSFP ↔ OSFP DAC</td></tr>
+        <tr><td>Switch → 2 × ConnectX-7 (OSFP)</td><td>Twin-port OSFP, finned</td><td>2 × single-port OSFP, flat top</td><td>800G → 2 × 400G splitter, "finned to flat"</td></tr>
+        <tr><td>Switch → ConnectX-7 / BlueField-3 (QSFP112)</td><td>Twin-port OSFP, finned</td><td>QSFP112</td><td>800G → 2 × 400G OSFP-to-QSFP112 splitter</td></tr>
+        <tr><td>Switch → 4 × 200G endpoints</td><td>Twin-port OSFP, finned</td><td>4 × QSFP112 / QSFP56</td><td>800G → 4 × 200G breakout (NDR200)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small muted">Read the description and suffix (e.g. <code>-FLT</code> flat top) before unpacking. The ConnectX-7 list's example row <code>MCP7Y00-N001-FLT</code> is a 1 m passive copper splitter, 800G → 2 × 400G, OSFP → 2 × OSFP, flat top.</p>
+</section>
+
+<section>
+  <h2>Install it right</h2>
+  <ol class="steps">
+    <li><b>Verify before you open the bag</b>Part number, length and end types against the cable plan and labels. Unpack gently with ESD precautions. Copper cables with active ends (ACC) contain electronics.</li>
+    <li><b>Plan the side</b>Split each switch's cables 50/50 between the left and right managers, and plug from the <b>edges toward the centre</b> so the middle stays clear for fan and PSU removal.</li>
+    <li><b>Mount, then pre-bend</b>Fix the cable to the rack with hook-and-loop first, then shape a wide curve near the plug toward its route. This matters most for thick 26 AWG copper. The port should carry no leverage.</li>
+    <li><b>Insert by the body</b>Grip the connector body between thumb and index finger, hold it square to the panel and push until it latches. Never push via the cable, and never use the pull-tab to insert.</li>
+    <li><b>Install one, test one</b>Connect both ends and confirm a physical link (port LED) and a logical link before the next cable. A bad cable is cheap to find now and expensive inside a finished bundle.</li>
+    <li><b>Support and dress</b>Supports at ≤ 2 m (≤ 60 cm in the SuperPOD dressing guidance), hook-and-loop every 30–60 cm, snug but not deforming the jacket. Keep away from EMI sources, out of fiber runs, and off other equipment's vents.</li>
+    <li><b>Remove by the tab</b>Pull the tab straight out, perpendicular to the panel, until the latch releases. Never pull on the jacket.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Verifying the link</h2>
+  <p>InfiniBand reports two states per port: <b>physical</b> (is there a working signal on the cable?) and <b>logical</b> (has the Subnet Manager configured the port?). The cable is your job, the SM is the fabric's.</p>
+  <div class="seg" data-target="ib"><button data-value="down">No signal</button><button data-value="init">Physical up, no SM</button><button data-value="active" aria-pressed="true">Active</button></div>
+  <div class="states">
+    <div class="st" data-show-ib="init active"><b>LinkUp</b>Physical state: signal locked, cable OK</div>
+    <div class="st" data-show-ib="down"><b>Polling / Disabled</b>Physical state: no partner or bad cable</div>
+    <div class="st" data-show-ib="down"><b>Down</b>Logical state</div>
+    <div class="st" data-show-ib="init"><b>Initializing</b>Logical: waiting for the Subnet Manager</div>
+    <div class="st on" data-show-ib="active"><b>Active</b>Logical: SM has configured the port; traffic flows</div>
+  </div>
+  <pre data-show-ib="active"><code>$ ibstat
+  Port 1:
+      State: Active
+      Physical state: LinkUp
+      Rate: 400</code></pre>
+  <pre data-show-ib="init" hidden><code>$ ibstat
+  Port 1:
+      State: Initializing        ← cable is fine; check the Subnet Manager
+      Physical state: LinkUp</code></pre>
+  <pre data-show-ib="down" hidden><code>$ ibstat
+  Port 1:
+      State: Down
+      Physical state: Polling    ← reseat both ends, check end types, swap the cable</code></pre>
+  <p class="small">Also useful: <code>iblinkinfo</code> (every link's width and speed across the fabric), <code>mlxlink -d &lt;device&gt;</code> (speed, FEC, BER, cable/module info on the host), and the switch port LED. A link that comes up at a <b>lower rate or width</b> than expected usually means a damaged or wrong cable.</p>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"Use the longest DAC that fits."</b>No. Choose the shortest length that routes cleanly, keep runs under 90% of rated reach, and tuck limited slack into the managers.</li>
+    <li><b>Pushing by the pull-tab.</b>The tab is only for extraction. Insert by the connector body, square to the panel.</li>
+    <li><b>Physical LinkUp but State Initializing.</b>That's not a cable fault. The port is waiting for the Subnet Manager.</li>
+    <li><b>Copper beside power.</b>Route copper away from PDUs, power cords and converters. EMI raises errors.</li>
+    <li><b>Letting a heavy DAC hang.</b>Never more than 2 m unsupported. The cable's weight becomes strain on the port.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. A switch-to-switch run inside the same rack is 2 m. Most cost-effective NDR choice?</p>
+      <div class="opts"><button class="opt" data-correct>Passive copper DAC</button><button class="opt">Active copper (ACC)</button><button class="opt">Single-mode transceivers</button></div>
+      <p class="why">2 m is well within passive DAC reach (~0.5–3 m at NDR): cheapest, no power, lowest latency.</p></div>
+    <div class="q"><p>2. A run is 5 m. Which copper option, if any?</p>
+      <div class="opts"><button class="opt">Passive DAC</button><button class="opt" data-correct>Active copper (ACC, MCA…)</button><button class="opt">Copper can't reach; it must be fiber</button></div>
+      <p class="why">ACC stretches copper to roughly 4–6.5 m at NDR. Beyond that, use AOC or optics.</p></div>
+    <div class="q"><p>3. After cabling, <code>ibstat</code> shows Physical state LinkUp, State Initializing. What next?</p>
+      <div class="opts"><button class="opt">Replace the cable</button><button class="opt" data-correct>Check that a Subnet Manager is running and reachable</button><button class="opt">Reseat the transceiver</button></div>
+      <p class="why">LinkUp means the cable and signal are fine. Initializing means the port hasn't been configured by an SM yet.</p></div>
+    <div class="q"><p>4. Correct way to insert a copper cable into an OSFP cage?</p>
+      <div class="opts"><button class="opt">Push on the cable jacket</button><button class="opt">Push using the pull-tab</button><button class="opt" data-correct>Grip the connector body and push square until it latches</button></div>
+      <p class="why">NVIDIA's guidance is to grip the body near its lower part, hold it square to the panel and push gently. The tab is for removal only.</p></div>
+    <div class="q"><p>5. Why does the 50/50 left/right split matter more for copper than for AOC?</p>
+      <div class="opts"><button class="opt">Copper needs more airflow</button><button class="opt" data-correct>Copper is ~10× bulkier and ~5× heavier, so one-sided routing overloads the manager and blocks the rack</button><button class="opt">It doesn't matter for copper</button></div>
+      <p class="why">At 9.4 mm and 0.045 kg/m, copper fills managers fast. Splitting it keeps both sides serviceable and the centre clear.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../5.SR2/nvidia-cable-guidelines-explained.html">NVIDIA cable installation guidelines<span>5 · SR2: insertion, extraction, the 15 don'ts</span></a></li>
+    <li><a href="../4.SR7/connectx7-cables-explained.html">ConnectX-7 validated cables<span>4 · SR7: DAC/ACC reach, splitters</span></a></li>
+    <li><a href="../3.SR3/infiniband-cables-explained.html">InfiniBand cables explained<span>3 · SR3: DAC vs AOC vs optics</span></a></li>
+    <li><a href="../5.SR1/dgx-superpod-h100-networking-explained.html">SuperPOD networking: cable weight<span>5 · SR1: copper vs AOC in trays</span></a></li>
+    <li><a href="../4.T7/50-50-cable-routing.html">50/50 left-right routing<span>4 · T7</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Reach, size and weight figures are typical values from NVIDIA documentation; always confirm against the exact part's datasheet.</footer>
+</main>
+<script>
+(function () {
+  const run = document.getElementById("run"), v = document.getElementById("run-v"), pin = document.getElementById("pin"), out = document.getElementById("run-out");
+  function upd() {
+    const m = +run.value; v.textContent = m + " m";
+    pin.style.left = Math.min(100, m / 30 * 100) + "%";
+    let r;
+    if (m <= 2.7) r = '<span class="ok">Passive DAC.</span> Cheapest, no power, lowest latency. Comfortably under 90% of ~3 m.';
+    else if (m <= 3) r = '<span class="caution">Passive DAC, at the edge.</span> Past 90% of a 3 m DAC\'s reach. Consider ACC or a shorter route.';
+    else if (m <= 5.8) r = '<span class="ok">Active copper (ACC).</span> Signal conditioning in the plugs stretches copper to about 4–6.5 m.';
+    else if (m <= 6.5) r = '<span class="caution">ACC at the edge.</span> Past 90% of rated reach. An AOC is the safer choice.';
+    else r = '<span class="ok">AOC or transceivers + fiber.</span> Copper can\'t reach. AOCs are thin and light; transceivers with structured fiber go farthest.';
+    out.innerHTML = r;
+  }
+  run.addEventListener("input", upd); upd();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

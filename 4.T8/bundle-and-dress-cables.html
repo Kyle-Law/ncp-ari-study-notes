@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bundling and dressing cables</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12.5px; fill: var(--muted) !important; } .t { font-size: 13px; }
+  .cab { stroke-width: 9; fill: none; stroke-linecap: round; }
+  .velcro { fill: var(--accent); } .zip { fill: var(--ink); }
+  .sup { fill: var(--muted); }
+  .label-tag { fill: var(--panel); stroke: var(--ink); }
+  .vs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1rem; }
+  .vs .card { border-top: 4px solid var(--good); } .vs .card.bad { border-top-color: var(--bad); }
+  .sw-row { display: flex; flex-wrap: wrap; gap: .5rem; margin: .6rem 0; }
+  .sw-row label { display: flex; align-items: center; gap: .35rem; font-size: .92rem; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: .25rem .5rem; }
+  .sw-row input[type=color] { width: 1.8rem; height: 1.5rem; padding: 0; border: 0; background: none; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">4 · T8</span><span class="chip">High-Density Cabling</span><span class="chip weight">30% of exam</span></div>
+  <h1>Bundling and dressing cables professionally</h1>
+  <p class="lede">Dressing is how cables are bundled, tied, supported, coloured and labelled after they're plugged in. Done well, any cable can be traced, any part swapped and air moves freely. Done badly, a 2-minute transceiver swap turns into an outage.</p>
+  <p class="objective"><b>Exam objective</b>Bundle and dress cables professionally (hook and loop fasteners, soft ties, color coding).</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Hook-and-loop (velcro) or soft ties, never plastic zip ties</b> on network cables. Zip ties get overtightened, crush fiber and copper pairs, and must be cut to make changes.</li>
+    <li>Ties every <b>30–60 cm (12–24 in)</b>, supports at least every <b>2 m</b> (tighter in SuperPOD racks: ≤ 60 cm). Tension: <b>snug</b>, stops movement without deforming the jacket.</li>
+    <li><b>Colour code</b> by purpose or endpoint (tie colour = link group), keep <b>copper and fiber in separate runs</b>, and <b>label both ends</b> (and along long runs) with unique identifiers, e.g. TIA-606-B style.</li>
+    <li>Don't over-bundle or stack bundles: cables at the bottom get crushed. Respect bend radius, don't twist near the connector (≥ 75 cm away), and keep each U's cables in their own horizontal plane.</li>
+    <li>Keep transceivers, fans, PSUs and vents <b>unobstructed</b>, and <b>remove abandoned cables</b>. They still block air.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Fasteners: what to use</h2>
+  <div class="vs">
+    <div class="card"><h3>✓ Hook-and-loop / soft ties</h3><ul class="small"><li>Wide, soft contact spreads pressure</li><li>Re-openable for moves, adds and changes</li><li>Hard to overtighten</li><li>Colours available for coding</li></ul></div>
+    <div class="card bad"><h3>✕ Plastic zip ties</h3><ul class="small"><li>Thin edge concentrates force and crushes fiber</li><li>Easy to overtighten; deforms copper pairs</li><li>Must be cut, which risks nicking jackets</li><li>Never on fiber; avoid on network cables entirely</li></ul></div>
+  </div>
+  <h3>Tie spacing and tension</h3>
+  <div class="card">
+    <label class="field">Distance between ties: <b id="sp-v"></b>
+      <input type="range" id="sp" min="10" max="150" step="5" value="40">
+    </label>
+    <div class="seg" id="ten-seg" style="margin-top:.6rem"><button data-t="loose">Loose</button><button data-t="snug" aria-pressed="true">Snug</button><button data-t="tight">Tight</button></div>
+    <div class="wide"><svg id="tie" viewBox="0 0 700 150" role="img" aria-labelledby="tieT"><title id="tieT">A horizontal cable run showing ties at the chosen spacing and the resulting sag</title></svg></div>
+    <p id="tie-out" aria-live="polite" style="margin:.4rem 0 0"></p>
+  </div>
+</section>
+
+<section>
+  <h2>Colour coding and labels</h2>
+  <p>Colour tells you <b>what kind</b> of link it is at a glance. The label tells you <b>exactly which</b> link it is. You need both.</p>
+  <div class="grid two">
+    <div class="card"><h3>Colour</h3>
+      <ul class="small">
+        <li><b>Tie colour = link group</b>, e.g. compute fabric, storage fabric, in-band management, OOB management, uplinks. Document the scheme and use it site-wide.</li>
+        <li>Fiber <b>jacket</b> colour already means something (yellow SMF, aqua OM3/OM4, lime OM5), so code with ties, labels or boots, not by inventing new jacket meanings.</li>
+        <li>Group bundles by purpose, e.g. inter-switch links in one, uplinks to core in another.</li>
+      </ul></div>
+    <div class="card"><h3>Labels</h3>
+      <ul class="small">
+        <li>Label <b>both ends</b>, and along long runs, with machine-printed labels.</li>
+        <li>Each label names its own end first, then the far end. TIA-606-B form: <code>floor+room.grid-RU:port</code>, e.g. <code>1A.AD02-40:02</code>.</li>
+        <li>Bundles carry a bundle serial number (BSN) matching the deployment plan.</li>
+        <li>Label so it reads without twisting the cable or blocking the port LED.</li>
+      </ul></div>
+  </div>
+  <h3>Try a scheme</h3>
+  <div class="card">
+    <div class="sw-row" id="scheme">
+      <label><input type="color" value="#1aa7b8" data-g="Compute fabric"> Compute fabric</label>
+      <label><input type="color" value="#8a5ad6" data-g="Storage fabric"> Storage fabric</label>
+      <label><input type="color" value="#e0a030" data-g="In-band mgmt"> In-band mgmt</label>
+      <label><input type="color" value="#e05a47" data-g="OOB mgmt"> OOB mgmt</label>
+    </div>
+    <div class="wide"><svg id="bund" viewBox="0 0 700 130" role="img" aria-labelledby="bundT"><title id="bundT">Four labelled bundles, each tied with its group's colour</title></svg></div>
+  </div>
+</section>
+
+<section>
+  <h2>Dressing rules that protect the cable</h2>
+  <div class="grid">
+    <div class="card"><h3>Bend radius</h3><p class="small">Follow the datasheet. Rule of thumb ~10× OD static, ~20× while pulling. Tight bends crack fiber or deform copper pairs, and the damage is often invisible.</p></div>
+    <div class="card"><h3>No twist at the plug</h3><p class="small">If a connector must rotate to fit, start the twist at least 75 cm down the cable so the connector isn't stressed.</p></div>
+    <div class="card"><h3>Don't over-bundle</h3><p class="small">Huge bundles and stacked bundles compress the cables at the bottom and can degrade them. Split into manageable groups.</p></div>
+    <div class="card"><h3>Weight off the port</h3><p class="small">Tie cables to the rack structure. No more than 2 m unsupported. Use trays and managers for continuous support.</p></div>
+    <div class="card"><h3>Clear paths</h3><p class="small">Nothing in front of transceiver pull-paths, fans, PSUs or vents. Don't drape over other equipment or thread through holes.</p></div>
+    <div class="card"><h3>Remove dead cable</h3><p class="small">Abandoned cables carry no traffic but still block airflow and fill trays. Removing them is a cooling fix.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"Zip ties are fine if not too tight."</b>NVIDIA's guidance is soft hook-and-loop. Plastic ties crush cable and must be cut off.</li>
+    <li><b>Tighter is tidier.</b>Snug is the target: stops movement without deforming the jacket. Tight wraps damage cables.</li>
+    <li><b>Colour without labels.</b>Colour shows the group, not the link. Every cable still needs a unique label at both ends.</li>
+    <li><b>Mixing copper and fiber in one bundle.</b>Keep separate runs: weight, crush and EMI differ.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. Which fastener should bundle fiber in an NVIDIA cluster?</p>
+      <div class="opts"><button class="opt">Nylon zip ties trimmed flush</button><button class="opt" data-correct>Hook-and-loop (velcro) or soft ties</button><button class="opt">Metal cable clips</button></div>
+      <p class="why">Soft hook-and-loop spreads pressure and can be reopened. Zip ties crush fiber and must be cut.</p></div>
+    <div class="q"><p>2. Recommended spacing for hook-and-loop ties along a bundle?</p>
+      <div class="opts"><button class="opt">Every 5 cm</button><button class="opt" data-correct>About 30–60 cm (12–24 in)</button><button class="opt">Every 3 m</button></div>
+      <p class="why">NVIDIA's guidelines: velcro every 30–60 cm, supports at least every 2 m.</p></div>
+    <div class="q"><p>3. What does colour coding give you that a label doesn't?</p>
+      <div class="opts"><button class="opt" data-correct>An at-a-glance link group / purpose</button><button class="opt">The exact far-end port</button><button class="opt">The cable's length</button></div>
+      <p class="why">Colour shows the category. The label identifies the specific link and both endpoints.</p></div>
+    <div class="q"><p>4. Why remove abandoned cables?</p>
+      <div class="opts"><button class="opt">They might carry traffic</button><button class="opt" data-correct>They still block airflow and fill pathways</button><button class="opt">They affect link speed</button></div>
+      <p class="why">Dead cables obstruct air and can contribute to overheating, and they waste tray capacity.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../4.SR3/cable-management-best-practices.html">Cable management best practices<span>4 · SR3: walk-down checklist</span></a></li>
+    <li><a href="../4.SR4/deploying-the-bundles-explained.html">Deploying the bundles<span>4 · SR4: connect and dress per U</span></a></li>
+    <li><a href="../5.SR2/nvidia-cable-guidelines-explained.html">NVIDIA cable installation guidelines<span>5 · SR2: spacing, grouping, labels</span></a></li>
+    <li><a href="../2.SR1/tia-606b-cable-labeling-explained.html">TIA-606-B labeling<span>2 · SR1: identifier format</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Bend-radius figures are rules of thumb; follow each cable's datasheet.</footer>
+</main>
+<script>
+(function () {
+  // Tie spacing demo
+  const sp = document.getElementById("sp"), spv = document.getElementById("sp-v"), svg = document.getElementById("tie"), out = document.getElementById("tie-out");
+  let ten = "snug";
+  function draw() {
+    const cm = +sp.value; spv.textContent = cm + " cm";
+    const px = 600 / 200 * cm; // 200 cm shown across 600 px
+    let s = svg.querySelector("title").outerHTML;
+    s += `<rect x="40" y="10" width="620" height="6" class="sup"/>`;
+    const sag = Math.min(60, (cm / 60) ** 2 * 6);
+    let d = "M50 40", x = 50;
+    const ties = [50];
+    while (x + px <= 650) { d += ` Q ${x + px / 2} ${40 + sag} ${x + px} 40`; x += px; ties.push(x); }
+    if (x < 650) d += ` Q ${(x + 650) / 2} ${40 + sag * ((650 - x) / px) ** 2} 650 40`;
+    const col = ten === "tight" ? "var(--bad)" : "var(--copper)";
+    s += `<path d="${d}" class="cab" style="stroke:${col}"/>`;
+    ties.forEach((tx) => {
+      const w = ten === "tight" ? 6 : ten === "loose" ? 14 : 10;
+      s += `<rect x="${tx - w / 2}" y="${ten === "loose" ? 22 : 28}" width="${w}" height="${ten === "loose" ? 32 : 24}" rx="2" class="velcro" ${ten === "loose" ? 'opacity=".55"' : ""}/>`;
+    });
+    s += `<text x="50" y="140" class="tm">0</text><text x="650" y="140" text-anchor="end" class="tm">2 m</text>`;
+    svg.innerHTML = s;
+    let m = cm < 30 ? '<span class="caution">More ties than needed.</span> Fine, but slower to change.' :
+            cm <= 60 ? '<span class="ok">Within 30–60 cm.</span>' :
+            '<span class="fail">Too far apart.</span> The bundle sags and pulls on connectors.';
+    m += ten === "snug" ? ' <span class="ok">Snug: stops movement without deforming the jacket.</span>'
+       : ten === "tight" ? ' <span class="fail">Too tight: the jacket deforms, and fiber or copper pairs can be damaged.</span>'
+       : ' <span class="caution">Loose: fine while you work. Snug it up when the side is finished.</span>';
+    out.innerHTML = m;
+  }
+  sp.addEventListener("input", draw);
+  const tb = document.querySelectorAll("#ten-seg button");
+  tb.forEach((b) => { b.type = "button"; b.addEventListener("click", () => { tb.forEach((x) => x.setAttribute("aria-pressed", String(x === b))); ten = b.dataset.t; draw(); }); });
+  draw();
+
+  // Colour scheme demo
+  const bund = document.getElementById("bund"), inputs = document.querySelectorAll("#scheme input");
+  const labels = ["1A.AD02-40:01", "1A.AD02-38:05", "1A.AD02-36:12", "1A.AD02-34:01"];
+  function drawB() {
+    let s = bund.querySelector("title").outerHTML;
+    inputs.forEach((inp, i) => {
+      const y = 18 + i * 28, c = inp.value;
+      s += `<path d="M20 ${y} H600" class="cab" style="stroke:var(--panel-2);stroke-width:14"/>`;
+      [80, 220, 360, 500].forEach((x) => (s += `<rect x="${x}" y="${y - 10}" width="12" height="20" rx="2" fill="${c}"/>`));
+      s += `<rect x="604" y="${y - 10}" width="92" height="20" rx="3" class="label-tag"/><text x="650" y="${y + 4}" text-anchor="middle" style="font-size:10px;font-family:var(--mono)">${labels[i]}</text>`;
+      s += `<text x="20" y="${y + 4}" style="font-size:11px" class="tm">${inp.dataset.g}</text>`;
+    });
+    bund.innerHTML = s;
+  }
+  inputs.forEach((i) => i.addEventListener("input", drawB)); drawB();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

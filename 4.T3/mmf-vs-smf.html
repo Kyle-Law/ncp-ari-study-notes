@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMF vs. SMF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .clad { fill: var(--panel-2); stroke: var(--rule); stroke-width: 1.5; }
+  .core-s { fill: var(--smf); } .core-m { fill: var(--mmf); }
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12.5px; fill: var(--muted) !important; }
+  .ray-s { stroke: var(--smf); stroke-width: 3; fill: none; }
+  .ray-m1 { stroke: var(--mmf); stroke-width: 2.5; fill: none; }
+  .ray-m2 { stroke: var(--mmf); stroke-width: 2.5; fill: none; opacity: .65; }
+  .ray-m3 { stroke: var(--mmf); stroke-width: 2.5; fill: none; opacity: .4; }
+  .pipe { fill: var(--panel-2); stroke: var(--rule); }
+  .pulse { stroke-width: 3; fill: none; }
+  .swatch { display: inline-block; width: 1.1em; height: 1.1em; border-radius: 3px; vertical-align: -0.2em; margin-right: .4em; border: 1px solid var(--rule); }
+  .reach-row { display: grid; grid-template-columns: 7.5rem 1fr; align-items: center; gap: .6rem; margin: .35rem 0; font-size: .92rem; }
+  .bar { height: 20px; border-radius: 4px; position: relative; }
+  .bar span { position: absolute; left: calc(100% + 6px); top: 0; white-space: nowrap; font-size: .85rem; color: var(--muted); }
+  .scale { display: grid; grid-template-columns: 7.5rem 1fr; gap: .6rem; font-size: .78rem; color: var(--muted); }
+  .scale div:last-child { display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">4 · T3</span><span class="chip">High-Density Cabling</span><span class="chip weight">30% of exam</span></div>
+  <h1>Multimode vs. single-mode fiber</h1>
+  <p class="lede">Both fibers have the same 125 µm glass outside. The real difference is the width of the core that carries the light, and almost every other difference (light source, reach, cost, colour) follows from that.</p>
+  <p class="objective"><b>Exam objective</b>Describe the difference between MMF and SMF.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>SMF</b> (OS2): ~<b>9 µm</b> core, one light path, lasers at <b>1310/1550 nm</b>. Reach runs to kilometres. Pricier optics, but the cable survives several speed upgrades.</li>
+    <li><b>MMF</b> (OM3/OM4/OM5): <b>50 µm</b> core (legacy OM1: 62.5 µm), many paths, cheap <b>850 nm VCSELs</b>. Reach is limited by <b>modal dispersion</b> to tens or hundreds of metres.</li>
+    <li>Jacket colour: <span class="swatch" style="background:var(--smf)"></span><b>yellow</b> = single-mode, <span class="swatch" style="background:var(--mmf)"></span><b>aqua</b> = OM3/OM4, <span class="swatch" style="background:#9acd32"></span><b>lime</b> = OM5, orange = legacy OM1/OM2.</li>
+    <li>Optics names say the fiber: <b>SR</b> = multimode, <b>DR / FR / LR / ER</b> = single-mode. NVIDIA prefixes: <b>MMA</b> = multimode, <b>MMS</b> = single-mode transceiver.</li>
+    <li><b>Never mix them</b> in one link: the cores don't line up, so most of the light is lost at the joint.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>It starts with the core</h2>
+  <figure>
+    <div class="wide"><svg viewBox="0 0 760 250" role="img" aria-labelledby="coreT">
+      <title id="coreT">Cross-sections drawn to scale: all fibers have a 125 micron cladding; single-mode has a 9 micron core, OM3 to OM5 a 50 micron core, OM1 a 62.5 micron core</title>
+      <g transform="translate(130,110)"><circle r="94" class="clad"/><circle r="6.8" class="core-s"/>
+        <text y="128" text-anchor="middle" class="tb">Single-mode (OS2)</text><text y="146" text-anchor="middle" class="tm">9 µm core</text></g>
+      <g transform="translate(380,110)"><circle r="94" class="clad"/><circle r="37.5" class="core-m"/>
+        <text y="128" text-anchor="middle" class="tb">Multimode OM3 / OM4 / OM5</text><text y="146" text-anchor="middle" class="tm">50 µm core</text></g>
+      <g transform="translate(630,110)"><circle r="94" class="clad"/><circle r="46.9" class="core-m" style="opacity:.7"/>
+        <text y="128" text-anchor="middle" class="tb">Multimode OM1 (legacy)</text><text y="146" text-anchor="middle" class="tm">62.5 µm core</text></g>
+    </svg></div>
+    <figcaption>Drawn to scale. The grey disc is the 125 µm cladding, identical on all three. A single dust speck (~10 µm) is wider than the whole single-mode core.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>Why a wide core limits distance</h2>
+  <p>In a wide core, light takes many paths ("modes"). Steep paths cover more distance and arrive later, so each pulse <b>smears out</b>. Over a long link, neighbouring bits blur together and the receiver can't tell a 1 from a 0. This is <b>modal dispersion</b>, and single-mode fiber essentially doesn't have it.</p>
+  <div class="card">
+    <label class="field">Link length: <b id="len-v">50 m</b>
+      <input type="range" id="len" min="10" max="600" step="10" value="50">
+    </label>
+    <div class="wide"><svg viewBox="0 0 700 220" role="img" aria-labelledby="dispT" style="margin-top:.6rem">
+      <title id="dispT">Received pulses: single-mode stays sharp, multimode pulses spread as the link gets longer</title>
+      <text x="0" y="18" class="tb">Single-mode: received bits 1 0 1 1 0 1</text>
+      <path id="p-s" class="pulse" style="stroke:var(--smf)"/>
+      <text x="0" y="128" class="tb">Multimode (OM4, high lane rate)</text>
+      <path id="p-m" class="pulse" style="stroke:var(--mmf)"/>
+      <line x1="0" x2="700" y1="78" y2="78" stroke="var(--muted)" stroke-dasharray="4 4"/>
+      <line x1="0" x2="700" y1="188" y2="188" stroke="var(--muted)" stroke-dasharray="4 4"/>
+    </svg></div>
+    <p class="small" id="disp-msg" style="margin:.4rem 0 0"></p>
+  </div>
+  <p class="small muted">Illustrative model, not a link budget. Real multimode fiber is graded-index, so rays curve gently rather than bouncing, but the effect (different paths, different arrival times) is the same.</p>
+</section>
+
+<section>
+  <h2>Side by side</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>Single-mode (SMF)</th><th>Multimode (MMF)</th></tr></thead>
+      <tbody>
+        <tr><td>Core / cladding</td><td>~9 / 125 µm</td><td>50 / 125 µm (OM1: 62.5)</td></tr>
+        <tr><td>Light paths</td><td>One</td><td>Many (modal dispersion)</td></tr>
+        <tr><td>Light source</td><td>Lasers (DFB/EML), 1310 / 1550 nm</td><td>VCSEL, 850 nm (OM5 adds SWDM 850–950 nm)</td></tr>
+        <tr><td>Typical reach</td><td>500 m … 2 km … 10 km+</td><td>Tens of metres at NDR speeds; a few hundred at 10–25G</td></tr>
+        <tr><td>Optics cost</td><td>Higher</td><td>Lower</td></tr>
+        <tr><td>Cable cost</td><td>Lower per metre</td><td>Higher per metre</td></tr>
+        <tr><td>Upgrade path</td><td>Swap optics, keep the cable</td><td>Each speed step shortens reach</td></tr>
+        <tr><td>Handling</td><td>Precise: tiny core, very sensitive to dirt</td><td>More forgiving of dust and misalignment</td></tr>
+        <tr><td>Typical AI-cluster use</td><td>Leaf↔spine, between rows/pods, anything over ~50–100 m</td><td>Short in-row links, server↔leaf</td></tr>
+        <tr><td>Optic names</td><td>DR, FR, LR, ER, ZR</td><td>SR, VR</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Know the grades</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Grade</th><th>Type</th><th>Core</th><th>Jacket colour (TIA convention)</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>OM1</td><td>MMF</td><td>62.5 µm</td><td><span class="swatch" style="background:#e8892c"></span>Orange</td><td>Legacy, LED-era</td></tr>
+        <tr><td>OM2</td><td>MMF</td><td>50 µm</td><td><span class="swatch" style="background:#e8892c"></span>Orange</td><td>Legacy</td></tr>
+        <tr><td>OM3</td><td>MMF</td><td>50 µm</td><td><span class="swatch" style="background:var(--mmf)"></span>Aqua</td><td>Laser-optimised for 850 nm VCSELs</td></tr>
+        <tr><td>OM4</td><td>MMF</td><td>50 µm</td><td><span class="swatch" style="background:var(--mmf)"></span>Aqua (sometimes violet)</td><td>Higher bandwidth than OM3; most common today</td></tr>
+        <tr><td>OM5</td><td>MMF</td><td>50 µm</td><td><span class="swatch" style="background:#9acd32"></span>Lime green</td><td>Wideband: several short wavelengths (SWDM)</td></tr>
+        <tr><td>OS2</td><td>SMF</td><td>~9 µm</td><td><span class="swatch" style="background:var(--smf)"></span>Yellow</td><td>Low-water-peak, the data-center single-mode standard</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout warn"><b>Connector colour ≠ jacket colour</b><p>A <b>green</b> connector body means <b>APC</b> (angled polish), not OM5. NVIDIA's NDR passive fiber cables use MPO-12/APC ends. Read the jacket and the label, not just the plug.</p></div>
+</section>
+
+<section>
+  <h2>How far each one reaches</h2>
+  <p>Typical reach classes for 400G/800G optics (log scale):</p>
+  <div class="card" id="reach">
+    <div class="reach-row"><span>VR (MMF)</span><div class="bar" style="background:var(--mmf);width:var(--w)" data-m="50"><span>≈50 m</span></div></div>
+    <div class="reach-row"><span>SR (MMF)</span><div class="bar" style="background:var(--mmf);width:var(--w)" data-m="100"><span>≈100 m</span></div></div>
+    <div class="reach-row"><span>DR (SMF)</span><div class="bar" style="background:var(--smf);width:var(--w)" data-m="500"><span>500 m</span></div></div>
+    <div class="reach-row"><span>FR (SMF)</span><div class="bar" style="background:var(--smf);width:var(--w)" data-m="2000"><span>2 km</span></div></div>
+    <div class="reach-row"><span>LR (SMF)</span><div class="bar" style="background:var(--smf);width:var(--w)" data-m="10000"><span>10 km</span></div></div>
+    <div class="scale"><div></div><div><span>10 m</span><span>100 m</span><span>1 km</span><span>10 km</span></div></div>
+  </div>
+  <p class="small muted">Typical industry reach classes from the 4 · SR2 note. NVIDIA's NDR multimode transceivers are often specified nearer 50 m, so check the datasheet for the exact part.</p>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"Multimode is cheaper, so it's cheaper overall."</b>MMF <em>optics</em> are cheaper. MMF <em>cable</em> costs more per metre. For short links MMF usually wins on total cost, and beyond its reach SMF is the only option.</li>
+    <li><b>"Single-mode can't be used for short links."</b>It can. DR optics (500 m) are often used for short AI-fabric links too, because the same cable plant carries future speeds.</li>
+    <li><b>Mixing fiber types.</b>An SR (multimode) optic on single-mode cable, or a DR optic on multimode cable, won't work properly. Optic and fiber must match.</li>
+    <li><b>Colour confusion.</b>Yellow jacket = SMF, aqua = OM3/OM4, lime = OM5. Green <em>connector</em> = APC polish.</li>
+    <li><b>Wavelengths.</b>850 nm = multimode VCSEL. 1310 nm = single-mode data-center optics (1550 nm for long haul).</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. What is the core diameter of OM4 multimode fiber?</p>
+      <div class="opts"><button class="opt">9 µm</button><button class="opt" data-correct>50 µm</button><button class="opt">62.5 µm</button><button class="opt">125 µm</button></div>
+      <p class="why">OM2 through OM5 all use a 50 µm core. 9 µm is single-mode, 62.5 µm is legacy OM1, and 125 µm is the cladding on every type.</p></div>
+    <div class="q"><p>2. What mainly limits multimode reach?</p>
+      <div class="opts"><button class="opt">Connector loss</button><button class="opt" data-correct>Modal dispersion</button><button class="opt">Laser power</button></div>
+      <p class="why">Many light paths arrive at slightly different times, smearing pulses. Higher lane rates make it worse.</p></div>
+    <div class="q"><p>3. A cable has a yellow jacket. What should you pair it with?</p>
+      <div class="opts"><button class="opt">An SR4 transceiver</button><button class="opt" data-correct>A DR4 or FR4 transceiver</button><button class="opt">Either; fiber type doesn't matter</button></div>
+      <p class="why">Yellow = single-mode, which pairs with DR/FR/LR optics. SR optics are multimode.</p></div>
+    <div class="q"><p>4. Which light source and wavelength is typical for multimode optics?</p>
+      <div class="opts"><button class="opt" data-correct>VCSEL at 850 nm</button><button class="opt">DFB laser at 1310 nm</button><button class="opt">EML laser at 1550 nm</button></div>
+      <p class="why">Cheap VCSELs at 850 nm are what keep multimode optics inexpensive. Single-mode uses DFB/EML lasers at 1310/1550 nm.</p></div>
+    <div class="q"><p>5. A 300 m link between two rows needs to run at 800G today and faster later. Best choice?</p>
+      <div class="opts"><button class="opt">OM4 multimode</button><button class="opt" data-correct>OS2 single-mode</button><button class="opt">Passive copper</button></div>
+      <p class="why">300 m is beyond multimode reach at 800G-class lane rates, and single-mode carries future speed upgrades by swapping only the optics.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../4.SR11/single-mode-vs-multimode-fiber2.html">Complete comparison guide<span>4 · SR11</span></a></li>
+    <li><a href="../4.SR12/single-mode-vs-multimode-fiber.html">Comprehensive guide<span>4 · SR12</span></a></li>
+    <li><a href="../4.SR14/single-mode-vs-multimode-fiber3.html">Single-mode vs multimode (DCD)<span>4 · SR14: why SMF is becoming the default</span></a></li>
+    <li><a href="../4.T4/smf-transceiver-distances.html">Transceivers across SMF distances<span>4 · T4: next topic</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Reach figures are typical classes; always confirm against the transceiver datasheet.</footer>
+</main>
+<script>
+(function () {
+  // Log-scale reach bars: 10 m .. 10 km across 90% of the track.
+  document.querySelectorAll("#reach .bar").forEach((b) => {
+    const m = +b.dataset.m, f = (Math.log10(m) - 1) / 3;
+    b.style.setProperty("--w", Math.max(4, f * 82) + "%");
+  });
+
+  const bits = [1, 0, 1, 1, 0, 1], W = 700 / bits.length;
+  function wave(y0, h, sigma) {
+    // Sum of gaussian pulses; sigma in px.
+    let d = "";
+    for (let x = 0; x <= 700; x += 3) {
+      let v = 0;
+      bits.forEach((b, i) => { if (b) { const c = (i + .5) * W, s = Math.max(sigma, 6); v += Math.exp(-((x - c) ** 2) / (2 * s * s)) * (6 / s) ** 0.35; } });
+      d += (x ? "L" : "M") + x + " " + (y0 - Math.min(v, 1.6) * h).toFixed(1);
+    }
+    return d;
+  }
+  const len = document.getElementById("len"), lv = document.getElementById("len-v"), msg = document.getElementById("disp-msg");
+  function draw() {
+    const L = +len.value; lv.textContent = L + " m";
+    document.getElementById("p-s").setAttribute("d", wave(78, 45, 7));
+    const sigma = 7 + L * 0.22;
+    document.getElementById("p-m").setAttribute("d", wave(188, 45, sigma));
+    msg.innerHTML = L <= 60 ? '<span class="ok">Multimode pulses are still distinct.</span> Short links are where multimode makes sense.'
+      : L <= 150 ? '<span class="caution">Pulses are starting to merge.</span> Near the limit for high-rate multimode optics.'
+      : '<span class="fail">The 0s are filling in.</span> At this length and lane rate, use single-mode.';
+  }
+  len.addEventListener("input", draw); draw();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

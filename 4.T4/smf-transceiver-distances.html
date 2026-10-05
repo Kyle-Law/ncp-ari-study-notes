@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SMF transceivers by distance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12.5px; fill: var(--muted) !important; }
+  .mod { fill: var(--panel-2); stroke: var(--ink); stroke-width: 1.5; }
+  .f1 { stroke: #e05a47; } .f2 { stroke: #e0a030; } .f3 { stroke: #3a9be0; } .f4 { stroke: #8a5ad6; }
+  .fib { stroke-width: 3; fill: none; }
+  .wdm { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .ladder { display: grid; gap: .6rem; }
+  .rung { display: grid; grid-template-columns: 5.5rem 1fr; gap: .8rem; align-items: start; background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: .8rem 1rem; }
+  .rung .d { font-family: var(--display); font-weight: 700; font-size: 1.6rem; line-height: 1; color: var(--accent); }
+  .rung .d small { display: block; font-size: .85rem; color: var(--muted); font-weight: 600; margin-top: .2rem; }
+  .rung p { margin: 0; }
+  .calc { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); }
+  .meter { height: 26px; border-radius: 6px; background: var(--panel-2); position: relative; overflow: hidden; margin-top: .8rem; border: 1px solid var(--rule); }
+  .meter i { position: absolute; top: 0; bottom: 0; left: 0; }
+  .meter b { position: absolute; top: -2px; bottom: -2px; width: 3px; background: var(--ink); }
+  .legend { display: flex; flex-wrap: wrap; gap: .4rem 1rem; font-size: .85rem; color: var(--muted); margin-top: .4rem; }
+  .legend span::before { content: ""; display: inline-block; width: .8em; height: .8em; border-radius: 2px; margin-right: .3em; background: var(--c); vertical-align: -.05em; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">4 · T4</span><span class="chip">High-Density Cabling</span><span class="chip weight">30% of exam</span></div>
+  <h1>Picking single-mode optics by distance</h1>
+  <p class="lede">On single-mode fiber, distance decides the optic. Each step up in reach changes how the lanes travel (parallel fibers or several wavelengths on one pair), which connector you need, and how much loss the link can tolerate.</p>
+  <p class="objective"><b>Exam objective</b>Describe the transceiver requirements across the various SMF distances.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li>The reach ladder: <b>DR</b> ≈ 500 m → <b>FR</b> ≈ 2 km → <b>LR</b> ≈ 10 km → <b>ER</b> ≈ 40 km. All run at about 1310 nm on OS2 fiber.</li>
+    <li><b>DR4 is parallel</b>: 4 lanes on 4 fiber pairs (8 fibers), using an <b>MPO-12</b> connector, which is <b>APC</b> in NVIDIA's NDR family. <b>FR4/LR4 are WDM</b>: 4 wavelengths muxed onto <b>one duplex pair</b>, usually LC.</li>
+    <li>Every reach class has a <b>loss budget</b> (max channel insertion loss). For 400G it's roughly 3 dB for DR4, 4 dB for FR4 and 6.3 dB for LR4. Fiber, connectors and splices all spend that budget.</li>
+    <li>PAM4 signalling is sensitive to <b>reflections</b>, which is why angled (APC) end-faces and clean connectors matter so much.</li>
+    <li>Short and long both fail: too much loss starves the receiver, but a long-reach optic on a very short link can <b>overload</b> it unless you add an attenuator.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>The reach ladder</h2>
+  <div class="ladder">
+    <div class="rung"><div class="d">DR<small>≈ 500 m</small></div><p><b>Parallel single-mode.</b> One wavelength (1310 nm), one fiber per lane per direction. 400G DR4 = 4 × 100G on 8 fibers through an MPO-12. NVIDIA's twin-port 800G optics carry two of these (2 × DR4 → two MPO-12s). Default choice for in-hall AI fabric links.</p></div>
+    <div class="rung"><div class="d">FR<small>≈ 2 km</small></div><p><b>WDM on a duplex pair.</b> Four CWDM wavelengths around 1271–1331 nm are multiplexed onto one fiber each way, using duplex LC. Fewer fibers, longer reach, pricier optics. Good for building-to-building or large campus halls.</p></div>
+    <div class="rung"><div class="d">LR<small>≈ 10 km</small></div><p><b>WDM, higher budget.</b> Same idea as FR4 with better lasers and receivers. Used for campus and metro links between data halls.</p></div>
+    <div class="rung"><div class="d">ER<small>≈ 40 km</small></div><p><b>Extended reach.</b> Rare inside an AI cluster. NVIDIA's validated list includes a single 40 km ER module for long interconnects.</p></div>
+  </div>
+  <p class="small muted" style="margin-top:.8rem">NVIDIA's single-mode (MMS…) parts in the ConnectX-7 validated list cover 100 m, 500 m, 2 km (FR4), 10 km (LR4) and one 40 km ER module. Check the list for the exact part and firmware.</p>
+</section>
+
+<section>
+  <h2>Parallel vs. WDM: what's in the fiber</h2>
+  <div class="seg" data-target="arch"><button data-value="dr" aria-pressed="true">DR4 · parallel</button><button data-value="fr">FR4 · WDM</button></div>
+  <figure data-show-arch="dr">
+    <div class="wide"><svg viewBox="0 0 760 230" role="img" aria-labelledby="drT">
+      <title id="drT">DR4: four lanes each on its own fiber, transmit and receive, through an MPO-12 connector</title>
+      <rect x="10" y="20" width="130" height="190" rx="8" class="mod"/><text x="75" y="44" text-anchor="middle" class="tb">DR4 optic</text>
+      <rect x="620" y="20" width="130" height="190" rx="8" class="mod"/><text x="685" y="44" text-anchor="middle" class="tb">DR4 optic</text>
+      <g class="fib"><path class="f1" d="M140 70 H620"/><path class="f2" d="M140 90 H620"/><path class="f3" d="M140 110 H620"/><path class="f4" d="M140 130 H620"/></g>
+      <g class="fib" style="opacity:.5"><path class="f1" d="M140 155 H620"/><path class="f2" d="M140 170 H620"/><path class="f3" d="M140 185 H620"/><path class="f4" d="M140 200 H620"/></g>
+      <text x="380" y="62" text-anchor="middle" class="tm">4 transmit fibers, all 1310 nm, 100G each</text>
+      <text x="380" y="150" text-anchor="middle" class="tm">4 receive fibers</text>
+      <text x="380" y="226" text-anchor="middle" class="tb">8 fibers in use → MPO-12 (4 positions unused) · up to ~500 m</text>
+    </svg></div>
+  </figure>
+  <figure data-show-arch="fr" hidden>
+    <div class="wide"><svg viewBox="0 0 760 230" role="img" aria-labelledby="frT">
+      <title id="frT">FR4: four wavelengths multiplexed onto one transmit fiber and one receive fiber, duplex LC</title>
+      <rect x="10" y="20" width="130" height="190" rx="8" class="mod"/><text x="75" y="44" text-anchor="middle" class="tb">FR4 optic</text>
+      <rect x="620" y="20" width="130" height="190" rx="8" class="mod"/><text x="685" y="44" text-anchor="middle" class="tb">FR4 optic</text>
+      <g class="fib"><path class="f1" d="M40 70 H110"/><path class="f2" d="M40 90 H110"/><path class="f3" d="M40 110 H110"/><path class="f4" d="M40 130 H110"/></g>
+      <rect x="110" y="60" width="40" height="80" rx="4" class="wdm"/><text x="130" y="155" text-anchor="middle" class="tm">MUX</text>
+      <path d="M150 100 H610" stroke="url(#rainbow)" stroke-width="5" fill="none"/>
+      <defs><linearGradient id="rainbow"><stop offset="0" stop-color="#e05a47"/><stop offset=".33" stop-color="#e0a030"/><stop offset=".66" stop-color="#3a9be0"/><stop offset="1" stop-color="#8a5ad6"/></linearGradient></defs>
+      <rect x="610" y="60" width="40" height="80" rx="4" class="wdm"/><text x="630" y="155" text-anchor="middle" class="tm">DEMUX</text>
+      <g class="fib"><path class="f1" d="M650 70 H720"/><path class="f2" d="M650 90 H720"/><path class="f3" d="M650 110 H720"/><path class="f4" d="M650 130 H720"/></g>
+      <path d="M150 185 H610" stroke="var(--muted)" stroke-width="5" fill="none" opacity=".6"/>
+      <text x="380" y="88" text-anchor="middle" class="tm">4 wavelengths (≈1271 / 1291 / 1311 / 1331 nm) on ONE fiber</text>
+      <text x="380" y="176" text-anchor="middle" class="tm">receive direction: the same, on the second fiber</text>
+      <text x="380" y="226" text-anchor="middle" class="tb">2 fibers → duplex LC · up to ~2 km (LR4: ~10 km)</text>
+    </svg></div>
+  </figure>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>DR4 (parallel)</th><th>FR4 / LR4 (WDM)</th></tr></thead>
+      <tbody>
+        <tr><td>Fibers per 400G link</td><td>8</td><td>2</td></tr>
+        <tr><td>Connector</td><td>MPO-12 (APC in NVIDIA NDR)</td><td>Duplex LC (typical)</td></tr>
+        <tr><td>Optics cost</td><td>Lower</td><td>Higher (lasers on 4 wavelengths + mux)</td></tr>
+        <tr><td>Breakout</td><td>Easy: split 400G DR4 into 4 × 100G DR</td><td>No per-lane breakout</td></tr>
+        <tr><td>Best for</td><td>In-hall, high fiber counts, breakouts</td><td>Long runs where fiber pairs are scarce</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Loss budget calculator</h2>
+  <p>Every connector, splice and kilometre of fiber costs some loss. Total it up and compare with the optic's maximum channel insertion loss.</p>
+  <div class="card">
+    <div class="calc">
+      <label class="field">Optic
+        <select id="optic">
+          <option value="3|500">400G DR4 · 3.0 dB · 500 m</option>
+          <option value="4|2000" selected>400G FR4 · 4.0 dB · 2 km</option>
+          <option value="6.3|10000">400G LR4 · 6.3 dB · 10 km</option>
+        </select>
+      </label>
+      <label class="field">Fiber length (m)<input type="number" id="km" value="1200" min="1" max="20000" step="50"></label>
+      <label class="field">Mated connector pairs<input type="number" id="conn" value="4" min="0" max="12"></label>
+      <label class="field">Fusion splices<input type="number" id="spl" value="2" min="0" max="20"></label>
+    </div>
+    <div class="meter" id="meter" aria-hidden="true"></div>
+    <div class="legend"><span style="--c:var(--smf)">Fiber 0.4 dB/km</span><span style="--c:var(--accent)">Connectors 0.5 dB each</span><span style="--c:var(--mmf)">Splices 0.1 dB each</span><span style="--c:var(--ink)">Budget line</span></div>
+    <p id="lb-out" aria-live="polite" style="margin:.8rem 0 0"></p>
+  </div>
+  <p class="small muted">Per-element losses are typical planning values (OS2 at 1310 nm ≈ 0.4 dB/km, a good mated pair ≈ 0.5 dB, a fusion splice ≈ 0.1 dB). Budgets are the IEEE 802.3 maximum channel insertion loss for each 400G PMD. Use your component datasheets for real designs.</p>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"More reach is always safer."</b>No. LR optics on a few metres of fiber can overload the receiver. Use the reach class that fits, or add an attenuator.</li>
+    <li><b>DR4 needs 8 fibers, FR4 needs 2.</b>Patch panels and trunks have to provide the right fiber count and connector (MPO-12 vs duplex LC).</li>
+    <li><b>Connectors eat the budget fastest.</b>On a short DR4 link, four dirty or poor connectors can blow a 3 dB budget before the fiber itself matters.</li>
+    <li><b>APC vs UPC.</b>NVIDIA's NDR single-mode cables are MPO-12/APC. Mating APC to UPC damages end-faces and causes high loss and reflection.</li>
+    <li><b>Wavelength.</b>Data-center SMF optics run around 1310 nm. 850 nm is multimode.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. Two halls are 1.5 km apart, with only a few spare fiber pairs between them. Which 400G optic fits?</p>
+      <div class="opts"><button class="opt">DR4</button><button class="opt" data-correct>FR4</button><button class="opt">SR4</button></div>
+      <p class="why">1.5 km is past DR4's ~500 m. FR4 reaches ~2 km and needs only one duplex pair per link.</p></div>
+    <div class="q"><p>2. How many fibers does a 400G DR4 link use, and on which connector?</p>
+      <div class="opts"><button class="opt">2, duplex LC</button><button class="opt" data-correct>8, MPO-12</button><button class="opt">16, MPO-16</button></div>
+      <p class="why">4 transmit + 4 receive fibers, carried in an MPO-12 with 4 positions unused.</p></div>
+    <div class="q"><p>3. What does the "4" in FR4 mean?</p>
+      <div class="opts"><button class="opt">4 km reach</button><button class="opt" data-correct>4 wavelengths multiplexed on one fiber per direction</button><button class="opt">4 parallel fibers per direction</button></div>
+      <p class="why">FR4 uses 4 CWDM wavelengths on a duplex pair. DR4 is the parallel one.</p></div>
+    <div class="q"><p>4. A 300 m DR4 link fails its loss test. What's the most likely culprit?</p>
+      <div class="opts"><button class="opt">Fiber attenuation</button><button class="opt" data-correct>Dirty or poor connectors</button><button class="opt">Wrong wavelength</button></div>
+      <p class="why">300 m of OS2 costs about 0.12 dB. Connectors at 0.5 dB+ each (more when dirty) are what consume a 3 dB budget.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../4.T3/mmf-vs-smf.html">MMF vs SMF<span>4 · T3: previous topic</span></a></li>
+    <li><a href="../4.SR7/connectx7-cables-explained.html">ConnectX-7 validated cables<span>4 · SR7: NVIDIA single-mode reach classes</span></a></li>
+    <li><a href="../4.SR2/osfp-vs-qsfpdd-explained.html">800G reach classes<span>4 · SR2: VR8 / SR8 / DR8 / FR4 / LR4</span></a></li>
+    <li><a href="../5.SR3/fiber-optic-installation-explained3.html">FOA installation &amp; loss testing<span>5 · SR3</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo plus IEEE 802.3 400G PMD loss budgets. Always confirm reach and budgets against the transceiver datasheet.</footer>
+</main>
+<script>
+(function () {
+  const optic = document.getElementById("optic"), km = document.getElementById("km"), conn = document.getElementById("conn"), spl = document.getElementById("spl");
+  const meter = document.getElementById("meter"), out = document.getElementById("lb-out");
+  function calc() {
+    const [budget, reach] = optic.value.split("|").map(Number);
+    const L = Math.max(0, +km.value || 0), c = Math.max(0, +conn.value || 0), s = Math.max(0, +spl.value || 0);
+    const fl = L / 1000 * 0.4, cl = c * 0.5, sl = s * 0.1, tot = fl + cl + sl;
+    const max = Math.max(budget * 1.5, tot * 1.05), pct = (v) => (v / max * 100) + "%";
+    meter.innerHTML =
+      `<i style="width:${pct(fl)};background:var(--smf)"></i>` +
+      `<i style="left:${pct(fl)};width:${pct(cl)};background:var(--accent)"></i>` +
+      `<i style="left:${pct(fl + cl)};width:${pct(sl)};background:var(--mmf)"></i>` +
+      `<b style="left:${pct(budget)}"></b>`;
+    const margin = budget - tot;
+    let msg = `Total loss <b>${tot.toFixed(2)} dB</b> (fiber ${fl.toFixed(2)} + connectors ${cl.toFixed(2)} + splices ${sl.toFixed(2)}) against a <b>${budget} dB</b> budget: `;
+    msg += margin >= 0.5 ? `<span class="ok">passes with ${margin.toFixed(2)} dB margin.</span>`
+         : margin >= 0 ? `<span class="caution">passes, but only ${margin.toFixed(2)} dB margin. One dirty connector could fail it.</span>`
+         : `<span class="fail">over budget by ${(-margin).toFixed(2)} dB.</span>`;
+    if (L > reach) msg += ` <span class="fail">Also past this optic's ~${reach >= 1000 ? reach / 1000 + " km" : reach + " m"} reach.</span>`;
+    out.innerHTML = msg;
+  }
+  [optic, km, conn, spl].forEach((e) => e.addEventListener("input", calc)); calc();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

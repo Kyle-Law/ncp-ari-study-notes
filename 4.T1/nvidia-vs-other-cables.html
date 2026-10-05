@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NVIDIA cables vs. others</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .box { fill: var(--panel); stroke: var(--rule); stroke-width: 1.5; }
+  .nv { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+  .tp { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 2; stroke-dasharray: 6 4; }
+  .wire { stroke: var(--ink); stroke-width: 3; fill: none; }
+  .lbl { font-size: 14px; font-weight: 600; }
+  .sub { font-size: 12px; fill: var(--muted) !important; }
+  .opn { font-family: var(--mono); font-size: 2rem; font-weight: 600; letter-spacing: .04em; display: flex; flex-wrap: wrap; gap: .2rem; margin: .6rem 0; }
+  .opn span { padding: .1rem .35rem; border-radius: 6px; border-bottom: 3px solid; }
+  .p1 { border-color: var(--accent) !important; } .p2 { border-color: var(--warn) !important; } .p3 { border-color: var(--mmf) !important; } .p4 { border-color: var(--copper) !important; }
+  #opn-in { font-family: var(--mono); width: 100%; max-width: 22ch; text-transform: uppercase; }
+  dl.decode { display: grid; grid-template-columns: auto 1fr; gap: .3rem 1rem; margin: .8rem 0 0; }
+  dl.decode dt { font-family: var(--mono); font-weight: 600; }
+  dl.decode dd { margin: 0; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">4 · T1</span><span class="chip">High-Density Cabling</span><span class="chip weight">30% of exam</span></div>
+  <h1>NVIDIA cables vs. everyone else's</h1>
+  <p class="lede">A third-party cable often fits the port and the link often comes up. The difference is that NVIDIA has tested its own LinkX cables with the NIC, firmware and switch at each end, and supports them if anything goes wrong.</p>
+  <p class="objective"><b>Exam objective</b>Describe the difference between NVIDIA cables vs. others.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>LinkX</b> is NVIDIA's (formerly Mellanox's) line of DAC, ACC, AOC cables and optical transceivers, designed and tested together with ConnectX adapters, BlueField DPUs and Quantum/Spectrum switches.</li>
+    <li>Each firmware release publishes a <b>validated cables list</b>. NVIDIA parts on it are supported. Third-party parts may appear as "seen to work", but come with <b>no performance guarantee</b>, and problems with them aren't handled through normal support.</li>
+    <li>At 100G-per-lane PAM4 (NDR) and 200G-per-lane (XDR), signal margins are thin. The NIC, cable and switch have to be tuned together, which is why end-to-end validation matters more than at older speeds.</li>
+    <li>NVIDIA parts are identifiable by <b>part number</b> (legacy OPN like <code>MCP4Y10-N001</code> or 980-series P/N), by the <b>module EEPROM</b> the switch/NIC reads, and by physical details like <b>finned vs flat-top</b> OSFP.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>What "validated" actually covers</h2>
+  <p>A link is three things working as one system: the transmitter in one port, the cable or optics, and the receiver in the other port. NVIDIA tunes and tests the whole chain, including firmware settings like equalization and FEC. A third-party cable is only one piece of a chain that nobody tested as a whole.</p>
+  <figure>
+    <div class="wide"><svg viewBox="0 0 760 270" role="img" aria-labelledby="chainT">
+      <title id="chainT">An all-NVIDIA link is validated end to end; a link with a third-party cable is only partly validated</title>
+      <text x="0" y="22" class="lbl">All-NVIDIA link</text>
+      <rect x="0" y="36" width="150" height="70" rx="8" class="nv"/><text x="75" y="66" text-anchor="middle" class="lbl">ConnectX-7</text><text x="75" y="86" text-anchor="middle" class="sub">NIC + firmware</text>
+      <path d="M150 71 H300" class="wire"/>
+      <rect x="300" y="46" width="160" height="50" rx="8" class="nv"/><text x="380" y="70" text-anchor="middle" class="lbl">LinkX cable</text><text x="380" y="86" text-anchor="middle" class="sub">on validated list</text>
+      <path d="M460 71 H610" class="wire"/>
+      <rect x="610" y="36" width="150" height="70" rx="8" class="nv"/><text x="685" y="66" text-anchor="middle" class="lbl">Quantum-2</text><text x="685" y="86" text-anchor="middle" class="sub">switch + firmware</text>
+      <path d="M0 118 H760" stroke="var(--accent)" stroke-width="3"/>
+      <text x="380" y="138" text-anchor="middle" class="sub">tested and supported as one system</text>
+
+      <text x="0" y="178" class="lbl">Mixed link</text>
+      <rect x="0" y="192" width="150" height="70" rx="8" class="nv"/><text x="75" y="222" text-anchor="middle" class="lbl">ConnectX-7</text><text x="75" y="242" text-anchor="middle" class="sub">NIC + firmware</text>
+      <path d="M150 227 H300" class="wire"/>
+      <rect x="300" y="202" width="160" height="50" rx="8" class="tp"/><text x="380" y="226" text-anchor="middle" class="lbl">Third-party cable</text><text x="380" y="242" text-anchor="middle" class="sub">"seen to work" at best</text>
+      <path d="M460 227 H610" class="wire"/>
+      <rect x="610" y="192" width="150" height="70" rx="8" class="nv"/><text x="685" y="222" text-anchor="middle" class="lbl">Quantum-2</text><text x="685" y="242" text-anchor="middle" class="sub">switch + firmware</text>
+    </svg></div>
+    <figcaption>The NIC and switch are the same in both rows. Only the cable changes, and with it, who stands behind the link.</figcaption>
+  </figure>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Question</th><th>NVIDIA LinkX</th><th>Third-party</th></tr></thead>
+      <tbody>
+        <tr><td>Tested with NVIDIA NICs, DPUs, switches?</td><td class="yes">Yes, per firmware release</td><td>Sometimes listed as "known to work"; often not tested at all</td></tr>
+        <tr><td>Performance guarantee</td><td class="yes">Yes</td><td class="no">No. NVIDIA states this explicitly for third-party parts</td></tr>
+        <tr><td>Support path when a link misbehaves</td><td>Normal NVIDIA support</td><td>Feature-request process, or the cable vendor</td></tr>
+        <tr><td>Lifecycle visibility</td><td>Listed: engineering sample → GA → last-time-buy → EOL</td><td>Unknown to NVIDIA</td></tr>
+        <tr><td>Firmware-tuned (equalization, FEC, power class)</td><td class="yes">Yes</td><td>Relies on generic standards behaviour</td></tr>
+        <tr><td>Physical fit</td><td colspan="2">Usually identical. Fitting the cage proves nothing about validation.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>The LinkX family at a glance</h2>
+  <p>Know these media types and the legacy part-number prefixes that go with them. On the exam and on site, the prefix is the fastest way to know what you're holding.</p>
+  <div class="grid">
+    <div class="card"><span class="tag">MCP…</span><h3>Passive copper (DAC)</h3><p class="small">Just wire and connectors. Cheapest, lowest power, lowest latency. Shortest reach: about 0.5–3 m at NDR.</p></div>
+    <div class="card"><span class="tag">MCA…</span><h3>Active copper (ACC)</h3><p class="small">Copper with signal conditioning in the ends. Stretches copper to about 4–6.5 m at NDR.</p></div>
+    <div class="card"><span class="tag">MFA… / MFS…</span><h3>Active optical cable (AOC)</h3><p class="small">Optics sealed into both ends with fiber between. Plug-and-play, no cleaning of separate connectors.</p></div>
+    <div class="card"><span class="tag">MMA…</span><h3>Multimode transceiver</h3><p class="small">850 nm VCSEL optics for short fiber runs (tens of metres).</p></div>
+    <div class="card"><span class="tag">MMS…</span><h3>Single-mode transceiver</h3><p class="small">1310 nm optics for 100 m up to 2 km (and longer LR/ER parts).</p></div>
+    <div class="card"><span class="tag">MFP7E…</span><h3>Passive fiber cable</h3><p class="small">The patch cable between two transceivers. MPO-12 with APC (angled) end-faces in the NDR family.</p></div>
+  </div>
+  <p class="small muted" style="margin-top:.8rem">Reach figures are from the ConnectX-7 validated-cables list. Always check the datasheet for the exact part.</p>
+</section>
+
+<section>
+  <h2>Decode a part number</h2>
+  <p>Legacy Mellanox/NVIDIA ordering codes (OPNs) follow a consistent pattern: <b>media type</b>, <b>family/variant</b>, then after the dash, <b>speed</b> and <b>length or reach</b>. Type one to try it.</p>
+  <div class="card">
+    <label class="field">Legacy OPN
+      <input id="opn-in" value="MCP4Y10-N001" spellcheck="false" autocomplete="off" maxlength="20">
+    </label>
+    <div class="opn" id="opn-parts" aria-hidden="true"></div>
+    <dl class="decode" id="opn-out" aria-live="polite"></dl>
+    <div class="seg" style="margin-top:1rem">
+      <button class="btn" data-opn="MCP4Y10-N001">MCP4Y10-N001</button>
+      <button class="btn" data-opn="MCA4J80-N004">MCA4J80-N004</button>
+      <button class="btn" data-opn="MMA4Z00-NS">MMA4Z00-NS</button>
+      <button class="btn" data-opn="MMS4X00-NM">MMS4X00-NM</button>
+      <button class="btn" data-opn="MFP7E10-N010">MFP7E10-N010</button>
+    </div>
+  </div>
+  <p class="small muted" style="margin-top:.6rem">Pattern based on common Mellanox/NVIDIA conventions, not an official decoding table. Confirm against the product datasheet before ordering.</p>
+</section>
+
+<section>
+  <h2>Physical details that are NVIDIA-specific</h2>
+  <p>NVIDIA's NDR/XDR switches use a <b>twin-port OSFP</b> cage, meaning one plug carries two independent 400G links (800G total at NDR). The top of the plug has to match how the cage is cooled:</p>
+  <div class="grid">
+    <div class="card"><h3>Finned top (IHS)</h3><p class="small">Integrated heat sink on the plug. For <b>switch cages</b>, which are open on top so the plug brings its own cooling.</p></div>
+    <div class="card"><h3>Flat top (RHS)</h3><p class="small">For cages that carry a <b>riding heat sink</b>: ConnectX-7 OSFP adapters (single-port) and systems like DGX (twin-port, flat).</p></div>
+    <div class="card"><h3>Splitter / breakout</h3><p class="small">One twin-port switch end fanning out to 2×400G or 4×200G adapter ends. Descriptions say e.g. "flat to finned", and suffixes like <code>-FLT</code> / <code>-FTF</code>.</p></div>
+  </div>
+  <div class="callout warn"><b>Don't confuse "fits" with "right"</b><p>A finned plug won't seat under a riding heat sink, and a flat plug in an open switch cage has no cooling of its own. Ordering the wrong top style is a classic deployment error.</p></div>
+</section>
+
+<section>
+  <h2>How to tell on site</h2>
+  <ol class="steps">
+    <li><b>Read the label</b>Check the OPN or 980-series P/N against the firmware release notes' validated list for the NIC/switch firmware you're running.</li>
+    <li><b>Read the module EEPROM</b>Every cable/transceiver reports vendor name, part number and serial number. On a host, NVIDIA's <code>mlxlink -d &lt;device&gt; -m</code> prints module info. On the switch, the transceiver/interface "show" commands do the same.</li>
+    <li><b>Validate the fabric</b>The Cable Validation Tool (CVT, in UFM) compares the cabling against the intended topology and flags wrong or unsupported cables. There's a free self-paced CVT course among the exam readings.</li>
+    <li><b>Check lifecycle</b>Prefer GA parts. LTB and EOL parts are still validated if you own them, but you can't count on buying replacements.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"Third-party cables are unsupported, so they won't link up."</b>Wrong. Many work. The difference is validation, guarantee and support, not whether the link comes up.</li>
+    <li><b>"Same form factor means interchangeable."</b>Fit isn't validation. Also check top style (finned vs flat), twin vs single port, and protocol (IB vs Ethernet qualification).</li>
+    <li><b>Mixing up prefixes.</b>MCP = passive copper, MCA = active copper, MFA/MFS = AOC, MMA = multimode, MMS = single-mode transceiver.</li>
+    <li><b>QSFP-DD on an NVIDIA adapter.</b>Doesn't exist. QSFP-DD is used only on Ethernet switches. InfiniBand and ConnectX/BlueField don't use it.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. A third-party 400G cable links up fine between a ConnectX-7 and a Quantum-2 switch. What is the main risk?</p>
+      <div class="opts">
+        <button class="opt">It will damage the switch cage</button>
+        <button class="opt" data-correct>No performance guarantee, and problems aren't handled through normal NVIDIA support</button>
+        <button class="opt">It will always run at half speed</button>
+      </div>
+      <p class="why">Third-party parts can work, but NVIDIA gives no performance guarantee for them, and issues with them go through a feature-request process instead of normal support.</p></div>
+    <div class="q"><p>2. Which prefix identifies an NVIDIA passive copper DAC?</p>
+      <div class="opts">
+        <button class="opt">MCA</button><button class="opt" data-correct>MCP</button><button class="opt">MMS</button><button class="opt">MFA</button>
+      </div>
+      <p class="why">MCP = passive copper. MCA = active copper, MMS = single-mode transceiver, MFA = active optical cable.</p></div>
+    <div class="q"><p>3. Which OSFP top style goes into a Quantum-2 switch cage?</p>
+      <div class="opts">
+        <button class="opt" data-correct>Twin-port, finned top (IHS)</button>
+        <button class="opt">Single-port, flat top (RHS)</button>
+        <button class="opt">Twin-port, flat top (RHS)</button>
+      </div>
+      <p class="why">Switch cages are open on top, so the plug must bring its own heat sink: twin-port, finned. Flat tops are for cages with a riding heat sink (adapters, DGX).</p></div>
+    <div class="q"><p>4. Where do you check whether a specific cable is validated for your ConnectX-7?</p>
+      <div class="opts">
+        <button class="opt">The IEEE 802.3 standard</button>
+        <button class="opt" data-correct>The "Validated and Supported Cables and Switches" section of the firmware release notes</button>
+        <button class="opt">The cable's jacket colour</button>
+      </div>
+      <p class="why">Each ConnectX firmware release lists the validated NVIDIA cables, third-party cables seen to work, and tested switches.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../4.SR7/connectx7-cables-explained.html">ConnectX-7 validated cables &amp; switches<span>4 · SR7: lifecycle codes, OPNs, third-party list</span></a></li>
+    <li><a href="../4.SR6/nvidia-connectors-and-cages.html">Connectors and cages (LinkX)<span>4 · SR6: finned vs flat, twin vs single port</span></a></li>
+    <li><a href="../4.SR8/nvidia-xdr-switch-led-guide.html">Q32xx / Q34xx XDR switch LEDs<span>4 · SR8: reading port status</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Part-number decoding follows common conventions; always confirm against NVIDIA datasheets and the firmware release notes for your exact versions.</footer>
+</main>
+<script>
+(function () {
+  const media = {
+    MCP: "Passive copper cable (DAC)", MCA: "Active copper cable (ACC)", MFA: "Active optical cable (AOC)",
+    MFS: "Active optical cable (AOC, splitter or special variant)", MMA: "Multimode optical transceiver (850 nm)",
+    MMS: "Single-mode optical transceiver (1310 nm)", MFP: "Passive fiber cable (MPO patch cable)", MAM: "Adapter module (e.g. QSA)"
+  };
+  const speed = { X: "XDR (200G/lane)", N: "NDR (100G/lane)", H: "HDR (50G/lane)", E: "EDR (25G/lane)", F: "FDR" };
+  const len = (s) => {
+    if (/^\d{3}$/.test(s)) return (+s) + " m";
+    const m = s.match(/^(\d{2})A$/); if (m) return (+m[1] + 0.5) + " m";
+    return null;
+  };
+  const inp = document.getElementById("opn-in"), parts = document.getElementById("opn-parts"), out = document.getElementById("opn-out");
+  const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  function decode() {
+    const v = inp.value.trim().toUpperCase();
+    const [head = "", tail = ""] = v.split("-");
+    const pre = head.slice(0, 3), fam = head.slice(3);
+    const sp = tail.slice(0, 1), rest = tail.slice(1);
+    parts.innerHTML = [pre && `<span class="p1">${esc(pre)}</span>`, fam && `<span class="p2">${esc(fam)}</span>`, tail && "–",
+      sp && `<span class="p3">${esc(sp)}</span>`, rest && `<span class="p4">${esc(rest)}</span>`].filter(Boolean).join("");
+    const rows = [];
+    rows.push([pre || "—", media[pre] || "Unknown prefix: check the datasheet"]);
+    if (fam) rows.push([fam, "Product family / variant (form factor, generation)"]);
+    if (sp) rows.push([sp, speed[sp] || "Speed code not recognised"]);
+    if (rest) {
+      const l = len(rest);
+      rows.push([rest, l ? `Length ${l}` : (/^[A-Z]+$/.test(rest) ? "Reach / optics variant (e.g. S = short reach, M = medium)" : "Length or variant code")]);
+    }
+    out.innerHTML = rows.map(([k, d]) => `<dt>${esc(k)}</dt><dd>${esc(d)}</dd>`).join("");
+  }
+  inp.addEventListener("input", decode);
+  document.querySelectorAll("[data-opn]").forEach((b) => b.addEventListener("click", () => { inp.value = b.dataset.opn; decode(); }));
+  decode();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>
