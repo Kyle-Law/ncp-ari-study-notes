@@ -94,9 +94,13 @@ This exam section covers pre-deployment planning, including physical network doc
 
 ### Potential Exam Topics:
 - **T1** Describe physical network design documentation.
+  - [Physical network design documentation](2.T1/physical-network-design-docs.html)
 - **T2** Conduct site surveys for cable management infrastructure (load capacity, clearances).
+  - [Site survey for cable management infrastructure](2.T2/cable-pathway-site-survey.html)
 - **T3** Verify environmental readiness (rack spacing, power, cooling, thermal zones).
+  - [Verifying environmental readiness](2.T3/environmental-readiness.html)
 - **T4** Describe inventory check procedures.
+  - [Inventory check procedures](2.T4/inventory-check-procedures.html)
 
 ### Suggested Readings
 

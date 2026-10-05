@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inventory check procedures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .flow { display: flex; flex-wrap: wrap; gap: .4rem; align-items: stretch; margin: 1rem 0; }
+  .flow div { flex: 1 1 140px; background: var(--panel); border: 1px solid var(--rule); border-top: 4px solid var(--accent); border-radius: 8px; padding: .6rem .7rem; font-size: .9rem; }
+  .flow div b { display: block; font-family: var(--display); font-size: 1.1rem; }
+  td input { width: 5rem; }
+  td.st-ok { color: var(--good); font-weight: 600; } td.st-short { color: var(--bad); font-weight: 600; } td.st-over { color: var(--warn); font-weight: 600; } td.st-wrong { color: var(--bad); font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">2 · T4</span><span class="chip">Pre-Deployment Planning</span><span class="chip weight">11% of exam</span></div>
+  <h1>Inventory check procedures</h1>
+  <p class="lede">A short count or one wrong cable type found mid-install stalls a whole row of racks. Inventory checks catch missing, damaged and wrong parts at the dock, while there's still time to reorder.</p>
+  <p class="objective"><b>Exam objective</b>Describe inventory check procedures.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Receive</b>: inspect packaging for damage and shock/tilt indicators before signing. Note any damage on the delivery receipt and photograph it.</li>
+    <li><b>Reconcile</b>: count every line against the <b>packing list, purchase order and BOM</b>, matching <b>part number</b> (not just description), quantity, length and variant (e.g. finned vs flat top).</li>
+    <li><b>Record</b>: serial numbers and asset tags into the inventory / DCIM system, and map them to rack locations.</li>
+    <li><b>Store &amp; stage</b>: clean, dry, secure, within the datasheet's storage temperature and humidity, ESD-safe. Let equipment <b>acclimatise</b> before unpacking. Kit by rack or bundle (BSN) in deployment order.</li>
+    <li><b>Report</b> shortages, damage and wrong parts immediately. Test suspect fiber reels for continuity on arrival.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>The receiving flow</h2>
+  <div class="flow">
+    <div><b>1 · Inspect</b>Crates, pallets, shock and tilt indicators, wet or crushed boxes</div>
+    <div><b>2 · Count</b>Every line vs packing list and PO; part numbers and quantities</div>
+    <div><b>3 · Verify</b>Variant details: lengths, top style, reach class, fiber type, polarity</div>
+    <div><b>4 · Record</b>Serials and asset tags into DCIM / inventory; photos of damage</div>
+    <div><b>5 · Report</b>Discrepancies to the vendor and PM the same day</div>
+    <div><b>6 · Stage</b>Kit by rack / bundle (BSN) in deployment order</div>
+  </div>
+</section>
+
+<section>
+  <h2>Try it: reconcile a delivery</h2>
+  <p>Enter what you counted on the dock. The status column compares it against the packing list.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Part number</th><th>Description</th><th>Expected</th><th>Received</th><th>Status</th></tr></thead>
+      <tbody id="rec"></tbody>
+    </table>
+  </div>
+  <p id="rec-out" aria-live="polite"></p>
+  <p class="small muted">Part numbers are examples in LinkX style for illustration. Always reconcile against your own PO and packing list.</p>
+</section>
+
+<section>
+  <h2>Storage and staging rules</h2>
+  <div class="grid">
+    <div class="card"><h3>Environment</h3><p class="small">Clean and dry, within each datasheet's storage temperature and humidity range, away from construction dust. Open packaging in a space that matches storage humidity.</p></div>
+    <div class="card"><h3>Acclimatise</h3><p class="small">Equipment moved from a cold or hot truck needs time to reach room temperature before unpacking and power-on, to avoid condensation.</p></div>
+    <div class="card"><h3>ESD</h3><p class="small">Transceivers, AOCs and NICs are ESD-sensitive. Use grounded work surfaces and wrist straps when unpacking.</p></div>
+    <div class="card"><h3>Protect the optics</h3><p class="small">Leave dust caps on. Never stack heavy boxes on cable reels or coils.</p></div>
+    <div class="card"><h3>Reels</h3><p class="small">Lift by a pipe through the hub, never by slings around the cable. Keep both ends reachable for testing.</p></div>
+    <div class="card"><h3>Kitting</h3><p class="small">Group cables and optics by rack and bundle serial number so installers pull exactly what the deployment plan calls for.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>Counting boxes, not parts.</b>Check part numbers and variants: a 3 m cable in a box labelled 5 m, or flat-top optics instead of finned, still matches the box count.</li>
+    <li><b>Signing for damaged freight "clean".</b>Note damage on the delivery receipt with photos before signing.</li>
+    <li><b>Unpacking cold equipment immediately.</b>Let it acclimatise to avoid condensation.</li>
+    <li><b>Reporting later.</b>Shortages and wrong parts should be reported the same day, since lead times on AI networking parts can be long.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. What do you reconcile received items against?</p>
+      <div class="opts"><button class="opt">The box labels only</button><button class="opt" data-correct>The packing list, purchase order and BOM, by part number and quantity</button><button class="opt">The previous project's inventory</button></div>
+      <p class="why">Part numbers and quantities must match what was ordered and what the design needs.</p></div>
+    <div class="q"><p>2. A pallet's tilt indicator has tripped. What now?</p>
+      <div class="opts"><button class="opt">Ignore it if the boxes look fine</button><button class="opt" data-correct>Note it on the delivery receipt, photograph it, and inspect the contents before accepting</button><button class="opt">Refuse all deliveries that day</button></div>
+      <p class="why">Document possible transit damage before signing, then inspect.</p></div>
+    <div class="q"><p>3. Why record serial numbers at receiving?</p>
+      <div class="opts"><button class="opt">For marketing</button><button class="opt" data-correct>Asset tracking, warranty/RMA and mapping each unit to its installed location</button><button class="opt">It's not needed</button></div>
+      <p class="why">Serials tie each part to its rack position, warranty and support cases.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../5.SR3/fiber-optic-installation-explained3.html">FOA: receiving and handling<span>5 · SR3: inspect on arrival, reels</span></a></li>
+    <li><a href="../5.SR2/nvidia-cable-guidelines-explained.html">NVIDIA cable guidelines<span>5 · SR2: unpacking, ESD, humidity</span></a></li>
+    <li><a href="../4.SR4/deploying-the-bundles-explained.html">Deploying the bundles<span>4 · SR4: staging, BSN</span></a></li>
+    <li><a href="../4.SR7/connectx7-cables-explained.html">Decoding part numbers<span>4 · SR7</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Follow your organisation's receiving procedure and the vendor's handling instructions.</footer>
+</main>
+<script>
+(function () {
+  const lines = [
+    { pn: "MFP7E10-N015", d: "MPO-12/APC multimode fiber, 15 m", e: 256, r: 256 },
+    { pn: "MMA4Z00-NS", d: "800G twin-port OSFP multimode transceiver, finned", e: 128, r: 120 },
+    { pn: "MCP4Y10-N001", d: "800G OSFP passive copper, 1 m", e: 32, r: 32, wrong: "MCP4Y10-N002 (2 m)" },
+    { pn: "HL-VELCRO-20", d: "Hook-and-loop ties, 20 m roll", e: 10, r: 12 }
+  ];
+  const tb = document.getElementById("rec"), out = document.getElementById("rec-out");
+  function render() {
+    tb.innerHTML = lines.map((l, i) => {
+      let st, cls;
+      if (l.wrong && !l.fixed) { st = `Wrong part: received ${l.wrong}`; cls = "st-wrong"; }
+      else if (l.r < l.e) { st = `Short by ${l.e - l.r}`; cls = "st-short"; }
+      else if (l.r > l.e) { st = `Over by ${l.r - l.e}`; cls = "st-over"; }
+      else { st = "Matches"; cls = "st-ok"; }
+      return `<tr><td><code>${l.pn}</code></td><td>${l.d}</td><td>${l.e}</td><td><input type="number" min="0" data-i="${i}" value="${l.r}" aria-label="Received ${l.pn}"></td><td class="${cls}">${st}${l.wrong ? ` <button class="btn" type="button" data-fix="${i}" style="font-size:.8rem;padding:.1rem .5rem">${l.fixed ? "undo" : "replaced"}</button>` : ""}</td></tr>`;
+    }).join("");
+    const issues = lines.filter((l) => (l.wrong && !l.fixed) || l.r !== l.e).length;
+    out.innerHTML = issues ? `<span class="fail">${issues} discrepanc${issues === 1 ? "y" : "ies"}.</span> Report to the vendor and project manager today, and don't stage affected racks until resolved.`
+      : '<span class="ok">Delivery reconciled.</span> Record serials and stage by rack/bundle.';
+  }
+  tb.addEventListener("input", (e) => { const i = e.target.dataset.i; if (i !== undefined) { lines[+i].r = Math.max(0, +e.target.value || 0); const pos = e.target.selectionStart; render(); const el = tb.querySelector(`input[data-i="${i}"]`); el.focus(); try { el.setSelectionRange(pos, pos); } catch (x) {} } });
+  tb.addEventListener("click", (e) => { const b = e.target.closest("[data-fix]"); if (b) { const l = lines[+b.dataset.fix]; l.fixed = !l.fixed; render(); } });
+  render();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

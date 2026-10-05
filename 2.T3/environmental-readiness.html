@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Environmental readiness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .calc { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); align-items: end; }
+  .checks { display: grid; gap: .5rem; margin-top: 1rem; }
+  .chk { display: grid; grid-template-columns: 1.6rem 1fr auto; gap: .6rem; align-items: center; background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; padding: .5rem .7rem; font-size: .95rem; }
+  .chk .i { font-weight: 700; text-align: center; }
+  .chk b.v { font-family: var(--display); font-size: 1.1rem; }
+  .env { width: 100%; }
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12px; fill: var(--muted) !important; } .t { font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">2 · T3</span><span class="chip">Pre-Deployment Planning</span><span class="chip weight">11% of exam</span></div>
+  <h1>Verifying environmental readiness</h1>
+  <p class="lede">The hall has to be ready before the racks arrive: space to place and service them, power and cooling for their real load, and conditions inside the envelope the hardware is specified for. AI racks stress all of these at once.</p>
+  <p class="objective"><b>Exam objective</b>Verify environmental readiness (rack spacing, power, cooling, thermal zones).</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Rack spacing &amp; access</b>: aisles wide enough to install and service (TIA-942 guidance is roughly ≥ 1 m front / 0.6 m rear, more recommended), working space in front of electrical gear, and a <b>delivery path</b> (doors, lifts, ramps) that fits the rack and its weight.</li>
+    <li><b>Floor</b>: rated load per rack position and along the path. A GB200 NVL72 rack is about <b>1,360 kg</b> before coolant. DGX H100 is <b>130 kg per 8U system</b>.</li>
+    <li><b>Power</b>: A and B feeds installed, energised, labelled, and each able to carry the full rack under 80%.</li>
+    <li><b>Cooling</b>: capacity for the heat load with <b>N+1</b>. Air inlet in the ASHRAE recommended envelope (<b>18–27 °C</b>). Liquid racks need CDU capacity, coolant temperatures and pumps on UPS.</li>
+    <li><b>Thermal zones</b>: map where cooling is strongest (near CRAHs, contained aisles, liquid loops) and place the densest racks there. Measure inlet temperatures low, middle and high.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Rack readiness check</h2>
+  <p>Enter a rack's plan and the site's numbers. The checks follow the formulas from the 1 · T1 guides.</p>
+  <div class="card">
+    <div class="calc">
+      <label class="field">Preset<select id="pre"><option value="dgx">4 × DGX H100 (air)</option><option value="nvl">GB200 NVL72 (liquid)</option><option value="custom">Custom</option></select></label>
+      <label class="field">IT load (kW)<input type="number" id="kw" min="1" max="200" step="0.1"></label>
+      <label class="field">Rack weight (kg)<input type="number" id="kg" min="50" max="3000"></label>
+      <label class="field">Share of heat to liquid (%)<input type="number" id="liq" min="0" max="100"></label>
+      <label class="field">Air ΔT across servers (°F)<input type="number" id="dt" min="10" max="50" value="25"></label>
+      <label class="field">Each feed capacity (kW)<input type="number" id="feed" min="1" max="300"></label>
+      <label class="field">Air cooling available (kW, N+1)<input type="number" id="air" min="0" max="500"></label>
+      <label class="field">Floor rating per position (kg)<input type="number" id="floor" min="100" max="5000" value="1500"></label>
+    </div>
+    <div class="checks" id="checks" aria-live="polite"></div>
+  </div>
+  <p class="small muted">Airflow ≈ 3.16 × watts ÷ ΔT(°F) CFM. Heat to air = IT load × (1 − liquid share). 1 kW ≈ 3,412 BTU/h. DGX H100: 10.2 kW max, 130 kg, 1,105 CFM at 80% fans (3 · SR2). GB200 NVL72: ~132 kW, ~1,360 kg, ~17 kW to air (1 · T1). Rack weight for 4 × DGX includes a ~150 kg rack and PDUs as an assumption.</p>
+</section>
+
+<section>
+  <h2>The environmental envelope</h2>
+  <figure>
+    <div class="wide"><svg class="env" viewBox="0 0 700 170" role="img" aria-labelledby="envT">
+      <title id="envT">Temperature ranges: ASHRAE recommended 18 to 27 degrees C; DGX H100 operating 5 to 30 degrees C; A1 allowable 15 to 32 degrees C</title>
+      <line x1="40" y1="140" x2="680" y2="140" stroke="var(--muted)"/>
+      <g class="tm"><text x="40" y="160">0 °C</text><text x="200" y="160">10</text><text x="360" y="160">20</text><text x="520" y="160">30</text><text x="660" y="160">40 °C</text></g>
+      <rect x="120" y="20" width="400" height="22" rx="4" style="fill:var(--panel-2);stroke:var(--muted)"/><text x="126" y="36" class="t">DGX H100 operating 5–30 °C, 20–80% RH</text>
+      <rect x="280" y="58" width="272" height="22" rx="4" style="fill:var(--warn-soft);stroke:var(--warn)"/><text x="286" y="74" class="t">A1 allowable 15–32 °C</text>
+      <rect x="328" y="96" width="144" height="26" rx="4" style="fill:var(--accent-soft);stroke:var(--accent);stroke-width:2"/><text x="334" y="114" class="t" style="font-weight:600">Recommended 18–27 °C</text>
+    </svg></div>
+    <figcaption>Design to the ASHRAE recommended range (18–27 °C inlet; humidity roughly 8–70% RH within the dew-point limits). Allowable ranges are for excursions. Always check the hardware's own spec.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>Readiness walk-through</h2>
+  <ol class="steps">
+    <li><b>Space</b>Rack positions match the floor plan; aisle widths and front/rear service clearance; overhead clearance for trays and drops; working space at PDUs and panels.</li>
+    <li><b>Delivery path</b>Door heights/widths, lifts, ramps and floor ratings along the route for the heaviest crated rack. OCP-style 48U racks (~600 × 1,068 mm) are not standard 19-inch footprints.</li>
+    <li><b>Power</b>A/B whips or busway installed and tested, breakers and receptacles match the PDUs, circuits labelled, capacity per feed ≥ rack load ÷ 0.8.</li>
+    <li><b>Cooling</b>Units commissioned with N+1; containment, blanking and floor sealing done; for liquid: facility water loop, CDUs, manifolds, leak detection, coolant within spec.</li>
+    <li><b>Thermal zones</b>Map the heat load per zone against the cooling capacity serving it; put the densest racks where capacity and containment are strongest.</li>
+    <li><b>Conditions</b>Inlet temperature and humidity in range at low, middle and high positions; clean (no construction dust); fire suppression and monitoring live.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>Total cooling ≠ cooling where it's needed.</b>A room can have enough tons on paper and still hot-spot one zone. Check per zone and per rack inlet.</li>
+    <li><b>Forgetting liquid racks' air share.</b>A liquid-cooled rack still puts some heat into the room (~17 kW for a GB200 NVL72).</li>
+    <li><b>Floor checked only at the rack position.</b>The delivery path (lifts, ramps, raised-floor tiles) must carry the rack too.</li>
+    <li><b>Commissioning with dust.</b>Construction dust in a new hall clogs filters and contaminates optics. Clean before the hardware arrives.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. ASHRAE recommended inlet air range?</p>
+      <div class="opts"><button class="opt">10–20 °C</button><button class="opt" data-correct>18–27 °C</button><button class="opt">25–35 °C</button></div>
+      <p class="why">18–27 °C (64.4–80.6 °F) is the recommended envelope for all A classes.</p></div>
+    <div class="q"><p>2. Approximately how much airflow does a 10.2 kW server need at a 25 °F ΔT?</p>
+      <div class="opts"><button class="opt">~130 CFM</button><button class="opt" data-correct>~1,290 CFM</button><button class="opt">~12,900 CFM</button></div>
+      <p class="why">CFM ≈ 3.16 × 10,200 ÷ 25 ≈ 1,289. In line with DGX H100's ~1,105 CFM at 80% fans.</p></div>
+    <div class="q"><p>3. Before a GB200 NVL72 arrives, what floor check is easiest to miss?</p>
+      <div class="opts"><button class="opt">Tile colour</button><button class="opt" data-correct>Load ratings along the delivery path (lifts, ramps, doorways), not just the final position</button><button class="opt">Floor height</button></div>
+      <p class="why">At ~1,360 kg, the rack must be supported everywhere it travels.</p></div>
+    <div class="q"><p>4. What does "thermal zone" planning mean?</p>
+      <div class="opts"><button class="opt">Painting hot aisles red</button><button class="opt" data-correct>Matching heat load per area to the cooling capacity serving it, and placing dense racks accordingly</button><button class="opt">Setting all CRAHs to the same setpoint</button></div>
+      <p class="why">Cooling capacity is local. Densest racks go where capacity and containment are strongest.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../1.T1/datacenter-power-cooling-guide.html">Power in, heat out<span>1 · T1: capacity checks</span></a></li>
+    <li><a href="../1.T1/datacenter-formulas-guide.html">Data center formulas<span>1 · T1: CFM, tons, N+1</span></a></li>
+    <li><a href="../2.SR2/elevated_return_air_explainer.html">Elevated return air temperature<span>2 · SR2: ASHRAE classes</span></a></li>
+    <li><a href="../2.SR7/hot-aisle-cold-aisle-explained.html">Hot / cold aisle layout<span>2 · SR7</span></a></li>
+    <li><a href="../3.SR2/dgx-h100-h200-guide-explained.html">DGX H100 site requirements<span>3 · SR2</span></a></li>
+    <li><a href="../1.T1/datacenter-gb200-nvl72-guide.html">GB200 NVL72 guide<span>1 · T1</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Clearances, floor ratings and environmental limits must come from the site's engineering documents and the hardware specifications.</footer>
+</main>
+<script>
+(function () {
+  const g = (id) => document.getElementById(id);
+  const P = { dgx: { kw: 40.8, kg: 700, liq: 0, feed: 60, air: 50 }, nvl: { kw: 132, kg: 1360, liq: 87, feed: 180, air: 25 } };
+  function setPre() {
+    const p = P[g("pre").value]; if (!p) return;
+    g("kw").value = p.kw; g("kg").value = p.kg; g("liq").value = p.liq; g("feed").value = p.feed; g("air").value = p.air; run();
+  }
+  function row(ok, label, val, warn) {
+    const i = ok ? '<span class="ok">✓</span>' : warn ? '<span class="caution">!</span>' : '<span class="fail">✕</span>';
+    return `<div class="chk"><span class="i">${i}</span><span>${label}</span><b class="v">${val}</b></div>`;
+  }
+  function run() {
+    const kw = +g("kw").value || 0, kg = +g("kg").value || 0, liq = Math.min(100, Math.max(0, +g("liq").value || 0)) / 100,
+      dt = Math.max(1, +g("dt").value || 25), feed = +g("feed").value || 0, air = +g("air").value || 0, fl = +g("floor").value || 0;
+    const airKw = kw * (1 - liq), cfm = 3.16 * airKw * 1000 / dt, btu = kw * 3412;
+    let h = "";
+    h += row(kw <= feed * 0.8, `Each feed carries the whole rack ≤ 80% (needs ≥ ${(kw / 0.8).toFixed(1)} kW per feed)`, `${feed} kW`);
+    h += row(airKw <= air, `Heat to air ${airKw.toFixed(1)} kW vs. air cooling available (with N+1)`, `${air} kW`);
+    h += row(true, "Airflow the rack will pull at this ΔT", `${Math.round(cfm).toLocaleString()} CFM`);
+    if (liq > 0) h += row(true, "Heat to liquid (size CDU capacity with one unit failed)", `${(kw * liq).toFixed(1)} kW`);
+    h += row(true, "Total heat to remove", `${Math.round(btu).toLocaleString()} BTU/h`);
+    h += row(kg <= fl, `Rack weight vs. floor rating at this position (check the delivery path too)`, `${kg} / ${fl} kg`, kg <= fl * 1.1);
+    g("checks").innerHTML = h;
+  }
+  g("pre").addEventListener("change", setPre);
+  ["kw", "kg", "liq", "dt", "feed", "air", "floor"].forEach((id) => g(id).addEventListener("input", () => { g("pre").value = "custom"; run(); }));
+  setPre();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Physical network design docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12px; fill: var(--muted) !important; } .t { font-size: 13px; }
+  .layer { fill: var(--panel); stroke: var(--ink); stroke-width: 1.5; }
+  .layer.sel { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; }
+  .stack g { cursor: pointer; }
+  #doc-info { min-height: 5rem; }
+  .results { display: grid; gap: .7rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); margin-top: 1rem; }
+  .results div { background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; padding: .55rem .75rem; }
+  .results b { display: block; font-family: var(--display); font-size: 1.6rem; line-height: 1.1; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">2 · T1</span><span class="chip">Pre-Deployment Planning</span><span class="chip weight">11% of exam</span></div>
+  <h1>Physical network design documentation</h1>
+  <p class="lede">Before a single cable is pulled, the design package has to answer where every rack sits, which port connects to which, with what cable, along which path, and under what name. Installers build from it, and the as-built is checked against it.</p>
+  <p class="objective"><b>Exam objective</b>Describe physical network design documentation.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li>The package layers from <b>logical</b> to <b>physical</b>: topology → floor plan &amp; rack elevations → port-to-port <b>cable schedule</b> → <b>pathways</b> (trays, drops, fill, load) → <b>labeling</b> scheme → <b>bill of materials</b> and bundle/deployment plan.</li>
+    <li>For NVIDIA DGX SuperPOD, the fabric grows in <b>scalable units (SUs)</b>. One H100 SU is 32 DGX slots (31 nodes + UFM), 8 leaf switches, with roughly <b>508 cables per SU</b> (252 node/UFM + 256 leaf–spine).</li>
+    <li>The cable schedule is the single source of truth: <b>unique ID, A-end, B-end, part number, length, bundle (BSN), route</b>. Labels and drawings use the same IDs (TIA-606).</li>
+    <li>Design docs also carry the <b>physical constraints</b>: rack power and cooling budgets, tray sizes at ≤ 50% fill, structural load, clearances, applicable codes (NEC, TIA, BICSI).</li>
+    <li>Topology files (e.g. for the Cable Validation Tool) let the as-built be validated automatically against the design.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>The document stack</h2>
+  <p>Select a layer to see what it contains and who uses it.</p>
+  <figure>
+    <div class="wide"><svg class="stack" id="stack" viewBox="0 0 760 330" role="img" aria-labelledby="stT"><title id="stT">Layers of a physical network design package from logical topology down to bill of materials</title></svg></div>
+  </figure>
+  <div class="card" id="doc-info" aria-live="polite"></div>
+</section>
+
+<section>
+  <h2>Sizing from scalable units</h2>
+  <p>NVIDIA's DGX SuperPOD (H100) design guide gives cable counts per scalable unit. The design docs turn those into trays and loads.</p>
+  <div class="card">
+    <label class="field">Scalable units: <b id="su-v"></b><input type="range" id="su" min="1" max="4" step="1" value="1"></label>
+    <div class="results">
+      <div><span class="muted small">DGX nodes</span><b id="r-n"></b></div>
+      <div><span class="muted small">GPUs</span><b id="r-g"></b></div>
+      <div><span class="muted small">Leaf / spine</span><b id="r-ls"></b></div>
+      <div><span class="muted small">Node + UFM cables</span><b id="r-nc"></b></div>
+      <div><span class="muted small">Leaf–spine cables</span><b id="r-sc"></b></div>
+      <div><span class="muted small">Min tray area (3 mm AOC, 50% fill)</span><b id="r-tr"></b></div>
+      <div><span class="muted small">Cable load (AOC)</span><b id="r-kg"></b></div>
+    </div>
+  </div>
+  <p class="small muted">Counts from the guide's Table 18 (one DGX slot per SU goes to UFM). Tray area = cables × π(D/2)² ÷ 0.5. Load uses the guide's 0.009 kg/m per AOC. Trays and hangers add more.</p>
+</section>
+
+<section>
+  <h2>A cable schedule row</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Cable ID</th><th>A end</th><th>B end</th><th>Part / media</th><th>Length</th><th>Bundle</th><th>Route</th></tr></thead>
+      <tbody>
+        <tr><td>SU1-N07-C3</td><td>1A.AD04-12:cx7-3 (DGX-07, compute port 3)</td><td>1A.AJ06-40:17/2 (Leaf-3, cage 17, port 2)</td><td>Twin-port OSFP AOC, finned (switch) ↔ flat (DGX)</td><td>15 m</td><td>BSN-0412</td><td>T-04 → drop D-AJ06</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small">Every field has a reader: the installer (ends, length, bundle), QA (label = ID), operations (route for later tracing), and validation tools (A/B ports vs topology).</p>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"The topology diagram is the design."</b>Logical topology alone doesn't say where cables physically run, how long they are, or what they weigh.</li>
+    <li><b>Planning trays at 100% fill.</b>NVIDIA's guide says ≤ 50% fill, for airflow, bend radius and future adds.</li>
+    <li><b>Different names in different documents.</b>One ID scheme across labels, schedule and drawings.</li>
+    <li><b>Forgetting codes and clearances.</b>Pathways follow ANSI/TIA, BICSI and NEMA practice plus local electrical/fire codes.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. Which document is the port-to-port source of truth for installers?</p>
+      <div class="opts"><button class="opt">Logical topology diagram</button><button class="opt" data-correct>Cable schedule (run list)</button><button class="opt">Floor plan</button></div>
+      <p class="why">The cable schedule lists every link's ID, both ends, part, length, bundle and route.</p></div>
+    <div class="q"><p>2. Roughly how many cables does one DGX H100 SuperPOD scalable unit need?</p>
+      <div class="opts"><button class="opt">~64</button><button class="opt" data-correct>~508</button><button class="opt">~5,000</button></div>
+      <p class="why">252 node+UFM cables + 256 leaf–spine cables ≈ 508 per SU, per NVIDIA's guide.</p></div>
+    <div class="q"><p>3. Maximum tray fill ratio in NVIDIA's SuperPOD guidance?</p>
+      <div class="opts"><button class="opt">25%</button><button class="opt" data-correct>50%</button><button class="opt">80%</button></div>
+      <p class="why">Stay at or below 50% fill for airflow, bend radius and room for future cables.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../5.SR1/dgx-superpod-h100-networking-explained.html">SuperPOD H100 networking<span>5 · SR1: SU counts, trays, load</span></a></li>
+    <li><a href="../2.SR1/tia-606b-cable-labeling-explained.html">TIA-606-B labeling<span>2 · SR1</span></a></li>
+    <li><a href="../2.SR8/nvidia-networking-explained.html">NVIDIA networking<span>2 · SR8: scale-up / out / across</span></a></li>
+    <li><a href="../4.SR4/deploying-the-bundles-explained.html">Deploying the bundles<span>4 · SR4: BSN, run order</span></a></li>
+    <li><a href="../6.T3/document-as-built.html">Documenting the as-built<span>6 · T3</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. SU figures are from NVIDIA's DGX SuperPOD H100 design guide as summarised in 5 · SR1.</footer>
+</main>
+<script>
+(function () {
+  const layers = [
+    ["topo", "Logical topology", "Fabrics (compute, storage, in-band, OOB), leaf/spine tiers, rails, port counts per switch. Used by architects and the CVT/UFM topology file."],
+    ["floor", "Floor plan & rack elevations", "Rack positions on the floor grid, row/aisle layout, front and rear elevations (devices by RU, PDUs, managers). Used by facilities and installers."],
+    ["sched", "Cable schedule / port map", "Every cable: unique ID, A-end and B-end (rack-RU:port), part number, media, length, polarity. The installers' build sheet and QA's checklist."],
+    ["path", "Pathways", "Overhead/underfloor tray routes, widths and fill (≤ 50%), drops into racks, support spacing and structural load, clearances (e.g. NEC 392.18(F) 12 in above trays)."],
+    ["label", "Labeling scheme", "TIA-606 identifiers for spaces, racks, panels, ports and cables. The same ID appears on the label, the schedule and the drawing."],
+    ["bom", "BOM & deployment plan", "Part numbers and quantities (cables by type and length, optics, trays, ties), bundle serial numbers (BSN), staging and deployment order."]
+  ];
+  const svg = document.getElementById("stack"), info = document.getElementById("doc-info");
+  let s = svg.querySelector("title").outerHTML;
+  layers.forEach(([k, name], i) => {
+    const y = 10 + i * 52, x = 40 + i * 18, w = 680 - i * 36;
+    s += `<g data-k="${k}" tabindex="0" role="button" aria-label="${name}"><rect x="${x}" y="${y}" width="${w}" height="42" rx="8" class="layer"/><text x="${x + 16}" y="${y + 26}" class="tb">${i + 1}. ${name}</text></g>`;
+  });
+  s += `<text x="740" y="22" text-anchor="end" class="tm">logical</text><text x="740" y="318" text-anchor="end" class="tm">physical / procurement</text>`;
+  svg.innerHTML = s;
+  const pick = (k) => {
+    const L = layers.find((l) => l[0] === k);
+    svg.querySelectorAll("g[data-k]").forEach((g) => g.querySelector("rect").classList.toggle("sel", g.dataset.k === k));
+    info.innerHTML = `<b>${L[1]}.</b> ${L[2]}`;
+  };
+  svg.querySelectorAll("g[data-k]").forEach((g) => {
+    g.addEventListener("click", () => pick(g.dataset.k));
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(g.dataset.k); } });
+  });
+  pick("sched");
+
+  const T = { 1: [31, 248, 8, 4, 252, 256], 2: [63, 504, 16, 8, 508, 512], 3: [95, 760, 24, 16, 764, 768], 4: [127, 1016, 32, 16, 1020, 1024] };
+  const su = document.getElementById("su");
+  function upd() {
+    const k = +su.value, [n, g, l, sp, nc, sc] = T[k], tot = nc + sc;
+    document.getElementById("su-v").textContent = k + (k === 1 ? " SU" : " SUs");
+    document.getElementById("r-n").textContent = n; document.getElementById("r-g").textContent = g;
+    document.getElementById("r-ls").textContent = `${l} / ${sp}`; document.getElementById("r-nc").textContent = nc; document.getElementById("r-sc").textContent = sc;
+    const a = tot * Math.PI * Math.pow(0.118 / 2, 2) / 0.5;
+    document.getElementById("r-tr").textContent = a.toFixed(1) + " in²";
+    document.getElementById("r-kg").textContent = (tot * 0.009).toFixed(1) + " kg/m";
+  }
+  su.addEventListener("input", upd); upd();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

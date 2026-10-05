@@ -199,6 +199,34 @@
    "title": "Liquid cooling architectures for AI data centers, explained"
   },
   {
+   "path": "2.T1/physical-network-design-docs.html",
+   "section": "2",
+   "kind": "T",
+   "code": "T1",
+   "title": "Physical network design docs"
+  },
+  {
+   "path": "2.T2/cable-pathway-site-survey.html",
+   "section": "2",
+   "kind": "T",
+   "code": "T2",
+   "title": "Cable pathway site survey"
+  },
+  {
+   "path": "2.T3/environmental-readiness.html",
+   "section": "2",
+   "kind": "T",
+   "code": "T3",
+   "title": "Environmental readiness"
+  },
+  {
+   "path": "2.T4/inventory-check-procedures.html",
+   "section": "2",
+   "kind": "T",
+   "code": "T4",
+   "title": "Inventory check procedures"
+  },
+  {
    "path": "2.SR1/tia-606b-cable-labeling-explained.html",
    "section": "2",
    "kind": "SR",

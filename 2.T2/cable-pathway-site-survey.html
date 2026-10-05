@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cable pathway site survey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12px; fill: var(--muted) !important; } .t { font-size: 13px; }
+  .calc { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); align-items: end; }
+  .results { display: grid; gap: .7rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); margin-top: 1rem; }
+  .results div { background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; padding: .55rem .75rem; }
+  .results b { display: block; font-family: var(--display); font-size: 1.5rem; line-height: 1.15; }
+  .deck { fill: var(--panel-2); stroke: var(--muted); }
+  .tray { fill: none; stroke: var(--ink); stroke-width: 2.5; }
+  .obst { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 2; }
+  .dim { stroke: var(--accent); stroke-width: 1.5; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">2 · T2</span><span class="chip">Pre-Deployment Planning</span><span class="chip weight">11% of exam</span></div>
+  <h1>Site survey for cable management infrastructure</h1>
+  <p class="lede">An AI cluster puts hundreds of cables per scalable unit over everyone's heads. The survey checks, before installation, that the trays are big enough, the supports are strong enough, and there's room to install and maintain everything.</p>
+  <p class="objective"><b>Exam objective</b>Conduct site surveys for cable management infrastructure (load capacity, clearances).</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Capacity</b>: tray cross-section must hold the planned cables at <b>≤ 50% fill</b>. N = (F/100 × A) ÷ (π × (D/2)²). Copper (~9.4 mm) takes ~10× the area of a 3 mm AOC.</li>
+    <li><b>Load</b>: cable weight per metre (AOC ~0.009 kg/m, copper ~0.045 kg/m) × count, plus tray and hardware, against the support and anchor ratings. Supports typically every <b>5 ft (1.5 m)</b> on straight runs and within <b>1 ft (0.3 m)</b> of splices and transitions.</li>
+    <li><b>Clearances</b>: NEC 2026 392.18(F) wants <b>12 in (305 mm)</b> clear above trays to work on them (exceptions include IT rooms built to 645.5 and crossings). Also check sprinkler, light and duct conflicts, and headroom.</li>
+    <li><b>Entry points</b>: top-of-rack penetrations and drops (waterfalls / bend-radius guides) sized for the bundles, rack-top clearance, and side-wall space in racks.</li>
+    <li>Note <b>codes</b> (NEC/IEC/BS 7671…), separation of power and data, firestops, and bonding of metal trays. Record it all with photos and measurements.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Tray capacity and load calculator</h2>
+  <div class="card">
+    <div class="calc">
+      <label class="field">Tray width (in)<input type="number" id="w" value="12" min="1" max="36" step="0.5"></label>
+      <label class="field">Tray depth (in)<input type="number" id="d" value="4" min="1" max="12" step="0.5"></label>
+      <label class="field">Cable type<select id="ct"><option value="3|0.009">AOC fiber · 3.0 mm · 0.009 kg/m</option><option value="9.43|0.045">Copper · 9.43 mm · 0.045 kg/m</option></select></label>
+      <label class="field">Cables planned<input type="number" id="n" value="1020" min="1" max="20000"></label>
+      <label class="field">Max fill<select id="f"><option value="0.5" selected>50% (NVIDIA guidance)</option><option value="0.4">40%</option><option value="0.6">60%</option></select></label>
+      <label class="field">Tray + hardware (kg/m)<input type="number" id="tw" value="4" min="0" max="50" step="0.5"></label>
+    </div>
+    <div class="results">
+      <div><span class="muted small">Tray area</span><b id="r-a"></b></div>
+      <div><span class="muted small">Capacity at fill</span><b id="r-cap"></b></div>
+      <div><span class="muted small">Fill used</span><b id="r-fill"></b></div>
+      <div><span class="muted small">Load per metre</span><b id="r-load"></b></div>
+      <div><span class="muted small">Load per 5 ft span</span><b id="r-span"></b></div>
+    </div>
+    <p id="t-out" aria-live="polite" style="margin:.8rem 0 0"></p>
+  </div>
+  <p class="small muted">Formula and cable figures from NVIDIA's DGX SuperPOD H100 design guide (5 · SR1). Tray/hardware weight is a placeholder: use the manufacturer's figures, and have support and anchor ratings checked by the structural engineer.</p>
+</section>
+
+<section>
+  <h2>Clearance above the tray</h2>
+  <p>NEC 2026 392.18(F) requires 12 inches of space above a cable tray, provided and maintained, for installing and maintaining cables.</p>
+  <div class="card">
+    <label class="field">Space from top of tray to obstruction: <b id="cl-v"></b><input type="range" id="cl" min="2" max="24" value="9"></label>
+    <div class="seg" id="obst"><button data-o="along" aria-pressed="true">Duct running along the tray</button><button data-o="cross">Pipe crossing over</button><button data-o="it">IT room built to 645.5</button></div>
+    <div class="wide"><svg id="clsvg" viewBox="0 0 700 200" role="img" aria-labelledby="clT"><title id="clT">Section view of a cable tray with an obstruction above it and the measured clearance</title></svg></div>
+    <p id="cl-out" aria-live="polite" style="margin:.4rem 0 0"></p>
+  </div>
+</section>
+
+<section>
+  <h2>Survey checklist</h2>
+  <ol class="steps">
+    <li><b>Routes</b>Walk every planned path from the cluster racks to the network/management racks. Measure lengths, elevation changes, crossings and conflicts with ducts, pipes, lights and sprinklers.</li>
+    <li><b>Trays</b>Type (ladder, wire basket, solid bottom), width × depth, current fill (existing cables count), condition, bonding/grounding.</li>
+    <li><b>Supports</b>Hanger type and spacing (≤ 5 ft typical), extra supports at bends and within 1 ft of splices, anchors into the slab or structure, rated loads.</li>
+    <li><b>Clearances</b>12 in above trays (or a documented exception), headroom to work, sprinkler clearance, access along the run.</li>
+    <li><b>Drops &amp; entries</b>Top-of-rack openings and brush grommets, waterfalls or bend-radius guides, rack-top equipment conflicts, side-wall cable space.</li>
+    <li><b>Separation &amp; codes</b>Power vs data separation, firestops at penetrations, local code (NEC / CEC / IEC / BS 7671 / NF C 15-100).</li>
+    <li><b>Record</b>Measurements, photos, issues and required remediations, fed back into the design package.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>Sizing for today only.</b>Count existing cables plus future SUs. A tray at 50% fill on day one has no room to grow.</li>
+    <li><b>Ignoring copper weight.</b>Copper is ~5× heavier per metre than AOC. Long copper runs overload supports fast.</li>
+    <li><b>Duct parked on top of the tray.</b>Running along the tray inside the 12 in space isn't allowed. A crossing is (exception 4).</li>
+    <li><b>Checking the tray but not the anchors.</b>Supports and anchors are evaluated separately, each for cable + tray + structure.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. How many 3 mm AOCs fit in an 11.5 in² tray at 50% fill?</p>
+      <div class="opts"><button class="opt">~260</button><button class="opt" data-correct>~524</button><button class="opt">~1,050</button></div>
+      <p class="why">0.5 × 11.5 ÷ (π × 0.059²) ≈ 524, NVIDIA's worked example for one SU (508 cables).</p></div>
+    <div class="q"><p>2. NEC 2026 392.18(F) clearance above a cable tray?</p>
+      <div class="opts"><button class="opt">6 in</button><button class="opt" data-correct>12 in</button><button class="opt">24 in</button></div>
+      <p class="why">A minimum of 12 in, provided and maintained, with four exceptions (IT rooms per 645.5, industrial qualified persons, AHJ permission, crossings).</p></div>
+    <div class="q"><p>3. Typical support spacing for straight tray sections in the SuperPOD guide?</p>
+      <div class="opts"><button class="opt">Every 1 ft</button><button class="opt" data-correct>Every 5 ft (1.5 m), plus within 1 ft of splices</button><button class="opt">Every 20 ft</button></div>
+      <p class="why">5 ft on straights; curves and longer spans need evaluation; splices and transitions need a support within 1 ft.</p></div>
+    <div class="q"><p>4. Why does NVIDIA cap tray fill at 50%?</p>
+      <div class="opts"><button class="opt">Fire code always requires it</button><button class="opt" data-correct>Cables don't pack perfectly, and there must be room for airflow, bend radius and future additions</button><button class="opt">To reduce cost</button></div>
+      <p class="why">Headroom lets new cables be pulled without damaging existing ones.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../5.SR1/dgx-superpod-h100-networking-explained.html">SuperPOD H100 networking<span>5 · SR1: fill formula, load, supports</span></a></li>
+    <li><a href="../2.SR3/nec-392-18F-cable-tray-access.html">NEC 392.18(F) tray access<span>2 · SR3: 12 in rule, exceptions</span></a></li>
+    <li><a href="../3.SR4/wyr-grid-explained.html">Wyr-Grid overhead tray<span>3 · SR4</span></a></li>
+    <li><a href="../5.SR4/fiber-cable-installation-explained.html">FOA: installing fiber cable<span>5 · SR4: pathways first</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Structural and code compliance must be confirmed by qualified engineers and the AHJ.</footer>
+</main>
+<script>
+(function () {
+  const g = (id) => document.getElementById(id);
+  function tray() {
+    const W = +g("w").value || 0, D = +g("d").value || 0, [dmm, kg] = g("ct").value.split("|").map(Number), N = +g("n").value || 0, F = +g("f").value, TW = +g("tw").value || 0;
+    const A = W * D, din = dmm / 25.4, one = Math.PI * Math.pow(din / 2, 2), cap = Math.floor(F * A / one), used = N * one / A;
+    const load = N * kg + TW;
+    g("r-a").textContent = A.toFixed(1) + " in²";
+    g("r-cap").textContent = cap.toLocaleString() + " cables";
+    g("r-fill").textContent = (used * 100).toFixed(0) + "%";
+    g("r-load").textContent = load.toFixed(1) + " kg/m";
+    g("r-span").textContent = (load * 1.524).toFixed(1) + " kg";
+    g("t-out").innerHTML = N <= cap ? `<span class="ok">Fits</span>: ${N.toLocaleString()} cables use ${(used * 100).toFixed(0)}% of the tray (limit ${(F * 100).toFixed(0)}%), leaving room for ${(cap - N).toLocaleString()} more.`
+      : `<span class="fail">Over capacity</span>: needs ${(N * one / F).toFixed(1)} in² at ${(F * 100).toFixed(0)}% fill. Use a larger tray, a second pathway, or fiber instead of copper.`;
+  }
+  ["w", "d", "ct", "n", "f", "tw"].forEach((id) => g(id).addEventListener("input", tray)); tray();
+
+  const cl = g("cl"), svg = g("clsvg"); let ob = "along";
+  function clr() {
+    const v = +cl.value; g("cl-v").textContent = v + " in";
+    const px = 4, tY = 160, oY = tY - 40 - v * px;
+    let s = svg.querySelector("title").outerHTML;
+    s += `<rect x="0" y="0" width="700" height="14" class="deck"/>`;
+    s += `<path d="M180 ${tY} V${tY - 40} M180 ${tY} H520 V${tY - 40}" class="tray"/><text x="350" y="${tY + 22}" text-anchor="middle" class="tm">cable tray (section)</text>`;
+    s += ob === "cross" ? `<rect x="40" y="${oY - 14}" width="620" height="14" rx="7" class="obst"/><text x="350" y="${oY - 3}" text-anchor="middle" class="tm">pipe crossing over</text>`
+      : `<rect x="250" y="${oY - 30}" width="200" height="30" rx="3" class="obst"/><text x="350" y="${oY - 11}" text-anchor="middle" class="tm">${ob === "it" ? "obstruction (IT room)" : "duct running along"}</text>`;
+    s += `<line x1="560" y1="${tY - 40}" x2="560" y2="${oY}" class="dim"/><text x="570" y="${(tY - 40 + oY) / 2 + 4}" class="t" style="font-weight:600">${v}"</text>`;
+    svg.innerHTML = s;
+    g("cl-out").innerHTML = v >= 12 ? '<span class="ok">Meets the 12 in minimum.</span>'
+      : ob === "cross" ? '<span class="ok">Allowed under exception 4</span>: equipment may cross over the tray at any angle through the 12 in space.'
+      : ob === "it" ? '<span class="caution">Allowed under exception 1</span>, but only if the room complies with NEC 645.5 (IT equipment room). Document it.'
+      : '<span class="fail">Fails 392.18(F)</span>: a duct running along the tray inside the 12 in space. Re-route it, raise the obstruction, or get written AHJ permission.';
+  }
+  cl.addEventListener("input", clr);
+  const ob_b = document.querySelectorAll("#obst button");
+  ob_b.forEach((b) => { b.type = "button"; b.addEventListener("click", () => { ob_b.forEach((x) => x.setAttribute("aria-pressed", String(x === b))); ob = b.dataset.o; clr(); }); });
+  clr();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>
