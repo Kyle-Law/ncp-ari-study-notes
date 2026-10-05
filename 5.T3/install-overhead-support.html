@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installing overhead support</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 14px; font-weight: 600; } .tm { font-size: 11.5px; fill: var(--muted) !important; } .t { font-size: 12.5px; }
+  .calc { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); align-items: end; }
+  .tr { fill: var(--panel-2); stroke: var(--ink); stroke-width: 1.5; }
+  .rod { stroke: var(--ink); stroke-width: 2; }
+  .spl { stroke: var(--warn); stroke-width: 3; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">5 · T3</span><span class="chip">Cable Support Systems</span><span class="chip weight">7% of exam</span></div>
+  <h1>Installing overhead cable support infrastructure</h1>
+  <p class="lede">The overhead system goes in before any cable: hangers, tray sections, splices, drops and bonding, all level and at the clearances the design calls for. Then the bundles are laid into it in a set order.</p>
+  <p class="objective"><b>Exam objective</b>Install overhead cable support infrastructure.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Lay out</b> the route from the drawings (laser line), mark support points, check conflicts with ducts, lights, sprinklers and the 12 in access space above trays.</li>
+    <li><b>Hang</b>: anchors into the structure, threaded rod and trapeze hangers (or rack-top/wall brackets), supports at ≤ <b>5 ft (1.5 m)</b>, extra at curves, within <b>1 ft</b> of every splice and transition.</li>
+    <li><b>Assemble</b> tray sections with <b>bonding splices</b>, add dividers, sidewalls, <b>waterfalls</b> and drop-outs at every rack entry, and level everything.</li>
+    <li><b>Bond and ground</b> the tray system (TIA-607 / NEC). Label pathways.</li>
+    <li><b>Then cable</b>: seat the first stretch, fish and tie the near end, lay the run, deal with slack, fish and tie the far end. Support bundles while working. Never exceed bend radius (20× OD while pulling).</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Where do the supports go?</h2>
+  <p>Set a run length and how many splices it has. The diagram places supports at the maximum spacing plus one beside each splice.</p>
+  <div class="card">
+    <div class="calc">
+      <label class="field">Run length (ft)<input type="number" id="len" value="40" min="5" max="200"></label>
+      <label class="field">Tray section length (ft)<input type="number" id="sec" value="10" min="4" max="20"></label>
+      <label class="field">Max support spacing (ft)<input type="number" id="sp" value="5" min="1" max="10" step="0.5"></label>
+    </div>
+    <div class="wide"><svg id="run" viewBox="0 0 760 150" role="img" aria-labelledby="runT" style="margin-top:1rem"><title id="runT">Elevation of a tray run with section splices and support positions</title></svg></div>
+    <p id="run-out" aria-live="polite" style="margin:.4rem 0 0"></p>
+  </div>
+  <p class="small muted">Spacing rules from NVIDIA's DGX SuperPOD guide (5 · SR1): straights typically every 5 ft, a support within 1 ft of splices and transitions. Manufacturer and engineer requirements govern.</p>
+</section>
+
+<section>
+  <h2>Install sequence</h2>
+  <ol class="steps">
+    <li><b>Prepare</b>Approved drawings, permits, material check (sections, splices, hangers, anchors, waterfalls), lift/ladder plan, safety briefing.</li>
+    <li><b>Lay out</b>Snap or laser the centre line. Mark hanger points at the design spacing. Confirm clearances: 12 in above trays, sprinklers, lights, ducts. Avoid running alongside other services.</li>
+    <li><b>Install hangers</b>Anchors into structure (not into ceiling tiles or other trades' supports), threaded rod, trapeze or bracket, set to height.</li>
+    <li><b>Place and splice tray</b>Lay sections, join with bonding splices, and support each splice within 1 ft. Add curves, tees and height transitions with their own supports.</li>
+    <li><b>Accessories</b>Waterfalls over every rack entry, dividers to separate media, sidewalls where cables need retaining, cable-entry brushes at rack tops.</li>
+    <li><b>Bond, level, inspect</b>Bond to the grounding system, level the run, check fastener torque and clearances, label the pathway, photograph before cables go in.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Laying bundles into the trays</h2>
+  <div class="grid">
+    <div class="card"><h3>1 · Seat the first stretch</h3><p class="small">Lay about 8 ft of bundle in the tray at the start, plus the free length needed to reach the target U.</p></div>
+    <div class="card"><h3>2 · Fish and tie the near end</h3><p class="small">Drop it into the rack and tie it off. Don't plug it in yet.</p></div>
+    <div class="card"><h3>3 · Lay the run</h3><p class="small">Place the bundle into the tray end to end, supported with temporary wraps so it can't kink or stretch. Coil and unroll around obstructions.</p></div>
+    <div class="card"><h3>4 · Deal with slack</h3><p class="small">Keep slack at the top-of-rack end, not at the congested core/spine end.</p></div>
+    <div class="card"><h3>5 · Fish and tie the far end</h3><p class="small">Drop into the destination rack and tie off. Repeat for the next bundle.</p></div>
+    <div class="card"><h3>Pulling rules</h3><p class="small">Pull by strength members or approved grips with a swivel, ≤ rated tension, 20× OD bend while pulling, roll off the reel (don't spin off the end).</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>Hanging from other trades' supports.</b>Anchor to the structure with the tray's own rated supports.</li>
+    <li><b>Splice in mid-span with no support.</b>A support goes within 1 ft of every splice.</li>
+    <li><b>No waterfalls.</b>Cables dropping over the tray edge break bend radius.</li>
+    <li><b>Plugging while laying.</b>Bundles are laid and tied off first. Connecting is a separate, later phase.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. What goes in first?</p>
+      <div class="opts"><button class="opt">Cables, then tray around them</button><button class="opt" data-correct>Hangers and tray, bonded and inspected, before any cable</button><button class="opt">Doesn't matter</button></div>
+      <p class="why">The pathway is built and checked first, then cables are laid in.</p></div>
+    <div class="q"><p>2. Minimum bend radius while pulling, as a rule of thumb?</p>
+      <div class="opts"><button class="opt">5× OD</button><button class="opt">10× OD</button><button class="opt" data-correct>20× OD</button></div>
+      <p class="why">20× while under tension, 10× once installed (FOA guidance). Check the datasheet.</p></div>
+    <div class="q"><p>3. Where is bundle slack kept?</p>
+      <div class="opts"><button class="opt">At the core/spine end</button><button class="opt" data-correct>At the top-of-rack (edge) end</button><button class="opt">Coiled in the middle of the tray</button></div>
+      <p class="why">Core and aggregation switches already have huge cable convergence. Extra loops there choke the tray.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../4.SR4/deploying-the-bundles-explained.html">Deploying the bundles<span>4 · SR4: laying inter-rack bundles</span></a></li>
+    <li><a href="../5.SR4/fiber-cable-installation-explained.html">FOA: installing fiber cable<span>5 · SR4: pulling, figure-8</span></a></li>
+    <li><a href="../3.SR4/wyr-grid-explained.html">Wyr-Grid overhead tray<span>3 · SR4: splices, waterfalls, bonding</span></a></li>
+    <li><a href="../2.SR3/nec-392-18F-cable-tray-access.html">NEC 392.18(F) access<span>2 · SR3</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Follow manufacturer instructions, engineered drawings and local code.</footer>
+</main>
+<script>
+(function () {
+  const g = (id) => document.getElementById(id);
+  function run() {
+    const L = Math.max(5, +g("len").value || 40), S = Math.max(1, +g("sec").value || 10), SP = Math.max(0.5, +g("sp").value || 5);
+    const sc = 680 / L, x0 = 40, y = 70;
+    const splices = []; for (let x = S; x < L - 0.01; x += S) splices.push(x);
+    // supports: at both ends, near each splice (within 1 ft), then fill gaps so no gap exceeds SP
+    let pts = [0, L]; splices.forEach((s) => pts.push(Math.max(0, s - 0.75)));
+    pts = [...new Set(pts.map((p) => +p.toFixed(2)))].sort((a, b) => a - b);
+    const filled = [];
+    for (let i = 0; i < pts.length; i++) {
+      filled.push(pts[i]);
+      if (i < pts.length - 1) { const gap = pts[i + 1] - pts[i], n = Math.ceil(gap / SP) - 1; for (let k = 1; k <= n; k++) filled.push(pts[i] + gap * k / (n + 1)); }
+    }
+    let s = g("run").querySelector("title").outerHTML;
+    s += `<line x1="0" y1="12" x2="760" y2="12" stroke="var(--muted)" stroke-width="3"/><text x="380" y="8" text-anchor="middle" class="tm">structure</text>`;
+    filled.forEach((p) => { const x = x0 + p * sc; s += `<line x1="${x}" y1="12" x2="${x}" y2="${y + 14}" class="rod"/><line x1="${x - 8}" y1="${y + 14}" x2="${x + 8}" y2="${y + 14}" class="rod"/>`; });
+    s += `<rect x="${x0}" y="${y}" width="${L * sc}" height="12" class="tr"/>`;
+    splices.forEach((p) => { const x = x0 + p * sc; s += `<line x1="${x}" y1="${y - 4}" x2="${x}" y2="${y + 16}" class="spl"/>`; });
+    for (let f = 0; f <= L; f += Math.max(5, Math.round(L / 8 / 5) * 5)) s += `<text x="${x0 + f * sc}" y="${y + 40}" text-anchor="middle" class="tm">${f} ft</text>`;
+    s += `<text x="${x0}" y="${y + 62}" class="tm">orange = splice · black = support</text>`;
+    g("run").innerHTML = s;
+    g("run-out").innerHTML = `<b>${filled.length}</b> supports for ${L} ft with ${splices.length} splice${splices.length === 1 ? "" : "s"}: one at each end, one within 1 ft of every splice, and none more than ${SP} ft apart.`;
+  }
+  ["len", "sec", "sp"].forEach((id) => g(id).addEventListener("input", run)); run();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

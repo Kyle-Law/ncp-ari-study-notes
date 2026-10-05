@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cable slack management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .calc { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); align-items: end; }
+  .results { display: grid; gap: .7rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); margin-top: 1rem; }
+  .results div { background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; padding: .55rem .75rem; }
+  .results b { display: block; font-family: var(--display); font-size: 1.5rem; line-height: 1.15; }
+  .tb { font-size: 14px; font-weight: 600; } .tm { font-size: 12px; fill: var(--muted) !important; }
+  .loop { fill: none; stroke: var(--mmf); stroke-width: 4; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">5 · T4</span><span class="chip">Cable Support Systems</span><span class="chip weight">7% of exam</span></div>
+  <h1>Implementing cable slack management</h1>
+  <p class="lede">Some slack is useful: it lets you reach the port, reroute later, and repair a damaged end. Too much becomes loops that choke trays, block airflow and get crushed. The skill is choosing the right length and deciding where the extra lives.</p>
+  <p class="objective"><b>Exam objective</b>Implement cable slack management.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Order the right length</b>: measure the real path (tray route, drops, manager travel), add small end allowances, and pick the nearest standard length. NVIDIA: right-length cables with <b>only a little slack at each end</b>, runs under <b>90%</b> of rated reach.</li>
+    <li><b>Where slack lives</b>: in the rack's cable managers or slack spools, within bend-radius limits. For inter-rack bundles, at the <b>top-of-rack end</b>, not the congested core/spine end.</li>
+    <li>Outer ports have shorter runs than middle ports. <b>Tuck the difference</b> into the in-rack manager rather than leaving loops at the faceplate.</li>
+    <li><b>Service loops</b> on vertical and long runs give spare length for repairs and something to grip for support. Staging long cable on the floor: lay it in a <b>figure-8</b> so it doesn't twist.</li>
+    <li>Never: tight coils, slack piled in trays or in front of vents, loops hanging under their own weight, or tight wraps squeezing coils.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Pick the cable length</h2>
+  <div class="card">
+    <div class="calc">
+      <label class="field">Tray path (m)<input type="number" id="path" value="6.4" min="0" max="100" step="0.1"></label>
+      <label class="field">Drop at end A (m)<input type="number" id="da" value="1.2" min="0" max="5" step="0.1"></label>
+      <label class="field">Drop at end B (m)<input type="number" id="db" value="0.9" min="0" max="5" step="0.1"></label>
+      <label class="field">Manager travel + port allowance (m, both ends)<input type="number" id="al" value="1.0" min="0" max="5" step="0.1"></label>
+      <label class="field">Media max reach (m)<input type="number" id="reach" value="30" min="1" max="2000"></label>
+    </div>
+    <div class="results">
+      <div><span class="muted small">Needed length</span><b id="r-need"></b></div>
+      <div><span class="muted small">Order</span><b id="r-order"></b></div>
+      <div><span class="muted small">Slack to manage</span><b id="r-slack"></b></div>
+    </div>
+    <p id="len-out" aria-live="polite" style="margin:.8rem 0 0"></p>
+  </div>
+  <p class="small muted">Standard lengths used: 1, 1.5, 2, 2.5, 3, 5, 7, 10, 15, 20, 30, 50, 100 m (typical LinkX-style options; check what's orderable for your part).</p>
+</section>
+
+<section>
+  <h2>Why a figure-8?</h2>
+  <figure>
+    <div class="wide"><svg viewBox="0 0 700 170" role="img" aria-labelledby="f8T">
+      <title id="f8T">A plain coil adds one twist per loop; a figure-8 adds half a twist in one lobe and removes it in the other</title>
+      <g transform="translate(120,85)"><circle r="50" class="loop"/><circle r="42" class="loop" style="opacity:.6"/><circle r="34" class="loop" style="opacity:.35"/>
+        <text y="80" text-anchor="middle" class="tb">Coil: +1 twist per loop</text></g>
+      <g transform="translate(470,85)"><path d="M0 0 C 60 -70, 140 -70, 140 0 S 60 70, 0 0 C -60 -70, -140 -70, -140 0 S -60 70, 0 0" class="loop"/>
+        <text x="-80" y="-58" text-anchor="middle" class="tm">+½ twist</text><text x="80" y="-58" text-anchor="middle" class="tm">−½ twist</text>
+        <text y="80" text-anchor="middle" class="tb">Figure-8: net zero twist when paid out</text></g>
+    </svg></div>
+  </figure>
+</section>
+
+<section>
+  <h2>Rules of thumb</h2>
+  <div class="grid">
+    <div class="card"><h3>Keep it in managers</h3><p class="small">Slack goes into vertical managers, slack spools or radius guides, never in front of faceplates, fans or vents.</p></div>
+    <div class="card"><h3>Edge, not core</h3><p class="small">Inter-rack slack at the top-of-rack end. Core/aggregation racks already have huge convergence.</p></div>
+    <div class="card"><h3>Large, loose loops</h3><p class="small">Loops respect the minimum bend radius. Hook-and-loop holds them gently without squeezing.</p></div>
+    <div class="card"><h3>Service loops</h3><p class="small">On vertical runs and long pulls, a controlled loop allows future repairs. Support it so it isn't hanging.</p></div>
+    <div class="card"><h3>Don't overbuy length</h3><p class="small">Excess length is excess weight, tray fill and airflow blockage. Measure the path.</p></div>
+    <div class="card"><h3>Remove dead cable</h3><p class="small">Abandoned cables are the worst kind of slack. Remove them.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"Extra length is safer."</b>Excess slack fills trays, blocks air and gets crushed. Order to measured length.</li>
+    <li><b>Slack at the spine.</b>Keep it at the edge (top-of-rack) end.</li>
+    <li><b>Tight coils zip-tied to the rack.</b>Bend radius and crush violations. Use large loops and hook-and-loop.</li>
+    <li><b>Coiling long cable on the floor.</b>Use a figure-8 to avoid twist.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. Where should inter-rack bundle slack be kept?</p>
+      <div class="opts"><button class="opt">At the core switch end</button><button class="opt" data-correct>At the top-of-rack end</button><button class="opt">Coiled in the tray midway</button></div>
+      <p class="why">The core end already has massive cable convergence. Slack there chokes the tray.</p></div>
+    <div class="q"><p>2. Why lay staged cable in a figure-8 instead of a coil?</p>
+      <div class="opts"><button class="opt">It takes less space</button><button class="opt" data-correct>Each lobe's half-twist cancels the other, so the cable pays out without twist</button><button class="opt">It's faster</button></div>
+      <p class="why">Plain coils add a twist per loop. The figure-8 nets to zero.</p></div>
+    <div class="q"><p>3. NVIDIA's guidance on cable length?</p>
+      <div class="opts"><button class="opt">Always add 3 m spare</button><button class="opt" data-correct>Right length with a little slack at each end, under 90% of the media's max reach</button><button class="opt">Longest available length</button></div>
+      <p class="why">From the Cable Installation and Management Guidelines.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../4.SR4/deploying-the-bundles-explained.html">Deploying the bundles<span>4 · SR4: slack at the edge</span></a></li>
+    <li><a href="../5.SR2/nvidia-cable-guidelines-explained.html">NVIDIA cable guidelines<span>5 · SR2: right length, 90% reach</span></a></li>
+    <li><a href="../5.SR4/fiber-cable-installation-explained2.html">FOA: installing fiber cable<span>5 · SR4: figure-8, service loops</span></a></li>
+    <li><a href="../4.T8/bundle-and-dress-cables.html">Bundling and dressing<span>4 · T8</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo.</footer>
+</main>
+<script>
+(function () {
+  const g = (id) => document.getElementById(id);
+  const STD = [1, 1.5, 2, 2.5, 3, 5, 7, 10, 15, 20, 30, 50, 100];
+  function run() {
+    const need = (+g("path").value || 0) + (+g("da").value || 0) + (+g("db").value || 0) + (+g("al").value || 0), reach = +g("reach").value || 1;
+    const order = STD.find((l) => l >= need);
+    g("r-need").textContent = need.toFixed(1) + " m";
+    if (!order) { g("r-order").textContent = "—"; g("r-slack").textContent = "—"; g("len-out").innerHTML = '<span class="fail">Longer than any standard length.</span> Use structured fiber (trunks and patch panels) instead.'; return; }
+    const slack = order - need;
+    g("r-order").textContent = order + " m"; g("r-slack").textContent = slack.toFixed(1) + " m";
+    let m = slack <= 1 ? '<span class="ok">Little slack.</span> Tuck it into the in-rack managers.' : slack <= 3 ? '<span class="caution">Moderate slack.</span> Store it in a vertical manager or slack spool at the top-of-rack end, in large loops.' : '<span class="fail">Lots of slack.</span> Re-check the measurement or the route. This much will crowd trays or managers.';
+    if (order > reach * 0.9) m += ` <span class="fail">Also over 90% of the media's ${reach} m reach.</span>`;
+    g("len-out").innerHTML = m;
+  }
+  ["path", "da", "db", "al", "reach"].forEach((id) => g(id).addEventListener("input", run)); run();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

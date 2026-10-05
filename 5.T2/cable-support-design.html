@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cable support design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .calc { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); align-items: end; }
+  .results { display: grid; gap: .7rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); margin-top: 1rem; }
+  .results div { background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; padding: .55rem .75rem; }
+  .results b { display: block; font-family: var(--display); font-size: 1.5rem; line-height: 1.15; }
+  .meter { height: 26px; border-radius: 6px; background: var(--panel-2); position: relative; overflow: hidden; margin-top: 1rem; border: 1px solid var(--rule); }
+  .meter i { position: absolute; top: 0; bottom: 0; left: 0; transition: width .2s; }
+  .meter b { position: absolute; top: -3px; bottom: -3px; width: 3px; background: var(--ink); }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">5 · T2</span><span class="chip">Cable Support Systems</span><span class="chip weight">7% of exam</span></div>
+  <h1>Designing cable support for ultra-high-density loads</h1>
+  <p class="lede">Every scalable unit adds roughly 500 cables to the overhead paths, and they all converge on the management and spine racks. The support system has to carry that weight, keep cables within fill and bend limits, and leave room for the next SU.</p>
+  <p class="objective"><b>Exam objective</b>Design cable support systems for ultra-high-density loads.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Start from counts</b>: cables per SU (~508 for DGX H100: 252 node/UFM + 256 leaf–spine), times SUs on each pathway, by cable type.</li>
+    <li><b>Area</b>: tray cross-section at ≤ <b>50% fill</b>. <b>Weight</b>: AOC ≈ 0.009 kg/m, copper ≈ 0.045 kg/m, plus tray and hardware, against the tray's rated working load and each support's and anchor's rating (checked separately).</li>
+    <li><b>Spacing</b>: supports typically every <b>5 ft (1.5 m)</b> on straights, extra on curves, and within <b>1 ft (0.3 m)</b> of splices and transitions. Evaluate spans longer than 5 ft.</li>
+    <li><b>Converge carefully</b>: density peaks at central management/network racks, so size those pathways and rack-top entries for the worst point, not the average.</li>
+    <li>Design for <b>growth</b> (future SUs), separate copper and fiber paths, bend-radius control at every drop, bonding, and code compliance (NEC/IEC, TIA, BICSI, seismic where required).</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Load per span</h2>
+  <div class="card">
+    <div class="calc">
+      <label class="field">Scalable units on this pathway<input type="number" id="su" value="2" min="1" max="8"></label>
+      <label class="field">Copper share of cables (%)<input type="number" id="cu" value="0" min="0" max="100"></label>
+      <label class="field">Tray + hardware (kg/m)<input type="number" id="tw" value="5" min="0" max="40" step="0.5"></label>
+      <label class="field">Support spacing (m)<input type="number" id="sp" value="1.5" min="0.3" max="3" step="0.1"></label>
+      <label class="field">Tray rated working load (kg/m)<input type="number" id="rate" value="40" min="1" max="300"></label>
+    </div>
+    <div class="results">
+      <div><span class="muted small">Cables</span><b id="r-n"></b></div>
+      <div><span class="muted small">Cable load</span><b id="r-c"></b></div>
+      <div><span class="muted small">Total load</span><b id="r-t"></b></div>
+      <div><span class="muted small">Per support</span><b id="r-s"></b></div>
+      <div><span class="muted small">Tray area at 50% fill</span><b id="r-a"></b></div>
+    </div>
+    <div class="meter" aria-hidden="true"><i id="mbar"></i><b id="mlim"></b></div>
+    <p id="ld-out" aria-live="polite" style="margin:.6rem 0 0"></p>
+  </div>
+  <p class="small muted">~508 cables per SU and the cable weights/diameters are from NVIDIA's DGX SuperPOD H100 guide (5 · SR1). The rated working load is an example: use the tray manufacturer's load class for your span, and have hangers and anchors engineered.</p>
+</section>
+
+<section>
+  <h2>Design decisions</h2>
+  <div class="grid">
+    <div class="card"><h3>Tray type</h3><p class="small">Wire basket / mesh (flexible, easy drops), ladder (heavy loads, long spans), solid-bottom (protection). Choose by load, span and access.</p></div>
+    <div class="card"><h3>Tiers &amp; separation</h3><p class="small">Separate fiber and copper (and power) paths. Stack tiers with working clearance, and keep 12 in above trays for access (NEC 392.18(F)).</p></div>
+    <div class="card"><h3>Supports &amp; anchors</h3><p class="small">Trapeze hangers on threaded rod, wall/rack-top brackets. Supports and anchors each rated for cable + tray + structure. Add seismic bracing where required.</p></div>
+    <div class="card"><h3>Convergence points</h3><p class="small">Size the paths above management and spine racks for all SUs that land there, plus rack-top penetrations and waterfalls.</p></div>
+    <div class="card"><h3>Growth</h3><p class="small">Plan for future SUs: fill at day one well under 50%, spare pathways, room to pull new cables without disturbing the old.</p></div>
+    <div class="card"><h3>Media choice</h3><p class="small">Fiber/AOC for long runs. Copper is ~10× the area and ~5× the weight, so keep it to short in-rack links.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>Sizing for the average run.</b>The heaviest point is where SUs converge. Design there.</li>
+    <li><b>Checking the tray but not anchors.</b>Supports and anchors are evaluated separately.</li>
+    <li><b>Ignoring splices.</b>Splices and transitions need a support within 1 ft.</li>
+    <li><b>Copper in long overhead runs.</b>Its weight and bulk overwhelm trays. Use fiber.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. Cable load per metre for one SU of 3 mm AOCs (≈ 508 cables)?</p>
+      <div class="opts"><button class="opt">≈ 0.5 kg/m</button><button class="opt" data-correct>≈ 4.6 kg/m</button><button class="opt">≈ 46 kg/m</button></div>
+      <p class="why">508 × 0.009 kg/m ≈ 4.57 kg/m from cables alone, NVIDIA's reference figure.</p></div>
+    <div class="q"><p>2. Where must a support be placed relative to a tray splice?</p>
+      <div class="opts"><button class="opt" data-correct>Within 1 ft (0.3 m)</button><button class="opt">Within 5 ft</button><button class="opt">Anywhere on the span</button></div>
+      <p class="why">Splices, joints and height transitions need a support within 1 ft.</p></div>
+    <div class="q"><p>3. Where is cable density highest in a SuperPOD hall?</p>
+      <div class="opts"><button class="opt">At the ends of compute rows</button><button class="opt" data-correct>Above the central management/network racks where leaf–spine and node cables converge</button><button class="opt">Evenly everywhere</button></div>
+      <p class="why">Every leaf–spine cable lands at the core. Size those pathways for the worst case.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../5.SR1/dgx-superpod-h100-networking-explained.html">SuperPOD H100 networking<span>5 · SR1: load, fill, supports</span></a></li>
+    <li><a href="../2.T2/cable-pathway-site-survey.html">Site survey for pathways<span>2 · T2</span></a></li>
+    <li><a href="../3.SR4/wyr-grid-explained.html">Wyr-Grid overhead tray<span>3 · SR4</span></a></li>
+    <li><a href="../5.T3/install-overhead-support.html">Installing overhead support<span>5 · T3: next topic</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Structural design must be done and approved by qualified engineers.</footer>
+</main>
+<script>
+(function () {
+  const g = (id) => document.getElementById(id);
+  function run() {
+    const su = Math.max(1, +g("su").value || 1), cu = Math.min(100, Math.max(0, +g("cu").value || 0)) / 100, tw = +g("tw").value || 0, sp = +g("sp").value || 1.5, rate = +g("rate").value || 1;
+    const n = Math.round(su * 508), ncu = Math.round(n * cu), nf = n - ncu;
+    const cl = nf * 0.009 + ncu * 0.045, tot = cl + tw;
+    const areaMm2 = nf * Math.PI * 1.5 * 1.5 + ncu * Math.PI * 4.715 * 4.715, areaIn = areaMm2 / 645.16 / 0.5;
+    g("r-n").textContent = n.toLocaleString(); g("r-c").textContent = cl.toFixed(1) + " kg/m"; g("r-t").textContent = tot.toFixed(1) + " kg/m";
+    g("r-s").textContent = (tot * sp).toFixed(0) + " kg"; g("r-a").textContent = areaIn.toFixed(0) + " in²";
+    const max = Math.max(rate * 1.4, tot * 1.1);
+    g("mbar").style.width = (tot / max * 100) + "%"; g("mbar").style.background = tot <= rate ? "var(--accent)" : "var(--bad)";
+    g("mlim").style.left = (rate / max * 100) + "%";
+    g("ld-out").innerHTML = (tot <= rate ? `<span class="ok">Within the tray's rated load</span> (${(tot / rate * 100).toFixed(0)}%).` : `<span class="fail">Over the tray's rated load.</span> Shorten spans, use a heavier tray class, split across pathways, or move copper to fiber.`) +
+      (sp > 1.524 ? ' <span class="caution">Spans over 5 ft need evaluation.</span>' : "");
+  }
+  ["su", "cu", "tw", "sp", "rate"].forEach((id) => g(id).addEventListener("input", run)); run();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

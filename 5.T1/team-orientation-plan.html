@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cabling team orientation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .order { display: grid; gap: .4rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
+  .order button { text-align: left; font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: .55rem .8rem; cursor: pointer; }
+  .order button[disabled] { opacity: .45; cursor: default; }
+  .picked { list-style: none; padding: 0; margin: .8rem 0 0; display: grid; gap: .35rem; max-width: none; counter-reset: p; }
+  .picked li { counter-increment: p; background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; padding: .45rem .8rem .45rem 2.4rem; position: relative; margin: 0; }
+  .picked li::before { content: counter(p); position: absolute; left: .7rem; font-family: var(--display); font-weight: 700; color: var(--accent); }
+  .picked li.ok { border-color: var(--good); } .picked li.bad { border-color: var(--bad); background: var(--bad-soft); }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">5 · T1</span><span class="chip">Cable Support Systems</span><span class="chip weight">7% of exam</span></div>
+  <h1>A team orientation plan for the cabling workflow</h1>
+  <p class="lede">A scalable unit means hundreds of cables, several people, and work at height. Before the first bundle moves, everyone needs to know the plan, their role, the order of work, the safety rules, and what "done" looks like at each stage.</p>
+  <p class="objective"><b>Exam objective</b>Define a team orientation plan for the cabling workflow.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li>Orientation covers <b>scope</b> (racks, SUs, cable counts), <b>documents</b> (cable schedule, elevations, bundle/BSN deployment order, labeling scheme), <b>roles</b>, <b>sequence</b>, <b>safety</b>, <b>quality gates</b> and <b>communication</b>.</li>
+    <li>Workflow phases (DU-10438): <b>stage &amp; verify</b> → <b>inter-rack bundles</b> laid in trays (not plugged) → <b>intra-rack cables</b> → <b>connect &amp; dress</b> per U, bottom-up, 50/50 → <b>test</b> (install one, test one) → <b>inspect &amp; document</b>.</li>
+    <li>Typical roles: <b>lead</b> (plan, sequence, sign-off), <b>pathway / pull crew</b> (trays, lay bundles, slack), <b>rack installers</b> (connect, dress), <b>test &amp; QA</b> (clean, inspect, verify links), <b>documentation</b> (as-built, photos).</li>
+    <li>Safety briefing: ladders/lifts and work at height, PPE, ESD, LOTO boundaries near power, laser safety with live optics, housekeeping.</li>
+    <li>Daily stand-up: today's BSNs and racks, blockers, findings from yesterday's QA, and any changes (redlines).</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Put the workflow in order</h2>
+  <p>Click the phases in the order the team should work them.</p>
+  <div class="card">
+    <div class="order" id="pool"></div>
+    <ol class="picked" id="picked"></ol>
+    <p id="ord-out" aria-live="polite" style="margin:.8rem 0 0"></p>
+    <p style="margin:.6rem 0 0"><button class="btn" id="ord-reset" type="button">Start over</button></p>
+  </div>
+</section>
+
+<section>
+  <h2>Roles and hand-offs</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Role</th><th>Owns</th><th>Hands off when</th></tr></thead>
+      <tbody>
+        <tr><td>Lead / supervisor</td><td>Plan, sequence, safety briefing, daily stand-up, sign-off</td><td>Each rack passes QA and docs are complete</td></tr>
+        <tr><td>Staging</td><td>Receiving, inventory reconciliation, kitting by rack/BSN, labels verified</td><td>A rack's kit is complete and staged in run order</td></tr>
+        <tr><td>Pathway / pull crew</td><td>Lay inter-rack bundles in trays end to end, tie off ends, manage slack, temporary supports</td><td>Bundle ends are fished and tied at both racks, unplugged</td></tr>
+        <tr><td>Rack installers</td><td>Clean, connect and dress one U at a time, bottom-up, 50/50, hook-and-loop</td><td>Each U is connected and dressed. Install one, test one</td></tr>
+        <tr><td>Test &amp; QA</td><td>Link status, optical checks, inspection images, walk-down checklist, punch list</td><td>Findings fixed and re-verified</td></tr>
+        <tr><td>Documentation</td><td>Redlines → as-built, photos, test records, cable schedule updates</td><td>Package matches what's installed</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Orientation briefing checklist</h2>
+  <div class="grid">
+    <div class="card"><h3>Scope &amp; documents</h3><ul class="small"><li>Racks, SUs and cable counts</li><li>Cable schedule, elevations, pathway drawings</li><li>BSN deployment order (check, don't assume)</li><li>Label scheme and examples</li></ul></div>
+    <div class="card"><h3>Standards</h3><ul class="small"><li>DU-10438 rules (50/50, bottom-up, per-U dressing)</li><li>Bend radius, support spacing, twist ≥ 75 cm</li><li>Clean every insertion</li><li>Hook-and-loop only</li></ul></div>
+    <div class="card"><h3>Safety</h3><ul class="small"><li>Ladders/lifts, work at height, overhead hazards</li><li>PPE, ESD straps, laser safety</li><li>No work inside LOTO boundaries</li><li>Housekeeping: caps, offcuts, packaging</li></ul></div>
+    <div class="card"><h3>Quality &amp; comms</h3><ul class="small"><li>Quality gates per phase</li><li>How to log a finding or a redline</li><li>Who to call for parts, power and cooling</li><li>Daily stand-up time and format</li></ul></div>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>Plug everything, dress later.</b>The plan interleaves connect and dress per U.</li>
+    <li><b>Assuming BSN order = deployment order.</b>Usually, but not always. Check the deployment documentation.</li>
+    <li><b>Testing at the end.</b>Install one, test one. Finding a bad cable in a finished bundle costs far more.</li>
+    <li><b>No safety briefing.</b>Work at height and around live power is part of every cabling job.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. During the inter-rack bundle phase, are the bundle ends plugged in?</p>
+      <div class="opts"><button class="opt">Yes, both ends</button><button class="opt" data-correct>No, they're laid in trays and tied off; connecting comes later</button><button class="opt">Only the switch end</button></div>
+      <p class="why">Inter-rack bundles are laid end to end and tied off. Connecting and dressing happens per U afterwards.</p></div>
+    <div class="q"><p>2. What should a daily stand-up cover?</p>
+      <div class="opts"><button class="opt">Only safety</button><button class="opt" data-correct>Today's racks/BSNs, blockers, QA findings, changes and safety notes</button><button class="opt">Nothing; follow the drawings</button></div>
+      <p class="why">Short daily alignment keeps a multi-person crew on the same sequence and quality bar.</p></div>
+    <div class="q"><p>3. Which role turns field redlines into the as-built package?</p>
+      <div class="opts"><button class="opt">Pull crew</button><button class="opt" data-correct>Documentation</button><button class="opt">Staging</button></div>
+      <p class="why">Documentation keeps the cable schedule, drawings and photos matching what's installed.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../4.SR4/deploying-the-bundles-explained.html">Deploying the bundles<span>4 · SR4: three phases, run and plug order</span></a></li>
+    <li><a href="../5.SR3/fiber-optic-installation-explained3.html">FOA: plan before anyone pulls<span>5 · SR3: project checklist</span></a></li>
+    <li><a href="../2.T4/inventory-check-procedures.html">Inventory checks<span>2 · T4</span></a></li>
+    <li><a href="../6.T3/document-as-built.html">Documenting the deployment<span>6 · T3</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Roles are typical; adapt to crew size and site rules.</footer>
+</main>
+<script>
+(function () {
+  const phases = ["Orientation & safety briefing", "Stage, reconcile and kit by rack/BSN", "Lay inter-rack bundles in trays (unplugged)", "Install intra-rack cables", "Clean, connect and dress per U (bottom-up, 50/50)", "Test each link (install one, test one)", "QA walk-down and fix punch list", "Finalise as-built docs and photos"];
+  const shuffled = phases.map((p, i) => [p, i]).sort((a, b) => ((a[1] * 7 + 3) % 8) - ((b[1] * 7 + 3) % 8));
+  const pool = document.getElementById("pool"), picked = document.getElementById("picked"), out = document.getElementById("ord-out");
+  let seq = [];
+  function render() {
+    pool.innerHTML = shuffled.map(([p, i]) => `<button type="button" data-i="${i}" ${seq.includes(i) ? "disabled" : ""}>${p}</button>`).join("");
+    picked.innerHTML = seq.map((i, k) => `<li class="${seq.length === phases.length ? (i === k ? "ok" : "bad") : ""}">${phases[i]}</li>`).join("");
+    if (seq.length === phases.length) {
+      const right = seq.filter((i, k) => i === k).length;
+      out.innerHTML = right === phases.length ? '<span class="ok">Perfect order.</span>' : `<span class="caution">${right} of ${phases.length} in the right place.</span> Correct order: ` + phases.map((p, k) => `${k + 1}. ${p}`).join(" · ");
+    } else out.textContent = seq.length ? `${phases.length - seq.length} to go` : "";
+  }
+  pool.addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (!b) return; seq.push(+b.dataset.i); render(); });
+  document.getElementById("ord-reset").onclick = () => { seq = []; render(); };
+  render();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

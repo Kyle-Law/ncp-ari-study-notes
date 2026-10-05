@@ -256,9 +256,13 @@ This section covers defining a team orientation plan for the cabling workflow, d
 
 ### Potential Exam Topics:
 - **T1** Define a team orientation plan for the cabling workflow.
+  - [A team orientation plan for the cabling workflow](5.T1/team-orientation-plan.html)
 - **T2** Design cable support systems for ultra-high-density loads.
+  - [Designing cable support for ultra-high-density loads](5.T2/cable-support-design.html)
 - **T3** Install overhead cable support infrastructure.
+  - [Installing overhead cable support infrastructure](5.T3/install-overhead-support.html)
 - **T4** Implement cable slack management.
+  - [Implementing cable slack management](5.T4/cable-slack-management.html)
 - **T5** Understand the causes of unexpected visual results.
 - **T6** Update the extent attribute of a mesh after updating its points.
 

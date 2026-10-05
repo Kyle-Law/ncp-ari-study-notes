@@ -549,6 +549,34 @@
    "title": "Clean & Inspect — IEC 61300-3-35 explained visually"
   },
   {
+   "path": "5.T1/team-orientation-plan.html",
+   "section": "5",
+   "kind": "T",
+   "code": "T1",
+   "title": "Cabling team orientation"
+  },
+  {
+   "path": "5.T2/cable-support-design.html",
+   "section": "5",
+   "kind": "T",
+   "code": "T2",
+   "title": "Cable support design"
+  },
+  {
+   "path": "5.T3/install-overhead-support.html",
+   "section": "5",
+   "kind": "T",
+   "code": "T3",
+   "title": "Installing overhead support"
+  },
+  {
+   "path": "5.T4/cable-slack-management.html",
+   "section": "5",
+   "kind": "T",
+   "code": "T4",
+   "title": "Cable slack management"
+  },
+  {
    "path": "5.SR1/dgx-superpod-h100-networking-explained.html",
    "section": "5",
    "kind": "SR",
