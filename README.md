@@ -23,13 +23,19 @@ This section covers AI infrastructure basics, focusing on verifying data center 
 
 
 - **T3** Balance the rPDUs for AC-powered racks.
+  - [Balancing rack PDUs on AC racks](1.T3/balance-rpdus.html)
 
 
 - **T4** Verify power redundancy per rack.
+  - [Verifying power redundancy per rack](1.T4/rack-power-redundancy.html)
 - **T5** Verify the power capacity by PDU type.
+  - [Verifying power capacity by PDU type](1.T5/pdu-power-capacity.html)
 - **T6** Describe CDUs for liquid-cooled racks.
+  - [CDUs for liquid-cooled racks](1.T6/cdus-liquid-cooled-racks.html)
 - **T7** Verify grounding.
+  - [Verifying grounding](1.T7/verify-grounding.html)
 - **T8** Differentiate between hot-aisle and cold-aisle cooling.
+  - [Hot aisle vs. cold aisle](1.T8/hot-vs-cold-aisle.html)
 
 ### Suggested Readings
 

@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hot vs. cold aisle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  :root { --cold: #3a7bd5; --hot: #e05a47; }
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12px; fill: var(--muted) !important; } .t { font-size: 13px; }
+  .rack { fill: var(--panel-2); stroke: var(--ink); stroke-width: 1.5; }
+  .front { stroke: var(--cold); stroke-width: 5; }
+  .wall { fill: none; stroke: var(--accent); stroke-width: 4; }
+  .air { fill: none; stroke-width: 3; }
+  .ac { stroke: var(--cold); marker-end: url(#m-c); } .ah { stroke: var(--hot); marker-end: url(#m-h); } .mix { stroke: #b05ad6; stroke-dasharray: 6 5; marker-end: url(#m-m); }
+  .zone-c { fill: var(--cold); opacity: .10; } .zone-h { fill: var(--hot); opacity: .10; }
+  .floor { stroke: var(--muted); stroke-width: 2; }
+  .tile { stroke: var(--cold); stroke-width: 4; stroke-dasharray: 4 4; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">1 · T8</span><span class="chip">AI Infrastructure Basics</span><span class="chip weight">20% of exam</span></div>
+  <h1>Hot aisle vs. cold aisle</h1>
+  <p class="lede">Every server breathes the same way: cool air in at the front, hot air out at the back. Hot/cold aisle layout lines the racks up so fronts face fronts and backs face backs. Containment then walls one of the two aisles off so the air streams can't mix.</p>
+  <p class="objective"><b>Exam objective</b>Differentiate between hot-aisle and cold-aisle cooling.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Layout</b>: alternate rows so intakes share a <b>cold aisle</b> (perforated tiles or overhead diffusers here) and exhausts share a <b>hot aisle</b> (returns here). This alone saves roughly <b>10–35%</b> cooling energy.</li>
+    <li><b>Cold aisle containment (CAC)</b>: roof and end doors enclose the cold aisle. The <b>rest of the room becomes hot</b>. Easier to retrofit on raised floors.</li>
+    <li><b>Hot aisle containment (HAC)</b>: enclose the exhaust side and duct it straight back to the cooling units (often via a ceiling plenum). The <b>room stays cool</b>. Captures heat more completely and is usually the more effective option, supporting higher density.</li>
+    <li>Either way: <b>blanking panels</b>, sealed floor cut-outs, no solid rack doors, and control cooling from <b>server inlet</b> temperature (ASHRAE recommended ~18–27 °C).</li>
+    <li>Two failure modes containment fixes: <b>recirculation</b> (hot exhaust back into intakes) and <b>bypass</b> (cold air returning without touching a server).</li>
+  </ul>
+</div>
+
+<section>
+  <h2>See the airflow</h2>
+  <div class="seg" data-target="mode"><button data-value="open">No containment</button><button data-value="cac" aria-pressed="true">Cold aisle contained</button><button data-value="hac">Hot aisle contained</button></div>
+  <figure>
+    <div class="wide"><svg viewBox="0 0 760 330" role="img" aria-labelledby="aisT">
+      <title id="aisT">Side section of a raised-floor hall with two rack rows: cold air rises through tiles into the cold aisle, passes through racks into hot aisles and returns to the cooling unit; containment variants shown</title>
+      <defs>
+        <marker id="m-c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--cold)"/></marker>
+        <marker id="m-h" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--hot)"/></marker>
+        <marker id="m-m" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:#b05ad6"/></marker>
+      </defs>
+      <line x1="20" y1="270" x2="740" y2="270" class="floor"/>
+      <text x="380" y="300" text-anchor="middle" class="tm">raised-floor supply plenum (pressurised cold air)</text>
+      <line x1="20" y1="40" x2="740" y2="40" class="floor" style="stroke-dasharray:6 6"/>
+      <text x="380" y="32" text-anchor="middle" class="tm">ceiling / return plenum</text>
+      <rect x="30" y="120" width="70" height="150" rx="4" style="fill:var(--panel);stroke:var(--ink)"/><text x="65" y="195" text-anchor="middle" class="t" style="font-weight:600">CRAH</text>
+      <!-- zones -->
+      <rect x="350" y="80" width="90" height="190" class="zone-c"/>
+      <rect x="160" y="80" width="90" height="190" class="zone-h"/><rect x="540" y="80" width="90" height="190" class="zone-h"/>
+      <text x="395" y="70" text-anchor="middle" class="tb" style="fill:var(--cold)">Cold aisle</text>
+      <text x="205" y="70" text-anchor="middle" class="tb" style="fill:var(--hot)">Hot aisle</text><text x="585" y="70" text-anchor="middle" class="tb" style="fill:var(--hot)">Hot aisle</text>
+      <!-- racks: row A faces right (front at x=350), row B faces left (front at x=440) -->
+      <rect x="250" y="110" width="100" height="160" class="rack"/><line x1="350" y1="110" x2="350" y2="270" class="front"/><text x="300" y="195" text-anchor="middle" class="t">Row A</text>
+      <rect x="440" y="110" width="100" height="160" class="rack"/><line x1="440" y1="110" x2="440" y2="270" class="front"/><text x="490" y="195" text-anchor="middle" class="t">Row B</text>
+      <line x1="360" y1="270" x2="430" y2="270" class="tile"/>
+      <!-- base airflow -->
+      <path d="M100 280 H395 V250" class="air ac"/>
+      <path d="M380 220 H355" class="air ac"/><path d="M410 220 H435" class="air ac"/>
+      <path d="M248 180 H210" class="air ah"/><path d="M542 180 H580" class="air ah"/>
+      <!-- open: mixing -->
+      <g data-show-mode="open">
+        <path d="M205 160 C 205 95, 300 85, 370 120" class="air mix"/><path d="M585 160 C 585 95, 490 85, 420 120" class="air mix"/>
+        <path d="M395 140 C 395 100, 330 90, 300 100" class="air mix" style="stroke:var(--cold)"/>
+        <path d="M205 150 C 205 70, 120 60, 75 115" class="air ah"/>
+        <text x="395" y="100" text-anchor="middle" class="tm">recirculation + bypass</text>
+      </g>
+      <!-- CAC -->
+      <g data-show-mode="cac" hidden>
+        <path d="M350 110 V100 H440 V110" class="wall"/><text x="395" y="94" text-anchor="middle" class="tm" style="fill:var(--accent) !important">roof + end doors</text>
+        <path d="M205 150 C 205 70, 120 60, 75 115" class="air ah"/><path d="M585 150 C 585 60, 300 50, 90 110" class="air ah"/>
+        <text x="600" y="300" class="tm">room = hot return space</text>
+      </g>
+      <!-- HAC -->
+      <g data-show-mode="hac" hidden>
+        <path d="M250 110 V80 M160 110 V80 M160 80 V40 M250 80 V40" class="wall"/><path d="M630 110 V40 M540 110 V40" class="wall"/>
+        <path d="M205 150 V55" class="air ah"/><path d="M585 150 V55" class="air ah"/><path d="M585 52 H90 V110" class="air ah"/>
+        <text x="600" y="300" class="tm">room stays cool</text>
+      </g>
+    </svg></div>
+    <figcaption data-show-mode="open" hidden>No walls: hot exhaust spills over rack tops and around row ends into the intakes (recirculation), and some cold air returns without touching a server (bypass). Top-of-rack servers run hottest.</figcaption>
+    <figcaption data-show-mode="cac">The cold aisle is enclosed by a roof and end doors. Servers breathe only supply air. Exhaust fills the room and drifts back to the cooling unit, so the hall itself is warm.</figcaption>
+    <figcaption data-show-mode="hac" hidden>The hot aisles are enclosed and ducted to the ceiling plenum, back to the cooling unit. Exhaust never enters the room, which stays at supply temperature.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>Cold vs. hot aisle containment</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>Cold aisle containment</th><th>Hot aisle containment</th></tr></thead>
+      <tbody>
+        <tr><td>What's enclosed</td><td>The supply (intake) aisle</td><td>The exhaust aisle</td></tr>
+        <tr><td>Rest of the room</td><td>Hot (return air)</td><td>Cool (supply air)</td></tr>
+        <tr><td>Return path</td><td>Room air back to the cooling units</td><td>Ducted / ceiling plenum straight back</td></tr>
+        <tr><td>Typical density with CRAC (Legrand ranges)</td><td>~8–10 kW per rack</td><td>~10–15 kW per rack</td></tr>
+        <tr><td>Typical PUE (same source)</td><td>~1.5–1.8</td><td>~1.4–1.6</td></tr>
+        <tr><td>Strengths</td><td>Easy retrofit on raised floors; contains a small volume</td><td>Captures heat more completely; comfortable room; more economiser hours</td></tr>
+        <tr><td>Watch out for</td><td>Hot room for people and non-contained gear; fire-suppression reach</td><td>Hot aisle is hot for technicians; needs a return plenum or chimneys</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small muted">Density and PUE ranges are the typical figures from the Legrand article (1 · SR11). CRAC with no containment: ~3–5 kW per rack, PUE ~1.8–2.2. Dense AI racks go well beyond air and need liquid (see 1 · T6).</p>
+</section>
+
+<section>
+  <h2>Make either one work</h2>
+  <div class="grid">
+    <div class="card"><h3>Blanking panels</h3><p class="small">Fill every empty U and the gaps between racks, or exhaust sneaks forward to the intakes.</p></div>
+    <div class="card"><h3>Seal the floor</h3><p class="small">Grommets on cable cut-outs, sealed tile joints and perimeter. Perforated tiles only in the cold aisle, placed by CFD.</p></div>
+    <div class="card"><h3>No solid doors</h3><p class="small">Solid glass or Plexiglas doors deflect air. Use perforated doors.</p></div>
+    <div class="card"><h3>Control on inlet temp</h3><p class="small">Measure server inlet (low, middle, high on each rack) and control cooling from it, not from return air. Hold about 18–27 °C.</p></div>
+    <div class="card"><h3>Clear underfloor &amp; rear</h3><p class="small">Remove abandoned cable. Don't let rear cable bundles choke exhaust.</p></div>
+    <div class="card"><h3>Raise the setpoint</h3><p class="small">With containment, supply air can move toward the top of the ASHRAE range, saving chiller energy.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"Hot aisle containment makes the room hot."</b>It's the reverse. HAC keeps the room cool. CAC makes the room the hot return.</li>
+    <li><b>Perforated tiles in the hot aisle.</b>That's bypass air. Tiles belong in the cold aisle only.</li>
+    <li><b>Controlling from return temperature.</b>With containment, return air is much hotter. Control from server inlet temperature.</li>
+    <li><b>Containment without blanking panels.</b>Open U-spaces let air short-circuit through the rack.</li>
+    <li><b>Layout vs containment.</b>Hot/cold aisle is the arrangement. Containment is the physical barrier added on top.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. With cold aisle containment, what temperature is the general room?</p>
+      <div class="opts"><button class="opt">Cold, at supply temperature</button><button class="opt" data-correct>Warm, since the room is the hot return space</button><button class="opt">Same as outdoors</button></div>
+      <p class="why">CAC encloses the supply aisle, so everything outside it carries exhaust back to the cooling units.</p></div>
+    <div class="q"><p>2. Which containment usually captures heat more completely and supports higher density?</p>
+      <div class="opts"><button class="opt">Cold aisle</button><button class="opt" data-correct>Hot aisle</button><button class="opt">They're identical</button></div>
+      <p class="why">HAC ducts exhaust straight back to the cooling units, so less mixing and higher return temperatures.</p></div>
+    <div class="q"><p>3. Hot exhaust curling over rack tops into server intakes is called…</p>
+      <div class="opts"><button class="opt">Bypass airflow</button><button class="opt" data-correct>Recirculation</button><button class="opt">Stratification</button></div>
+      <p class="why">Recirculation = exhaust back into intakes. Bypass = cold air returning without passing through equipment.</p></div>
+    <div class="q"><p>4. Where should perforated floor tiles go?</p>
+      <div class="opts"><button class="opt" data-correct>In the cold aisle, in front of rack intakes</button><button class="opt">In the hot aisle to cool exhaust</button><button class="opt">Evenly across the room</button></div>
+      <p class="why">Supply air should arrive exactly where servers draw it in.</p></div>
+    <div class="q"><p>5. What is the ASHRAE recommended range for server inlet air?</p>
+      <div class="opts"><button class="opt">10–15 °C</button><button class="opt" data-correct>About 18–27 °C</button><button class="opt">30–35 °C</button></div>
+      <p class="why">18–27 °C (64.4–80.6 °F) is the commonly cited ASHRAE recommended envelope for IT inlet air.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../1.SR1/cold-aisle-containment.html">Cold aisle containment<span>1 · SR1</span></a></li>
+    <li><a href="../1.SR11/crac-aisle-containment-explained.html">CRAC with aisle containment<span>1 · SR11: density &amp; PUE ranges</span></a></li>
+    <li><a href="../2.SR7/hot-aisle-cold-aisle-explained.html">Move to a hot/cold aisle layout<span>2 · SR7: ENERGY STAR</span></a></li>
+    <li><a href="../1.T1/datacenter-cooling-no-raised-floor.html">Cooling on a slab<span>1 · T1</span></a></li>
+    <li><a href="../2.SR2/elevated_return_air_explainer.html">Elevated return air temperature<span>2 · SR2</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Density and PUE ranges are typical published figures, not design values.</footer>
+</main>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

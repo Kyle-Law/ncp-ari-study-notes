@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDU power capacity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .calc { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); align-items: end; }
+  .results { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); margin-top: 1rem; }
+  .results div { background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; padding: .6rem .8rem; }
+  .results b { display: block; font-family: var(--display); font-size: 1.7rem; line-height: 1.1; }
+  .formula { font-family: var(--mono); font-size: .9rem; background: var(--panel-2); border-radius: 6px; padding: .5rem .7rem; margin-top: .8rem; overflow-x: auto; white-space: nowrap; }
+  .chain { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin: 1rem 0; }
+  .chain span { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: .45rem .7rem; font-size: .92rem; }
+  .chain i { color: var(--muted); font-style: normal; }
+  .chain .min { border-color: var(--bad); background: var(--bad-soft); }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">1 · T5</span><span class="chip">AI Infrastructure Basics</span><span class="chip weight">20% of exam</span></div>
+  <h1>Verifying power capacity by PDU type</h1>
+  <p class="lede">A rack PDU's capacity comes from its <b>input</b>: phase, voltage and amps. Intelligence (metered, monitored, switched) changes what you can see and control, not how much power you get. Then the smallest limit in the chain sets the real ceiling.</p>
+  <p class="objective"><b>Exam objective</b>Verify the power capacity by PDU type.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Single-phase</b>: kVA = V × A ÷ 1000. <b>Three-phase</b>: kVA = <b>√3</b> × V<sub>line-line</sub> × A ÷ 1000. Same amps, three-phase delivers about 3× a single-phase circuit at the line-to-neutral voltage.</li>
+    <li>Usable continuous capacity is typically <b>80%</b> of the breaker (NEC continuous-load rule in North America; many operators apply the same margin elsewhere).</li>
+    <li>kW ≈ kVA × power factor. Modern server PSUs run at about <b>0.95–1.0</b>, so kW ≈ kVA for planning.</li>
+    <li>The real limit is the <b>smallest</b> of: upstream breaker and receptacle, PDU input rating, internal <b>branch breakers</b>, and <b>outlet ratings</b> (C13 ≈ 10–15 A, C19 ≈ 16–20 A).</li>
+    <li>PDU <b>types</b> by feature: <b>basic</b> → <b>metered</b> (local display) → <b>monitored</b> (network, per-unit or per-outlet metering) → <b>switched</b> (remote outlet on/off). Use the metering to verify actual load against capacity.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Capacity calculator</h2>
+  <div class="card">
+    <div class="seg" id="preset" style="margin-top:0">
+      <button data-p="1|208|30">208 V 1φ 30 A</button>
+      <button data-p="3|208|30">208 V 3φ 30 A</button>
+      <button data-p="3|208|60" aria-pressed="true">208 V 3φ 60 A</button>
+      <button data-p="1|230|32">230 V 1φ 32 A</button>
+      <button data-p="3|400|32">400 V 3φ 32 A</button>
+      <button data-p="3|415|63">415 V 3φ 63 A</button>
+    </div>
+    <div class="calc">
+      <label class="field">Phase<select id="ph"><option value="1">Single-phase</option><option value="3">Three-phase</option></select></label>
+      <label class="field">Voltage (V)<input type="number" id="v" min="100" max="480"></label>
+      <label class="field">Breaker / input (A)<input type="number" id="a" min="1" max="200"></label>
+      <label class="field">Derating<select id="d"><option value="0.8">80% (continuous)</option><option value="1">100% rated breaker</option></select></label>
+      <label class="field">Power factor<input type="number" id="pf" min="0.5" max="1" step="0.01" value="0.95"></label>
+    </div>
+    <div class="results">
+      <div><span class="muted small">Nameplate</span><b id="r-kva"></b></div>
+      <div><span class="muted small">Usable (derated)</span><b id="r-use"></b></div>
+      <div><span class="muted small">Usable real power</span><b id="r-kw"></b></div>
+      <div><span class="muted small">Per phase (3φ)</span><b id="r-pp"></b></div>
+    </div>
+    <div class="formula" id="formula"></div>
+  </div>
+  <p class="small muted">For three-phase, enter the line-to-line voltage (208 in North America, 400/415 in IEC regions). The 80% derate follows the NEC continuous-load rule; check your local code. A breaker listed as 100% rated may carry full rating continuously.</p>
+</section>
+
+<section>
+  <h2>Common rack feeds at a glance</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Feed</th><th>Typical connector</th><th>Nameplate</th><th>Usable @ 80%</th></tr></thead>
+      <tbody id="feeds"></tbody>
+    </table>
+  </div>
+  <p class="small muted">Connector types are typical examples: NEMA locking plugs in North America, IEC 60309 pin-and-sleeve elsewhere (blue = 200–250 V, red = 380–480 V). Always read the PDU nameplate and the receptacle.</p>
+</section>
+
+<section>
+  <h2>PDU types: what changes and what doesn't</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Type</th><th>Distributes power</th><th>Shows load</th><th>Network / alerts</th><th>Remote outlet control</th></tr></thead>
+      <tbody>
+        <tr><td>Basic</td><td class="yes">Yes</td><td class="no">No</td><td class="no">No</td><td class="no">No</td></tr>
+        <tr><td>Metered</td><td class="yes">Yes</td><td>Local display (unit / phase)</td><td>Some models</td><td class="no">No</td></tr>
+        <tr><td>Monitored</td><td class="yes">Yes</td><td>Unit or per-outlet</td><td class="yes">SNMP, web, email, DCIM</td><td class="no">No</td></tr>
+        <tr><td>Switched</td><td class="yes">Yes</td><td>Unit or per-outlet</td><td class="yes">Yes</td><td class="yes">On / off / reboot, outlet caps</td></tr>
+        <tr><td>ATS PDU</td><td>Yes, from A or B</td><td>Usually</td><td>Usually</td><td>Some</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout tip"><b>Capacity comes from the input, not the features</b><p>A basic and a switched PDU with the same 208 V 3φ 60 A input have the same ~17.3 kW usable capacity. The intelligent one lets you <em>prove</em> you're within it, with per-phase readings and threshold alarms before a breaker trips.</p></div>
+</section>
+
+<section>
+  <h2>Find the weakest link</h2>
+  <p>A PDU only delivers what its narrowest point allows. Example: a 208 V 3φ 60 A PDU with six 20 A branch breakers feeding C13 and C19 outlets.</p>
+  <div class="chain" aria-label="Capacity chain example">
+    <span>Upstream breaker 60 A 3φ</span><i>→</i>
+    <span>PDU input 60 A (≈ 17.3 kW usable)</span><i>→</i>
+    <span class="min">Branch breaker 20 A (≈ 3.3 kW usable at 208 V)</span><i>→</i>
+    <span>C19 outlet 16–20 A</span><i>→</i>
+    <span>Device PSU</span>
+  </div>
+  <p class="small">The whole PDU can deliver ~17.3 kW, but no single branch can supply more than ~3.3 kW continuously. A GPU server with several PSUs has to be spread across branches. Check each branch, each phase, and the total.</p>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>Forgetting √3.</b>208 V × 60 A = 12.5 kVA is wrong for three-phase. It's √3 × 208 × 60 ≈ 21.6 kVA.</li>
+    <li><b>Planning to 100%.</b>Continuous load on a standard breaker: 80%. 21.6 kVA → ~17.3 kVA usable.</li>
+    <li><b>"Switched PDUs have more capacity."</b>Features don't change capacity. The input rating does.</li>
+    <li><b>Ignoring branch breakers.</b>A rack can be under the PDU total but over a branch.</li>
+    <li><b>Using the phase-to-neutral voltage in the 3φ formula.</b>Use line-to-line (208 / 400 / 415 V) with √3, or phase-to-neutral × 3 × A (same result).</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. Usable continuous capacity of a 208 V three-phase 30 A PDU (80% rule)?</p>
+      <div class="opts"><button class="opt">5.0 kVA</button><button class="opt" data-correct>≈ 8.6 kVA</button><button class="opt">10.8 kVA</button></div>
+      <p class="why">√3 × 208 × 30 ≈ 10.8 kVA nameplate; × 0.8 ≈ 8.6 kVA.</p></div>
+    <div class="q"><p>2. Which feature distinguishes a switched PDU from a monitored one?</p>
+      <div class="opts"><button class="opt">Higher capacity</button><button class="opt" data-correct>Remote per-outlet on/off/reboot</button><button class="opt">Per-outlet metering</button></div>
+      <p class="why">Both can meter per outlet. Switched adds remote outlet control.</p></div>
+    <div class="q"><p>3. A 230 V single-phase 32 A PDU: nameplate capacity?</p>
+      <div class="opts"><button class="opt" data-correct>≈ 7.4 kVA</button><button class="opt">≈ 12.7 kVA</button><button class="opt">≈ 22 kVA</button></div>
+      <p class="why">230 × 32 = 7,360 VA. Single-phase has no √3.</p></div>
+    <div class="q"><p>4. A rack totals 12 kW on a 17.3 kW-usable PDU, but one branch trips. Why?</p>
+      <div class="opts"><button class="opt">The PDU is overloaded</button><button class="opt" data-correct>That branch's load exceeds its own branch breaker</button><button class="opt">Power factor is too low</button></div>
+      <p class="why">Each branch breaker is its own limit. Spread load across branches and phases.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../1.SR3/intelligent-pdu-explained.html">Intelligent PDUs<span>1 · SR3: monitored vs switched</span></a></li>
+    <li><a href="../1.SR4/3-phase-power-explained.html">3-phase power<span>1 · SR4: √3, delta, wye</span></a></li>
+    <li><a href="../2.SR4/breaker-80-vs-100-explained.html">80% vs 100% rated breakers<span>2 · SR4</span></a></li>
+    <li><a href="../1.T1/datacenter-formulas-guide.html">Data center formulas<span>1 · T1</span></a></li>
+    <li><a href="../1.T3/balance-rpdus.html">Balancing rPDUs<span>1 · T3</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Connector and outlet ratings are typical; always read the nameplate and follow local electrical code.</footer>
+</main>
+<script>
+(function () {
+  const ph = document.getElementById("ph"), v = document.getElementById("v"), a = document.getElementById("a"), d = document.getElementById("d"), pf = document.getElementById("pf");
+  const kva = (p, V, A) => (p === 3 ? Math.sqrt(3) : 1) * V * A / 1000;
+  function calc() {
+    const p = +ph.value, V = +v.value || 0, A = +a.value || 0, D = +d.value, PF = Math.min(1, Math.max(0.5, +pf.value || 1));
+    const n = kva(p, V, A), u = n * D;
+    document.getElementById("r-kva").textContent = n.toFixed(1) + " kVA";
+    document.getElementById("r-use").textContent = u.toFixed(1) + " kVA";
+    document.getElementById("r-kw").textContent = (u * PF).toFixed(1) + " kW";
+    document.getElementById("r-pp").textContent = p === 3 ? (u / 3).toFixed(1) + " kVA" : "n/a";
+    document.getElementById("formula").textContent = p === 3
+      ? `√3 × ${V} V × ${A} A = ${n.toFixed(2)} kVA  →  × ${D} = ${u.toFixed(2)} kVA  →  × PF ${PF} = ${(u * PF).toFixed(2)} kW`
+      : `${V} V × ${A} A = ${n.toFixed(2)} kVA  →  × ${D} = ${u.toFixed(2)} kVA  →  × PF ${PF} = ${(u * PF).toFixed(2)} kW`;
+  }
+  [ph, v, a, d, pf].forEach((e) => e.addEventListener("input", calc));
+  const pb = document.querySelectorAll("#preset button");
+  function preset(b) {
+    pb.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    const [p, V, A] = b.dataset.p.split("|"); ph.value = p; v.value = V; a.value = A; calc();
+  }
+  pb.forEach((b) => { b.type = "button"; b.addEventListener("click", () => preset(b)); });
+  preset(document.querySelector('#preset button[aria-pressed="true"]'));
+
+  const feeds = [
+    ["208 V 1φ 30 A", "NEMA L6-30", 1, 208, 30], ["208 V 3φ 30 A", "NEMA L15-30 / L21-30", 3, 208, 30],
+    ["208 V 3φ 60 A", "IEC 60309 60 A, 3P+E (common in North America)", 3, 208, 60], ["230 V 1φ 16 A", "IEC 60309 blue 16 A", 1, 230, 16],
+    ["230 V 1φ 32 A", "IEC 60309 blue 32 A", 1, 230, 32], ["400 V 3φ 32 A", "IEC 60309 red 32 A (5-pin)", 3, 400, 32],
+    ["415 V 3φ 63 A", "IEC 60309 red 63 A (5-pin)", 3, 415, 63]
+  ];
+  document.getElementById("feeds").innerHTML = feeds.map(([n, c, p, V, A]) => {
+    const k = kva(p, V, A); return `<tr><td>${n}</td><td>${c}</td><td>${k.toFixed(1)} kVA</td><td>${(k * 0.8).toFixed(1)} kVA</td></tr>`;
+  }).join("");
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

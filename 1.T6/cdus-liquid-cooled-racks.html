@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDUs for liquid-cooled racks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  :root { --cold: #3a7bd5; --warm: #e05a47; --fws: #8a5ad6; }
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12px; fill: var(--muted) !important; } .t { font-size: 13px; }
+  .pipe { stroke-width: 7; fill: none; stroke-linecap: round; }
+  .cold { stroke: var(--cold); } .warm { stroke: var(--warm); }
+  .fws-c { stroke: #6f8fd8; } .fws-w { stroke: #c27a9c; }
+  .box { fill: var(--panel); stroke: var(--ink); stroke-width: 1.5; }
+  .hx { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .flow { stroke-dasharray: 10 14; animation: fl 1.2s linear infinite; }
+  @keyframes fl { to { stroke-dashoffset: -24; } }
+  .calc { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); align-items: end; }
+  .results { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); margin-top: 1rem; }
+  .results div { background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; padding: .6rem .8rem; }
+  .results b { display: block; font-family: var(--display); font-size: 1.7rem; line-height: 1.1; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">1 · T6</span><span class="chip">AI Infrastructure Basics</span><span class="chip weight">20% of exam</span></div>
+  <h1>CDUs for liquid-cooled racks</h1>
+  <p class="lede">A coolant distribution unit sits between the building's water and the chips. It keeps the two loops apart and delivers clean coolant at the right temperature, pressure and flow, so a 120 kW+ rack can shed heat that air alone can't carry.</p>
+  <p class="objective"><b>Exam objective</b>Describe CDUs for liquid-cooled racks.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li>Two loops that <b>never mix</b>: the <b>facility water system (FWS)</b> (primary) and the <b>technology cooling system (TCS)</b> (secondary, to the cold plates). A <b>heat exchanger</b> inside the CDU moves heat from TCS to FWS.</li>
+    <li>The CDU controls <b>temperature, pressure and flow</b>: pumps (typically <b>N+1</b>), a control valve on the facility side, filters, an expansion tank, sensors and <b>leak detection</b>.</li>
+    <li><b>Liquid-to-liquid (L2L)</b> rejects heat to facility water (row/large CDUs, hundreds of kW to MW). <b>Liquid-to-air (L2A)</b> rejects to room air via fans (sidecars for a few racks, no facility water needed).</li>
+    <li>Form factors: <b>in-rack</b> CDU (one rack), <b>sidecar</b> (beside 1–2 racks), <b>in-row / row</b> CDU (a whole row via manifolds).</li>
+    <li>Liquid racks still dump some heat to <b>air</b> (e.g. ~17 kW per GB200 NVL72 rack), and <b>pumps must be on UPS</b>: lose flow and GPUs overheat in seconds.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>How heat moves through a CDU</h2>
+  <figure>
+    <div class="wide"><svg viewBox="0 0 760 330" role="img" aria-labelledby="cduT">
+      <title id="cduT">Facility water loop and technology cooling loop meeting at the CDU's heat exchanger; pumps, filter and valve inside the CDU; rack manifolds and cold plates on the IT side</title>
+      <text x="20" y="22" class="tb">Facility side (FWS, primary)</text>
+      <text x="520" y="22" class="tb">IT side (TCS, secondary)</text>
+      <rect x="20" y="40" width="130" height="80" rx="8" class="box"/><text x="85" y="76" text-anchor="middle" class="t" style="font-weight:600">Cooling tower /</text><text x="85" y="94" text-anchor="middle" class="t" style="font-weight:600">dry cooler / chiller</text>
+      <path d="M150 70 H270" class="pipe fws-c"/><path d="M150 70 H270" class="pipe flow" style="stroke:#fff;stroke-width:2;opacity:.6"/>
+      <path d="M270 110 H150" class="pipe fws-w"/>
+      <text x="210" y="60" text-anchor="middle" class="tm">facility supply</text><text x="210" y="132" text-anchor="middle" class="tm">facility return</text>
+      <rect x="250" y="40" width="250" height="260" rx="12" class="box" style="stroke-width:2.5"/>
+      <text x="375" y="62" text-anchor="middle" class="tb">CDU</text>
+      <rect x="290" y="80" width="60" height="110" rx="6" class="hx"/><text x="320" y="140" text-anchor="middle" class="t" style="font-weight:600">HX</text>
+      <circle cx="270" cy="70" r="9" style="fill:var(--warn-soft);stroke:var(--warn)"/><text x="270" y="50" text-anchor="middle" class="tm" style="font-size:10px">valve</text>
+      <g transform="translate(395,215)"><circle r="16" class="box"/><path d="M-7 -8 L9 0 L-7 8 Z" style="fill:var(--ink)"/><text y="34" text-anchor="middle" class="tm">pump</text></g>
+      <g transform="translate(445,215)"><circle r="16" class="box"/><path d="M-7 -8 L9 0 L-7 8 Z" style="fill:var(--ink)"/><text y="34" text-anchor="middle" class="tm">pump</text></g>
+      <g transform="translate(470,170)"><circle r="12" class="box" style="stroke-dasharray:3 3"/><text x="0" y="-18" text-anchor="middle" class="tm" style="font-size:10px">standby</text></g>
+      <rect x="380" y="90" width="40" height="30" rx="4" class="box"/><text x="400" y="110" text-anchor="middle" class="tm" style="font-size:10px">filter</text>
+      <rect x="430" y="90" width="44" height="30" rx="4" class="box"/><text x="452" y="110" text-anchor="middle" class="tm" style="font-size:10px">T · P</text>
+      <path d="M350 100 H500 H560" class="pipe cold"/><path d="M350 100 H560" class="pipe flow" style="stroke:#fff;stroke-width:2;opacity:.6"/>
+      <path d="M560 170 H500 H350" class="pipe warm"/>
+      <rect x="560" y="60" width="180" height="200" rx="8" class="box"/>
+      <text x="650" y="82" text-anchor="middle" class="t" style="font-weight:600">Rack + manifolds</text>
+      <g class="t">
+        <rect x="580" y="95" width="140" height="22" rx="4" style="fill:var(--panel-2)"/><text x="650" y="110" text-anchor="middle" class="tm">cold plate · GPU tray</text>
+        <rect x="580" y="125" width="140" height="22" rx="4" style="fill:var(--panel-2)"/><text x="650" y="140" text-anchor="middle" class="tm">cold plate · GPU tray</text>
+        <rect x="580" y="155" width="140" height="22" rx="4" style="fill:var(--panel-2)"/><text x="650" y="170" text-anchor="middle" class="tm">cold plate · switch tray</text>
+      </g>
+      <text x="650" y="205" text-anchor="middle" class="tm">quick disconnects at each tray</text>
+      <text x="650" y="225" text-anchor="middle" class="tm">leak sensors in the rack</text>
+      <text x="530" y="92" text-anchor="middle" class="tm">to chips</text><text x="530" y="190" text-anchor="middle" class="tm">from chips</text>
+      <text x="380" y="320" text-anchor="middle" class="tm">Heat path: chips → TCS coolant → heat exchanger → facility water → outdoors. The two loops never share fluid.</text>
+    </svg></div>
+  </figure>
+  <div class="grid">
+    <div class="card"><h3>Heat exchanger</h3><p class="small">Plate HX that transfers heat between loops without mixing them. The <b>approach temperature</b> is how close the TCS supply gets to the facility water temperature (a few °C on good units).</p></div>
+    <div class="card"><h3>Pumps</h3><p class="small">Drive the TCS loop. Typically <b>N+1</b> (e.g. 2 duty + 1 standby) with variable speed to hold pressure/flow as load changes.</p></div>
+    <div class="card"><h3>Control valve</h3><p class="small">Modulates facility water through the HX to hold the TCS supply temperature setpoint.</p></div>
+    <div class="card"><h3>Filtration &amp; expansion</h3><p class="small">Filters protect the fine channels in cold plates. An expansion tank absorbs volume changes and keeps loop pressure stable.</p></div>
+    <div class="card"><h3>Sensors &amp; controls</h3><p class="small">Temperature, pressure, flow and leak detection, with alarms and BMS/DCIM integration. A rising pressure drop often means clogging filters or cold plates.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Which CDU fits?</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Type</th><th>Rejects heat to</th><th>Scale</th><th>Fits when</th></tr></thead>
+      <tbody>
+        <tr><td>In-rack CDU</td><td>Facility water (L2L) or air</td><td>One rack</td><td>A single dense cabinet; ships pre-integrated; a leak stays in one rack</td></tr>
+        <tr><td>Sidecar (L2A)</td><td>Room air via fans</td><td>1–2 racks</td><td>No facility water: retrofitting a few AI racks into an air-cooled hall</td></tr>
+        <tr><td>In-row / row CDU (L2L)</td><td>Facility water</td><td>Whole row via manifolds; 800 kW+ class units</td><td>New AI/HPC halls with facility water piped to the white space</td></tr>
+        <tr><td>Facility-scale CDU</td><td>Facility water</td><td>MW class (e.g. up to ~2 MW)</td><td>Hyperscale / OCP-style rows of GB200/GB300-class racks</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>How much flow does a rack need?</h2>
+  <p>Heat carried = flow × specific heat × temperature rise. For water-like coolant, roughly <b>1.4 L/min per kW at a 10 °C rise</b>. Try it:</p>
+  <div class="card">
+    <div class="calc">
+      <label class="field">Heat into liquid (kW)<input type="number" id="q" value="115" min="1" max="2000"></label>
+      <label class="field">Temperature rise ΔT (°C)<input type="number" id="dt" value="10" min="2" max="30"></label>
+      <label class="field">Coolant<select id="cool"><option value="4.18|1.0">Water</option><option value="3.9|1.02" selected>PG25 (25% propylene glycol)</option></select></label>
+    </div>
+    <div class="results">
+      <div><span class="muted small">Flow</span><b id="lpm"></b></div>
+      <div><span class="muted small">Flow</span><b id="gpm"></b></div>
+      <div><span class="muted small">Flow</span><b id="lps"></b></div>
+    </div>
+    <p class="small" id="flow-note" style="margin:.8rem 0 0"></p>
+  </div>
+  <p class="small muted">Simplified: flow = Q ÷ (ρ × c<sub>p</sub> × ΔT). Real systems add margin for pressure drop, uneven distribution and one pump or CDU offline (N+1). Halving ΔT doubles the flow.</p>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"The CDU cools the water."</b>A CDU is a heat <em>exchanger</em> and pump station. The heat leaves through the facility plant (or room air for L2A).</li>
+    <li><b>Facility water to the cold plates.</b>Never directly. Building water is variable and dirty; the TCS loop is clean and controlled.</li>
+    <li><b>Forgetting residual air heat.</b>Liquid captures most but not all heat. Room air cooling must still handle the rest.</li>
+    <li><b>Pumps not on UPS.</b>If the CDU pumps stop, chips overheat in seconds, faster than servers can shut down gracefully.</li>
+    <li><b>Ignoring the inlet limit.</b>Facility supply + approach must stay below the vendor's coolant inlet limit (e.g. up to ~45 °C for GB200 NVL72) on the hottest day.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. What is the CDU's heat exchanger for?</p>
+      <div class="opts"><button class="opt">To chill the coolant below room temperature</button><button class="opt" data-correct>To move heat from the TCS loop to the facility water without mixing the fluids</button><button class="opt">To filter the facility water</button></div>
+      <p class="why">The HX keeps the clean IT loop isolated from building water while transferring heat between them.</p></div>
+    <div class="q"><p>2. An air-cooled hall with no facility water needs two liquid-cooled racks. Best fit?</p>
+      <div class="opts"><button class="opt">Row L2L CDU</button><button class="opt" data-correct>Liquid-to-air sidecar CDU</button><button class="opt">Immersion tank</button></div>
+      <p class="why">L2A sidecars reject heat to room air for one or two racks, so no facility water is needed.</p></div>
+    <div class="q"><p>3. The three variables a CDU controls?</p>
+      <div class="opts"><button class="opt" data-correct>Temperature, pressure, flow</button><button class="opt">Voltage, current, frequency</button><button class="opt">Humidity, dew point, airflow</button></div>
+      <p class="why">It delivers coolant at the desired temperature, pressure and flow to the cold plates.</p></div>
+    <div class="q"><p>4. Pressure drop across a rack has been slowly rising. Likely cause?</p>
+      <div class="opts"><button class="opt">Higher GPU utilisation</button><button class="opt" data-correct>Filters or cold-plate channels clogging</button><button class="opt">Facility water too cold</button></div>
+      <p class="why">A gradual pressure rise usually indicates restriction: dirty filters or fouled cold plates.</p></div>
+    <div class="q"><p>5. Typical pump redundancy in a CDU?</p>
+      <div class="opts"><button class="opt">N</button><button class="opt" data-correct>N+1 (e.g. 2 duty + 1 standby)</button><button class="opt">None; pumps don't fail</button></div>
+      <p class="why">A spare pump keeps flow if one fails. Sites also plan at least one spare CDU (N+1).</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../1.SR6/nvent-cdu-explained.html">nVent CDU explained<span>1 · SR6: loops, L2L vs L2A, simulator</span></a></li>
+    <li><a href="../1.T1/datacenter-direct-to-chip-cooling.html">Direct-to-chip cooling<span>1 · T1</span></a></li>
+    <li><a href="../1.T1/datacenter-gb200-nvl72-guide.html">GB200 NVL72 power &amp; cooling<span>1 · T1: coolant temps, residual air</span></a></li>
+    <li><a href="../1.O1/liquid-cooling-explainer.html">Liquid cooling architectures<span>1 · O1</span></a></li>
+    <li><a href="../3.SR7/vertiv-rack-cooling-explained.html">Vertiv rack cooling<span>3 · SR7</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Capacities and temperatures are vendor examples; check the specific CDU and IT platform specifications.</footer>
+</main>
+<script>
+(function () {
+  const q = document.getElementById("q"), dt = document.getElementById("dt"), cool = document.getElementById("cool");
+  function calc() {
+    const Q = +q.value || 0, T = Math.max(1, +dt.value || 1), [cp, rho] = cool.value.split("|").map(Number);
+    const lps = Q / (rho * cp * T); // kW / (kg/L * kJ/kgK * K) = L/s
+    document.getElementById("lps").textContent = lps.toFixed(2) + " L/s";
+    document.getElementById("lpm").textContent = (lps * 60).toFixed(0) + " L/min";
+    document.getElementById("gpm").textContent = (lps * 60 / 3.785).toFixed(0) + " US gpm";
+    document.getElementById("flow-note").innerHTML = `At ${T} °C rise, ${Q} kW needs about <b>${(lps * 60).toFixed(0)} L/min</b>. With ${T / 2} °C rise you'd need about ${(lps * 120).toFixed(0)} L/min.`;
+  }
+  [q, dt, cool].forEach((e) => e.addEventListener("input", calc)); calc();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

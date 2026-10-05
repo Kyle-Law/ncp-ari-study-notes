@@ -59,6 +59,48 @@
    "title": "AC vs DC powered racks"
   },
   {
+   "path": "1.T3/balance-rpdus.html",
+   "section": "1",
+   "kind": "T",
+   "code": "T3",
+   "title": "Balancing rack PDUs"
+  },
+  {
+   "path": "1.T4/rack-power-redundancy.html",
+   "section": "1",
+   "kind": "T",
+   "code": "T4",
+   "title": "Rack power redundancy"
+  },
+  {
+   "path": "1.T5/pdu-power-capacity.html",
+   "section": "1",
+   "kind": "T",
+   "code": "T5",
+   "title": "PDU power capacity"
+  },
+  {
+   "path": "1.T6/cdus-liquid-cooled-racks.html",
+   "section": "1",
+   "kind": "T",
+   "code": "T6",
+   "title": "CDUs for liquid-cooled racks"
+  },
+  {
+   "path": "1.T7/verify-grounding.html",
+   "section": "1",
+   "kind": "T",
+   "code": "T7",
+   "title": "Verifying rack grounding"
+  },
+  {
+   "path": "1.T8/hot-vs-cold-aisle.html",
+   "section": "1",
+   "kind": "T",
+   "code": "T8",
+   "title": "Hot vs. cold aisle"
+  },
+  {
    "path": "1.SR1/cold-aisle-containment-test.html",
    "section": "1",
    "kind": "SR",

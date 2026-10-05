@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rack power redundancy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  :root { --fa: #3a7bd5; --fb: #d8a300; }
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12px; fill: var(--muted) !important; } .t { font-size: 13px; }
+  .feed { stroke-width: 4; fill: none; }
+  .fa { stroke: var(--fa); } .fb { stroke: var(--fb); }
+  .dead { stroke: var(--rule) !important; stroke-dasharray: 5 5; }
+  .pdu { stroke-width: 2; }
+  .devbox { fill: var(--panel); stroke: var(--ink); stroke-width: 1.2; }
+  .devbox.down { fill: var(--bad-soft); stroke: var(--bad); }
+  .devbox.warn { fill: var(--warn-soft); stroke: var(--warn); }
+  .cord { stroke-width: 2; fill: none; }
+  .terms { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: .8rem; }
+  .term { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: .8rem 1rem; }
+  .term b { font-family: var(--display); font-size: 1.5rem; display: block; color: var(--accent); }
+  .term p { margin: 0; font-size: .92rem; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">1 · T4</span><span class="chip">AI Infrastructure Basics</span><span class="chip weight">20% of exam</span></div>
+  <h1>Verifying power redundancy per rack</h1>
+  <p class="lede">A rack is redundant only if losing any one power path keeps every device running, and the surviving path can carry the whole load. Both halves of that have to be checked.</p>
+  <p class="objective"><b>Exam objective</b>Verify power redundancy per rack.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li>Typical design: <b>2N</b> at the rack: two PDUs (<b>A</b> and <b>B</b>) fed from <b>independent</b> upstream paths (different panels, UPSs and ideally utility sources).</li>
+    <li>Every dual-corded device: <b>PSU 1 → PDU A, PSU 2 → PDU B</b>. Both cords on the same PDU is the classic hidden single point of failure.</li>
+    <li><b>Capacity</b>: either side alone must carry the full rack. So total rack load ≤ <b>80%</b> of one feed's capacity, which means each side runs at under ~40% in normal operation.</li>
+    <li><b>Device-level redundancy</b> matters too: DGX H100 has six 3.3 kW PSUs as <b>4+2</b> (≈10.2 kW max). GB200 NVL72 has 8 × 33 kW power shelves as <b>N+N</b> (two halves, each able to run the rack).</li>
+    <li>Single-corded gear needs an <b>ATS</b> (automatic transfer switch) to get A/B protection.</li>
+    <li>Verify by <b>tracing</b> (labels, circuit IDs), <b>monitoring</b> (PSU status in the BMC, per-PDU load), and a controlled <b>feed-pull test</b> in a maintenance window.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>The vocabulary</h2>
+  <div class="terms">
+    <div class="term"><b>N</b><p>Exactly the capacity you need. No spare: any failure drops load.</p></div>
+    <div class="term"><b>N+1</b><p>One spare module or unit beyond need (pumps, CRACs, UPS modules). Survives one component failure, but shares one path.</p></div>
+    <div class="term"><b>2N</b><p>Two complete, independent systems. Either one can carry the full load alone. Survives losing an entire path.</p></div>
+    <div class="term"><b>N+N</b><p>Used for device PSUs/power shelves: N supplies on feed A, N on feed B. Lose a whole feed and N remain.</p></div>
+    <div class="term"><b>4+2</b><p>DGX H100: 4 PSUs carry the load, 2 are spare. Split across feeds so losing one feed still leaves 4 or more.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Try it: pull a feed</h2>
+  <p>Some devices in this rack are wired correctly and some aren't. Fail one feed at a time and see what goes down.</p>
+  <div class="seg" id="feed-seg"><button data-f="none" aria-pressed="true">Both feeds up</button><button data-f="A">Feed A fails</button><button data-f="B">Feed B fails</button></div>
+  <label class="field" style="max-width:360px">Feed capacity (each side): <b id="cap-v"></b><input type="range" id="cap" min="10" max="60" step="1" value="40"></label>
+  <figure>
+    <div class="wide"><svg id="rack" viewBox="0 0 720 420" role="img" aria-labelledby="rkT"><title id="rkT">Rack with PDU A and PDU B and five devices, showing which cords go to which PDU and which devices stay powered when a feed fails</title></svg></div>
+  </figure>
+  <p id="sim-out" aria-live="polite"></p>
+</section>
+
+<section>
+  <h2>How to verify a rack</h2>
+  <ol class="steps">
+    <li><b>Trace the paths</b>PDU A and PDU B labels show their upstream panel/circuit IDs. Confirm they come from <b>different</b> panels, breakers and UPSs, not two circuits off the same panel.</li>
+    <li><b>Check every cord</b>Each dual-corded device has one cord on A and one on B. Colour-coded cords (e.g. one colour per feed) make this visible at a glance.</li>
+    <li><b>Check device PSU redundancy</b>All PSUs present and healthy in the BMC/IPMI or tools like <code>nvsm show health</code> on DGX. Know each platform's scheme (4+2, N+N) and how PSUs map to feeds.</li>
+    <li><b>Check failover capacity</b>Sum the rack's real peak load. It must be ≤ 80% of <b>one</b> feed's rating (and per phase, see 1 · T3). On N+N systems, enable power capping if the guide calls for it.</li>
+    <li><b>Handle single-corded gear</b>Put it behind an ATS PDU fed from A and B, or accept and document the risk.</li>
+    <li><b>Test (planned)</b>In a maintenance window, switch off feed A at its breaker and confirm nothing drops and no alarms beyond "redundancy lost". Restore, then repeat for B.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>Two PDUs on the same upstream circuit.</b>That looks like A/B but it's one path. Verify upstream independence.</li>
+    <li><b>Both cords in PDU A.</b>The device survives a PSU failure but not a feed failure.</li>
+    <li><b>Each side at 60%.</b>Fine day to day, but after failover the survivor sits at 120% and trips. In 2N each side must stay under half of the 80% limit.</li>
+    <li><b>N+1 ≠ 2N.</b>N+1 covers a failed module, not a lost path.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. A rack's A and B PDUs each show 9 kW on 17.3 kW-rated feeds. Is it safe to lose a feed?</p>
+      <div class="opts"><button class="opt">Yes, each side is only at 52%</button><button class="opt" data-correct>No: the survivor would carry 18 kW, above both 80% (13.8 kW) and 100%</button><button class="opt">Yes, if the load is balanced across phases</button></div>
+      <p class="why">After failover one feed carries the sum, 18 kW, which exceeds the feed. Total rack load must stay ≤ 80% of one feed.</p></div>
+    <div class="q"><p>2. What does "2N" mean?</p>
+      <div class="opts"><button class="opt">Two spare modules</button><button class="opt" data-correct>Two complete independent systems, each able to carry the full load</button><button class="opt">Twice the needed number of PSUs on one feed</button></div>
+      <p class="why">2N duplicates the entire path, which is why it survives losing a whole feed.</p></div>
+    <div class="q"><p>3. How is a DGX H100's power supply redundancy described?</p>
+      <div class="opts"><button class="opt">2+2</button><button class="opt" data-correct>4+2 (six 3.3 kW PSUs; four carry the load)</button><button class="opt">N+1 with five PSUs</button></div>
+      <p class="why">Six 3.3 kW supplies, up to ~10.2 kW system draw. Four carry the full load and two are spare.</p></div>
+    <div class="q"><p>4. A single-corded switch must survive loss of either feed. What do you use?</p>
+      <div class="opts"><button class="opt">Plug it into PDU A</button><button class="opt">A Y-splitter cord across A and B</button><button class="opt" data-correct>An automatic transfer switch (ATS) fed from A and B</button></div>
+      <p class="why">An ATS switches the single cord to the surviving source. Never bridge two feeds with a splitter.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../1.T1/datacenter-power-cooling-guide.html">Power in, heat out<span>1 · T1: 2N, N+1, 80% rule</span></a></li>
+    <li><a href="../1.T1/datacenter-gb200-nvl72-guide.html">GB200 NVL72 power &amp; cooling<span>1 · T1: N+N power shelves</span></a></li>
+    <li><a href="../1.T1/datacenter-formulas-guide.html">Data center formulas<span>1 · T1: capacity with a failure</span></a></li>
+    <li><a href="../3.SR2/dgx-h100-h200-guide-explained.html">DGX H100/H200 user guide<span>3 · SR2: 4+2 PSUs, power capping</span></a></li>
+    <li><a href="../1.SR3/intelligent-pdu-explained.html">Intelligent PDUs<span>1 · SR3: A/B pattern, metering</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Device PSU schemes come from NVIDIA documentation as summarised in the linked notes; check your platform's guide.</footer>
+</main>
+<script>
+(function () {
+  const devs = [
+    { n: "GPU server 1", kw: 10.2, cords: ["A", "B"] },
+    { n: "GPU server 2", kw: 10.2, cords: ["A", "B"] },
+    { n: "Storage node", kw: 1.6, cords: ["A", "A"] },
+    { n: "Leaf switch", kw: 1.4, cords: ["A", "B"] },
+    { n: "Mgmt switch", kw: 0.3, cords: ["B"] }
+  ];
+  const svg = document.getElementById("rack"), title = svg.querySelector("title").outerHTML, out = document.getElementById("sim-out");
+  const cap = document.getElementById("cap"), capv = document.getElementById("cap-v");
+  let fail = "none";
+  function draw() {
+    const C = +cap.value; capv.textContent = C + " kW";
+    const up = (f) => f !== fail;
+    let s = title;
+    // feeds
+    s += `<text x="80" y="22" text-anchor="middle" class="tb">Feed A · UPS A</text><text x="640" y="22" text-anchor="middle" class="tb">Feed B · UPS B</text>`;
+    s += `<path d="M80 30 V60" class="feed fa ${up("A") ? "" : "dead"}"/><path d="M640 30 V60" class="feed fb ${up("B") ? "" : "dead"}"/>`;
+    s += `<rect x="55" y="60" width="50" height="340" rx="6" class="pdu" style="fill:var(--panel);stroke:${up("A") ? "var(--fa)" : "var(--rule)"}"/><text x="80" y="415" text-anchor="middle" class="t">PDU A</text>`;
+    s += `<rect x="615" y="60" width="50" height="340" rx="6" class="pdu" style="fill:var(--panel);stroke:${up("B") ? "var(--fb)" : "var(--rule)"}"/><text x="640" y="415" text-anchor="middle" class="t">PDU B</text>`;
+    let loadA = 0, loadB = 0;
+    const res = [];
+    devs.forEach((d, i) => {
+      const y = 80 + i * 64, live = d.cords.filter(up);
+      const alive = live.length > 0;
+      // load sharing: split across live cords on distinct feeds
+      const feeds = [...new Set(live)];
+      feeds.forEach((f) => { if (f === "A") loadA += d.kw / feeds.length; else loadB += d.kw / feeds.length; });
+      const lone = new Set(d.cords).size < 2;
+      const cls = !alive ? "down" : lone ? "warn" : "";
+      s += `<rect x="200" y="${y}" width="320" height="44" rx="6" class="devbox ${cls}"/>`;
+      s += `<text x="216" y="${y + 20}" class="t" style="font-weight:600">${d.n}</text><text x="216" y="${y + 36}" class="tm">${d.kw} kW · cords: ${d.cords.join(" + ")}</text>`;
+      s += `<text x="505" y="${y + 27}" text-anchor="end" class="t" style="font-weight:700;fill:${alive ? "var(--good)" : "var(--bad)"}">${alive ? "ON" : "DOWN"}</text>`;
+      d.cords.forEach((f, k) => {
+        const yy = y + 14 + k * 16, x0 = f === "A" ? 105 : 615, x1 = f === "A" ? 200 : 520;
+        s += `<path d="M${x0} ${yy} H${x1}" class="cord" style="stroke:${up(f) ? (f === "A" ? "var(--fa)" : "var(--fb)") : "var(--rule)"};${up(f) ? "" : "stroke-dasharray:4 4"}"/>`;
+      });
+      res.push({ d, alive, lone });
+    });
+    svg.innerHTML = s;
+    const total = devs.reduce((a, d) => a + d.kw, 0);
+    const msgs = [];
+    const down = res.filter((r) => !r.alive).map((r) => r.d.n);
+    if (down.length) msgs.push(`<span class="fail">Down: ${down.join(", ")}.</span>`);
+    const lone = res.filter((r) => r.lone).map((r) => r.d.n);
+    if (fail === "none" && lone.length) msgs.push(`<span class="caution">Single points of failure: ${lone.join(", ")}.</span> Fail a feed to see them drop.`);
+    const surv = fail === "A" ? loadB : fail === "B" ? loadA : Math.max(loadA, loadB);
+    if (fail !== "none") {
+      msgs.push(surv > C ? `<span class="fail">Surviving feed overloaded: ${surv.toFixed(1)} kW on a ${C} kW feed. It trips and everything goes dark.</span>`
+        : surv > C * 0.8 ? `<span class="caution">Surviving feed at ${(surv / C * 100).toFixed(0)}%, over the 80% continuous limit.</span>`
+        : `<span class="ok">Surviving feed carries ${surv.toFixed(1)} kW (${(surv / C * 100).toFixed(0)}% of ${C} kW).</span>`);
+    } else {
+      msgs.push(`Total rack load ${total.toFixed(1)} kW. A failover-safe rack needs ≤ 80% of one feed: ${(C * 0.8).toFixed(1)} kW. ${total <= C * 0.8 ? '<span class="ok">Capacity OK.</span>' : '<span class="fail">Not enough. Losing a feed will overload the other.</span>'}`);
+    }
+    out.innerHTML = msgs.join(" ");
+  }
+  const fb = document.querySelectorAll("#feed-seg button");
+  fb.forEach((b) => { b.type = "button"; b.addEventListener("click", () => { fb.forEach((x) => x.setAttribute("aria-pressed", String(x === b))); fail = b.dataset.f; draw(); }); });
+  cap.addEventListener("input", draw);
+  draw();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

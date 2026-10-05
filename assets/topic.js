@@ -45,7 +45,8 @@
     const select = (v) => {
       buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === v)));
       document.querySelectorAll(`[data-show-${name}]`).forEach((el) => {
-        el.hidden = !el.getAttribute(`data-show-${name}`).split(" ").includes(v);
+        // toggleAttribute (not .hidden) so this also works on SVG elements
+        el.toggleAttribute("hidden", !el.getAttribute(`data-show-${name}`).split(" ").includes(v));
       });
       seg.dispatchEvent(new CustomEvent("segchange", { detail: v, bubbles: true }));
     };

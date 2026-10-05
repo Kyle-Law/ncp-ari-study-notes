@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verifying rack grounding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  :root { --gnd: #2e9d4f; }
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12px; fill: var(--muted) !important; } .t { font-size: 13px; }
+  .rack { fill: var(--panel); stroke: var(--ink); stroke-width: 1.5; }
+  .bar { fill: #c98d3a; stroke: var(--ink); }
+  .gc { stroke: var(--gnd); stroke-width: 3.5; fill: none; }
+  .gc.bad { stroke: var(--bad); stroke-dasharray: 6 5; }
+  .node.sel rect { stroke: var(--accent); stroke-width: 3; }
+  .hier { cursor: pointer; }
+  #hier-info { min-height: 4.5rem; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">1 · T7</span><span class="chip">AI Infrastructure Basics</span><span class="chip weight">20% of exam</span></div>
+  <h1>Verifying grounding</h1>
+  <p class="lede">When something inside a rack faults, current looks for the easiest way to earth. Grounding decides whether that path is a copper conductor or the person touching the rack.</p>
+  <p class="objective"><b>Exam objective</b>Verify grounding.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li>Two separate jobs. <b>Bonding</b> ties every metal part together (racks, doors, rails, trays, ladder racks) so nothing sits at a different voltage. <b>Grounding</b> gives that bonded system one low-impedance path to earth.</li>
+    <li>The path is a hierarchy (TIA-607): rack → rack bonding conductor → <b>SBB/TGB</b> room busbar → <b>TBB</b> backbone → <b>PBB/TMGB</b> main busbar → building grounding electrode.</li>
+    <li>Each rack connects <b>individually</b> to the busbar or row conductor with a green or green/yellow conductor and <b>listed compression lugs</b>. <b>No daisy-chaining</b>, and <b>bare metal</b> or paint-piercing hardware (paint is an insulator).</li>
+    <li>The power cord's earth pin protects <b>that device</b>, not the rack frame, doors and trays.</li>
+    <li>Verify: <b>visual</b> inspection, <b>continuity / bond resistance</b> tests, ground resistance by the electrician, then <b>recheck periodically</b> and after moves/adds.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Follow the copper to earth</h2>
+  <p>Select a link in the chain to see its role.</p>
+  <figure>
+    <div class="wide"><svg id="hier" viewBox="0 0 760 300" role="img" aria-labelledby="hT">
+      <title id="hT">Grounding hierarchy from racks through the room busbar and backbone to the main busbar and earth electrode</title>
+      <g class="hier node" data-k="rack" tabindex="0"><rect x="20" y="40" width="70" height="150" rx="5" class="rack"/><rect x="110" y="40" width="70" height="150" rx="5" class="rack"/><rect x="200" y="40" width="70" height="150" rx="5" class="rack"/><text x="145" y="30" text-anchor="middle" class="tb">Racks</text></g>
+      <path d="M55 190 V230 H330" class="gc"/><path d="M145 190 V230" class="gc"/><path d="M235 190 V230" class="gc"/>
+      <g class="hier node" data-k="sbb" tabindex="0"><rect x="330" y="215" width="100" height="30" rx="4" class="bar"/><text x="380" y="265" text-anchor="middle" class="t" style="font-weight:600">SBB (TGB)</text><text x="380" y="282" text-anchor="middle" class="tm">room busbar</text></g>
+      <path d="M430 230 H520" class="gc"/><text x="475" y="220" text-anchor="middle" class="tm">TBB</text>
+      <g class="hier node" data-k="tbb" tabindex="0"><rect x="452" y="222" width="46" height="16" rx="3" style="fill:transparent"/></g>
+      <g class="hier node" data-k="pbb" tabindex="0"><rect x="520" y="215" width="100" height="30" rx="4" class="bar"/><text x="570" y="265" text-anchor="middle" class="t" style="font-weight:600">PBB (TMGB)</text><text x="570" y="282" text-anchor="middle" class="tm">main busbar</text></g>
+      <path d="M620 230 H690 V270" class="gc"/>
+      <g class="hier node" data-k="earth" tabindex="0"><path d="M665 270 H715 M672 280 H708 M680 290 H700" stroke="var(--ink)" stroke-width="2.5"/><text x="690" y="200" text-anchor="middle" class="t" style="font-weight:600">Building</text><text x="690" y="216" text-anchor="middle" class="t" style="font-weight:600">electrode</text></g>
+      <g class="hier node" data-k="tray" tabindex="0"><rect x="20" y="10" width="250" height="10" rx="2" style="fill:var(--panel-2);stroke:var(--muted)"/><path d="M270 15 H300 V230" class="gc" style="stroke-width:2.5"/></g>
+      <text x="310" y="120" class="tm">cable tray bonded too</text>
+    </svg></div>
+  </figure>
+  <div class="card" id="hier-info" aria-live="polite">Select a part of the diagram.</div>
+  <p class="small muted">PBB = primary bonding busbar (older term TMGB), SBB = secondary bonding busbar (TGB), TBB = telecommunications bonding backbone, per TIA-607. Follow the grounding guidance in TIA-942 and your local electrical code.</p>
+</section>
+
+<section>
+  <h2>Good vs. bad installs</h2>
+  <div class="seg" data-target="inst"><button data-value="good" aria-pressed="true">Correct</button><button data-value="chain">Daisy-chained</button><button data-value="paint">Lug on paint</button></div>
+  <figure>
+    <div class="wide"><svg viewBox="0 0 700 220" role="img" aria-labelledby="gbT">
+      <title id="gbT">Three racks connected to a ground bar: individually (correct), daisy-chained, or with a lug bolted to paint</title>
+      <rect x="40" y="20" width="110" height="140" rx="5" class="rack"/><rect x="200" y="20" width="110" height="140" rx="5" class="rack"/><rect x="360" y="20" width="110" height="140" rx="5" class="rack"/>
+      <text x="95" y="90" text-anchor="middle" class="t">Rack 1</text><text x="255" y="90" text-anchor="middle" class="t">Rack 2</text><text x="415" y="90" text-anchor="middle" class="t">Rack 3</text>
+      <rect x="40" y="190" width="600" height="18" rx="3" class="bar"/><text x="560" y="182" class="tm">row conductor / busbar</text>
+      <g data-show-inst="good"><path d="M95 160 V190" class="gc"/><path d="M255 160 V190" class="gc"/><path d="M415 160 V190" class="gc"/></g>
+      <g data-show-inst="chain" hidden><path d="M95 160 V190" class="gc"/><path d="M150 140 H200" class="gc"/><path d="M310 140 H360" class="gc"/>
+        <text x="175" y="132" text-anchor="middle" class="tm">jumper</text><text x="335" y="132" text-anchor="middle" class="tm">jumper</text></g>
+      <g data-show-inst="paint" hidden><path d="M95 160 V190" class="gc"/><path d="M415 160 V190" class="gc"/><path d="M255 160 V190" class="gc bad"/>
+        <circle cx="255" cy="160" r="7" style="fill:var(--bad-soft);stroke:var(--bad);stroke-width:2"/></g>
+    </svg></div>
+    <figcaption data-show-inst="good">Each rack has its own conductor to the bar. Remove any rack and the others stay grounded.</figcaption>
+    <figcaption data-show-inst="chain" hidden>Racks 2 and 3 reach ground only through their neighbours. Remove or unbolt Rack 1 or 2 and everything after it floats.</figcaption>
+    <figcaption data-show-inst="paint" hidden>The lug looks tight but sits on powder coat, an insulator. It carries almost nothing. Scrape to bare metal or use paint-piercing washers.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>How to verify</h2>
+  <ol class="steps">
+    <li><b>Check the requirements</b>Equipment manufacturer grounding instructions, TIA-607 / TIA-942 for telecom spaces, NEC (NFPA 70) or local code, and the site's uptime targets.</li>
+    <li><b>Visual inspection</b>A ground busbar in the room tied back to the building ground. Each rack individually connected via its ground lug/stud. Green or green/yellow insulated conductors. Listed two-hole compression lugs on bare metal or with paint-piercing hardware. Doors, side panels and rails bonded. Trays and ladder racks bonded. Short, direct runs without coils or sharp bends.</li>
+    <li><b>Continuity / bonding test</b>Measure resistance from each rack's frame to the busbar with a low-resistance ohmmeter or bonding tester. It should be very low (milliohms). A high reading means a loose, painted or corroded joint.</li>
+    <li><b>Ground system resistance</b>The electrician measures the grounding electrode system (fall-of-potential or clamp-on tester) against the design target. Many data centers aim for ≤ 5 Ω or lower.</li>
+    <li><b>Power path checks</b>Confirm PDU and receptacle grounds (outlet tester / PDU self-test). The PDU earth must tie to the same system.</li>
+    <li><b>Record and repeat</b>Document readings, then recheck periodically and after moves/adds. Joints loosen and corrode.</li>
+  </ol>
+  <div class="callout warn"><b>Safety</b><p>Grounding ties into the building electrical system. Design, installation and earth-resistance testing are work for a qualified electrician under the local code. Never disconnect a ground on energised equipment.</p></div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"The power cord grounds the rack."</b>It grounds that device's chassis. The rack frame, doors and trays need their own bonded path.</li>
+    <li><b>Daisy-chaining racks.</b>Each rack taps the common conductor or busbar directly.</li>
+    <li><b>Bolting to paint.</b>Paint and powder coat insulate. Use bare metal or paint-piercing washers.</li>
+    <li><b>Bonding vs grounding.</b>Bonding = equal potential between metal parts. Grounding = connection of that system to earth. You need both.</li>
+    <li><b>Coiling extra conductor.</b>Coils and sharp bends add impedance to fast surges. Keep runs short and direct.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. What does bonding accomplish?</p>
+      <div class="opts"><button class="opt">Connects the system to the earth electrode</button><button class="opt" data-correct>Ties metal parts together so they sit at the same potential</button><button class="opt">Isolates racks from each other</button></div>
+      <p class="why">Bonding equalises potential between metal parts. Grounding then connects the bonded system to earth.</p></div>
+    <div class="q"><p>2. Why is daisy-chaining rack grounds a problem?</p>
+      <div class="opts"><button class="opt">It uses too much copper</button><button class="opt" data-correct>Removing one rack breaks the ground path for every rack after it</button><button class="opt">It's only a problem for DC racks</button></div>
+      <p class="why">Each rack should connect independently to the busbar or row conductor.</p></div>
+    <div class="q"><p>3. A bond test from a rack frame to the busbar reads high. Most likely cause?</p>
+      <div class="opts"><button class="opt" data-correct>A lug on paint, or a loose or corroded joint</button><button class="opt">The busbar is too large</button><button class="opt">The PDU is unbalanced</button></div>
+      <p class="why">Bond resistance should be very low. High readings point to poor metal-to-metal contact.</p></div>
+    <div class="q"><p>4. Which standard covers bonding and grounding for telecom spaces?</p>
+      <div class="opts"><button class="opt">TIA-568</button><button class="opt" data-correct>TIA-607</button><button class="opt">IEC 61300-3-35</button></div>
+      <p class="why">TIA-607 defines the PBB/SBB/TBB hierarchy. TIA-942 adds data-center guidance.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../1.SR7/server-rack-grounding.html">Grounding a server rack<span>1 · SR7: bonding vs grounding, hierarchy</span></a></li>
+    <li><a href="../1.SR8/nfpa-codes-explained.html">NFPA codes &amp; standards<span>1 · SR8: NEC (NFPA 70)</span></a></li>
+    <li><a href="../3.SR5/nfpa70-explained.html">NFPA 70 (NEC) code development<span>3 · SR5</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo with TIA-607 terminology. Resistance targets vary by design; grounding work must follow local code and be done by qualified electricians.</footer>
+</main>
+<script>
+(function () {
+  const info = {
+    rack: "<b>Racks.</b> Each rack's frame, doors, side panels and rails are bonded together. A rack bonding conductor runs from the rack's ground lug or stud to the row conductor or room busbar, one per rack, never chained through neighbours.",
+    sbb: "<b>SBB (secondary bonding busbar, formerly TGB).</b> The room's central ground point. Every rack, tray and enclosure in the space bonds here, and it connects back toward the main busbar.",
+    tbb: "<b>TBB (telecommunications bonding backbone).</b> The conductor that ties each room's SBB back to the PBB, so all telecom spaces share one reference.",
+    pbb: "<b>PBB (primary bonding busbar, formerly TMGB).</b> The main telecom busbar, usually in the entrance or main electrical room, bonded to the building's electrical service ground.",
+    earth: "<b>Grounding electrode system.</b> Rods, rings or building steel that connect the whole system to earth. Its resistance is measured by the electrician against the design target.",
+    tray: "<b>Cable trays and ladder racks.</b> These are metal too, so they're bonded into the same system with jumpers across joints, or they can float at a different potential."
+  };
+  const box = document.getElementById("hier-info");
+  document.querySelectorAll("#hier .node").forEach((n) => {
+    const show = () => { document.querySelectorAll("#hier .node").forEach((m) => m.classList.toggle("sel", m === n)); box.innerHTML = info[n.dataset.k]; };
+    n.addEventListener("click", show); n.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(); } });
+  });
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

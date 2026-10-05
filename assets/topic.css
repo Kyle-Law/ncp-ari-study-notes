@@ -160,3 +160,6 @@ footer { margin-top: 3.5rem; padding-top: 1.2rem; border-top: 1px solid var(--ru
 .wide { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .wide > svg { min-width: 620px; }
 .wide > svg.fit { min-width: 0; width: 100%; }
+
+/* The HTML hidden attribute doesn't apply to SVG content by default. */
+svg [hidden] { display: none; }

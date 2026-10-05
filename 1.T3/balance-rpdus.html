@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Balancing rack PDUs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12.5px; fill: var(--muted) !important; } .t { font-size: 13px; }
+  :root { --px: #e05a47; --py: #d8a300; --pz: #3a7bd5; }
+  .bal { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.2rem; }
+  @media (max-width: 720px) { .bal { grid-template-columns: 1fr; } }
+  .dev { display: grid; grid-template-columns: 1fr auto; gap: .5rem; align-items: center; padding: .45rem .6rem; border: 1px solid var(--rule); border-radius: 8px; background: var(--bg); margin-bottom: .4rem; font-size: .92rem; }
+  .dev .ph { display: inline-flex; gap: 2px; }
+  .dev .ph button { font: inherit; font-size: .8rem; font-weight: 700; width: 2rem; padding: .2rem 0; border-radius: 5px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); cursor: pointer; }
+  .dev .ph button[aria-pressed="true"] { color: #fff; border-color: transparent; }
+  .dev .ph button[data-p="X"][aria-pressed="true"] { background: var(--px); }
+  .dev .ph button[data-p="Y"][aria-pressed="true"] { background: var(--py); }
+  .dev .ph button[data-p="Z"][aria-pressed="true"] { background: var(--pz); }
+  .bars { display: grid; gap: .6rem; }
+  .barrow { display: grid; grid-template-columns: 2.4rem 1fr 4.2rem; gap: .5rem; align-items: center; font-size: .92rem; }
+  .barbox { position: relative; height: 26px; background: var(--panel-2); border-radius: 5px; border: 1px solid var(--rule); }
+  .barbox i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; transition: width .2s; }
+  .barbox .lim { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--warn); }
+  .barbox .brk { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--bad); }
+  .stat { display: flex; flex-wrap: wrap; gap: 1rem 2rem; margin-top: 1rem; }
+  .stat div b { display: block; font-family: var(--display); font-size: 1.5rem; }
+  .ph-x { color: var(--px); } .ph-y { color: var(--py); } .ph-z { color: var(--pz); }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">1 · T3</span><span class="chip">AI Infrastructure Basics</span><span class="chip weight">20% of exam</span></div>
+  <h1>Balancing rack PDUs on AC racks</h1>
+  <p class="lede">A three-phase rack PDU is really three circuits in one box. If most of the load lands on one phase, that phase's breaker trips while the other two still have capacity, and the uneven currents waste energy as heat.</p>
+  <p class="objective"><b>Exam objective</b>Balance the rPDUs for AC-powered racks.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li>Three-phase power is three AC waves 120° apart (L1/L2/L3, or X/Y/Z). Equal currents <b>cancel</b>, so no neutral current flows and every conductor shares the work.</li>
+    <li>A 3φ rPDU splits outlets into <b>branches</b> (or alternates phase per outlet). Spread the load so phase currents are <b>roughly equal</b>. A common target is within about <b>10%</b> of the average.</li>
+    <li>Imbalance means <b>tripped breakers</b> (one phase hits its limit first), <b>extra heat</b> and <b>neutral current</b> (in wye systems), and <b>higher bills</b>.</li>
+    <li>Stay under <b>80%</b> of each breaker for continuous load (NEC). With <b>A/B PDUs</b>, check it <b>after failover</b>: one PDU then carries the whole rack, so each phase must stay under 80% with double the load.</li>
+    <li>Verify with the PDU's <b>per-phase / per-branch metering</b>. Alternating-phase outlets make balance close to automatic.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Why imbalance hurts</h2>
+  <div class="grid">
+    <div class="card"><h3>Tripped breakers</h3><p class="small">Each branch or phase has its own breaker. Overload one and that group of outlets goes dark, even though the other phases had room to spare.</p></div>
+    <div class="card"><h3>Heat and waste</h3><p class="small">Current that doesn't cancel still flows through wires and connections and turns into heat, which the cooling system then has to remove.</p></div>
+    <div class="card"><h3>Stranded capacity</h3><p class="small">The rack is "full" as soon as the busiest phase hits its limit. The headroom on the other two phases can't be used.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Try it: balance a 3φ rPDU</h2>
+  <p>A 230/400 V wye PDU with one <b>16 A</b> breaker per phase. The dashed amber line is the <b>80% continuous limit (12.8 A)</b> and the red line is the breaker. Assign each device's cord to a phase. Then turn on <b>failover</b>: the partner PDU has died, so this one now carries both cords of every dual-corded device.</p>
+  <div class="card">
+    <div class="bal">
+      <div id="devs" aria-label="Devices and their phase assignment"></div>
+      <div>
+        <div class="seg" id="mode"><button data-m="normal" aria-pressed="true">Normal (A+B sharing)</button><button data-m="fail">Feed B failed</button></div>
+        <div class="bars" id="bars"></div>
+        <div class="stat">
+          <div><span class="muted small">Imbalance</span><b id="imb"></b></div>
+          <div><span class="muted small">Neutral current</span><b id="neu"></b></div>
+          <div><span class="muted small">Total load</span><b id="tot"></b></div>
+        </div>
+        <p id="verdict" aria-live="polite" style="margin:.8rem 0 0"></p>
+        <p style="margin:.6rem 0 0"><button class="btn" id="auto">Auto-balance</button> <button class="btn" id="worst">Everything on X</button></p>
+      </div>
+    </div>
+  </div>
+  <p class="small muted">Currents per cord are illustrative (230 V equipment, each dual-corded device sharing ~50/50 across A and B in normal operation). Imbalance = largest deviation from the average phase current ÷ average. Neutral current is the vector sum of the three phase currents.</p>
+</section>
+
+<section>
+  <h2>How to balance, step by step</h2>
+  <ol class="steps">
+    <li><b>Know the PDU</b>Phase type (1φ / 3φ delta / 3φ wye), voltage, input breaker, number of branches and their breaker ratings. Outlets are usually colour-coded by branch or phase.</li>
+    <li><b>Plan from nameplate or measured draw</b>Use real measured power where you have it (nameplate is a worst case). Group devices so each phase totals about the same amps.</li>
+    <li><b>Mirror A and B</b>Plug each dual-corded device's PSU 1 into PDU A and PSU 2 into PDU B, on the same phase position, so both PDUs balance identically.</li>
+    <li><b>Check failover headroom</b>Every phase on each PDU must stay under 80% of its breaker <b>with the whole rack on that one PDU</b>.</li>
+    <li><b>Measure and adjust</b>Read per-phase and per-branch current on the intelligent PDU (web UI, SNMP, DCIM). Move a cord to the next outlet group if one phase runs high, and set warning/critical alarms.</li>
+    <li><b>Re-check after changes</b>Every add, move or change can unbalance the rack. Alternating-phase PDUs let you change phase by moving a plug one outlet over.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Delta vs. wye in one picture</h2>
+  <div class="grid two">
+    <div class="card"><h3>Delta (typical North America, 208 V)</h3><p class="small">Outlet groups sit <b>between two hot wires</b>: L1–L2, L2–L3, L3–L1, each at 208 V (= 120 V × √3). No neutral to the outlets. Balance the three <b>branch pairs</b>.</p></div>
+    <div class="card"><h3>Wye / star (230/400 V regions)</h3><p class="small">Outlet groups sit <b>between one hot wire and neutral</b> at 230 V. 400 V line-to-line is too high for IT PSUs. Imbalance shows up as <b>neutral current</b>.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"Balanced means equal outlets per phase."</b>No: balance <b>current</b>, not outlet count. One GPU server can draw more than ten switches.</li>
+    <li><b>Balancing only in normal operation.</b>With A/B feeds, check each PDU with the whole rack's load on it.</li>
+    <li><b>Ignoring the 80% rule.</b>Continuous loads (≥ 3 h) on standard breakers are limited to 80% of the rating.</li>
+    <li><b>Plugging bottom-up into the next free outlet.</b>On a traditional branch-grouped PDU that fills one phase first. Plan placement, or use alternating-phase outlets.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. A 3φ rPDU reads X = 14 A, Y = 6 A, Z = 7 A on 16 A breakers. What's the risk?</p>
+      <div class="opts"><button class="opt">None; total is only 27 A</button><button class="opt" data-correct>Phase X is over its 12.8 A continuous limit and closest to tripping</button><button class="opt">Phase Y will trip first</button></div>
+      <p class="why">Each phase is limited separately. X exceeds 80% of 16 A while Y and Z have unused headroom.</p></div>
+    <div class="q"><p>2. In a balanced 3φ wye system, what flows in the neutral?</p>
+      <div class="opts"><button class="opt" data-correct>Essentially nothing; the currents cancel</button><button class="opt">The sum of all three phase currents</button><button class="opt">One third of the total</button></div>
+      <p class="why">Equal currents 120° apart sum to zero. Imbalance produces neutral current.</p></div>
+    <div class="q"><p>3. Two PDUs (A and B) each read 7 A per phase on 16 A breakers. Is the rack safe for a single-feed failure?</p>
+      <div class="opts"><button class="opt">Yes, 7 A is under 12.8 A</button><button class="opt" data-correct>No: after failover each phase on the surviving PDU carries ~14 A, over 12.8 A</button><button class="opt">Can't tell without nameplates</button></div>
+      <p class="why">Dual-corded load shifts entirely to the surviving PDU, roughly doubling each phase.</p></div>
+    <div class="q"><p>4. What's the easiest way to move a device to a different phase on an alternating-phase PDU?</p>
+      <div class="opts"><button class="opt">Rewire the branch</button><button class="opt" data-correct>Move the plug to the adjacent outlet</button><button class="opt">Swap PDUs</button></div>
+      <p class="why">Phase changes every outlet (X, Y, Z, X…), so the next outlet is a different phase.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../1.SR5/alternating-phase-explained.html">Alternating phase PDUs<span>1 · SR5: fill-a-rack simulator</span></a></li>
+    <li><a href="../1.SR4/3-phase-power-explained.html">3-phase power, illustrated<span>1 · SR4: delta, wye, √3</span></a></li>
+    <li><a href="../1.SR3/intelligent-pdu-explained.html">Intelligent PDUs<span>1 · SR3: metering, thresholds</span></a></li>
+    <li><a href="../2.SR4/breaker-80-vs-100-explained.html">80% vs 100% rated breakers<span>2 · SR4</span></a></li>
+    <li><a href="../1.T4/rack-power-redundancy.html">Power redundancy per rack<span>1 · T4: next topic</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Balance targets vary by operator; follow your site standard and local electrical code.</footer>
+</main>
+<script>
+(function () {
+  // amps per cord in normal A/B sharing
+  const devices = [
+    { n: "GPU server 1", a: 3.8, p: "X" }, { n: "GPU server 2", a: 3.8, p: "X" },
+    { n: "GPU server 3", a: 3.8, p: "Y" }, { n: "Storage node", a: 1.6, p: "X" },
+    { n: "Leaf switch", a: 1.0, p: "Z" }, { n: "Mgmt switch", a: 0.4, p: "Z" },
+    { n: "CPU server 1", a: 1.4, p: "Y" }, { n: "CPU server 2", a: 1.4, p: "Z" }
+  ];
+  const B = 16, LIM = 12.8, scale = 34;
+  let mode = "normal";
+  const devs = document.getElementById("devs"), bars = document.getElementById("bars");
+  function renderDevs() {
+    devs.innerHTML = devices.map((d, i) => `<div class="dev"><span>${d.n} <span class="muted small">${d.a.toFixed(1)} A/cord</span></span>
+      <span class="ph" role="group" aria-label="Phase for ${d.n}">${["X", "Y", "Z"].map((p) => `<button type="button" data-i="${i}" data-p="${p}" aria-pressed="${d.p === p}">${p}</button>`).join("")}</span></div>`).join("");
+  }
+  devs.addEventListener("click", (e) => { const b = e.target.closest("button[data-p]"); if (!b) return; devices[+b.dataset.i].p = b.dataset.p; renderDevs(); calc(); });
+  function calc() {
+    const f = mode === "fail" ? 2 : 1;
+    const I = { X: 0, Y: 0, Z: 0 };
+    devices.forEach((d) => (I[d.p] += d.a * f));
+    const vals = [I.X, I.Y, I.Z], avg = (vals[0] + vals[1] + vals[2]) / 3;
+    const imb = avg ? Math.max(...vals.map((v) => Math.abs(v - avg))) / avg * 100 : 0;
+    // vector sum, 120° apart
+    const re = I.X - 0.5 * I.Y - 0.5 * I.Z, im = (Math.sqrt(3) / 2) * (I.Y - I.Z), neu = Math.hypot(re, im);
+    const col = { X: "var(--px)", Y: "var(--py)", Z: "var(--pz)" };
+    bars.innerHTML = ["X", "Y", "Z"].map((p) => `<div class="barrow"><b class="ph-${p.toLowerCase()}">${p}</b>
+      <div class="barbox"><i style="width:${Math.min(100, I[p] / scale * 100)}%;background:${col[p]}"></i>
+      <span class="lim" style="left:${LIM / scale * 100}%"></span><span class="brk" style="left:${B / scale * 100}%"></span></div>
+      <span>${I[p].toFixed(1)} A</span></div>`).join("");
+    document.getElementById("imb").textContent = imb.toFixed(0) + "%";
+    document.getElementById("neu").textContent = neu.toFixed(1) + " A";
+    document.getElementById("tot").textContent = (avg * 3).toFixed(1) + " A";
+    const over = ["X", "Y", "Z"].filter((p) => I[p] > LIM), trip = ["X", "Y", "Z"].filter((p) => I[p] > B);
+    const v = document.getElementById("verdict");
+    if (trip.length) v.innerHTML = `<span class="fail">Breaker trips on ${trip.join(", ")}.</span> ${mode === "fail" ? "This rack doesn't survive losing feed B." : ""}`;
+    else if (over.length) v.innerHTML = `<span class="caution">Over the 80% continuous limit on ${over.join(", ")}.</span> Move load to a lighter phase.`;
+    else if (imb > 10) v.innerHTML = `<span class="caution">Within limits, but ${imb.toFixed(0)}% imbalanced.</span> Aim for about 10% or less.`;
+    else v.innerHTML = `<span class="ok">Balanced and within the 80% limit${mode === "fail" ? " even with feed B down" : ""}.</span>`;
+  }
+  document.getElementById("auto").onclick = () => {
+    const load = { X: 0, Y: 0, Z: 0 };
+    [...devices].sort((a, b) => b.a - a.a).forEach((d) => { const p = ["X", "Y", "Z"].reduce((m, q) => (load[q] < load[m] ? q : m), "X"); d.p = p; load[p] += d.a; });
+    renderDevs(); calc();
+  };
+  document.getElementById("worst").onclick = () => { devices.forEach((d) => (d.p = "X")); renderDevs(); calc(); };
+  const mb = document.querySelectorAll("#mode button");
+  mb.forEach((b) => { b.type = "button"; b.addEventListener("click", () => { mb.forEach((x) => x.setAttribute("aria-pressed", String(x === b))); mode = b.dataset.m; calc(); }); });
+  [document.getElementById("auto"), document.getElementById("worst")].forEach((b) => (b.type = "button"));
+  renderDevs(); calc();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>
