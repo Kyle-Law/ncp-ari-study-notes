@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cable flame ratings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 14px; font-weight: 600; } .tm { font-size: 12px; fill: var(--muted) !important; } .t { font-size: 13px; }
+  .lvl { stroke: var(--ink); stroke-width: 1.5; }
+  .pick { display: grid; gap: .5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
+  .pick button { text-align: left; font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: .6rem .8rem; cursor: pointer; }
+  .pick button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .pick button b { display: block; }
+  #space-out { margin-top: 1rem; min-height: 4rem; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">7 · T2</span><span class="chip">Safety &amp; Compliance</span><span class="chip weight">10% of exam</span></div>
+  <h1>Fire safety and cable flame ratings</h1>
+  <p class="lede">A data hall holds tonnes of cable jacket, and burning jackets spread flame and smoke. The NEC sets how fire-resistant a cable must be by where it runs. The strictest rule applies to air-handling spaces, because smoke there reaches everyone.</p>
+  <p class="objective"><b>Exam objective</b>Comply with fire safety and cable flame ratings (NEC plenum requirements).</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li>Copper communications cable ratings, highest first: <b>CMP</b> (plenum) &gt; <b>CMR</b> (riser) &gt; <b>CMG / CM</b> (general) &gt; <b>CMX</b> (limited). Fiber: <b>OFNP</b> &gt; <b>OFNR</b> &gt; <b>OFNG / OFN</b> (N = non-conductive; OFC… = conductive).</li>
+    <li><b>Plenum</b> = a space used for environmental air (above a drop ceiling or under a raised floor used as an air path). Cables there must be <b>plenum-rated</b> or run in an approved raceway or metal conduit.</li>
+    <li><b>Riser</b> = vertical runs between floors (shafts). <b>CMR/OFNR</b> or better.</li>
+    <li><b>Substitution goes down, never up</b>: a CMP cable can be used anywhere; a CMR cable can't go in a plenum.</li>
+    <li>Also: <b>firestop</b> every penetration through a fire-rated wall or floor, <b>remove abandoned cable</b> (NEC), and know local equivalents (e.g. EU CPR Euroclasses, LSZH jackets). IT rooms built to NEC 645 have their own rules for under-floor cabling.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>The substitution ladder</h2>
+  <figure>
+    <div class="wide"><svg viewBox="0 0 760 260" role="img" aria-labelledby="ladT">
+      <title id="ladT">Cable ratings from most to least fire-resistant: plenum, riser, general, limited; each can substitute for those below it</title>
+      <rect x="40" y="20" width="680" height="48" rx="6" class="lvl" style="fill:var(--good-soft)"/><text x="60" y="50" class="tb">Plenum · CMP / OFNP / OFCP</text><text x="700" y="50" text-anchor="end" class="tm">NFPA 262 (Steiner tunnel): low flame spread, low smoke</text>
+      <rect x="100" y="78" width="620" height="48" rx="6" class="lvl" style="fill:var(--accent-soft)"/><text x="120" y="108" class="tb">Riser · CMR / OFNR / OFCR</text><text x="700" y="108" text-anchor="end" class="tm">UL 1666: won't carry fire floor to floor</text>
+      <rect x="160" y="136" width="560" height="48" rx="6" class="lvl" style="fill:var(--warn-soft)"/><text x="180" y="166" class="tb">General · CMG / CM / OFNG / OFN</text><text x="700" y="166" text-anchor="end" class="tm">Vertical tray flame test</text>
+      <rect x="220" y="194" width="500" height="48" rx="6" class="lvl" style="fill:var(--panel-2)"/><text x="240" y="224" class="tb">Limited · CMX</text><text x="700" y="224" text-anchor="end" class="tm">Dwellings / short exposed runs</text>
+      <path d="M20 30 V230" stroke="var(--ink)" stroke-width="2"/><path d="M14 222 L20 236 L26 222" fill="var(--ink)"/>
+      <text x="14" y="252" class="tm">can substitute downward</text>
+    </svg></div>
+  </figure>
+</section>
+
+<section>
+  <h2>What rating does this space need?</h2>
+  <div class="pick" id="spaces">
+    <button data-s="plenum"><b>Above a drop ceiling used as return air</b><span class="small muted">Air-handling plenum</span></button>
+    <button data-s="floor"><b>Under a raised floor used for supply air</b><span class="small muted">Air path, but inside an IT room?</span></button>
+    <button data-s="riser"><b>Vertical shaft between floors</b><span class="small muted">Riser</span></button>
+    <button data-s="tray" aria-pressed="true"><b>Overhead tray in the white space (not an air plenum)</b><span class="small muted">General-purpose space</span></button>
+  </div>
+  <div class="card" id="space-out" aria-live="polite"></div>
+  <p class="small muted">Simplified study summary of NEC Articles 770/800 and 645. Which edition applies, and every exception, is set by the local AHJ.</p>
+</section>
+
+<section>
+  <h2>Fire safety beyond the jacket</h2>
+  <div class="grid">
+    <div class="card"><h3>Firestopping</h3><p class="small">Every cable penetration through a fire-rated wall or floor is sealed with a listed firestop system, and re-sealed after any change.</p></div>
+    <div class="card"><h3>Abandoned cable</h3><p class="small">The NEC requires removal of abandoned cable (not terminated and not tagged for future use). It's fuel load and blocks airflow.</p></div>
+    <div class="card"><h3>Plenum raceway</h3><p class="small">Non-plenum cable may cross a plenum only inside approved plenum raceway or metal conduit.</p></div>
+    <div class="card"><h3>Clearances</h3><p class="small">Keep trays and bundles clear of sprinkler heads and fire-detection devices so they work as designed.</p></div>
+    <div class="card"><h3>Outside the US</h3><p class="small">EU CPR classes (Aca, B1ca, B2ca, Cca, Dca, Eca) and low-smoke zero-halogen (LSZH) jackets are common requirements. Check local codes.</p></div>
+    <div class="card"><h3>Suppression</h3><p class="small">Clean-agent or pre-action sprinkler systems are typical in data halls. Coordinate cable pathways with them.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>CMR in a plenum.</b>Not allowed. Plenum spaces need CMP/OFNP (or approved raceway).</li>
+    <li><b>Thinking higher-rated is "wrong" for lower spaces.</b>CMP may be used anywhere, including riser and general spaces.</li>
+    <li><b>Every ceiling is a plenum.</b>Only if it's used for environmental air. A ducted-return ceiling may not be a plenum. Check the HVAC design.</li>
+    <li><b>Leaving dead cable "just in case".</b>Untagged abandoned cable must be removed.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. Fiber runs above a drop ceiling that serves as the return-air plenum. Minimum rating?</p>
+      <div class="opts"><button class="opt">OFNR</button><button class="opt" data-correct>OFNP</button><button class="opt">OFN</button></div>
+      <p class="why">Air-handling plenums need plenum-rated cable (OFNP for non-conductive fiber) or approved raceway.</p></div>
+    <div class="q"><p>2. Can a CMP cable be installed in a riser?</p>
+      <div class="opts"><button class="opt" data-correct>Yes: higher ratings substitute for lower ones</button><button class="opt">No: risers need CMR only</button><button class="opt">Only with a firestop</button></div>
+      <p class="why">Substitution runs downward: CMP → CMR → CM → CMX.</p></div>
+    <div class="q"><p>3. What test is associated with plenum-rated cable?</p>
+      <div class="opts"><button class="opt">UL 1666 riser test</button><button class="opt" data-correct>NFPA 262 (Steiner tunnel)</button><button class="opt">IEC 61300-3-35</button></div>
+      <p class="why">NFPA 262 measures flame spread and smoke for plenum cables. UL 1666 is the riser test.</p></div>
+    <div class="q"><p>4. What does the NEC require for abandoned communications cable?</p>
+      <div class="opts"><button class="opt">Leave it for future use</button><button class="opt" data-correct>Remove it unless tagged for future use</button><button class="opt">Paint it red</button></div>
+      <p class="why">Abandoned cable adds fuel load and must be removed unless it's tagged for future use.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../1.SR8/nfpa-codes-explained.html">NFPA codes &amp; standards<span>1 · SR8</span></a></li>
+    <li><a href="../3.SR5/nfpa70-explained.html">NFPA 70 (NEC) code development<span>3 · SR5</span></a></li>
+    <li><a href="../5.SR3/fiber-optic-installation-explained3.html">FOA: fire, firestop, abandoned cable<span>5 · SR3</span></a></li>
+    <li><a href="../2.SR3/nec-392-18F-cable-tray-access.html">NEC 392.18(F) tray access<span>2 · SR3</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above. CMP/CMR/CPR readings (7 · SR3, SR4) don't have notes in this repo yet; this page summarises standard NEC practice. Confirm against the adopted code edition and the AHJ.</footer>
+</main>
+<script>
+(function () {
+  const A = {
+    plenum: '<b>Plenum-rated: CMP / OFNP</b> (or non-plenum cable inside approved plenum raceway or metal conduit). Smoke here travels through the building\'s air system, which is why the requirement is strictest.',
+    floor: '<b>It depends on NEC Article 645.</b> In an IT equipment room that meets 645 (dedicated HVAC, disconnecting means and other conditions), cables under the raised floor follow 645\'s rules instead of full plenum requirements. Otherwise treat the space as a plenum (CMP/OFNP). Confirm with the AHJ.',
+    riser: '<b>Riser-rated or better: CMR / OFNR</b> (CMP/OFNP also allowed). Firestop where the shaft penetrates each floor.',
+    tray: '<b>General-purpose or better: CM/CMG / OFN/OFNG</b> (CMR or CMP also allowed). Many operators standardise on plenum- or riser-rated cable anyway, to avoid mistakes.'
+  };
+  const btns = document.querySelectorAll("#spaces button"), out = document.getElementById("space-out");
+  btns.forEach((b) => { b.type = "button"; b.addEventListener("click", () => { btns.forEach((x) => x.setAttribute("aria-pressed", String(x === b))); out.innerHTML = A[b.dataset.s]; }); });
+  out.innerHTML = A.tray;
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

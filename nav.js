@@ -633,6 +633,34 @@
    "title": "Troubleshooting Layer 1 on Cumulus Linux — a visual guide"
   },
   {
+   "path": "7.T1/electrical-safety-loto-ppe.html",
+   "section": "7",
+   "kind": "T",
+   "code": "T1",
+   "title": "Electrical safety: LOTO and PPE"
+  },
+  {
+   "path": "7.T2/cable-flame-ratings.html",
+   "section": "7",
+   "kind": "T",
+   "code": "T2",
+   "title": "Cable flame ratings"
+  },
+  {
+   "path": "7.T3/nvidia-install-standards-warranty.html",
+   "section": "7",
+   "kind": "T",
+   "code": "T3",
+   "title": "NVIDIA install standards"
+  },
+  {
+   "path": "7.T4/esd-protection.html",
+   "section": "7",
+   "kind": "T",
+   "code": "T4",
+   "title": "ESD protection"
+  },
+  {
    "path": "7.SR1/loto-8-steps-explained.html",
    "section": "7",
    "kind": "SR",

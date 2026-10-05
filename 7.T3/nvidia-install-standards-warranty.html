@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NVIDIA install standards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .sc { display: grid; gap: .6rem; }
+  .sc .item { display: grid; grid-template-columns: 1fr auto; gap: .8rem; align-items: center; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: .6rem .8rem; }
+  .sc .item.done-ok { border-color: var(--good); } .sc .item.done-bad { border-color: var(--bad); }
+  .sc .item p { margin: 0; }
+  .sc .item .why { grid-column: 1 / -1; font-size: .9rem; color: var(--muted); display: none; }
+  .sc .item.done-ok .why, .sc .item.done-bad .why { display: block; }
+  .sc .btns { display: flex; gap: .3rem; }
+  .sc .btns button { font: inherit; font-size: .85rem; padding: .3rem .6rem; border-radius: 6px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); cursor: pointer; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">7 · T3</span><span class="chip">Safety &amp; Compliance</span><span class="chip weight">10% of exam</span></div>
+  <h1>NVIDIA installation standards and warranty compliance</h1>
+  <p class="lede">NVIDIA publishes how its clusters should be cabled and handled. Following those documents keeps the system supported. Ignoring them, through the wrong installer, unvalidated parts or damaged cables, can leave you paying for the failure.</p>
+  <p class="objective"><b>Exam objective</b>Follow NVIDIA-specific installation standards (DU-10438, warranty compliance).</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>DU-10438-001</b> is NVIDIA's <b>"Cabling Data Centers" design guide</b> (DGX SuperPOD). It covers cable management best practices, deploying bundles, and maintaining NDR connectors. These are the 4 · SR3 / SR4 / SR5 readings.</li>
+    <li>Its core rules: <b>50/50</b> left/right routing, nothing across the rack centre, plug <b>bottom-up</b>, connect and dress <b>per U</b>, hook-and-loop only, supports ≤ <b>60 cm</b>, no twist within <b>75 cm</b> of a connector, <b>clean every insertion</b>, keep parts reachable and air flowing.</li>
+    <li>Companion: NVIDIA's <b>Cable Installation and Management Guidelines</b> (5 · SR2): bend radius, no hanging &gt; 2 m, ties every 30–60 cm, install one/test one, runs &lt; 90% of rated reach, ESD and humidity on unpacking.</li>
+    <li><b>Warranty</b>: DGX installation must be done by <b>NVIDIA field engineers or an NVIDIA partner</b>, or the hardware warranty is void. Use <b>validated</b> cables/optics for support. Damage from improper installation (e.g. over-bending) is typically excluded.</li>
+    <li>Keep <b>records</b> (as-builts, test results, photos) as proof of compliant installation.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>What DU-10438 asks of the installer</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Area</th><th>Rule</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Routing</td><td>Split each switch's cables 50/50 to the left and right managers; never through the rack centre</td><td>Serviceability, airflow, weight balance</td></tr>
+        <tr><td>Order</td><td>Run bundles to the switch nearest the feed first; plug connectors bottom-up</td><td>Access: finished cables hang below your hands</td></tr>
+        <tr><td>Dressing</td><td>Connect and dress one U at a time, one side at a time; keep cables in the U's plane</td><td>Prevents tangles that compound</td></tr>
+        <tr><td>Support</td><td>Supports ≤ 60 cm; hook-and-loop, snug not tight; weight never on connectors</td><td>Strain relief, no crushed jackets</td></tr>
+        <tr><td>Twist</td><td>Start any reorientation ≥ 75 cm from the connector</td><td>Protects connector and conductors</td></tr>
+        <tr><td>NDR optics</td><td>Clean the cable MPO and the transceiver port on every insertion; caps on until connecting</td><td>9 µm cores; one uncleaned insertion can block the core</td></tr>
+        <tr><td>Access &amp; air</td><td>Transceivers and fans hot-swappable without disturbing others; remove abandoned cables; rack wide enough</td><td>Maintenance and cooling</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Compliant or not?</h2>
+  <p>Sort each situation.</p>
+  <div class="sc" id="sc"></div>
+  <p class="score" id="sc-score" aria-live="polite"></p>
+</section>
+
+<section>
+  <h2>Warranty and support essentials</h2>
+  <div class="grid">
+    <div class="card"><h3>Authorised installers</h3><p class="small">DGX systems: installation by NVIDIA field engineers or an NVIDIA partner, or the hardware warranty is void (DGX H100/H200 user guide).</p></div>
+    <div class="card"><h3>Validated parts</h3><p class="small">Use cables and transceivers from the firmware's validated list. Third-party parts carry no performance guarantee and aren't handled through normal support.</p></div>
+    <div class="card"><h3>Handle to spec</h3><p class="small">Bend radius, pulling tension, ESD and storage humidity per datasheets. Damage from improper installation is typically excluded from warranty.</p></div>
+    <div class="card"><h3>Keep proof</h3><p class="small">As-builts, test results, inspection images and photos show the installation met the standard if a claim is ever questioned.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"Any certified electrician can install the DGX."</b>NVIDIA requires its field engineers or an NVIDIA partner for DGX installation, or the warranty is void.</li>
+    <li><b>Confusing DU-10438 with the NEC.</b>DU-10438 is NVIDIA's own cabling design guide. Codes like the NEC still apply alongside it.</li>
+    <li><b>"Clean at first install only."</b>The NDR maintenance section says every insertion.</li>
+    <li><b>Zip ties for neatness.</b>Hook-and-loop only.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. What is NVIDIA DU-10438-001?</p>
+      <div class="opts"><button class="opt">A DGX firmware release</button><button class="opt" data-correct>The DGX SuperPOD "Cabling Data Centers" design guide</button><button class="opt">An OSHA regulation</button></div>
+      <p class="why">It's NVIDIA's cabling design guide (cable management, deploying bundles, NDR connector maintenance).</p></div>
+    <div class="q"><p>2. Who must install a DGX system to keep the hardware warranty?</p>
+      <div class="opts"><button class="opt">Any data-center technician</button><button class="opt" data-correct>NVIDIA field engineers or an NVIDIA partner</button><button class="opt">The building electrician</button></div>
+      <p class="why">Per the DGX H100/H200 user guide, otherwise the hardware warranty is void.</p></div>
+    <div class="q"><p>3. Maximum spacing between cable supports in the guide's dressing rules?</p>
+      <div class="opts"><button class="opt">2 m</button><button class="opt" data-correct>60 cm (2 ft)</button><button class="opt">5 ft</button></div>
+      <p class="why">Within the rack dressing guidance: supports at 60 cm or less. (5 ft is tray support spacing, 2 m the general hanging limit.)</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../4.SR3/cable-management-best-practices.html">Cable management best practices<span>4 · SR3 (DU-10438)</span></a></li>
+    <li><a href="../4.SR4/deploying-the-bundles-explained.html">Deploying the bundles<span>4 · SR4 (DU-10438)</span></a></li>
+    <li><a href="../4.SR5/ndr-connector-maintenance-explained.html">Maintaining NDR connectors<span>4 · SR5 (DU-10438)</span></a></li>
+    <li><a href="../5.SR2/nvidia-cable-guidelines-explained.html">Cable installation &amp; management guidelines<span>5 · SR2</span></a></li>
+    <li><a href="../3.SR2/dgx-h100-h200-guide-explained.html">DGX H100/H200 user guide<span>3 · SR2: installer requirement</span></a></li>
+    <li><a href="../4.T1/nvidia-vs-other-cables.html">NVIDIA vs third-party cables<span>4 · T1</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above. DU-10438-001 is NVIDIA's "Cabling Data Centers" design guide (docs.nvidia.com/cabling-data-centers.pdf). Warranty terms come from the specific product documentation and contracts.</footer>
+</main>
+<script>
+(function () {
+  const items = [
+    ["A contractor routes all of a leaf switch's cables to the right-hand manager because the patch panel is on that side.", false, "DU-10438 splits each switch's cables 50/50 to both sides and never across the rack centre."],
+    ["Installers plug the bottom switch first, then work upward, even though bundles arrived from the top.", true, "Run order follows the feed, but plug order is always bottom-up."],
+    ["An NDR AOC is unplugged by accident and immediately reinserted without cleaning.", false, "Every insertion gets the cable end and port cleaned, including accidental unplugs."],
+    ["A local IT team without NVIDIA partner status installs the DGX nodes to save time.", false, "DGX installation by anyone other than NVIDIA field engineers or a partner voids the hardware warranty."],
+    ["Bundles are dressed with hook-and-loop wraps, kept loose while working, then snugged when the side is finished.", true, "Exactly the guidance: loose while adjusting, snug (not deforming) at the end."],
+    ["A third-party 800G optic, not on the validated list, is used in production 'because it links up'.", false, "Not validated: no performance guarantee and not handled through normal support."],
+    ["A cable is rotated right at the connector to make it fit the port.", false, "Start any twist at least 75 cm down the cable."]
+  ];
+  const host = document.getElementById("sc"), score = document.getElementById("sc-score");
+  let done = 0, right = 0;
+  host.innerHTML = items.map(([t, , why], i) => `<div class="item" data-i="${i}"><p>${t}</p><span class="btns"><button type="button" data-a="1">Compliant</button><button type="button" data-a="0">Not compliant</button></span><p class="why">${why}</p></div>`).join("");
+  host.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-a]"); if (!b) return;
+    const it = b.closest(".item"); if (it.classList.contains("done-ok") || it.classList.contains("done-bad")) return;
+    const i = +it.dataset.i, ok = (b.dataset.a === "1") === items[i][1];
+    it.classList.add(ok ? "done-ok" : "done-bad"); done++; if (ok) right++;
+    it.querySelector(".why").innerHTML = (ok ? '<span class="ok">Correct.</span> ' : `<span class="fail">Actually ${items[i][1] ? "compliant" : "not compliant"}.</span> `) + items[i][2];
+    it.querySelectorAll("button").forEach((x) => (x.disabled = true));
+    score.textContent = `${right} / ${items.length} correct` + (done < items.length ? ` · ${items.length - done} to go` : "");
+  });
+  score.textContent = `0 / ${items.length} correct · ${items.length} to go`;
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

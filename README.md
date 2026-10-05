@@ -314,9 +314,13 @@ This section covers adhering to electrical safety, LOTO, fire compliance, NVIDIA
 
 ### Potential Exam Topics:
 - **T1** Adhere to electrical safety practices (LOTO, PPE, 120 kW+ environments).
+  - [Electrical safety: LOTO, PPE and 120 kW racks](7.T1/electrical-safety-loto-ppe.html)
 - **T2** Comply with fire safety and cable flame ratings (NEC plenum requirements).
+  - [Fire safety and cable flame ratings](7.T2/cable-flame-ratings.html)
 - **T3** Follow NVIDIA-specific installation standards (DU-10438, warranty compliance).
+  - [NVIDIA installation standards and warranty compliance](7.T3/nvidia-install-standards-warranty.html)
 - **T4** Implement ESD protection for sensitive components.
+  - [ESD protection for sensitive components](7.T4/esd-protection.html)
 
 ### Suggested Readings
 

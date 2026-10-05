@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Electrical safety: LOTO and PPE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .srcs { display: grid; gap: .5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); margin: 1rem 0; }
+  .src { display: grid; grid-template-columns: auto 1fr; gap: .6rem; align-items: start; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: .55rem .7rem; cursor: pointer; font-size: .95rem; }
+  .src input { width: 1.1rem; height: 1.1rem; margin-top: .2rem; accent-color: var(--accent); }
+  .src small { display: block; color: var(--muted); }
+  .lotostep { display: grid; grid-template-columns: 3rem 1fr; gap: 1rem; align-items: start; background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 1rem; min-height: 8rem; }
+  .lotostep .num { font-family: var(--display); font-size: 2.6rem; font-weight: 700; color: var(--accent); line-height: 1; }
+  .dots { display: flex; gap: .3rem; margin: .7rem 0; }
+  .dots i { flex: 1; height: 6px; border-radius: 3px; background: var(--panel-2); }
+  .dots i.on { background: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">7 · T1</span><span class="chip">Safety &amp; Compliance</span><span class="chip weight">10% of exam</span></div>
+  <h1>Electrical safety: LOTO, PPE and 120 kW racks</h1>
+  <p class="lede">An AI rack draws as much power as a small building. Before anyone touches it, every energy source has to be found, isolated, locked, drained and proven dead, by the people doing the work, with the right PPE for the hazard that's left.</p>
+  <p class="objective"><b>Exam objective</b>Adhere to electrical safety practices (LOTO, PPE, 120 kW+ environments).</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>LOTO</b> (lockout/tagout) in 8 steps: prepare → notify &amp; shut down → isolate at the source → lock &amp; tag every point → release stored energy → <b>verify zero energy</b> → maintain through handovers → restore safely.</li>
+    <li><b>One person, one lock, one key.</b> Each worker locks every isolation point. Nobody removes someone else's lock.</li>
+    <li>Rules: <b>OSHA 29 CFR 1910.147</b> (US), <b>NFPA 70E</b> Article 120 (electrically safe work condition), EU 2009/104/EC.</li>
+    <li><b>PPE</b> follows NFPA 70E's arc-flash assessment: arc-rated clothing (PPE categories 1–4: <b>4 / 8 / 25 / 40 cal/cm²</b>), voltage-rated gloves, face shield or hood, safety glasses. Use a <b>tested meter</b> to "test before touch".</li>
+    <li><b>120 kW+ racks</b>: <b>multiple feeds</b> (A <i>and</i> B, sometimes more), DC <b>busbars</b> carrying thousands of amps, power-shelf capacitors, battery backup units, and pressurised <b>liquid</b> loops. All of them are energy sources for LOTO.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>The eight steps</h2>
+  <div class="lotostep" aria-live="polite"><div class="num" id="ln">1</div><div><h3 id="lh" style="margin-top:0"></h3><p id="lb" style="margin:0"></p></div></div>
+  <div class="dots" id="ldots" aria-hidden="true"></div>
+  <p><button class="btn" id="lprev" type="button">‹ Previous</button> <button class="btn" id="lnext" type="button">Next ›</button></p>
+</section>
+
+<section>
+  <h2>Find every energy source in a 120 kW AI rack</h2>
+  <p>You're about to work inside a GB200-class rack. Tick everything you'd isolate or release before starting.</p>
+  <div class="srcs" id="srcs"></div>
+  <p><button class="btn" id="chk" type="button">Check my list</button></p>
+  <p id="src-out" aria-live="polite"></p>
+</section>
+
+<section>
+  <h2>PPE and boundaries (NFPA 70E)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>PPE category</th><th>Minimum arc rating</th><th>Typical kit</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>4 cal/cm²</td><td>Arc-rated shirt/pants or coverall, face shield, safety glasses, hearing protection, leather/rubber gloves as required</td></tr>
+        <tr><td>2</td><td>8 cal/cm²</td><td>As cat 1 with 8 cal/cm² clothing, arc-rated balaclava or hood</td></tr>
+        <tr><td>3</td><td>25 cal/cm²</td><td>Arc-flash suit and hood, arc-rated gloves</td></tr>
+        <tr><td>4</td><td>40 cal/cm²</td><td>40 cal/cm² arc-flash suit and hood, arc-rated gloves</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid">
+    <div class="card"><h3>Arc-flash boundary</h3><p class="small">Distance where incident energy falls to 1.2 cal/cm². Inside it, arc-rated PPE is required.</p></div>
+    <div class="card"><h3>Shock boundaries</h3><p class="small"><b>Limited</b> approach (unqualified persons stay out unless escorted) and <b>restricted</b> approach (qualified persons with shock PPE and a plan).</p></div>
+    <div class="card"><h3>Labels</h3><p class="small">Equipment labels show incident energy or PPE category and boundaries. Read them before opening anything.</p></div>
+  </div>
+  <div class="callout warn"><b>Energised work is the exception</b><p>NFPA 70E's default is an electrically safe work condition (LOTO + verification). Working live needs justification, a permit and qualified people. Hot-swapping a PSU or transceiver as designed is normal; opening a power shelf or busbar area is not.</p></div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>Locking out feed A only.</b>2N racks stay live on feed B. Isolate every feed (and any BBU) to the rack.</li>
+    <li><b>Skipping verification.</b>"Test before touch": check the meter on a known source, test the equipment, re-check the meter.</li>
+    <li><b>Someone else's lock.</b>Only the person who placed a lock removes it. Shift handovers add the new crew's locks before the old ones come off.</li>
+    <li><b>Forgetting stored energy.</b>Capacitors, batteries, pressurised coolant and gravity (raised equipment) all survive the switch-off.</li>
+    <li><b>The tag alone.</b>A tag warns. The lock prevents re-energising.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. Which step comes right before starting work in LOTO?</p>
+      <div class="opts"><button class="opt">Apply the tag</button><button class="opt" data-correct>Verify zero energy (test for voltage, check gauges, try-start)</button><button class="opt">Notify the crew</button></div>
+      <p class="why">After isolating, locking and releasing stored energy, you prove it's dead before touching anything.</p></div>
+    <div class="q"><p>2. A rack has A and B feeds. You lock out feed A's breaker. Is the rack safe to work on?</p>
+      <div class="opts"><button class="opt">Yes</button><button class="opt" data-correct>No: feed B (and any battery backup) still energises it</button><button class="opt">Only if the PDUs are off</button></div>
+      <p class="why">Redundant power means multiple sources. All must be isolated and verified.</p></div>
+    <div class="q"><p>3. Minimum arc rating for NFPA 70E PPE category 2?</p>
+      <div class="opts"><button class="opt">4 cal/cm²</button><button class="opt" data-correct>8 cal/cm²</button><button class="opt">40 cal/cm²</button></div>
+      <p class="why">Categories 1–4 are 4, 8, 25 and 40 cal/cm².</p></div>
+    <div class="q"><p>4. Which US regulation covers the control of hazardous energy?</p>
+      <div class="opts"><button class="opt" data-correct>OSHA 29 CFR 1910.147</button><button class="opt">NEC Article 392</button><button class="opt">TIA-607</button></div>
+      <p class="why">OSHA 1910.147 is the lockout/tagout standard. NFPA 70E covers electrical safety work practices.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../7.SR1/loto-8-steps-explained.html">Lockout–tagout in 8 steps<span>7 · SR1: ABB article, live diagram</span></a></li>
+    <li><a href="../1.SR8/nfpa-codes-explained.html">NFPA codes &amp; standards<span>1 · SR8: NFPA 70E, 70</span></a></li>
+    <li><a href="../1.T1/datacenter-gb200-nvl72-guide.html">GB200 NVL72 power<span>1 · T1: shelves, busbar, N+N</span></a></li>
+    <li><a href="../1.T2/ac-vs-dc-racks.html">AC vs DC racks<span>1 · T2: the DC arc problem</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo plus NFPA 70E PPE categories. This is study material, not a safety procedure: follow your site's energy-control program and qualified-person rules.</footer>
+</main>
+<script>
+(function () {
+  const steps = [
+    ["Prepare", "Know the equipment and its written energy-control procedure. Identify every energy source (electrical, pneumatic, hydraulic, chemical, mechanical, thermal) and every isolation point."],
+    ["Notify and shut down", "Tell everyone affected. Shut the equipment down normally (graceful OS/job shutdown for IT gear) before isolating."],
+    ["Isolate at the source", "Open the breakers/disconnects for every feed. For AI racks that means A and B (and any others), plus valves for liquid loops if the work requires it."],
+    ["Lock and tag", "Each worker places their own lock and tag on every isolation point (group hasps for multiple workers). The lock prevents re-energising, and the tag says who and why."],
+    ["Release stored energy", "Discharge capacitors, disconnect or isolate battery backup units, relieve pressure, block anything that can move or fall."],
+    ["Verify zero energy", "Test before touch: prove the meter on a known live source, test for absence of voltage at the work point, prove the meter again. Check gauges. Try-start (then return controls to off)."],
+    ["Maintain during work", "Locks stay on for the whole job. At shift change, incoming workers add their locks before outgoing workers remove theirs."],
+    ["Restore safely", "Tools out, guards back, area clear, everyone notified. Each person removes only their own lock. Re-energise and verify normal operation."]
+  ];
+  let i = 0;
+  const dots = document.getElementById("ldots"); dots.innerHTML = steps.map(() => "<i></i>").join("");
+  function show() {
+    document.getElementById("ln").textContent = i + 1;
+    document.getElementById("lh").textContent = steps[i][0];
+    document.getElementById("lb").textContent = steps[i][1];
+    dots.querySelectorAll("i").forEach((d, k) => d.classList.toggle("on", k <= i));
+    document.getElementById("lprev").disabled = i === 0; document.getElementById("lnext").disabled = i === steps.length - 1;
+  }
+  document.getElementById("lprev").onclick = () => { if (i > 0) { i--; show(); } };
+  document.getElementById("lnext").onclick = () => { if (i < steps.length - 1) { i++; show(); } };
+  show();
+
+  const srcs = [
+    ["feedA", "Feed A breaker / whip", "Primary power path", true],
+    ["feedB", "Feed B breaker / whip", "Redundant path keeps the rack live", true],
+    ["bbu", "Battery backup units in the rack", "Stored energy that survives breaker-off", true],
+    ["caps", "Power-shelf capacitors / DC busbar", "Residual charge, very high current", true],
+    ["liquid", "Pressurised coolant loop", "Hydraulic energy and leak risk, if the work opens the loop", true],
+    ["mgmt", "Management Ethernet cable", "Data only, not a hazardous energy source", false],
+    ["fiber", "Fiber optic links", "Laser light is an eye hazard, not an electrical one; disconnect and cap, don't stare into ends", false]
+  ];
+  const host = document.getElementById("srcs");
+  host.innerHTML = srcs.map(([k, n]) => `<label class="src"><input type="checkbox" id="s-${k}"><span>${n}<small id="d-${k}"></small></span></label>`).join("");
+  document.getElementById("chk").onclick = () => {
+    const miss = srcs.filter(([k, , , need]) => need && !document.getElementById("s-" + k).checked).map((s) => s[1]);
+    const extra = srcs.filter(([k, , , need]) => !need && document.getElementById("s-" + k).checked).map((s) => s[1]);
+    let m = miss.length ? `<span class="fail">Missed:</span> ${miss.join("; ")}. ` : `<span class="ok">All hazardous energy sources covered.</span> `;
+    if (extra.length) m += `<span class="caution">Not hazardous-energy LOTO items:</span> ${extra.join("; ")}.`;
+    document.getElementById("src-out").innerHTML = m;
+    srcs.forEach(([k, , d, need]) => { document.getElementById("d-" + k).innerHTML = (need ? "✓ isolate: " : "✕ ") + d; });
+  };
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>
