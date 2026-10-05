@@ -278,9 +278,13 @@ This section covers cable continuity/link testing, final quality inspection (ben
 
 ### Potential Exam Topics:
 - **T1** Perform cable continuity and link testing (optical power meter, link status, differentiate between NVIDIA vs. non-NVIDIA cabling).
+  - [Continuity and link testing](6.T1/continuity-and-link-testing.html)
 - **T2** Conduct final deployment quality inspection (bend radius, labeling, airflow).
+  - [Final deployment quality inspection](6.T2/final-quality-inspection.html)
 - **T3** Document cable deployment with photos and as-built diagrams.
+  - [Documenting the cable deployment](6.T3/document-as-built.html)
 - **T4** Troubleshoot signal integrity issues (dirty connectors, over-bending, BER, link down vs. high BER issues).
+  - [Troubleshooting signal integrity](6.T4/signal-integrity-troubleshooting.html)
 
 ### Suggested Readings
 

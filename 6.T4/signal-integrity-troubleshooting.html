@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Troubleshooting signal integrity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .ladder { display: grid; gap: .4rem; margin: 1rem 0; }
+  .rung { display: grid; grid-template-columns: 2rem 1fr; gap: .7rem; align-items: center; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: .55rem .8rem; }
+  .rung b.n { width: 2rem; height: 2rem; border-radius: 50%; display: grid; place-items: center; font-family: var(--display); background: var(--panel-2); }
+  .rung.ok { border-color: var(--good); } .rung.ok b.n { background: var(--good); color: var(--bg); }
+  .rung.bad { border-color: var(--bad); background: var(--bad-soft); } .rung.bad b.n { background: var(--bad); color: var(--bg); }
+  .rung.na { opacity: .45; }
+  .calc { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); align-items: end; }
+  .results { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); margin-top: 1rem; }
+  .results div { background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; padding: .6rem .8rem; }
+  .results b { display: block; font-family: var(--display); font-size: 1.5rem; line-height: 1.15; }
+  #ts-steps { margin-top: 1rem; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">6 · T4</span><span class="chip">Testing &amp; Verification</span><span class="chip weight">12% of exam</span></div>
+  <h1>Troubleshooting signal integrity</h1>
+  <p class="lede">A link that won't come up and a link that's up but corrupting bits are different problems with different causes. Start by working out which one you have, then find the lowest layer that's unhealthy and change one thing at a time.</p>
+  <p class="objective"><b>Exam objective</b>Troubleshoot signal integrity issues (dirty connectors, over-bending, BER, link down vs. high BER issues).</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Link down</b>: no light or no lock. Typical causes: unplugged or unseated module, broken fiber, wrong polarity, wrong media/optic type, FEC/speed mismatch, dead lane, far end down.</li>
+    <li><b>Link up, high BER</b>: signal arrives but degraded. Typical causes: <b>dirty connectors</b> (often with Rx power still "normal"), <b>over-bending</b> or crushed cable, marginal or damaged cable/module, too long a run, receiver overload, missing FEC.</li>
+    <li><b>BER</b> = errored bits ÷ total bits. PAM4 links rely on <b>FEC</b>: <b>raw (pre-FEC)</b> BER can be high and still be corrected. <b>Effective (post-FEC)</b> errors are what hurt. The IEEE target is about <b>10⁻¹²</b>.</li>
+    <li>Signal ladder: <b>Rx power → signal detect → lock → link up</b>. The highest healthy rung tells you where to look.</li>
+    <li>Isolate: <b>clean first</b>, then swap the cable, swap ends (does the fault follow?), loopback, replace one part at a time, and re-test after each change.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Link down vs. high BER</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>Link down / flapping</th><th>Link up, high BER</th></tr></thead>
+      <tbody>
+        <tr><td>What you see</td><td>Port LED off/amber; <code>ibstat</code> Physical state Polling/Disabled; NO-CARRIER; link flaps in logs</td><td>Link Active, but symbol/FEC-corrected errors climbing, CRC errors, retransmits, slow jobs, reduced width/speed</td></tr>
+        <tr><td>Signal ladder</td><td>Fails at Rx power, signal detect or lock</td><td>All rungs pass. Data arrives with errors.</td></tr>
+        <tr><td>Common causes</td><td>Unseated module, broken fiber, Tx/Rx polarity, wrong optic or fiber type, FEC/autoneg mismatch, one dead lane</td><td>Dirty end-faces, tight bends, crushed or damaged cable, marginal module, over-length, receiver overload</td></tr>
+        <tr><td>First moves</td><td>Check both ends' config and module identity, reseat, check Rx power on every lane, verify polarity</td><td>Inspect and clean both ends, check bends along the run, compare per-lane Rx power, watch counters over time</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Interactive troubleshooter</h2>
+  <p>Pick what you're seeing. The signal ladder shows where it breaks, followed by the next steps.</p>
+  <div class="seg" id="sym">
+    <button data-s="dark">Link down, Rx dark</button>
+    <button data-s="nolock">Link down, Rx power OK</button>
+    <button data-s="flap">Link flapping</button>
+    <button data-s="ber" aria-pressed="true">Up, errors climbing</button>
+    <button data-s="width">Up at reduced width/speed</button>
+  </div>
+  <div class="ladder" id="ladder"></div>
+  <ol class="steps" id="ts-steps"></ol>
+</section>
+
+<section>
+  <h2>BER in numbers</h2>
+  <p>A BER sounds tiny until you multiply it by the line rate. Raw BER on PAM4 links is expected to be well above 10⁻¹². FEC brings the effective rate down.</p>
+  <div class="card">
+    <div class="calc">
+      <label class="field">Link speed<select id="rate"><option value="100">100 Gb/s</option><option value="200">200 Gb/s</option><option value="400" selected>400 Gb/s (NDR)</option><option value="800">800 Gb/s (XDR)</option></select></label>
+      <label class="field">BER: 10^<input type="number" id="exp" value="-12" min="-18" max="-3" step="1"></label>
+    </div>
+    <div class="results">
+      <div><span class="muted small">Errored bits / second</span><b id="eps"></b></div>
+      <div><span class="muted small">Per hour</span><b id="eph"></b></div>
+      <div><span class="muted small">One error every</span><b id="every"></b></div>
+    </div>
+    <p class="small" id="ber-note" style="margin:.8rem 0 0"></p>
+  </div>
+  <h3>Where to read it</h3>
+<pre><code># InfiniBand host / switch
+$ mlxlink -d &lt;dev&gt; -c        # raw (pre-FEC) and effective (post-FEC) physical BER, FEC mode
+$ perfquery                  # SymbolErrorCounter, LinkErrorRecoveryCounter, LinkDownedCounter
+$ ibdiagnet                  # fabric-wide link errors and cable info
+# Cumulus / Ethernet
+$ ethtool -S swp1 | grep -i err     # uncorrected (post-FEC) errors
+$ sudo l1-show swp1 --pcs-errors    # FEC-corrected errors</code></pre>
+  <p class="small">Counters also jump during link up/down events. Watch whether they <b>keep climbing</b> over time instead of trusting one snapshot.</p>
+</section>
+
+<section>
+  <h2>The physical culprits</h2>
+  <div class="grid">
+    <div class="card"><h3>Dirty connectors</h3><p class="small">The top cause of optical trouble. In Dell's study, most "failed" optics returned had no fault. Rx power can sit in range while errors climb. Inspect and clean before replacing anything.</p></div>
+    <div class="card"><h3>Over-bending</h3><p class="small">Tight bends leak light out of the core (macrobend loss) and can crack glass. Look for kinks at ports, manager entries and tray drops. A VFL glows at the bend.</p></div>
+    <div class="card"><h3>Crush &amp; tension</h3><p class="small">Over-tight ties, stacked bundles, pulled jackets. Microbends add loss and errors without visible damage.</p></div>
+    <div class="card"><h3>Seating &amp; keying</h3><p class="small">A half-latched module or connector gives intermittent errors or flapping. Reseat both ends.</p></div>
+    <div class="card"><h3>Wrong part</h3><p class="small">Wrong reach class, wrong fiber type, unsupported module, or FEC/speed mismatch between ends.</p></div>
+    <div class="card"><h3>Too much light</h3><p class="small">A long-reach optic on a short link can overload the receiver and cause errors. Use an attenuator or the right reach.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"Rx power is in range, so it's not the fiber."</b>Dirty end-faces often leave power in range while corrupting data. Clean first.</li>
+    <li><b>Replacing the transceiver first.</b>Clean, reseat and swap the cable before replacing hardware. Most returned optics test fine.</li>
+    <li><b>Treating raw BER as failure.</b>PAM4 links run with nonzero raw BER and FEC corrects it. Watch effective/uncorrected errors and the trend.</li>
+    <li><b>Changing several things at once.</b>You won't know what fixed it. Change one thing, re-test.</li>
+    <li><b>Link down blamed on dirt alone.</b>Also check polarity, module type, FEC/autoneg and both ends' config.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. A link is up, Rx power is normal on all lanes, but symbol errors keep climbing. First action?</p>
+      <div class="opts"><button class="opt">Replace the switch</button><button class="opt" data-correct>Inspect and clean both connector end-faces, then re-test</button><button class="opt">Disable FEC</button></div>
+      <p class="why">Contamination can degrade data while leaving power readings acceptable. It's also the cheapest fix to try.</p></div>
+    <div class="q"><p>2. What does FEC change about BER?</p>
+      <div class="opts"><button class="opt">Nothing; it just adds latency</button><button class="opt" data-correct>It corrects errors, so effective (post-FEC) BER is far lower than raw (pre-FEC) BER</button><button class="opt">It raises the line rate</button></div>
+      <p class="why">FEC adds redundancy so the receiver repairs errors. Effective BER is what applications see.</p></div>
+    <div class="q"><p>3. Rx power is dark on one lane of a 4-lane optic and the link is down. Likely cause?</p>
+      <div class="opts"><button class="opt">FEC mismatch</button><button class="opt" data-correct>A broken/dirty fiber position or a failed lane in the module or far-end transmitter</button><button class="opt">Subnet Manager offline</button></div>
+      <p class="why">One dark lane kills the whole link. Inspect that MPO position and swap the cable or module to isolate.</p></div>
+    <div class="q"><p>4. The fault moves with the transceiver when you swap ends. What's bad?</p>
+      <div class="opts"><button class="opt">The cable</button><button class="opt" data-correct>The transceiver</button><button class="opt">The switch port</button></div>
+      <p class="why">If the fault follows the module, the module is the culprit. If it stays with the port, suspect the port.</p></div>
+    <div class="q"><p>5. At 400 Gb/s and BER 10⁻¹², roughly how often is there an errored bit?</p>
+      <div class="opts"><button class="opt">Once a day</button><button class="opt" data-correct>About every 2.5 seconds</button><button class="opt">Never</button></div>
+      <p class="why">400 × 10⁹ bits/s × 10⁻¹² = 0.4 errors/s, about one every 2.5 s. That's why FEC exists.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../6.SR3/cumulus-layer1-troubleshooting-explained.html">Cumulus Layer 1 troubleshooting<span>6 · SR3: ladder, FEC, l1-show</span></a></li>
+    <li><a href="../6.SR2/fiber-connector-contamination-explained.html">Dirty connectors &amp; poor I/O<span>6 · SR2: power-OK trap</span></a></li>
+    <li><a href="../6.SR1/otdr-test-failures-explained.html">OTDR test failures<span>6 · SR1: bends, breaks, ghosts</span></a></li>
+    <li><a href="../4.T9/install-transceivers-clean-connectors.html">Cleaning connectors<span>4 · T9</span></a></li>
+    <li><a href="../6.T1/continuity-and-link-testing.html">Continuity &amp; link testing<span>6 · T1</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. BER thresholds and counter names vary by platform and firmware; use your platform's documented limits.</footer>
+</main>
+<script>
+(function () {
+  const rungs = ["Rx optical power present", "Signal detected", "Signal lock (CDR locked)", "Link up / carrier", "Clean data (low BER)"];
+  const S = {
+    dark: { at: 0, steps: [
+      ["Check the far end", "Is the neighbour port up and its module present? A down far end means no light."],
+      ["Reseat both modules and connectors", "Fully latched, correct orientation."],
+      ["Check polarity", "Tx must land on Rx (Type B end-to-end for parallel optics). A VFL confirms which fiber lights at the far end."],
+      ["Inspect and clean", "A heavily contaminated or damaged end-face can block a lane completely."],
+      ["Swap the cable, then the modules", "Use known-good parts, one at a time. OTDR for long runs to find a break."]] },
+    nolock: { at: 2, steps: [
+      ["Compare config on both ends", "Speed, autoneg and FEC must agree. An FEC mismatch keeps the link down."],
+      ["Check module identity and type", "Vendor/part from the EEPROM. Right reach and media, supported for this firmware, and both ends of the same technology."],
+      ["Check every lane", "Per-lane Rx power. One dark lane kills the link."],
+      ["Check the firmware diagnosis", "l1-show Troubleshooting Info / mlxlink status. \"Remote fault\" means they can't hear you."],
+      ["Isolate hardware", "Swap cable → swap ends → loopback → replace one part at a time."]] },
+    flap: { at: 3, steps: [
+      ["Look for marginal signal", "A link that's too marginal flaps: FEC can't keep up, so it retrains. Check per-lane Rx power and errors."],
+      ["Inspect and clean, then reseat", "Partly seated connectors and dirt are classic flap causes."],
+      ["Walk the run for bends and strain", "Kinks, tight drops, weight hanging on the connector."],
+      ["Check logs and counters", "LinkDownedCounter / linkstate log. Note whether flaps correlate with work in the rack."],
+      ["Swap the cable, then the modules", "Re-test after each change."]] },
+    ber: { at: 4, steps: [
+      ["Confirm it's real and rising", "Clear or baseline counters, then watch effective/uncorrected errors over minutes. Ignore spikes from link transitions."],
+      ["Inspect and clean both end-faces", "Power can be normal while dirt corrupts data. This is the most likely fix."],
+      ["Check bends and crush along the run", "Over-tight ties, kinks at ports, stacked bundles."],
+      ["Check FEC mode and module", "Correct FEC for the lane rate. Supported module. Rx not overloaded."],
+      ["Swap the cable, then the modules", "If errors follow a part, replace it."]] },
+    width: { at: 4, steps: [
+      ["Identify the degraded link", "iblinkinfo / ibdiagnet shows links below the expected width or speed."],
+      ["Check per-lane signal", "Lanes that failed training are usually dirty or damaged positions, or a damaged copper pair."],
+      ["Inspect and clean, reseat", "Then retrain the link (toggle the port) and re-check width."],
+      ["Check cable type and validation", "An unsupported or wrong cable can train to a lower speed."],
+      ["Swap the cable, then the modules", "Isolate which part limits the link."]] }
+  };
+  const lad = document.getElementById("ladder"), st = document.getElementById("ts-steps");
+  function show(k) {
+    const s = S[k];
+    lad.innerHTML = rungs.map((r, i) => {
+      const cls = i < s.at ? "ok" : i === s.at ? "bad" : "na";
+      return `<div class="rung ${cls}"><b class="n">${i < s.at ? "✓" : i === s.at ? "✕" : i + 1}</b><span>${r}${i === s.at ? " <b>← breaks here</b>" : ""}</span></div>`;
+    }).join("");
+    st.innerHTML = s.steps.map(([h, d]) => `<li><b>${h}</b>${d}</li>`).join("");
+  }
+  const btns = document.querySelectorAll("#sym button");
+  btns.forEach((b) => { b.type = "button"; b.addEventListener("click", () => { btns.forEach((x) => x.setAttribute("aria-pressed", String(x === b))); show(b.dataset.s); }); });
+  show("ber");
+
+  const rate = document.getElementById("rate"), exp = document.getElementById("exp");
+  const fmtT = (sec) => sec < 1e-3 ? (sec * 1e6).toFixed(1) + " µs" : sec < 1 ? (sec * 1000).toFixed(1) + " ms" : sec < 120 ? sec.toFixed(1) + " s" : sec < 7200 ? (sec / 60).toFixed(1) + " min" : sec < 172800 ? (sec / 3600).toFixed(1) + " h" : (sec / 86400).toFixed(1) + " days";
+  const fmtN = (n) => n >= 1e6 ? n.toExponential(1) : n >= 100 ? Math.round(n).toLocaleString() : n.toPrecision(2);
+  function ber() {
+    const r = +rate.value * 1e9, e = Math.max(-18, Math.min(-3, Math.round(+exp.value || -12))), b = Math.pow(10, e);
+    const eps = r * b;
+    document.getElementById("eps").textContent = fmtN(eps);
+    document.getElementById("eph").textContent = fmtN(eps * 3600);
+    document.getElementById("every").textContent = fmtT(1 / eps);
+    document.getElementById("ber-note").innerHTML = e >= -6 ? '<span class="caution">Typical of raw (pre-FEC) BER on a PAM4 link.</span> FEC is designed to correct this, so judge the link by its effective (post-FEC) errors.'
+      : e >= -11 ? '<span class="caution">Worse than the 10⁻¹² target</span> if this is effective (post-FEC). Investigate.'
+      : '<span class="ok">At or better than the ~10⁻¹² target</span> for effective BER.';
+  }
+  [rate, exp].forEach((x) => x.addEventListener("input", ber)); ber();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

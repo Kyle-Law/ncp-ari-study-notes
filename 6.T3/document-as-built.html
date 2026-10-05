@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documenting the deployment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  td.chg { background: var(--warn-soft); font-weight: 600; }
+  td.chg del { color: var(--bad); font-weight: 400; margin-right: .3rem; }
+  .shots { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
+  .shot { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+  .shot .frame { aspect-ratio: 4/3; background: var(--panel-2); display: grid; place-items: center; border-bottom: 1px solid var(--rule); }
+  .shot .frame svg { width: 70%; }
+  .shot div.c { padding: .6rem .8rem; font-size: .92rem; }
+  .shot div.c b { display: block; }
+  .shot code { font-size: .78rem; }
+  .ln { stroke: var(--ink); fill: none; stroke-width: 2; } .fl { fill: var(--panel); stroke: var(--ink); stroke-width: 2; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">6 · T3</span><span class="chip">Testing &amp; Verification</span><span class="chip weight">12% of exam</span></div>
+  <h1>Documenting the cable deployment</h1>
+  <p class="lede">The design says where every cable should go. The as-built records where it actually went, with proof. When a link flaps at 3 a.m. six months later, those records are what the on-call engineer has to work from.</p>
+  <p class="objective"><b>Exam objective</b>Document cable deployment with photos and as-built diagrams.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>As-built</b> = the design updated with every field change ("redlines"): what was really installed, where, with which part.</li>
+    <li>Deliver a set: <b>cable schedule</b> (every link: ID, both ends, part, length, test result), <b>diagrams</b> (rack elevations front/rear, port maps, pathway/tray routes, logical topology), <b>photos</b>, and <b>test records</b> (loss, OTDR, inspection images, link/CVT reports).</li>
+    <li>Photos: each rack <b>front and rear</b> after dressing, switch faceplates with <b>legible labels</b>, patch panels, tray routes and drops, grounding points, anything that deviates from the design. Take them <b>before doors close</b>, and name them consistently.</li>
+    <li>Use one <b>identifier scheme</b> everywhere (TIA-606): the label on the cable, the row in the schedule and the port on the drawing all match.</li>
+    <li>Records are living documents: update them on every move, add or change.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Design vs. as-built</h2>
+  <p>Field changes happen: a cable is a different length, a port moves because a cage was faulty, a bundle takes another tray. Toggle to see what the as-built captures.</p>
+  <div class="seg" id="ab"><button data-v="design" aria-pressed="true">As designed</button><button data-v="built">As built (with redlines)</button></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Cable ID</th><th>A end</th><th>B end</th><th>Part / type</th><th>Length</th><th>Tray route</th><th>Test</th></tr></thead>
+      <tbody id="sched"></tbody>
+    </table>
+  </div>
+  <p class="small" id="ab-note" aria-live="polite"></p>
+</section>
+
+<section>
+  <h2>What goes in the package</h2>
+  <div class="grid">
+    <div class="card"><h3>Cable schedule</h3><p class="small">One row per cable: unique ID, A-end (room.rack-RU:port, device, port), B-end, part number and media, length, bundle serial number (BSN), polarity type, test result and date, installer.</p></div>
+    <div class="card"><h3>Rack elevations</h3><p class="small">Front and rear of every rack: devices by RU, PDUs, cable managers, which side each bundle uses (50/50).</p></div>
+    <div class="card"><h3>Port maps &amp; topology</h3><p class="small">Switch faceplate maps (which cage → which node/spine) and the logical fabric (leaf/spine/rails) the CVT validates against.</p></div>
+    <div class="card"><h3>Pathways</h3><p class="small">Overhead/underfloor tray routes, drops, fill levels, firestop penetrations, grounding/bonding points.</p></div>
+    <div class="card"><h3>Test records</h3><p class="small">OLTS loss per fiber, OTDR traces where taken, end-face inspection images, link status / ibdiagnet / CVT output.</p></div>
+    <div class="card"><h3>Photos</h3><p class="small">Proof of workmanship and a baseline for the future. See the shot list below.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Photo shot list</h2>
+  <div class="shots">
+    <div class="shot"><div class="frame"><svg viewBox="0 0 100 100" aria-hidden="true"><rect x="25" y="5" width="50" height="90" class="fl"/><path d="M30 20h40M30 35h40M30 50h40M30 65h40M30 80h40" class="ln"/></svg></div><div class="c"><b>Rack front &amp; rear, full height</b>After dressing, doors open, straight-on and level. <code>AD02_front_2026-10-05.jpg</code></div></div>
+    <div class="shot"><div class="frame"><svg viewBox="0 0 100 100" aria-hidden="true"><rect x="5" y="35" width="90" height="30" class="fl"/><path d="M15 42v16M27 42v16M39 42v16M51 42v16M63 42v16M75 42v16M87 42v16" class="ln"/></svg></div><div class="c"><b>Switch faceplates</b>Close enough that every port label is legible. One photo per switch, and per side for 50/50 dressing.</div></div>
+    <div class="shot"><div class="frame"><svg viewBox="0 0 100 100" aria-hidden="true"><rect x="20" y="40" width="60" height="20" class="fl"/><path d="M50 40V10M50 60v30" class="ln"/><rect x="38" y="44" width="24" height="12" style="fill:var(--warn-soft);stroke:var(--warn)"/></svg></div><div class="c"><b>Label close-ups</b>A sample of cable labels at both ends showing the ID scheme.</div></div>
+    <div class="shot"><div class="frame"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M5 30h90v12H5z" class="fl"/><path d="M20 42v40M50 42v40M80 42v40" class="ln"/></svg></div><div class="c"><b>Tray routes &amp; drops</b>Where bundles enter each rack, fill level, bend at the drop.</div></div>
+    <div class="shot"><div class="frame"><svg viewBox="0 0 100 100" aria-hidden="true"><rect x="15" y="40" width="70" height="14" style="fill:#c98d3a;stroke:var(--ink)"/><path d="M30 40V15M50 40V15M70 40V15" class="ln" style="stroke:var(--apc)"/></svg></div><div class="c"><b>Grounding &amp; bonding</b>Rack ground lugs and busbar connections.</div></div>
+    <div class="shot"><div class="frame"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="38" class="fl"/><path d="M35 35l30 30M65 35l-30 30" class="ln" style="stroke:var(--bad)"/></svg></div><div class="c"><b>Deviations &amp; findings</b>Anything that differs from the design or was fixed during QA, before and after.</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>Handing over the design as the as-built.</b>The as-built must include every field change.</li>
+    <li><b>Photos that can't be read.</b>Wide shots alone don't prove labeling. Take faceplate close-ups too.</li>
+    <li><b>Different IDs in different places.</b>Label, schedule and drawing must use the same identifier.</li>
+    <li><b>Documentation "at the end".</b>Capture redlines and photos as you go, before ceilings, doors and tiles close.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. What makes a drawing an "as-built"?</p>
+      <div class="opts"><button class="opt">It was drawn before installation</button><button class="opt" data-correct>It reflects what was actually installed, including field changes</button><button class="opt">It contains photos</button></div>
+      <p class="why">As-builts are the design updated with redlines from the field.</p></div>
+    <div class="q"><p>2. A cable moved from port 7 to port 9 because cage 7 was damaged. What must be updated?</p>
+      <div class="opts"><button class="opt">Nothing; the link works</button><button class="opt" data-correct>The cable schedule, port map, labels if needed, and a note on the faulty cage</button><button class="opt">Only the photo</button></div>
+      <p class="why">Every record that references that link must match reality.</p></div>
+    <div class="q"><p>3. Best practice for deployment photos?</p>
+      <div class="opts"><button class="opt">One wide shot of the room</button><button class="opt" data-correct>Front and rear of each rack plus legible faceplate/label close-ups, consistently named</button><button class="opt">Only photos of problems</button></div>
+      <p class="why">Photos are proof of workmanship and the baseline for future changes.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../2.SR1/tia-606b-cable-labeling-explained.html">TIA-606-B labeling<span>2 · SR1: identifier format, records</span></a></li>
+    <li><a href="../5.SR3/fiber-optic-installation-explained3.html">FOA: documentation<span>5 · SR3: record every fiber's path</span></a></li>
+    <li><a href="../4.SR4/deploying-the-bundles-explained.html">Deploying the bundles<span>4 · SR4: BSN and deployment docs</span></a></li>
+    <li><a href="../6.T2/final-quality-inspection.html">Final quality inspection<span>6 · T2</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. The example schedule is illustrative.</footer>
+</main>
+<script>
+(function () {
+  const rows = [
+    { id: "C-0101", a: "1A.AD02-40:01", b: "1A.AJ06-27:01", p: "MFP7E10-N010 (MPO-12/APC)", l: "10 m", r: "T-04", t: "1.1 dB ✓" },
+    { id: "C-0102", a: "1A.AD02-40:02", b: "1A.AJ06-27:02", p: "MFP7E10-N010 (MPO-12/APC)", l: "10 m", r: "T-04", t: "1.3 dB ✓", built: { b: "1A.AJ06-27:09", l: "15 m", note: "cage 27:02 damaged, moved to :09; 15 m to reach" } },
+    { id: "C-0103", a: "1A.AD02-38:01", b: "1A.AD02-40:31", p: "MCP4Y10-N001 (DAC)", l: "1 m", r: "in-rack", t: "link 400G ✓" },
+    { id: "C-0104", a: "1A.AD02-38:02", b: "1A.AH04-27:05", p: "MFP7E10-N020 (MPO-12/APC)", l: "20 m", r: "T-04", t: "1.6 dB ✓", built: { r: "T-07", note: "T-04 at 50% fill; rerouted via T-07" } }
+  ];
+  const tb = document.getElementById("sched"), note = document.getElementById("ab-note");
+  function render(mode) {
+    const notes = [];
+    tb.innerHTML = rows.map((r) => {
+      const c = (k) => {
+        const nv = mode === "built" && r.built && r.built[k];
+        return nv ? `<td class="chg"><del>${r[k]}</del>${nv}</td>` : `<td>${r[k]}</td>`;
+      };
+      if (mode === "built" && r.built) notes.push(`<b>${r.id}</b>: ${r.built.note}`);
+      return `<tr><td>${r.id}</td>${c("a")}${c("b")}${c("p")}${c("l")}${c("r")}${c("t")}</tr>`;
+    }).join("");
+    note.innerHTML = mode === "built" ? "Redlines: " + notes.join(" · ") : "This is the plan. Switch to As built to see what the field changed.";
+  }
+  const btns = document.querySelectorAll("#ab button");
+  btns.forEach((b) => { b.type = "button"; b.addEventListener("click", () => { btns.forEach((x) => x.setAttribute("aria-pressed", String(x === b))); render(b.dataset.v); }); });
+  render("design");
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

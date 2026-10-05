@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Final quality inspection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12px; fill: var(--muted) !important; } .t { font-size: 13px; }
+  .cl-group { margin-top: 1.2rem; }
+  .cl-group h3 { margin: 0 0 .5rem; display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  .cl-group h3 span { font-family: var(--body); font-size: .85rem; color: var(--muted); font-weight: 500; }
+  .cl { list-style: none; padding: 0; margin: 0; max-width: none; display: grid; gap: .35rem; }
+  .cl li { margin: 0; }
+  .cl label { display: grid; grid-template-columns: auto 1fr; gap: .6rem; align-items: start; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: .5rem .7rem; cursor: pointer; font-size: .95rem; }
+  .cl input { width: 1.1rem; height: 1.1rem; margin-top: .2rem; accent-color: var(--accent); }
+  .cl input:checked + span { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--rule); }
+  .progress { height: 10px; border-radius: 99px; background: var(--panel-2); overflow: hidden; margin: .6rem 0; }
+  .progress i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .2s; }
+  .calc { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); align-items: end; }
+  .bend { fill: none; stroke: var(--copper); stroke-width: 8; stroke-linecap: round; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">6 · T2</span><span class="chip">Testing &amp; Verification</span><span class="chip weight">12% of exam</span></div>
+  <h1>Final deployment quality inspection</h1>
+  <p class="lede">Before handover, walk every rack and pathway with a checklist. The point is to catch the problems that don't break a link today but will tomorrow: a too-tight bend, a missing label, a bundle in front of a fan intake.</p>
+  <p class="objective"><b>Exam objective</b>Conduct final deployment quality inspection (bend radius, labeling, airflow).</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Bend radius</b>: no bend tighter than the datasheet minimum. Rule of thumb ≈ <b>10× OD installed</b>, 20× under pulling tension. Look hardest at the tight turns: at the port, into managers, at tray drops.</li>
+    <li><b>Labeling</b>: every cable labelled at <b>both ends</b>, legible, unique, matching the cable schedule / as-built. Racks, panels and ports labelled too (TIA-606).</li>
+    <li><b>Airflow</b>: nothing blocking intakes, exhausts, fans or PSUs; blanking panels in place; no abandoned cable; rack centre clear (50/50 routing).</li>
+    <li>Plus: supports ≤ 2 m (≤ 60 cm in racks), hook-and-loop only and snug, connectors fully latched with no weight on them, dust caps on unused ports, all links up at the expected speed.</li>
+    <li>Record the result: photos, test reports and a punch list of fixes.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Bend radius check</h2>
+  <p>The minimum radius scales with the cable's outer diameter (OD). Enter a cable to get rule-of-thumb limits, then always confirm against its datasheet.</p>
+  <div class="card">
+    <div class="calc">
+      <label class="field">Cable<select id="cab">
+        <option value="9.43">NDR copper DAC (≈ 9.4 mm)</option>
+        <option value="3" selected>AOC (≈ 3.0 mm)</option>
+        <option value="2">Duplex fiber patch (≈ 2.0 mm)</option>
+        <option value="4.5">MPO trunk (≈ 4.5 mm)</option>
+      </select></label>
+      <label class="field">Or OD (mm)<input type="number" id="od" min="1" max="30" step="0.1" value="3"></label>
+      <label class="field">Bend you measured (radius, mm)<input type="number" id="meas" min="1" max="300" value="25"></label>
+    </div>
+    <div class="wide"><svg id="bsvg" viewBox="0 0 700 200" role="img" aria-labelledby="bT"><title id="bT">Comparison of the measured bend against the minimum installed and pulling radii</title></svg></div>
+    <p id="b-out" aria-live="polite" style="margin:.4rem 0 0"></p>
+  </div>
+  <p class="small muted">10× / 20× OD are common rules of thumb (FOA). Bend-insensitive fibers allow tighter radii; thick copper often needs more. The datasheet value wins.</p>
+</section>
+
+<section>
+  <h2>Walk-down checklist</h2>
+  <p>Tick items as you verify them on site. Ticks are remembered in this browser only.</p>
+  <div class="card">
+    <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+    <p class="small" style="margin:0" id="count" aria-live="polite"></p>
+    <div id="checklist"></div>
+    <p style="margin:1rem 0 0"><button class="btn" id="clear" type="button">Clear all ticks</button></p>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"All links are up, so it passes."</b>QA also covers physical workmanship that hasn't failed yet: bends, labels, support, airflow.</li>
+    <li><b>Label at one end.</b>Both ends, every cable, matching the records.</li>
+    <li><b>Ignoring the rear.</b>Rear cable bundles in front of exhausts or PSU handles fail an airflow and serviceability check.</li>
+    <li><b>Zip ties on fiber.</b>An automatic finding. Replace with hook-and-loop.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. Rule-of-thumb minimum bend radius for an installed 3 mm AOC?</p>
+      <div class="opts"><button class="opt">3 mm</button><button class="opt" data-correct>About 30 mm (10× OD), unless the datasheet says otherwise</button><button class="opt">300 mm</button></div>
+      <p class="why">≈ 10× OD installed, 20× while pulling. Always check the datasheet.</p></div>
+    <div class="q"><p>2. Which labeling finding fails QA?</p>
+      <div class="opts"><button class="opt">Labels at both ends matching the schedule</button><button class="opt" data-correct>A cable labelled only at the switch end</button><button class="opt">Machine-printed labels</button></div>
+      <p class="why">Every cable needs a unique label at both ends that matches the documentation.</p></div>
+    <div class="q"><p>3. An airflow finding during inspection?</p>
+      <div class="opts"><button class="opt">Blanking panels in all empty U</button><button class="opt" data-correct>A bundle draped across the switch's fan intakes</button><button class="opt">Cables routed 50/50 to side managers</button></div>
+      <p class="why">Anything blocking intakes, exhausts, fans or PSUs is a finding. Re-route through the side managers.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../4.SR3/cable-management-best-practices.html">Cable management best practices<span>4 · SR3: 13-rule walk-down</span></a></li>
+    <li><a href="../5.SR2/nvidia-cable-guidelines-explained.html">NVIDIA cable guidelines<span>5 · SR2: field checklist</span></a></li>
+    <li><a href="../4.T8/bundle-and-dress-cables.html">Bundling and dressing<span>4 · T8</span></a></li>
+    <li><a href="../2.SR1/tia-606b-cable-labeling-explained.html">TIA-606-B labeling<span>2 · SR1</span></a></li>
+    <li><a href="../6.T3/document-as-built.html">Documenting the deployment<span>6 · T3: next topic</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Bend radius figures are rules of thumb; always follow the cable datasheet.</footer>
+</main>
+<script>
+(function () {
+  // Bend radius
+  const cab = document.getElementById("cab"), od = document.getElementById("od"), meas = document.getElementById("meas"), svg = document.getElementById("bsvg"), out = document.getElementById("b-out");
+  cab.addEventListener("change", () => { od.value = cab.value; bend(); });
+  function arc(cx, cy, r, color, label) {
+    return `<path d="M${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx} ${cy - r}" class="bend" style="stroke:${color}"/><text x="${cx}" y="${cy + 22}" text-anchor="middle" class="t">${label}</text>`;
+  }
+  function bend() {
+    const D = Math.max(0.5, +od.value || 1), M = +meas.value || 0, rs = 10 * D, rp = 20 * D;
+    const scale = 120 / Math.max(rp, M, 1);
+    let s = svg.querySelector("title").outerHTML;
+    s += arc(150, 170, M * scale, M >= rs ? "var(--good)" : "var(--bad)", `measured ${M} mm`);
+    s += arc(370, 170, rs * scale, "var(--accent)", `min installed ${rs.toFixed(0)} mm`);
+    s += arc(590, 170, rp * scale, "var(--muted)", `min pulling ${rp.toFixed(0)} mm`);
+    svg.innerHTML = s;
+    out.innerHTML = M >= rs ? `<span class="ok">Pass:</span> ${M} mm ≥ ${rs.toFixed(0)} mm (10 × ${D} mm).`
+      : `<span class="fail">Finding:</span> ${M} mm is tighter than ${rs.toFixed(0)} mm. Re-route with a wider sweep or a bend-radius manager.`;
+  }
+  [od, meas].forEach((e) => e.addEventListener("input", bend)); bend();
+
+  // Checklist with per-viewer persistence
+  const groups = [
+    ["Bend radius & handling", ["No bend tighter than the datasheet minimum, especially at ports and manager entries", "No kinks, crushed or pinched jackets; nothing stepped on or trapped by doors", "No twist close to connectors (start any rotation ≥ 75 cm back)"]],
+    ["Labeling & records", ["Every cable labelled at both ends with a unique ID", "Labels legible, machine-printed, readable without moving the cable", "Rack, panel and port labels present (TIA-606 style)", "Labels and endpoints match the cable schedule / as-built"]],
+    ["Airflow & access", ["Nothing blocking intakes, exhausts, fans or PSU handles", "Blanking panels in all empty U", "Rack centre clear; cables split 50/50 to the side managers", "Transceivers and modules can be pulled without disturbing others", "No abandoned or unused cable left in place"]],
+    ["Support & dressing", ["Hook-and-loop only, snug (no zip ties on fiber)", "Supports at the required spacing; no cable hanging > 2 m unsupported", "No weight or tension on any connector", "Copper and fiber in separate runs; copper clear of power/EMI sources"]],
+    ["Connectors & links", ["All connectors fully latched", "Dust caps on every unused port and connector", "All links up at expected speed/width; error counters clean", "Test results (loss / inspection images) recorded per link"]]
+  ];
+  const KEY = "ncpari-6T2-checklist";
+  let state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { state = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+  const host = document.getElementById("checklist");
+  let total = 0;
+  host.innerHTML = groups.map(([g, items], gi) => `<div class="cl-group"><h3>${g}<span id="g${gi}"></span></h3><ul class="cl">` +
+    items.map((t, ii) => { total++; const id = `c${gi}-${ii}`; return `<li><label><input type="checkbox" id="${id}" ${state[id] ? "checked" : ""}><span>${t}</span></label></li>`; }).join("") + `</ul></div>`).join("");
+  function tally() {
+    let done = 0;
+    groups.forEach(([, items], gi) => {
+      let d = 0; items.forEach((_, ii) => { if (state[`c${gi}-${ii}`]) d++; });
+      document.getElementById("g" + gi).textContent = `${d} / ${items.length}`; done += d;
+    });
+    document.getElementById("count").textContent = `${done} of ${total} verified`;
+    document.getElementById("bar").style.width = (done / total * 100) + "%";
+  }
+  host.addEventListener("change", (e) => { if (e.target.type === "checkbox") { state[e.target.id] = e.target.checked; save(); tally(); } });
+  document.getElementById("clear").addEventListener("click", () => { state = {}; save(); host.querySelectorAll("input").forEach((i) => (i.checked = false)); tally(); });
+  tally();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

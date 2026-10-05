@@ -528,6 +528,34 @@
    "title": "Installing Fiber Optic Cable — Explained"
   },
   {
+   "path": "6.T1/continuity-and-link-testing.html",
+   "section": "6",
+   "kind": "T",
+   "code": "T1",
+   "title": "Continuity and link testing"
+  },
+  {
+   "path": "6.T2/final-quality-inspection.html",
+   "section": "6",
+   "kind": "T",
+   "code": "T2",
+   "title": "Final quality inspection"
+  },
+  {
+   "path": "6.T3/document-as-built.html",
+   "section": "6",
+   "kind": "T",
+   "code": "T3",
+   "title": "Documenting the deployment"
+  },
+  {
+   "path": "6.T4/signal-integrity-troubleshooting.html",
+   "section": "6",
+   "kind": "T",
+   "code": "T4",
+   "title": "Troubleshooting signal integrity"
+  },
+  {
    "path": "6.SR1/otdr-test-failures-explained.html",
    "section": "6",
    "kind": "SR",

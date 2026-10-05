@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Continuity and link testing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12px; fill: var(--muted) !important; } .t { font-size: 13px; }
+  .dev { fill: var(--panel); stroke: var(--ink); stroke-width: 1.5; }
+  .ref { stroke: var(--warn); stroke-width: 4; fill: none; }
+  .plant { stroke: var(--smf); stroke-width: 5; fill: none; }
+  .calc { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); align-items: end; }
+  .gauge { position: relative; height: 30px; border-radius: 6px; margin: 1rem 0 .3rem; background: linear-gradient(90deg, var(--bad) 0 30%, var(--warn) 30% 41.7%, var(--good) 41.7% 84.7%, var(--warn) 84.7% 90.3%, var(--bad) 90.3%); }
+  .gauge b { position: absolute; top: -6px; bottom: -6px; width: 4px; background: var(--ink); border-radius: 2px; transform: translateX(-2px); }
+  .glabels { display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); }
+  .tools { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">6 · T1</span><span class="chip">Testing &amp; Verification</span><span class="chip weight">12% of exam</span></div>
+  <h1>Continuity and link testing</h1>
+  <p class="lede">Testing answers three questions in order. Does the fiber go where the paperwork says (continuity)? Does it lose less light than its budget (insertion loss)? Does the live link come up clean on the right kind of cable (link status)?</p>
+  <p class="objective"><b>Exam objective</b>Perform cable continuity and link testing (optical power meter, link status, differentiate between NVIDIA vs. non-NVIDIA cabling).</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Continuity / polarity</b>: trace each fiber end to end with a visual fault locator (VFL), visual tracer or OLTS. This confirms routing, polarity and that labels match the records.</li>
+    <li><b>Insertion loss</b>: an <b>OLTS</b> (light source + optical power meter) with good reference cords. Multimode at <b>850/1300 nm</b>, single-mode at <b>1310/1550 nm</b>. Compare against the link's loss budget.</li>
+    <li><b>OTDR</b> locates events (connectors, splices, bends, breaks) along the fiber, but isn't the tool for measuring total cable loss.</li>
+    <li><b>Live link</b>: port LEDs, link state (<code>ibstat</code>, <code>iblinkinfo</code>, <code>l1-show</code>/<code>ethtool</code>) and transceiver <b>DDM</b> (Tx/Rx power per lane), then error counters.</li>
+    <li><b>NVIDIA vs non-NVIDIA</b>: read the module EEPROM (vendor, part number) via <code>mlxlink -m</code> / switch transceiver commands, and check against the validated list. The Cable Validation Tool (CVT) compares the fabric to the plan.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>The test toolkit</h2>
+  <div class="tools">
+    <div class="card"><h3>VFL / visual tracer</h3><p class="small">Bright red laser shows which fiber lights up at the far end, and glows at breaks or tight bends in jacketed fiber. Use it for continuity and polarity.</p></div>
+    <div class="card"><h3>Light source + power meter (OLTS)</h3><p class="small">Measures insertion loss of the installed plant against a reference. A calibrated meter also reads a transmitter's actual output.</p></div>
+    <div class="card"><h3>OTDR</h3><p class="small">"Optical radar": length, the location and loss of each connector and splice, bends and breaks. Use long launch/receive cords. Needs a trained operator.</p></div>
+    <div class="card"><h3>Inspection scope</h3><p class="small">100–200× (video preferred) before every test and mating. Dirty references ruin results.</p></div>
+    <div class="card"><h3>Switch / host tools</h3><p class="small">Port LEDs, link state, DDM Rx/Tx power per lane, FEC and error counters, module EEPROM identity.</p></div>
+    <div class="card"><h3>Cable Validation Tool</h3><p class="small">NVIDIA's CVT (with UFM) checks the cabled fabric against the intended topology and flags wrong or unsupported cables.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Insertion-loss test (OLTS)</h2>
+  <figure>
+    <div class="wide"><svg viewBox="0 0 760 170" role="img" aria-labelledby="olT">
+      <title id="olT">Light source with launch reference cable, installed plant under test, receive reference cable, power meter</title>
+      <rect x="10" y="50" width="110" height="60" rx="8" class="dev"/><text x="65" y="78" text-anchor="middle" class="t" style="font-weight:600">Light source</text><text x="65" y="96" text-anchor="middle" class="tm">1310 / 1550 nm</text>
+      <path d="M120 80 H220" class="ref"/><text x="170" y="70" text-anchor="middle" class="tm">launch ref</text>
+      <rect x="216" y="70" width="10" height="20" style="fill:var(--ink)"/>
+      <path d="M226 80 H534" class="plant"/><text x="380" y="70" text-anchor="middle" class="t" style="font-weight:600">installed cable plant under test</text>
+      <circle cx="380" cy="80" r="5" style="fill:var(--bg);stroke:var(--ink)"/><text x="380" y="104" text-anchor="middle" class="tm">splice</text>
+      <rect x="534" y="70" width="10" height="20" style="fill:var(--ink)"/>
+      <path d="M544 80 H640" class="ref"/><text x="590" y="70" text-anchor="middle" class="tm">receive ref</text>
+      <rect x="640" y="50" width="110" height="60" rx="8" class="dev"/><text x="695" y="78" text-anchor="middle" class="t" style="font-weight:600">Power meter</text><text x="695" y="96" text-anchor="middle" class="tm">reads dBm</text>
+      <text x="380" y="150" text-anchor="middle" class="tm">Measured loss = both end connections + fiber + splices. Reference the meter first (source → ref cords → meter), then insert the plant.</text>
+    </svg></div>
+  </figure>
+  <div class="card">
+    <div class="calc">
+      <label class="field">Reference reading (dBm)<input type="number" id="ref" value="-3.2" step="0.1"></label>
+      <label class="field">Reading with plant (dBm)<input type="number" id="meas" value="-5.1" step="0.1"></label>
+      <label class="field">Loss budget (dB)<input type="number" id="bud" value="3.0" step="0.1"></label>
+    </div>
+    <p id="ol-out" aria-live="polite" style="margin:.8rem 0 0"></p>
+  </div>
+</section>
+
+<section>
+  <h2>Reading Rx power</h2>
+  <p>Transceivers report Tx and Rx optical power per lane (DDM/DOM), in mW or dBm. <b>dBm = 10 × log10(mW)</b>. Check <b>every lane</b>: one dark lane takes the whole link down.</p>
+  <div class="card">
+    <label class="field">Rx power on one lane: <b id="rx-v"></b>
+      <input type="range" id="rx" min="-30" max="6" step="0.5" value="-2">
+    </label>
+    <div class="gauge" aria-hidden="true"><b id="rx-pin"></b></div>
+    <div class="glabels"><span>−30 dBm</span><span>alarm · warn · normal · warn · alarm</span><span>+6 dBm</span></div>
+    <p id="rx-out" aria-live="polite" style="margin:.8rem 0 0"></p>
+  </div>
+  <p class="small muted">Thresholds here are illustrative for a short-reach module. Per NVIDIA's Cumulus guide, short-reach optics typically transmit ~0.6–1.0 mW and work with Rx above ~0.05 mW (≈ −13 dBm). Always use the module's own alarm/warning thresholds (<code>ethtool -m</code>, <code>mlxlink -m</code>). DDM readings are typically accurate to about ±10%.</p>
+</section>
+
+<section>
+  <h2>Live link checks</h2>
+  <div class="seg" data-target="fab"><button data-value="ib" aria-pressed="true">InfiniBand</button><button data-value="eth">Ethernet (Cumulus)</button></div>
+  <div data-show-fab="ib">
+<pre><code>$ ibstat                     # per port: State Active, Physical state LinkUp, Rate 400
+$ iblinkinfo                 # every link in the fabric: width and speed, spot 1X or slower links
+$ mlxlink -d &lt;dev&gt; -m        # module info: vendor, part number, DDM per lane
+$ mlxlink -d &lt;dev&gt; -c        # counters and BER (raw/effective)
+$ perfquery                  # SymbolErrorCounter, LinkDownedCounter, PortRcvErrors …
+$ ibdiagnet                  # fabric-wide check: links, speeds, errors, cable info</code></pre>
+  </div>
+  <div data-show-fab="eth" hidden>
+<pre><code>$ nv show interface swp1                 # admin/oper state, speed
+$ sudo l1-show swp1                      # module → config → operational → firmware diagnosis
+$ nv show platform transceiver swp1      # vendor, part number, DDM per lane
+$ ethtool -m swp1                        # EEPROM + DDM with thresholds
+$ ethtool -S swp1 | grep -i err          # uncorrected errors (post-FEC)
+$ sudo l1-show swp1 --pcs-errors         # FEC-corrected errors</code></pre>
+  </div>
+  <h3>NVIDIA or not?</h3>
+  <ol class="steps">
+    <li><b>Read the identity</b>Vendor name and part number from the module EEPROM (<code>mlxlink -m</code>, <code>ethtool -m</code>, switch transceiver show). NVIDIA/Mellanox parts carry OPNs like <code>MCP…</code>, <code>MMA…</code>, <code>MMS…</code>.</li>
+    <li><b>Compare to the validated list</b>For the exact NIC/switch firmware. Third-party parts may work but come with no performance guarantee.</li>
+    <li><b>Run CVT / ibdiagnet</b>Fabric-wide: wrong cable types, unexpected speeds/widths, mismatched ends, and links that don't match the topology file.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>Using the OTDR for loss acceptance.</b>The OLTS (source + meter) measures insertion loss. The OTDR finds where events are.</li>
+    <li><b>Checking one lane.</b>Parallel optics have 4 or 8 lanes. Check Rx power on every one.</li>
+    <li><b>"Rx power is fine, so the fiber is fine."</b>A dirty end-face can leave power in range while errors climb. Inspect and clean anyway.</li>
+    <li><b>Skipping the reference.</b>Without referencing the meter through the test cords, the loss number is meaningless.</li>
+    <li><b>"Link up = done."</b>Also confirm the expected speed/width and zero or stable error counters.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. Which tool measures the insertion loss of an installed fiber link for acceptance?</p>
+      <div class="opts"><button class="opt">OTDR</button><button class="opt" data-correct>Light source + optical power meter (OLTS)</button><button class="opt">Visual fault locator</button></div>
+      <p class="why">Insertion loss is measured with an OLTS against a reference. OTDRs locate events but shouldn't be used to measure cable loss.</p></div>
+    <div class="q"><p>2. Test wavelengths for single-mode fiber?</p>
+      <div class="opts"><button class="opt">850 / 1300 nm</button><button class="opt" data-correct>1310 / 1550 nm</button><button class="opt">650 nm only</button></div>
+      <p class="why">Single-mode: 1310 and 1550 nm (TIA-526-7). Multimode: 850 and 1300 nm (TIA-526-14).</p></div>
+    <div class="q"><p>3. An Rx reading is 0.5 mW. In dBm?</p>
+      <div class="opts"><button class="opt">+5 dBm</button><button class="opt" data-correct>≈ −3 dBm</button><button class="opt">−30 dBm</button></div>
+      <p class="why">10 × log10(0.5) ≈ −3.0 dBm.</p></div>
+    <div class="q"><p>4. How do you tell whether an installed cable is an NVIDIA part?</p>
+      <div class="opts"><button class="opt">By jacket colour</button><button class="opt" data-correct>Read the module EEPROM vendor/part number and check the validated list</button><button class="opt">By whether the link comes up</button></div>
+      <p class="why">The EEPROM identity (and label OPN) tells you the vendor and part. Third-party cables often link up too.</p></div>
+    <div class="q"><p>5. <code>iblinkinfo</code> shows one link at 1X width instead of 4X. Likely meaning?</p>
+      <div class="opts"><button class="opt">Normal power saving</button><button class="opt" data-correct>A degraded link: lanes failed, often a bad cable, dirty connector or damaged module</button><button class="opt">Subnet Manager missing</button></div>
+      <p class="why">A link that trains at reduced width or speed usually points to a physical problem on some lanes.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../5.SR3/fiber-optic-installation-explained3.html">FOA installation &amp; testing<span>5 · SR3: test sequence, loss budget</span></a></li>
+    <li><a href="../6.SR1/otdr-test-failures-explained.html">Diagnosing OTDR failures<span>6 · SR1</span></a></li>
+    <li><a href="../6.SR3/cumulus-layer1-troubleshooting-explained.html">Cumulus Layer 1 troubleshooting<span>6 · SR3: l1-show, DDM, FEC</span></a></li>
+    <li><a href="../4.T1/nvidia-vs-other-cables.html">NVIDIA cables vs others<span>4 · T1</span></a></li>
+    <li><a href="../4.T4/smf-transceiver-distances.html">Loss budgets by optic<span>4 · T4</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Command names follow NVIDIA tools as summarised in the linked notes; check your OS and firmware versions.</footer>
+</main>
+<script>
+(function () {
+  const ref = document.getElementById("ref"), meas = document.getElementById("meas"), bud = document.getElementById("bud"), o = document.getElementById("ol-out");
+  function ol() {
+    const loss = (+ref.value) - (+meas.value), B = +bud.value;
+    o.innerHTML = `Loss = reference − measured = ${(+ref.value).toFixed(1)} − (${(+meas.value).toFixed(1)}) = <b>${loss.toFixed(2)} dB</b>. ` +
+      (loss < 0 ? '<span class="caution">Negative loss means the reference was taken badly. Re-reference.</span>'
+        : loss <= B ? `<span class="ok">Pass</span>, ${(B - loss).toFixed(2)} dB under the ${B} dB budget.`
+        : `<span class="fail">Fail</span>, ${(loss - B).toFixed(2)} dB over budget. Inspect and clean, then use an OTDR to locate the bad event.`);
+  }
+  [ref, meas, bud].forEach((e) => e.addEventListener("input", ol)); ol();
+
+  const rx = document.getElementById("rx"), v = document.getElementById("rx-v"), pin = document.getElementById("rx-pin"), out = document.getElementById("rx-out");
+  function upd() {
+    const d = +rx.value, mw = Math.pow(10, d / 10);
+    v.textContent = `${d.toFixed(1)} dBm (${mw < 0.01 ? mw.toExponential(1) : mw.toFixed(3)} mW)`;
+    pin.style.left = ((d + 30) / 36 * 100) + "%";
+    out.innerHTML = d < -23.5 ? '<span class="fail">Effectively dark.</span> No light: unplugged, broken fiber, wrong polarity, or the far-end laser is off.'
+      : d < -19.2 ? '<span class="fail">Below the low alarm.</span> The link likely won\'t come up. Look for dirt, a bad connector, a tight bend or over-length.'
+      : d < -15 ? '<span class="caution">Low warning.</span> The link may be up but marginal. Clean and inspect before errors appear.'
+      : d <= 0.5 ? '<span class="ok">Normal range.</span> If errors are still high, inspect the end-faces anyway.'
+      : d <= 2.5 ? '<span class="caution">High warning.</span> Very short link with a long-reach optic?'
+      : '<span class="fail">Above the high alarm.</span> Receiver overload. Add an attenuator or use the right reach class.';
+  }
+  rx.addEventListener("input", upd); upd();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>
