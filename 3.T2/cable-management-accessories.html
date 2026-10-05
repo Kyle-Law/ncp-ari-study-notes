@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cable management accessories</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12px; fill: var(--muted) !important; } .t { font-size: 12.5px; }
+  .part { cursor: pointer; }
+  .part rect, .part path { transition: stroke-width .15s; }
+  .part.sel rect, .part.sel path { stroke: var(--accent) !important; stroke-width: 3 !important; }
+  .frame { fill: none; stroke: var(--ink); stroke-width: 3; }
+  .sw { fill: var(--panel); stroke: var(--ink); stroke-width: 1.2; }
+  .vm { fill: var(--panel-2); stroke: var(--muted); stroke-width: 1.5; }
+  .hm { fill: var(--accent-soft); stroke: var(--muted); stroke-width: 1.2; }
+  .fing { stroke: var(--muted); stroke-width: 1.2; }
+  .br { fill: none; stroke: var(--warn); stroke-width: 4; }
+  .tray { fill: var(--panel-2); stroke: var(--ink); stroke-width: 1.2; }
+  #acc-info { min-height: 5rem; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">3 · T2</span><span class="chip">Rack Infrastructure</span><span class="chip weight">10% of exam</span></div>
+  <h1>Installing cable management accessories</h1>
+  <p class="lede">Managers, ducts and radius guides give every cable a defined path that holds its weight and never bends it too tight. They go in <b>before</b> the cables, because retrofitting them into a full rack means unplugging what's already there.</p>
+  <p class="objective"><b>Exam objective</b>Install cable management accessories (vertical/horizontal ducts, bend radius managers).</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Vertical managers / ducts</b> run the height of the rack (in the side channels of a wide rack, or between racks). Each switch's cables go 50/50 to the left and right managers.</li>
+    <li><b>Horizontal managers</b> (1U/2U finger panels) sit next to dense switches and patch panels, guiding cables sideways from the ports to the vertical managers in the same plane as the U.</li>
+    <li><b>Bend-radius managers</b> (waterfalls, spools, radius guides, curved fingers) control every turn: at the port, into managers, and at tray drops (e.g. 3 in radius guides on wire tray).</li>
+    <li>Overhead: <b>trays</b> and <b>fiber raceways</b> (separate copper and fiber paths), with <b>waterfalls</b> into the rack-top openings and brush or grommet panels.</li>
+    <li>Install first, align to the RU plan, secure to the frame, bond metal parts, size for future cables, and don't block airflow or module extraction.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Where each accessory goes</h2>
+  <p>Select a part of the rack.</p>
+  <figure>
+    <div class="wide"><svg id="rack" viewBox="0 0 760 420" role="img" aria-labelledby="rkT">
+      <title id="rkT">Rack elevation with overhead tray and waterfall, vertical managers on both sides, horizontal managers between switches, and bend radius guides</title>
+      <g class="part" data-k="tray" tabindex="0"><rect x="120" y="10" width="520" height="22" rx="3" class="tray"/><text x="380" y="26" text-anchor="middle" class="t">overhead tray / fiber raceway</text></g>
+      <g class="part" data-k="wf" tabindex="0"><path d="M200 32 q0 34 34 34" class="br"/><path d="M560 32 q0 34 -34 34" class="br"/><text x="250" y="58" class="tm">waterfall</text></g>
+      <rect x="160" y="70" width="440" height="340" class="frame"/>
+      <g class="part" data-k="vm" tabindex="0"><rect x="166" y="76" width="60" height="328" class="vm"/><rect x="534" y="76" width="60" height="328" class="vm"/>
+        <text x="196" y="395" text-anchor="middle" class="tm">vertical</text><text x="564" y="395" text-anchor="middle" class="tm">vertical</text></g>
+      <g id="units"></g>
+      <g class="part" data-k="bend" tabindex="0"><path d="M300 152 q-30 0 -40 30" class="br"/><path d="M460 152 q30 0 40 30" class="br"/></g>
+      <g class="part" data-k="brush" tabindex="0"><rect x="232" y="76" width="296" height="14" rx="3" style="fill:var(--panel-2);stroke:var(--muted)"/><text x="380" y="87" text-anchor="middle" class="tm" style="font-size:10px">brush / grommet entry</text></g>
+    </svg></div>
+  </figure>
+  <div class="card" id="acc-info" aria-live="polite"></div>
+</section>
+
+<section>
+  <h2>Install sequence</h2>
+  <ol class="steps">
+    <li><b>Plan from the elevation</b>Which RUs get horizontal managers (typically adjacent to each dense switch or patch panel), and which side channels hold vertical managers.</li>
+    <li><b>Mount pathways first</b>Overhead tray or raceway, waterfalls aligned to the rack-top openings, brush/grommet panels. Bond metal tray sections (bonding splices) per NEC/TIA-607.</li>
+    <li><b>Mount vertical managers</b>Secure to the frame along the full height, with doors or covers that open without fouling the rack doors.</li>
+    <li><b>Mount horizontal managers</b>Aligned to the U so fingers line up with the port rows they serve. Leave the switch's fan and PSU paths clear.</li>
+    <li><b>Add bend-radius control</b>Radius guides at every turn from horizontal to vertical, spools for slack, waterfalls at drops. Respect each cable's minimum radius.</li>
+    <li><b>Check, then cable</b>Doors close, modules can be pulled, nothing blocks vents. Only then install cables (and dress per U as you go).</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Choosing the right part</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Accessory</th><th>Job</th><th>Watch for</th></tr></thead>
+      <tbody>
+        <tr><td>Vertical manager (finger duct, with cover)</td><td>Carry bundles up/down the rack; support weight</td><td>Capacity at ~50% fill for growth; copper takes ~10× AOC area</td></tr>
+        <tr><td>Horizontal manager (1U/2U)</td><td>Fan cables out from ports to the sides in their own plane</td><td>Finger spacing vs port pitch; don't block switch airflow</td></tr>
+        <tr><td>Bend-radius guide / spool</td><td>Hold the minimum radius at turns; store slack</td><td>Radius ≥ cable spec (≈10× OD static)</td></tr>
+        <tr><td>Waterfall</td><td>Controlled drop from tray into rack</td><td>Radius guide at the tray edge (e.g. 3 in on Wyr-Grid)</td></tr>
+        <tr><td>Lacing bar / D-ring</td><td>Strain relief near ports</td><td>Hook-and-loop to the bar, never zip ties on fiber</td></tr>
+        <tr><td>Brush / grommet panel</td><td>Cable entry while blocking air bypass</td><td>Seal unused openings</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>Cables first, managers later.</b>Managers go in first. Retrofitting means unplugging working links.</li>
+    <li><b>Horizontal managers that block fans.</b>Place them so switch intakes, exhausts and PSU handles stay clear.</li>
+    <li><b>Sharp drops from trays.</b>Use waterfalls / radius guides. A tray edge is a bend-radius violation waiting to happen.</li>
+    <li><b>Sizing managers for day one.</b>Leave headroom for added links and breakouts.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. What is a horizontal cable manager for?</p>
+      <div class="opts"><button class="opt">Carrying cables between racks</button><button class="opt" data-correct>Guiding cables sideways from the ports to the vertical managers in the same U plane</button><button class="opt">Storing spare transceivers</button></div>
+      <p class="why">Horizontal managers sit next to dense switches or panels and route cables to the sides.</p></div>
+    <div class="q"><p>2. What protects cables where they drop from an overhead tray into the rack?</p>
+      <div class="opts"><button class="opt">A zip tie</button><button class="opt" data-correct>A waterfall / radius guide</button><button class="opt">A blanking panel</button></div>
+      <p class="why">Waterfalls give a controlled radius at the tray edge.</p></div>
+    <div class="q"><p>3. When should cable management accessories be installed?</p>
+      <div class="opts"><button class="opt" data-correct>Before cabling, aligned to the rack elevation plan</button><button class="opt">After all cables are plugged in</button><button class="opt">Only if cables look messy</button></div>
+      <p class="why">Pathways come first, then cabling, dressed per U.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../3.SR4/wyr-grid-explained.html">Wyr-Grid overhead tray<span>3 · SR4: waterfalls, 3 in radius, bonding</span></a></li>
+    <li><a href="../4.SR3/cable-management-best-practices.html">Cable management best practices<span>4 · SR3</span></a></li>
+    <li><a href="../4.T7/50-50-cable-routing.html">50/50 routing<span>4 · T7</span></a></li>
+    <li><a href="../4.T8/bundle-and-dress-cables.html">Bundling and dressing<span>4 · T8</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Accessory dimensions vary by vendor; follow the manufacturer's installation instructions.</footer>
+</main>
+<script>
+(function () {
+  const units = document.getElementById("units");
+  let s = "";
+  const rows = [["hm", 100], ["sw", 128, "Leaf switch (64 ports)"], ["hm", 156], ["sw", 184, "Leaf switch (64 ports)"], ["hm", 212], ["sw", 260, "Spine switch"], ["hm", 288]];
+  rows.forEach(([k, y, label]) => {
+    if (k === "sw") s += `<rect x="232" y="${y}" width="296" height="26" rx="2" class="sw"/><text x="380" y="${y + 17}" text-anchor="middle" class="t">${label}</text>`;
+    else {
+      s += `<g class="part" data-k="hm" tabindex="0"><rect x="232" y="${y}" width="296" height="24" rx="2" class="hm"/>`;
+      for (let x = 244; x < 520; x += 16) s += `<line x1="${x}" y1="${y + 2}" x2="${x}" y2="${y + 14}" class="fing"/>`;
+      s += `</g>`;
+    }
+  });
+  s += `<text x="380" y="360" text-anchor="middle" class="tm">GPU nodes below…</text>`;
+  units.innerHTML = s;
+  const info = {
+    tray: "<b>Overhead tray / fiber raceway.</b> Carries inter-rack bundles. Keep copper and fiber in separate pathways, size for ≤ 50% fill, support every ~5 ft, and keep 12 in clear above (NEC 392.18(F)).",
+    wf: "<b>Waterfall.</b> A curved guide where cables leave the tray and drop into the rack, holding a controlled radius (e.g. 3 in) so the tray edge can't kink them.",
+    vm: "<b>Vertical managers.</b> Full-height ducts in the side channels. Each switch's cables split 50/50 left and right and travel here, supported along their length, never across the rack face.",
+    hm: "<b>Horizontal managers (1U/2U).</b> Finger panels next to dense switches and patch panels. Cables leave the ports and travel sideways through the fingers to the vertical managers, staying in their own U plane.",
+    bend: "<b>Bend-radius guides.</b> Curved fingers, spools and radius guides at every transition (horizontal → vertical, slack loops) so no turn is tighter than the cable's minimum radius.",
+    brush: "<b>Brush / grommet entry.</b> Lets cables enter the rack top while blocking air from bypassing the equipment. Seal unused openings."
+  };
+  const box = document.getElementById("acc-info");
+  const parts = document.querySelectorAll("#rack .part");
+  const pick = (k) => { parts.forEach((p) => p.classList.toggle("sel", p.dataset.k === k)); box.innerHTML = info[k]; };
+  parts.forEach((p) => {
+    p.addEventListener("click", () => pick(p.dataset.k));
+    p.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(p.dataset.k); } });
+  });
+  pick("hm");
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

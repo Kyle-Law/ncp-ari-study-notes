@@ -269,6 +269,34 @@
    "title": "NVIDIA Networking, explained"
   },
   {
+   "path": "3.T1/extra-wide-racks.html",
+   "section": "3",
+   "kind": "T",
+   "code": "T1",
+   "title": "Extra-wide racks for AI"
+  },
+  {
+   "path": "3.T2/cable-management-accessories.html",
+   "section": "3",
+   "kind": "T",
+   "code": "T2",
+   "title": "Cable management accessories"
+  },
+  {
+   "path": "3.T3/power-data-pathways-emi.html",
+   "section": "3",
+   "kind": "T",
+   "code": "T3",
+   "title": "Power and data pathways"
+  },
+  {
+   "path": "3.T4/rack-containment-clearance.html",
+   "section": "3",
+   "kind": "T",
+   "code": "T4",
+   "title": "Rack containment clearance"
+  },
+  {
    "path": "3.SR1/data-center-design-explained.html",
    "section": "3",
    "kind": "SR",

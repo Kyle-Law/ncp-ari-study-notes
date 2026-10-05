@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rack containment clearance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 14px; font-weight: 600; } .tm { font-size: 11.5px; fill: var(--muted) !important; } .t { font-size: 12.5px; }
+  .calc { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); align-items: end; }
+  .checks { display: grid; gap: .5rem; margin-top: 1rem; }
+  .chk { display: grid; grid-template-columns: 1.6rem 1fr auto; gap: .6rem; align-items: center; background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; padding: .5rem .7rem; font-size: .95rem; }
+  .chk .i { font-weight: 700; text-align: center; }
+  .chk b.v { font-family: var(--display); font-size: 1.1rem; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">3 · T4</span><span class="chip">Rack Infrastructure</span><span class="chip weight">10% of exam</span></div>
+  <h1>Verifying rack containment clearance</h1>
+  <p class="lede">Three dimensions decide whether a rack actually works once it's loaded. Front post to front door gives room for bezels, handles and cable bends. Front post to rear post decides whether the rails fit. Space at the back and between bayed racks has to hold cables, PDUs and managers. Containment panels and doors have to fit around all of it.</p>
+  <p class="objective"><b>Exam objective</b>Verify rack containment clearance (front-post to front door and front-post to rear-post or inter-rack posts).</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Front post → front door</b>: at least <b>51 mm (2 in)</b> for bezels, handles and airflow (Intel's guide). Front-cabled switches need far more: connector length plus the cable's bend radius, or the door crushes the cables.</li>
+    <li><b>Front post → rear post (F)</b>: must sit inside the <b>rail kit's adjustable range</b>. Rear posts usually move, so set F before mounting. Often the limiting factor in shallow cabinets.</li>
+    <li><b>Total depth</b>: front clearance + equipment depth + rear cable space (~<b>152 mm fiber</b>, ~112 mm copper) + PDUs ≤ cabinet depth. AI racks favour <b>1,200 mm</b>.</li>
+    <li><b>Inter-rack posts</b>: in bayed rows, adjacent posts and side panels eat into the space for vertical managers between racks. Check that managers and cables fit.</li>
+    <li><b>Containment</b>: doors must open fully inside the contained aisle, the roof must clear rack tops, drops and trays, and blanking/brush seals must close the gaps.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Depth stack calculator (side view)</h2>
+  <div class="card">
+    <div class="calc">
+      <label class="field">Cabinet depth (mm)<select id="L"><option>1000</option><option selected>1200</option><option>1070</option></select></label>
+      <label class="field">Front post → front door (mm)<input type="number" id="D" value="100" min="0" max="300"></label>
+      <label class="field">Equipment depth (mm)<input type="number" id="E" value="897" min="300" max="1200"></label>
+      <label class="field">Rear cable space<select id="G"><option value="152" selected>Fiber (152 mm)</option><option value="112">Copper/power (112 mm)</option></select></label>
+      <label class="field">Front-cabled ports?<select id="FC"><option value="no">No (cables at rear)</option><option value="yes">Yes (switch faces front)</option></select></label>
+      <label class="field">Front cable OD (mm)<input type="number" id="OD" value="3" min="1" max="12" step="0.1"></label>
+      <label class="field">Rail kit range F (mm)<input type="text" id="R" value="610–915"></label>
+      <label class="field">Front→rear post F (mm)<input type="number" id="F" value="760" min="400" max="1100"></label>
+    </div>
+    <div class="wide"><svg id="side" viewBox="0 0 760 170" role="img" aria-labelledby="sdT" style="margin-top:1rem"><title id="sdT">Side view of the cabinet showing front clearance, equipment depth and rear cable space against cabinet depth, and post positions</title></svg></div>
+    <div class="checks" id="checks" aria-live="polite"></div>
+  </div>
+  <p class="small muted">51 mm front and 152/112 mm rear allowances come from Intel's rack compatibility guide (3 · SR8). Front-cable allowance here = ~80 mm connector/boot + 10 × OD bend radius, as an illustration. Use the actual connector and cable datasheets. DGX H100 maximum depth is 897 mm (3 · SR2).</p>
+</section>
+
+<section>
+  <h2>What to check on site</h2>
+  <ol class="steps">
+    <li><b>Front clearance</b>Measure front mounting flange to the inside of the closed front door. ≥ 51 mm for bezels, and more for any front-cabled switch (connector + bend radius). Close the door and confirm nothing touches cables or handles.</li>
+    <li><b>Post spacing</b>Measure front-to-rear post distance (F) and set rear posts inside the rail kit range before mounting. Verify square holes (or round). Tapped holes don't take most rail kits.</li>
+    <li><b>Flange clearance</b>Space beside the mounting flange for rail brackets (Intel: ≥ 16.77 mm. L-shaped flanges are typically fine, U-shaped often too tight).</li>
+    <li><b>Rear space</b>Room for cable bends behind the equipment, zero-U PDUs, liquid manifolds, and the rear door closing without pressing on connectors.</li>
+    <li><b>Inter-rack / bayed posts</b>Between adjacent racks, check that vertical managers fit between posts and side panels, and that 50/50 cable volume fits each side.</li>
+    <li><b>Containment fit</b>Doors open fully within the aisle; containment roof clears rack tops, waterfalls and tray drops; blanking and brush panels seal gaps; fire-suppression and sprinkler clearances are kept.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>Measuring the cabinet, not the posts.</b>The rails care about post-to-post distance (F), not the cabinet's outer depth.</li>
+    <li><b>Front door on front-cabled switches.</b>51 mm suits a bezel, not an OSFP connector plus bend radius.</li>
+    <li><b>Rear door pressing on cables.</b>Leave ~150 mm for fiber bends behind equipment, plus PDUs.</li>
+    <li><b>Containment added last.</b>Check door swing, roof height and seal gaps against the real rack row before ordering panels.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. Minimum front-post to front-door clearance in Intel's rack guide?</p>
+      <div class="opts"><button class="opt">10 mm</button><button class="opt" data-correct>51 mm (2 in)</button><button class="opt">152 mm</button></div>
+      <p class="why">At least 51 mm so bezels and handles clear the door and air can circulate.</p></div>
+    <div class="q"><p>2. A rail kit spans 610–915 mm, but the rack's front-to-rear post distance is 950 mm. Fix?</p>
+      <div class="opts"><button class="opt">Force the rails</button><button class="opt" data-correct>Move the adjustable rear posts inside the rail range</button><button class="opt">Mount on the front posts only</button></div>
+      <p class="why">F must be within the rail's travel. Rear posts are usually adjustable.</p></div>
+    <div class="q"><p>3. Why does a switch with front-facing ports need more front clearance?</p>
+      <div class="opts"><button class="opt">For airflow only</button><button class="opt" data-correct>The connectors and their bend radius must fit before the door closes</button><button class="opt">It doesn't</button></div>
+      <p class="why">Connector length plus bend radius can need far more than 51 mm.</p></div>
+    <div class="q"><p>4. In a bayed row, what reduces space for vertical managers?</p>
+      <div class="opts"><button class="opt" data-correct>Adjacent rack posts and side panels between racks</button><button class="opt">Perforated doors</button><button class="opt">Blanking panels</button></div>
+      <p class="why">Inter-rack posts and panels take width from the cable channel. Check the managers and cable volume fit.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../3.SR8/intel_rack_compatibility_explained.html">Rack cabinet compatibility<span>3 · SR8: D, E, F, G dimensions</span></a></li>
+    <li><a href="../3.SR8/intel-rack-compatibility-explained.html">Will this server fit this rack?<span>3 · SR8 (v2)</span></a></li>
+    <li><a href="../3.SR7/vertiv-rack-cooling-explained.html">Vertiv rack cooling<span>3 · SR7</span></a></li>
+    <li><a href="../1.T8/hot-vs-cold-aisle.html">Hot vs cold aisle containment<span>1 · T8</span></a></li>
+    <li><a href="../3.T1/extra-wide-racks.html">Extra-wide racks<span>3 · T1</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Use the cabinet, rail-kit and equipment drawings for real clearance checks.</footer>
+</main>
+<script>
+(function () {
+  const g = (id) => document.getElementById(id);
+  function row(ok, label, val, warn) {
+    const i = ok ? '<span class="ok">✓</span>' : warn ? '<span class="caution">!</span>' : '<span class="fail">✕</span>';
+    return `<div class="chk"><span class="i">${i}</span><span>${label}</span><b class="v">${val}</b></div>`;
+  }
+  function run() {
+    const L = +g("L").value, D = +g("D").value || 0, E = +g("E").value || 0, G = +g("G").value, fc = g("FC").value === "yes", OD = +g("OD").value || 3, F = +g("F").value || 0;
+    const m = g("R").value.match(/(\d+)\D+(\d+)/), rmin = m ? +m[1] : 0, rmax = m ? +m[2] : 9999;
+    const needFront = fc ? 80 + 10 * OD : 51, total = D + E + G;
+    // drawing
+    const svg = g("side"), sc = 680 / Math.max(L, total), x0 = 40;
+    let s = svg.querySelector("title").outerHTML;
+    s += `<rect x="${x0}" y="30" width="${L * sc}" height="100" rx="3" style="fill:none;stroke:var(--ink);stroke-width:2.5"/>`;
+    s += `<text x="${x0}" y="22" class="tm">front door</text><text x="${x0 + L * sc}" y="22" text-anchor="end" class="tm">rear door · ${L} mm</text>`;
+    s += `<rect x="${x0}" y="40" width="${D * sc}" height="80" style="fill:${D >= needFront ? "var(--good-soft)" : "var(--bad-soft)"}"/>`;
+    s += `<rect x="${x0 + D * sc}" y="45" width="${E * sc}" height="70" rx="2" style="fill:var(--panel-2);stroke:var(--ink)"/><text x="${x0 + D * sc + E * sc / 2}" y="85" text-anchor="middle" class="tb">equipment ${E} mm</text>`;
+    s += `<rect x="${x0 + (D + E) * sc}" y="40" width="${G * sc}" height="80" style="fill:${total <= L ? "var(--accent-soft)" : "var(--bad-soft)"}"/>`;
+    s += `<rect x="${x0 + D * sc - 3}" y="34" width="6" height="92" style="fill:var(--ink)"/><rect x="${x0 + (D + F) * sc - 3}" y="34" width="6" height="92" style="fill:var(--warn)"/>`;
+    s += `<text x="${x0 + D * sc}" y="146" text-anchor="middle" class="tm">front post</text><text x="${x0 + (D + F) * sc}" y="146" text-anchor="middle" class="tm">rear post (F = ${F})</text>`;
+    s += `<text x="${x0 + D * sc / 2}" y="164" text-anchor="middle" class="tm">${D} mm</text><text x="${x0 + (D + E + G / 2) * sc}" y="164" text-anchor="middle" class="tm">rear ${G} mm</text>`;
+    svg.innerHTML = s;
+    let h = "";
+    h += row(D >= needFront, fc ? `Front clearance vs connector + bend radius (~${Math.round(needFront)} mm needed)` : "Front clearance ≥ 51 mm for bezel/handles/airflow", `${D} mm`);
+    h += row(total <= L, `Front + equipment + rear cable space ≤ cabinet depth`, `${total} / ${L} mm`);
+    h += row(F >= rmin && F <= rmax, `Front→rear post distance inside the rail kit range (${rmin}–${rmax} mm)`, `${F} mm`);
+    h += row(E <= F + 250, `Equipment rear overhang beyond the rear post is reasonable`, `${Math.max(0, E - F)} mm`, true);
+    g("checks").innerHTML = h;
+  }
+  ["L", "D", "E", "G", "FC", "OD", "R", "F"].forEach((id) => g(id).addEventListener("input", run)); run();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

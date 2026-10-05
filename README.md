@@ -133,9 +133,13 @@ This section covers preparing rack infrastructure for AI platforms, focusing on 
 
 ### Potential Exam Topics:
 - **T1** Describe extra-wide racks for AI platforms.
+  - [Extra-wide racks for AI platforms](3.T1/extra-wide-racks.html)
 - **T2** Install cable management accessories (vertical/horizontal ducts, bend radius managers).
+  - [Installing cable management accessories](3.T2/cable-management-accessories.html)
 - **T3** Coordinate power and data cable pathways (EMI mitigation).
+  - [Coordinating power and data pathways](3.T3/power-data-pathways-emi.html)
 - **T4** Verify rack containment clearance (front-post to front door and front-post to rear-post or inter-rack posts).
+  - [Verifying rack containment clearance](3.T4/rack-containment-clearance.html)
 
 ### Suggested Readings
 

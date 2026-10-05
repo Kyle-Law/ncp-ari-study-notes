@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Extra-wide racks for AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12px; fill: var(--muted) !important; } .t { font-size: 13px; }
+  .frame { fill: none; stroke: var(--ink); stroke-width: 3; }
+  .post { fill: var(--ink); }
+  .eq { fill: var(--panel-2); stroke: var(--ink); stroke-width: 1.5; }
+  .chan { fill: var(--accent-soft); stroke: var(--accent); stroke-dasharray: 5 4; }
+  .results { display: grid; gap: .7rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); margin-top: 1rem; }
+  .results div { background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; padding: .55rem .75rem; }
+  .results b { display: block; font-family: var(--display); font-size: 1.5rem; line-height: 1.15; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">3 · T1</span><span class="chip">Rack Infrastructure</span><span class="chip weight">10% of exam</span></div>
+  <h1>Extra-wide racks for AI platforms</h1>
+  <p class="lede">The equipment still mounts on standard 19-inch rails. What an AI rack needs extra room for is everything around it: hundreds of thick cables, several PDUs, liquid manifolds, and space to reach and pull every transceiver.</p>
+  <p class="objective"><b>Exam objective</b>Describe extra-wide racks for AI platforms.</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li>A standard rack is <b>600 mm</b> wide. AI and network racks go to <b>750–800 mm</b>. The 19-inch (EIA-310) mounting opening stays the same, and the extra width becomes <b>side channels</b> for vertical cable management.</li>
+    <li>Schneider's AI guidance (WP110) recommends minimums of <b>750 mm wide, 1,200 mm deep</b> (mounting depth &gt; 1,000 mm), <b>48U</b>, and <b>&gt; 2,270 kg</b> static load capacity (&gt; 1,600 kg dynamic).</li>
+    <li>Why: high-radix switches (e.g. 32 twin-port OSFP cages) land dozens of cables per U; copper is ~9.4 mm thick; racks carry multiple zero-U PDUs and liquid manifolds at the rear.</li>
+    <li>Wide racks let cables leave the switch <b>straight to the sides</b> (50/50) without crossing the face, keeping transceivers, fans and PSUs serviceable and air flowing.</li>
+    <li>Some AI racks aren't 19-inch at all: <b>GB200 NVL72</b> is a 48U OCP/MGX-style rack (~600 × 1,068 mm, ~1,360 kg). Check doors, lifts and floor too.</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Top view: where the extra width goes</h2>
+  <div class="seg" id="wseg"><button data-w="600">600 mm</button><button data-w="750">750 mm</button><button data-w="800" aria-pressed="true">800 mm</button></div>
+  <figure>
+    <div class="wide"><svg id="top" viewBox="0 0 760 320" role="img" aria-labelledby="topT"><title id="topT">Top view of a rack showing the 19-inch mounting opening in the middle and side cable channels whose width depends on overall rack width</title></svg></div>
+  </figure>
+  <div class="results">
+    <div><span class="muted small">Each side channel (approx.)</span><b id="r-ch"></b></div>
+    <div><span class="muted small">3 mm AOCs per side at 50% fill</span><b id="r-aoc"></b></div>
+    <div><span class="muted small">9.4 mm copper per side at 50% fill</span><b id="r-cu"></b></div>
+  </div>
+  <p class="small muted">Illustrative: 19-inch equipment panel 482.6 mm wide (EIA-310), ~20 mm of frame/post per side, and a 150 mm-deep vertical manager zone. Real capacity depends on the cabinet and managers chosen.</p>
+</section>
+
+<section>
+  <h2>Why AI racks outgrow 600 mm</h2>
+  <div class="grid">
+    <div class="card"><h3>Cable density</h3><p class="small">A 64-port NDR switch with breakouts can land 64+ cables in 1U. With copper at ~9.4 mm, a 600 mm rack has nowhere to route them except across the face.</p></div>
+    <div class="card"><h3>Serviceability</h3><p class="small">NVIDIA's best practices: choose a rack wide enough that cables pass between the switch and the side walls, so transceivers and fans stay reachable.</p></div>
+    <div class="card"><h3>Power &amp; liquid</h3><p class="small">Multiple high-amp PDUs (A/B, sometimes several per side), plus liquid supply/return manifolds, compete for the rear corners.</p></div>
+    <div class="card"><h3>Depth</h3><p class="small">Deep servers (DGX H100 is up to 897 mm) plus rear cable space and PDUs push depth to 1,200 mm.</p></div>
+    <div class="card"><h3>Weight</h3><p class="small">Dense AI racks can exceed 1,800 kg, so static and dynamic (rolling) load ratings and leveling feet matter.</p></div>
+    <div class="card"><h3>Airflow</h3><p class="small">Cables kept in side channels leave the front and rear faces clear. Pair with perforated doors and containment.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Recommended minimums (Schneider WP110)</h2>
+  <div class="facts">
+    <div class="fact"><div class="n">750 mm</div><div class="l">Width (29.5 in)</div></div>
+    <div class="fact"><div class="n">1,200 mm</div><div class="l">Depth (47.2 in), mounting depth &gt; 1,000 mm</div></div>
+    <div class="fact"><div class="n">48U</div><div class="l">Height (~2.13 m interior)</div></div>
+    <div class="fact"><div class="n">&gt; 2,270 kg</div><div class="l">Static weight capacity</div></div>
+    <div class="fact"><div class="n">&gt; 1,600 kg</div><div class="l">Dynamic (moving) capacity</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>"Extra-wide racks need wider equipment."</b>No. Equipment still mounts to the 19-inch EIA-310 opening. The extra width is for cable management and power.</li>
+    <li><b>Width without depth.</b>AI racks also need ~1,200 mm depth for long servers, rear cabling, PDUs and manifolds.</li>
+    <li><b>Assuming every AI rack is 19-inch.</b>GB200 NVL72 uses its own 48U rack with a ~600 × 1,068 mm footprint.</li>
+    <li><b>Forgetting the floor.</b>Weight ratings for the rack and for the floor along the delivery path.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. What is the extra width of an 800 mm rack mainly used for?</p>
+      <div class="opts"><button class="opt">Wider servers</button><button class="opt" data-correct>Vertical cable management channels beside the 19-inch mounting area</button><button class="opt">Extra cooling fans</button></div>
+      <p class="why">The mounting opening is still 19-inch. The extra width creates side channels for cables (and room for PDUs).</p></div>
+    <div class="q"><p>2. WP110's recommended minimum width for AI racks?</p>
+      <div class="opts"><button class="opt">600 mm</button><button class="opt" data-correct>750 mm</button><button class="opt">1,000 mm</button></div>
+      <p class="why">750 mm wide, 1,200 mm deep, 48U, &gt; 2,270 kg static capacity.</p></div>
+    <div class="q"><p>3. Why does a narrow rack hurt serviceability in a dense switch rack?</p>
+      <div class="opts"><button class="opt">It blocks the PDU display</button><button class="opt" data-correct>Cables must cross the switch face, blocking transceiver and fan removal and airflow</button><button class="opt">It makes the switch run slower</button></div>
+      <p class="why">Without side space, cables drape over ports and vents.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../1.O1/ai-datacenter-explainer.html">How AI changes data center design (WP110)<span>1 · O1: rack minimums</span></a></li>
+    <li><a href="../3.SR8/intel_rack_compatibility_explained.html">Rack cabinet compatibility<span>3 · SR8: EIA-310, flanges, depth</span></a></li>
+    <li><a href="../4.SR3/cable-management-best-practices.html">Cable management best practices<span>4 · SR3: "choose a rack wide enough"</span></a></li>
+    <li><a href="../1.T1/datacenter-gb200-nvl72-guide.html">GB200 NVL72 rack<span>1 · T1</span></a></li>
+    <li><a href="../3.T2/cable-management-accessories.html">Cable management accessories<span>3 · T2: next topic</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Channel capacities are illustrative; use the cabinet manufacturer's data.</footer>
+</main>
+<script>
+(function () {
+  const svg = document.getElementById("top"), title = svg.querySelector("title").outerHTML;
+  function draw(W) {
+    const sc = 0.75, x0 = (760 - W * sc) / 2, eqW = 482.6 * sc, ex = (760 - eqW) / 2, D = 1200 * 0.22;
+    const ch = Math.max(0, (W - 482.6) / 2 - 20);
+    let s = title;
+    s += `<rect x="${x0}" y="20" width="${W * sc}" height="${D}" rx="4" class="frame"/>`;
+    if (ch > 0) {
+      s += `<rect x="${x0 + 20 * sc}" y="${20 + 30}" width="${ch * sc}" height="${150 * 0.9}" class="chan"/>`;
+      s += `<rect x="${ex + eqW}" y="${20 + 30}" width="${ch * sc}" height="${150 * 0.9}" class="chan"/>`;
+    }
+    s += `<rect x="${ex}" y="40" width="${eqW}" height="${D - 40}" rx="3" class="eq"/><text x="380" y="${20 + D / 2}" text-anchor="middle" class="tb">19-inch equipment (482.6 mm)</text>`;
+    [ex - 6, ex + eqW, ex - 6, ex + eqW].forEach((px, i) => (s += `<rect x="${px}" y="${i < 2 ? 34 : 14 + D - 14}" width="6" height="14" class="post"/>`));
+    s += `<text x="380" y="${20 + D + 22}" text-anchor="middle" class="t">rack width ${W} mm · front at top</text>`;
+    if (ch > 0) s += `<text x="${x0 + 20 * sc + ch * sc / 2}" y="${20 + D / 2 + 50}" text-anchor="middle" class="tm">${Math.round(ch)} mm</text><text x="${ex + eqW + ch * sc / 2}" y="${20 + D / 2 + 50}" text-anchor="middle" class="tm">${Math.round(ch)} mm</text>`;
+    else s += `<text x="380" y="${20 + D / 2 + 26}" text-anchor="middle" class="tm" style="fill:var(--bad) !important">almost no side space: cables must cross the face</text>`;
+    svg.innerHTML = s;
+    const area = ch * 150 * 0.5;
+    document.getElementById("r-ch").textContent = Math.round(ch) + " mm";
+    document.getElementById("r-aoc").textContent = Math.floor(area / (Math.PI * 1.5 * 1.5)).toLocaleString();
+    document.getElementById("r-cu").textContent = Math.floor(area / (Math.PI * 4.715 * 4.715)).toLocaleString();
+  }
+  const btns = document.querySelectorAll("#wseg button");
+  btns.forEach((b) => { b.type = "button"; b.addEventListener("click", () => { btns.forEach((x) => x.setAttribute("aria-pressed", String(x === b))); draw(+b.dataset.w); }); });
+  draw(800);
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Power and data pathways</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/topic.css">
+<style>
+  .tb { font-size: 15px; font-weight: 600; } .tm { font-size: 12px; fill: var(--muted) !important; } .t { font-size: 13px; }
+  .pw { stroke: var(--bad); stroke-width: 6; fill: none; }
+  .cu { stroke: var(--copper); stroke-width: 5; fill: none; }
+  .fb { stroke: var(--mmf); stroke-width: 4; fill: none; }
+  .rk { fill: var(--panel); stroke: var(--ink); stroke-width: 1.5; }
+  .field-ring { fill: none; stroke: var(--bad); stroke-dasharray: 3 4; opacity: .5; }
+  .calc { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); align-items: end; }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker"><span class="chip code">3 · T3</span><span class="chip">Rack Infrastructure</span><span class="chip weight">10% of exam</span></div>
+  <h1>Coordinating power and data pathways</h1>
+  <p class="lede">Power cables radiate electromagnetic fields, and unshielded copper data cables pick them up as noise. The fix is planning: give power and data separate routes, keep a distance between them, and cross at right angles where they must meet.</p>
+  <p class="objective"><b>Exam objective</b>Coordinate power and data cable pathways (EMI mitigation).</p>
+</header>
+
+<div class="card tldr">
+  <h2>In one minute</h2>
+  <ul>
+    <li><b>Separate pathways</b>: power and data in different trays or raceways (or divided by a barrier), often at different levels (e.g. power below or on its own tier, data overhead).</li>
+    <li><b>Distance</b> scales with power. Classic TIA-569 guidance for unshielded copper near unshielded power: ~<b>5 in</b> (&lt; 2 kVA), <b>12 in</b> (2–5 kVA), <b>24 in</b> (&gt; 5 kVA), roughly halved where one side runs in grounded metal conduit.</li>
+    <li><b>Cross at 90°</b> when paths must meet. Never run copper data parallel to power for long distances.</li>
+    <li>In the rack: PDUs and power cords on one side or the rear corners, data bundles on the other or in the side channels. Keep copper DACs away from PDUs, power cords, converters, fluorescent lighting and AC units.</li>
+    <li><b>Fiber</b> (AOC, optics) is immune to EMI, which is one more reason fiber carries long runs. Still route it separately for physical protection. Bond metal pathways (TIA-607).</li>
+  </ul>
+</div>
+
+<section>
+  <h2>Good vs. poor routing</h2>
+  <div class="seg" data-target="rt"><button data-value="good" aria-pressed="true">Coordinated</button><button data-value="bad">Uncoordinated</button></div>
+  <figure>
+    <div class="wide"><svg viewBox="0 0 760 260" role="img" aria-labelledby="rtT">
+      <title id="rtT">Overhead view of a row: coordinated routing keeps power and data in separate trays and crosses at right angles; uncoordinated routing runs copper parallel to power</title>
+      <g><rect x="60" y="150" width="70" height="80" class="rk"/><rect x="150" y="150" width="70" height="80" class="rk"/><rect x="240" y="150" width="70" height="80" class="rk"/><rect x="330" y="150" width="70" height="80" class="rk"/><rect x="420" y="150" width="70" height="80" class="rk"/><rect x="510" y="150" width="70" height="80" class="rk"/><rect x="600" y="150" width="70" height="80" class="rk"/></g>
+      <text x="365" y="250" text-anchor="middle" class="tm">rack row (plan view)</text>
+      <g data-show-rt="good">
+        <path d="M30 40 H730" class="cu"/><text x="740" y="44" class="tm" text-anchor="end">data tray (copper)</text>
+        <path d="M30 70 H730" class="fb"/><text x="740" y="64" class="tm" text-anchor="end">fiber raceway</text>
+        <path d="M30 128 H730" class="pw"/><text x="740" y="122" class="tm" text-anchor="end">power busway / whips</text>
+        <path d="M120 128 V150 M300 128 V150 M480 128 V150 M660 128 V150" class="pw" style="stroke-width:3"/>
+        <path d="M380 40 V128" class="cu" style="stroke-width:3"/><circle cx="380" cy="128" r="7" style="fill:none;stroke:var(--good);stroke-width:2"/><text x="392" y="112" class="tm">crossing at 90°</text>
+        <path d="M30 40 V128" stroke="var(--accent)" stroke-dasharray="3 3"/><text x="38" y="92" class="tm" style="fill:var(--accent) !important">separation</text>
+      </g>
+      <g data-show-rt="bad" hidden>
+        <path d="M30 110 H730" class="pw"/><path d="M30 120 H730" class="cu"/>
+        <ellipse cx="380" cy="115" rx="340" ry="22" class="field-ring"/>
+        <text x="380" y="80" text-anchor="middle" class="t" style="fill:var(--bad);font-weight:600">copper data runs alongside power for the whole row: induced noise, errors</text>
+        <path d="M30 60 H730" class="fb"/><text x="740" y="54" class="tm" text-anchor="end">fiber (unaffected)</text>
+      </g>
+    </svg></div>
+  </figure>
+</section>
+
+<section>
+  <h2>How far apart?</h2>
+  <div class="card">
+    <div class="calc">
+      <label class="field">Power circuit size<select id="kva"><option value="0">Under 2 kVA</option><option value="1" selected>2–5 kVA</option><option value="2">Over 5 kVA</option></select></label>
+      <label class="field">Pathways<select id="pc"><option value="open" selected>Open / non-metallic pathways</option><option value="conduit">Grounded metal conduit on one side</option></select></label>
+      <label class="field">Data cable<select id="dc"><option value="cu" selected>Unshielded copper</option><option value="fiber">Fiber / AOC</option></select></label>
+    </div>
+    <p id="sep-out" class="out" style="margin:1rem 0 .2rem"></p>
+    <p id="sep-note" class="small" style="margin:0"></p>
+  </div>
+  <p class="small muted">Values follow the classic EIA/TIA-569 separation table for unshielded twisted-pair copper. Current standards and local codes (NEC) govern actual installations. High-speed DACs are shielded twinax, but NVIDIA still advises routing copper away from EMI sources.</p>
+</section>
+
+<section>
+  <h2>Coordination checklist</h2>
+  <ol class="steps">
+    <li><b>Plan both systems together</b>Overlay electrical (busway, whips, PDUs) and network (trays, raceways, drops) on the same drawings. Assign each its own level and route.</li>
+    <li><b>Keep distance</b>Maintain separation from power, transformers, motors, VFDs, AC units and fluorescent lighting. Increase it for bigger loads.</li>
+    <li><b>Cross, don't parallel</b>Where routes must meet, cross at 90° and keep the crossing short.</li>
+    <li><b>Organise the rack</b>PDUs and power cords on the PDU side or in the rear corners. Data in the side channels / managers. Don't bundle power cords with data cables.</li>
+    <li><b>Use the right media</b>Fiber for long or noisy paths. Shielded copper where needed, with shields properly bonded.</li>
+    <li><b>Bond and ground</b>Bond metal trays and racks so shields and frames share one reference (TIA-607, NEC).</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Exam traps</h2>
+  <ul class="traps">
+    <li><b>Zip-tying power cords to data bundles.</b>Keep them separate in the rack too, not just in the ceiling.</li>
+    <li><b>Parallel runs "with a little gap".</b>Long parallel runs couple more noise. Increase separation or cross at 90°.</li>
+    <li><b>"Fiber needs EMI separation."</b>Fiber is immune to EMI. It's separated for physical protection and organisation.</li>
+    <li><b>Forgetting lighting and HVAC.</b>Fluorescent ballasts, motors and AC units are EMI sources too.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <p class="score" aria-live="polite"></p>
+  <div class="quiz">
+    <div class="q"><p>1. Power and copper data paths must meet. Best practice?</p>
+      <div class="opts"><button class="opt">Run them parallel for a short distance</button><button class="opt" data-correct>Cross at a right angle</button><button class="opt">Bundle them together at the crossing</button></div>
+      <p class="why">A 90° crossing minimises the coupling length.</p></div>
+    <div class="q"><p>2. Which data medium is immune to EMI from power cables?</p>
+      <div class="opts"><button class="opt">Unshielded twisted pair</button><button class="opt">Passive copper DAC</button><button class="opt" data-correct>Fiber (AOC / optics)</button></div>
+      <p class="why">Light in glass isn't affected by electromagnetic fields.</p></div>
+    <div class="q"><p>3. Under classic TIA-569 guidance, separation for unshielded copper near an unshielded power circuit above 5 kVA?</p>
+      <div class="opts"><button class="opt">2.5 in</button><button class="opt">5 in</button><button class="opt" data-correct>24 in</button></div>
+      <p class="why">&lt; 2 kVA: 5 in; 2–5 kVA: 12 in; &gt; 5 kVA: 24 in (less with grounded metal conduit).</p></div>
+    <div class="q"><p>4. NVIDIA's guidance on copper cable routing?</p>
+      <div class="opts"><button class="opt" data-correct>Route away from power converters, AC units, power cords, fluorescent lighting and building electrical runs</button><button class="opt">Route alongside power for shortest length</button><button class="opt">EMI is not a concern for DACs</button></div>
+      <p class="why">Copper picks up EMI. Keep it clear of those sources and in separate runs from fiber.</p></div>
+  </div>
+  <p style="margin-top:1rem"><button class="btn" data-quiz-reset>Reset quiz</button></p>
+</section>
+
+<section>
+  <h2>Go deeper</h2>
+  <ul class="deeper">
+    <li><a href="../5.SR2/nvidia-cable-guidelines-explained.html">NVIDIA cable guidelines<span>5 · SR2: keep copper away from noise</span></a></li>
+    <li><a href="../3.SR6/n93180ycfx-site-prep.html">Nexus site prep<span>3 · SR6: EMI/RFI, grounding</span></a></li>
+    <li><a href="../3.SR5/nfpa70-explained.html">NFPA 70 (NEC)<span>3 · SR5</span></a></li>
+    <li><a href="../1.T7/verify-grounding.html">Verifying grounding<span>1 · T7</span></a></li>
+  </ul>
+</section>
+
+<footer>Topic explainer for the NCP-ARI exam objective above, built from the suggested readings in this repo. Separation distances are classic guidance; follow current standards and the local electrical code.</footer>
+</main>
+<script>
+(function () {
+  const kva = document.getElementById("kva"), pc = document.getElementById("pc"), dc = document.getElementById("dc");
+  const T = { open: [5, 12, 24], conduit: [2.5, 6, 12] };
+  function upd() {
+    const out = document.getElementById("sep-out"), note = document.getElementById("sep-note");
+    if (dc.value === "fiber") { out.innerHTML = '<span class="ok">No EMI separation needed</span>'; note.textContent = "Fiber is immune to EMI. Still route it in its own pathway for physical protection."; return; }
+    const v = T[pc.value][+kva.value];
+    out.textContent = `≥ ${v} in (${Math.round(v * 25.4)} mm)`;
+    note.textContent = pc.value === "conduit" ? "A grounded metal pathway between power and data shields much of the field, so less distance is needed." : "Open or unshielded power conductors radiate more. Keep the larger distance, and cross at 90° where paths meet.";
+  }
+  [kva, pc, dc].forEach((e) => e.addEventListener("input", upd)); upd();
+})();
+</script>
+<script src="../assets/topic.js" defer></script>
+<script src="../nav.js" defer></script>
+</body>
+</html>
